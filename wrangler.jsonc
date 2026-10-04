@@ -15,6 +15,15 @@
       "service": "hocnoihocviet"
     }
   ],
-  "observability": { "enabled": true }
-  // Backend bindings (D1 database, R2 bucket, AI Gateway) get added here as those features land.
+  "observability": { "enabled": true },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "hocnoihocviet-db",
+      "database_id": "REPLACE_WITH_D1_DATABASE_ID",
+      "migrations_dir": "migrations"
+    }
+  ]
+  // Secrets (set in the dashboard, type Secret): BETTER_AUTH_SECRET, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET.
+  // Optional: ALLOWED_EMAILS (comma-separated) to limit sign-up during beta.
 }

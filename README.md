@@ -26,10 +26,31 @@ To deploy on every push, connect this repo once in the Cloudflare dashboard:
 5. Set **Deploy command** to `npx opennextjs-cloudflare deploy`.
 6. Click **Deploy**. The app is served at `https://hocnoihocviet.<your-subdomain>.workers.dev`.
 
+Since sign-in landed, the deploy command is **`npm run deploy:ci`**. It applies any new files in `migrations/` to the
+D1 database, then deploys.
+
 **Keep it private while testing:** open the Worker, go to **Settings → Domains & Routes**, find the `workers.dev` row, and enable
 **Cloudflare Access**. Only the emails you allow can then open the site.
 
-Backend pieces will be added to `wrangler.jsonc` as bindings when they land: D1 (database), R2 (files) and AI Gateway (AI calls).
+## Sign-in and data
+
+- **Auth:** [Better Auth](https://www.better-auth.com) with Google sign-in (`src/lib/auth.ts`, `/api/auth/*`).
+  - Sessions are stored in D1 and last 30 days.
+  - `src/middleware.ts` sends signed-out visitors on app pages to `/login?next=…`.
+  - Every API route checks the session itself.
+- **Database:** D1, bound as `DB`; the schema lives in `migrations/`.
+  - `attempt` rows belong to one user, and the API never reads or writes another user's rows.
+- **Secrets:** set these in the Worker's Variables and Secrets, all as type *Secret*:
+  - `BETTER_AUTH_SECRET`
+  - `GOOGLE_CLIENT_ID`
+  - `GOOGLE_CLIENT_SECRET`
+  - optional `ALLOWED_EMAILS`: a comma-separated list that limits who can sign up.
+- **Google OAuth client:** authorised redirect URI `https://<host>/api/auth/callback/google`.
+
+**Running it locally on the Workers runtime:**
+1. Create a `.dev.vars` file (gitignored) with the same secrets.
+2. Optionally add `DEV_PASSWORD_LOGIN=1` to it, which enables email + password sign-in for testing without Google. Never set this in production.
+3. Run `npm run db:migrate:local`, then `npm run preview`.
 
 ## Routes
 
@@ -60,9 +81,13 @@ never code. Question text must be copied verbatim from the prompt.
 ## Attempts
 
 An attempt is one go at one prompt: its chains, stance, the latest "Soát toàn bài" result, and the essay drafts,
-timer and submission result. `src/features/attempts/store.ts` defines the `AttemptStore` interface. **For now,
-attempts are saved in the browser's localStorage, which is temporary.** Once sign-in exists, implement the same
-interface against D1 and swap `attemptStore`; the screens don't change.
+timer and submission result. It's stored as JSON in the D1 `attempt` table, through `/api/attempts`.
+
+- **Shared workspace:** `/write/[id]` keeps a single workspace mounted across `/chains` and `/essay`, using a layout,
+  so nothing reloads between the two screens.
+- **Autosave:** it saves 1.5 s after the last edit, and again when the tab is hidden. The Desk timer alone doesn't
+  trigger a save.
+- **History:** `/attempts` lists the student's attempts.
 
 ## Layout
 
@@ -78,7 +103,7 @@ src/
     desk/                 Writing Desk + essay scoring
     guided/               Chép mẫu engine (also used by vocab practice)
     vocab/                vocab sets + builder
-    attempts/             attempt model, store (localStorage for now), workspace that autosaves
+    attempts/             attempt model, API-backed store, workspace that autosaves, history page
     library/              prompt library, filters, mode picker
     dashboard/ guidebooks/ auth/ landing/
 ```
@@ -99,8 +124,6 @@ UI changes:
 | Adding prompts | `content/prompts.ts` (edited by hand) | Admin import page: AI fills the metadata, you approve |
 | Chép mẫu sample essay | `features/guided/data.ts`, `GuidedFlow.tsx` | Several tagged sample essays per prompt |
 | Vocab sets + practice paragraphs | `features/vocab/data.ts` | Imported sets; paragraphs generated on demand |
-| Sign-in | `features/auth/Login.tsx` | Google OAuth |
-| Saving attempts | `features/attempts/store.ts` (localStorage) | D1, per signed-in user |
 | Saved words, practice counts | component state | D1, per signed-in user |
 
 ## Open items carried over from the design chats

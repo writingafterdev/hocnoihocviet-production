@@ -1,0 +1,13 @@
+-- Better Auth core tables (generated with better-auth's getMigrations for SQLite).
+create table "user" ("id" text not null primary key, "name" text not null, "email" text not null unique, "emailVerified" integer not null, "image" text, "createdAt" date not null, "updatedAt" date not null);
+create table "session" ("id" text not null primary key, "expiresAt" date not null, "token" text not null unique, "createdAt" date not null, "updatedAt" date not null, "ipAddress" text, "userAgent" text, "userId" text not null references "user" ("id") on delete cascade);
+create table "account" ("id" text not null primary key, "accountId" text not null, "providerId" text not null, "userId" text not null references "user" ("id") on delete cascade, "accessToken" text, "refreshToken" text, "idToken" text, "accessTokenExpiresAt" date, "refreshTokenExpiresAt" date, "scope" text, "password" text, "createdAt" date not null, "updatedAt" date not null);
+create table "verification" ("id" text not null primary key, "identifier" text not null, "value" text not null, "expiresAt" date not null, "createdAt" date not null, "updatedAt" date not null);
+create index "session_userId_idx" on "session" ("userId");
+create index "account_userId_idx" on "account" ("userId");
+create index "verification_identifier_idx" on "verification" ("identifier");
+
+-- One student's work on one prompt. `data` is the attempt JSON (chains, stance, essay, reviews).
+create table "attempt" ("id" text not null primary key, "userId" text not null references "user" ("id") on delete cascade, "promptId" text not null, "data" text not null, "createdAt" integer not null, "updatedAt" integer not null);
+create index "attempt_user_updated_idx" on "attempt" ("userId", "updatedAt");
+create index "attempt_user_prompt_idx" on "attempt" ("userId", "promptId");

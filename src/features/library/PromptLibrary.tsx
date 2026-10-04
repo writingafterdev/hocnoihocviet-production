@@ -83,9 +83,12 @@ export function PromptLibrary() {
 
   return (
     <div style={{ minHeight: '100vh', background: '#FFFFFF' }}>
-      <PageHeader avatar={false} />
+      <PageHeader />
       <div style={{ maxWidth: 1200, margin: '0 auto', padding: '10px 32px 96px' }}>
-        <Link href="/home" style={{ display: 'inline-block', fontFamily: 'var(--font-sans)', fontSize: 13, fontWeight: 500, color: '#857F70', marginBottom: 40 }}>← Trang chủ</Link>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 40 }}>
+          <Link href="/home" style={{ fontFamily: 'var(--font-sans)', fontSize: 13, fontWeight: 500, color: '#857F70' }}>← Trang chủ</Link>
+          <Link href="/attempts" style={{ fontFamily: 'var(--font-sans)', fontSize: 13, fontWeight: 600, color: '#141413' }}>Bài đã viết →</Link>
+        </div>
 
         <div style={{ display: 'flex', alignItems: 'flex-start', flexWrap: 'wrap', gap: 24, marginBottom: 48 }}>
           <div style={{ width: 80, height: 80, borderRadius: 18, background: '#FFE17B', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
