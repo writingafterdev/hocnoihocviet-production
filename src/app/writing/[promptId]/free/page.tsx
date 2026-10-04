@@ -1,16 +1,14 @@
-import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import { FreeWritingFlow } from '@/features/chainlab/FreeWritingFlow';
-import { findPrompt, PROMPTS } from '@/features/library/prompts';
-
-export const metadata: Metadata = { title: 'Viết tự do · hocnoihocviet' };
+import { findPrompt, PROMPTS } from '@/content/prompts';
+import { StartAttempt } from '@/features/attempts/StartAttempt';
 
 export function generateStaticParams() {
   return PROMPTS.map((p) => ({ promptId: p.id }));
 }
 
+/** Shareable link that starts a new "Viết tự do" attempt for a prompt. */
 export default async function Page({ params }: { params: Promise<{ promptId: string }> }) {
-  const prompt = findPrompt((await params).promptId);
-  if (!prompt) notFound();
-  return <FreeWritingFlow prompt={prompt} />;
+  const { promptId } = await params;
+  if (!findPrompt(promptId)) notFound();
+  return <StartAttempt promptId={promptId} />;
 }

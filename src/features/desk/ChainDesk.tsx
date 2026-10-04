@@ -12,6 +12,7 @@ import { backLinkStyle, ClIcon, ClLabel, ClTag, toolbarBtn } from '../chainlab/u
 import { ReviewPanel } from '../chainlab/ui/ReviewPanel';
 import { Rope } from '../chainlab/ui/Rope';
 import { WorkspaceGrid } from '../chainlab/ui/WorkspaceGrid';
+import type { EssayState } from '../attempts/store';
 import { draftsKey, requestEssayReview, reviewEssay, wordCount, type BandScores, type EssayReview, type EssaySection } from './scoring';
 
 /** A chain in the Desk's plan rail: title + status, expandable to steps, cases and findings. */
@@ -104,24 +105,23 @@ function DeskScores({ s }: { s: BandScores }) {
 const escapeRe = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
 /** Screen 2 of "Viết tự do": write the essay beside the plan, then submit for TR / CC / LR / GRA feedback. */
-export function ChainDesk({ chains, stance, onBack }: { chains: Chain[]; stance: string; onBack: () => void }) {
+export function ChainDesk({ chains, stance, essay, setEssay, onBack }: { chains: Chain[]; stance: string; essay: EssayState; setEssay: (fn: (e: EssayState) => EssayState) => void; onBack: () => void }) {
   const spec = useSpec();
   const verdictQ = spec.questions.find((q) => q.shape === 'verdict'), multiQ = spec.questions.length > 1;
   const [openIds, setOpenIds] = useState<string[]>(chains[0] ? [chains[0].id] : []);
-  const [bodies, setBodies] = useState(['body1', 'body2']);
-  const [drafts, setDrafts] = useState<Record<string, string>>({});
+  const { bodies, drafts, review, seconds: secs } = essay;
+  const setBodies = (b: string[]) => setEssay((e) => ({ ...e, bodies: b }));
+  const setReview = (r: EssayReview | null) => setEssay((e) => ({ ...e, review: r }));
   const [help, setHelp] = useState(false);
   const [activeId, setActiveId] = useState('intro');
-  const [review, setReview] = useState<EssayReview | null>(null);
   const [running, setRunning] = useState(false);
-  const [railOpen, setRailOpen] = useState(true);
+  const [railOpen, setRailOpen] = useState(!essay.review);
   const [seen, setSeen] = useState<string[]>([]);
   const [focusSec, setFocusSec] = useState<string | null>(null);
-  const [secs, setSecs] = useState(0);
   const mainRef = useRef<HTMLElement>(null);
   const focusTimer = useRef<ReturnType<typeof setTimeout>>(null);
 
-  useEffect(() => { const t = setInterval(() => setSecs((s) => s + 1), 1000); return () => clearInterval(t); }, []);
+  useEffect(() => { const t = setInterval(() => setEssay((e) => ({ ...e, seconds: e.seconds + 1 })), 1000); return () => clearInterval(t); }, []); // eslint-disable-line react-hooks/exhaustive-deps
   const clock = [Math.floor(secs / 3600), Math.floor(secs / 60) % 60, secs % 60].map((n) => String(n).padStart(2, '0')).join(':');
   const toggleOpen = (id: string) => setOpenIds((o) => (o.includes(id) ? o.filter((x) => x !== id) : [...o, id]));
   const showChain = (id: string) => {
@@ -160,7 +160,7 @@ export function ChainDesk({ chains, stance, onBack }: { chains: Chain[]; stance:
     focusTimer.current = setTimeout(() => setFocusSec(null), 2000);
   };
   const addBody = () => setBodies([...bodies, 'body' + Date.now()]);
-  const removeBody = (id: string) => { setBodies(bodies.filter((b) => b !== id)); const n = { ...drafts }; delete n[id]; setDrafts(n); };
+  const removeBody = (id: string) => setEssay((e) => { const d = { ...e.drafts }; delete d[id]; return { ...e, bodies: e.bodies.filter((b) => b !== id), drafts: d }; });
   const bodyCount = bodies.length;
 
   const rail = (
@@ -224,7 +224,7 @@ export function ChainDesk({ chains, stance, onBack }: { chains: Chain[]; stance:
                 </div>
                 <div style={{ position: 'relative' }}>
                   {open.filter((it) => it.sectionId === s.id && it.word).map((it) => <DeskMark key={it.key} text={drafts[s.id] || ''} word={it.word} />)}
-                  <textarea className="cl-ta cl-field" value={drafts[s.id] || ''} onFocus={() => setActiveId(s.id)} onChange={(e) => setDrafts({ ...drafts, [s.id]: e.target.value })} placeholder={s.placeholder} aria-label={s.label} rows={isBody ? 5 : 3} style={{ display: 'block', width: '100%', minHeight: isBody ? 150 : 96, resize: 'none', borderRadius: 12, border: '1px solid ' + (focusSec === s.id ? CL.ink : activeId === s.id ? CL.ink4 : CL.ink2), boxShadow: focusSec === s.id ? '0 0 0 4px ' + CL.ink1 : 'none', outline: 'none', background: 'transparent', position: 'relative', fontFamily: CL.serif, fontSize: 15.5, lineHeight: 1.7, color: CL.ink8, padding: '14px 18px', fieldSizing: 'content', transition: 'border-color .15s, box-shadow .3s' } as React.CSSProperties} />
+                  <textarea className="cl-ta cl-field" value={drafts[s.id] || ''} onFocus={() => setActiveId(s.id)} onChange={(e) => { const v = e.target.value; setEssay((x) => ({ ...x, drafts: { ...x.drafts, [s.id]: v } })); }} placeholder={s.placeholder} aria-label={s.label} rows={isBody ? 5 : 3} style={{ display: 'block', width: '100%', minHeight: isBody ? 150 : 96, resize: 'none', borderRadius: 12, border: '1px solid ' + (focusSec === s.id ? CL.ink : activeId === s.id ? CL.ink4 : CL.ink2), boxShadow: focusSec === s.id ? '0 0 0 4px ' + CL.ink1 : 'none', outline: 'none', background: 'transparent', position: 'relative', fontFamily: CL.serif, fontSize: 15.5, lineHeight: 1.7, color: CL.ink8, padding: '14px 18px', fieldSizing: 'content', transition: 'border-color .15s, box-shadow .3s' } as React.CSSProperties} />
                 </div>
               </section>
             );

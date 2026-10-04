@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
+import { findPrompt, PROMPTS } from '@/content/prompts';
 import { GuidedFlow } from '@/features/guided/GuidedFlow';
-import { findPrompt, PROMPTS } from '@/features/library/prompts';
 
 export const metadata: Metadata = { title: 'Chép mẫu · hocnoihocviet' };
 
@@ -10,6 +10,7 @@ export function generateStaticParams() {
 }
 
 export default async function Page({ params }: { params: Promise<{ promptId: string }> }) {
-  if (!findPrompt((await params).promptId)) notFound();
+  const { promptId } = await params;
+  if (!findPrompt(promptId)) notFound();
   return <GuidedFlow />;
 }

@@ -2,7 +2,8 @@
 
 import { Fragment, useEffect, useState } from 'react';
 import { X } from 'lucide-react';
-import type { LibraryPrompt } from './prompts';
+import type { Prompt } from '@/content/prompts';
+import { attemptStore, type Attempt } from '../attempts/store';
 
 export type WritingMode = 'free' | 'guided';
 
@@ -37,9 +38,20 @@ function ModeOption({ selected, onClick, title, desc, kind }: { selected: boolea
   );
 }
 
-/** Pop-up after "Viết bài": pick Viết tự do (ChainLab → Writing Desk) or Chép mẫu. */
-export function ModePickerModal({ prompt, onClose, onStart }: { prompt: LibraryPrompt; onClose: () => void; onStart: (mode: WritingMode) => void }) {
+const ago = (t: number) => {
+  const m = Math.round((Date.now() - t) / 60000);
+  if (m < 1) return 'vừa xong';
+  if (m < 60) return m + ' phút trước';
+  const h = Math.round(m / 60);
+  return h < 24 ? h + ' giờ trước' : Math.round(h / 24) + ' ngày trước';
+};
+
+/** Pop-up after "Viết bài": pick Viết tự do (ChainLab → Writing Desk) or Chép mẫu, or resume the last attempt. */
+export function ModePickerModal({ prompt, onClose, onStart, onResume }: { prompt: Prompt; onClose: () => void; onStart: (mode: WritingMode) => void; onResume: (attemptId: string) => void }) {
   const [mode, setMode] = useState<WritingMode>('free');
+  const [last, setLast] = useState<Attempt | null>(null);
+  const [starting, setStarting] = useState(false);
+  useEffect(() => { attemptStore.listForPrompt(prompt.id).then((list) => setLast(list[0] || null)); }, [prompt.id]);
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
     window.addEventListener('keydown', onKey);
@@ -57,7 +69,10 @@ export function ModePickerModal({ prompt, onClose, onStart }: { prompt: LibraryP
           <ModeOption kind="free" selected={mode === 'free'} onClick={() => setMode('free')} title="Viết tự do" desc="Dựng mạch lập luận cho từng câu hỏi, rồi tự viết bài bên cạnh dàn ý. Không gợi ý, chấm TR / CC / LR / GRA khi nộp." />
           <ModeOption kind="guided" selected={mode === 'guided'} onClick={() => setMode('guided')} title="Chép mẫu" desc="Viết lại bài mẫu từng câu từ nghĩa tiếng Việt, chữ cái đầu và công cụ lập luận. Không chấm điểm." />
         </div>
-        <button type="button" onClick={() => onStart(mode)} style={{ width: '100%', height: 46, borderRadius: 10, border: 'none', background: '#141413', color: '#fff', fontFamily: 'var(--font-sans)', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>Bắt đầu làm bài</button>
+        <button type="button" disabled={starting} onClick={() => { setStarting(true); onStart(mode); }} style={{ width: '100%', height: 46, borderRadius: 10, border: 'none', background: '#141413', color: '#fff', fontFamily: 'var(--font-sans)', fontSize: 13, fontWeight: 600, cursor: 'pointer', opacity: starting ? 0.6 : 1 }}>{mode === 'free' && last ? 'Bắt đầu bài mới' : 'Bắt đầu làm bài'}</button>
+        {mode === 'free' && last && (
+          <button type="button" onClick={() => onResume(last.id)} style={{ width: '100%', marginTop: 10, height: 42, borderRadius: 10, border: '1px solid #E6E4DE', background: '#fff', color: '#141413', fontFamily: 'var(--font-sans)', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>Tiếp tục bài đang viết · lưu {ago(last.updatedAt)}</button>
+        )}
       </div>
     </div>
   );

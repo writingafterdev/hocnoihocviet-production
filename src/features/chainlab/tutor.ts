@@ -11,8 +11,8 @@ export const BUILDER_ACTIONS: AssistantAction[] = [
 ];
 
 export const BUILDER_REPLIES: Record<string, string> = {
-  'Gợi ý stakeholder': 'Nhìn Backward: ai cung cấp khoá học? Trainers, đơn vị đào tạo, chính phủ. Nhìn Forward: kiến thức nuôi con đi tới bố mẹ, rồi tới trẻ. Nơi làm việc cũng nhận tác động khi phụ huynh phải xin nghỉ để đi học.',
-  'Mạch này thiếu vùng nào?': 'Hai mạch hiện tại đi qua Năng lực, An toàn, Tự quyết và Vật chất. Gắn kết & Bản sắc chưa được soi: khoá học có gò bố mẹ vào một cách nuôi con cố định không?',
+  'Gợi ý stakeholder': 'Nhìn Backward: ai cung cấp, ai trả tiền, ai thực hiện Driver? Nhìn Forward: bước cuối của mỗi mạch đi tới ai tiếp theo? Đối chiếu với "Các bên liên quan" bên trái và tìm bên chưa có mạch nào nhắc tới.',
+  'Mạch này thiếu vùng nào?': 'Ghi vùng tác động cho từng mạch, rồi so với 5 vùng ở cột trái: Vật chất, An toàn, Gắn kết & Bản sắc, Năng lực, Tự quyết. Vùng nào chưa có mạch nào chạm tới là chỗ nên soi tiếp.',
   'Dịch một cụm từ': 'Gửi mình cụm tiếng Việt bạn muốn diễn đạt, mình sẽ gợi ý 2–3 cách viết hợp với giọng học thuật.',
 };
 
@@ -23,7 +23,7 @@ export const DESK_ACTIONS: AssistantAction[] = [
 ];
 
 export const DESK_REPLIES: Record<string, string> = {
-  'Kiểm tra nhảy logic': 'Hỏi lại: A cho ra gì, D cần gì? Nếu câu của bạn đi thẳng từ khoá học tới sự phát triển của trẻ, còn thiếu bước bố mẹ áp dụng kiến thức vào sinh hoạt hằng ngày.',
-  'Đoạn này dùng mạch nào?': 'Đoạn này gần nhất với mạch 01. Bạn đã tách nhánh theo "Parents" nhưng chưa nhắc tới nhánh B (làm ca dài, kiệt sức), đó là chỗ lợi ích nhỏ lại.',
+  'Kiểm tra nhảy logic': 'Với mỗi cặp câu liền nhau, hỏi: câu trước cho ra thứ gì cụ thể, câu sau cần gì để xảy ra? Nếu hai thứ đó khác nhau, đang thiếu một bước ở giữa.',
+  'Đoạn này dùng mạch nào?': 'Đặt từng câu của đoạn cạnh các bước của mạch bên trái. Bước nào chưa có câu tương ứng, và trường hợp nào (nhánh Scope) đã bị bỏ qua?',
   'Dịch một cụm từ': 'Gửi mình cụm tiếng Việt bạn muốn diễn đạt, mình sẽ gợi ý 2–3 cách viết hợp với giọng học thuật.',
 };

@@ -33,39 +33,58 @@ Backend pieces will be added to `wrangler.jsonc` as bindings when they land: D1 
 
 ## Routes
 
-| Route | Screen | Prototype source |
-| --- | --- | --- |
-| `/` | Public landing (IELTS Writing) | `Landing Writing v2.html` |
-| `/login` | Split-screen Google sign-in | `Login.jsx` |
-| `/home` | Dashboard: Guidebooks, Writing, Vocab; Speaking and Reading disabled | `Dashboard.jsx` |
-| `/writing` | Prompt library: Task 2 / Task 1 switch, type and topic filters, mode picker | `PromptLibrary.jsx`, `ModeSelector.jsx` |
-| `/writing/[promptId]/free` | **Viết tự do**: ChainLab, then "Viết bài" opens the Writing Desk | `ChainLab.jsx`, `ChainDesk.jsx` |
-| `/writing/[promptId]/guided` | **Chép mẫu**: rebuild a sample essay sentence by sentence | `GuidedWriting.jsx` |
-| `/vocab` | Vocab cards: skill → topic table → tick phrases → rewrite a paragraph | `VocabBuilder.jsx` |
-| `/guidebooks`, `/guidebooks/engine` | Guidebook list and reader | `GuidebookHome.jsx`, `DocumentViewer.jsx` |
+| Route | Screen |
+| --- | --- |
+| `/` | Public landing (IELTS Writing) |
+| `/login` | Split-screen Google sign-in |
+| `/home` | Dashboard: Guidebooks, Writing, Vocab; Speaking and Reading disabled |
+| `/writing` | Prompt library: Task 2 / Task 1 switch, type and topic filters, mode picker (with "resume") |
+| `/write/[attemptId]/chains` | **Viết tự do**, screen 1: ChainLab for one attempt |
+| `/write/[attemptId]/essay` | **Viết tự do**, screen 2: Writing Desk for the same attempt |
+| `/writing/[promptId]/free` | Shareable link that starts a new attempt for a prompt |
+| `/writing/[promptId]/guided` | **Chép mẫu**: rebuild a sample essay sentence by sentence |
+| `/vocab` | Vocab cards: skill → topic table → tick phrases → rewrite a paragraph |
+| `/guidebooks`, `/guidebooks/engine` | Guidebook list and reader |
 
-`/writing/p0-childcare/free` shows the **Đề mẫu** switcher with all 11 sample prompt types (verdict variants,
-plan problems, and two-question mixes). Other prompts open as a single verdict question with one empty chain.
+## Prompts
+
+All Task 2 prompts live in `src/content/prompts.ts`. Each prompt is a list of questions, and each question has a
+type (`verdict`, `cause`, `problem`, `planproblem`, `effect`, `solution`). The type decides what ChainLab shows:
+- the default lens chips
+- the rope and stance, which appear for verdict questions only, with the rope ends taken from `sides`
+- the "Xử lý" link that solution chains use
+
+Each prompt also carries the hint panel's data (`reqs`, `driver`, `stakeholders`). A new prompt needs data only,
+never code. Question text must be copied verbatim from the prompt.
+
+## Attempts
+
+An attempt is one go at one prompt: its chains, stance, the latest "Soát toàn bài" result, and the essay drafts,
+timer and submission result. `src/features/attempts/store.ts` defines the `AttemptStore` interface. **For now,
+attempts are saved in the browser's localStorage, which is temporary.** Once sign-in exists, implement the same
+interface against D1 and swap `attemptStore`; the screens don't change.
 
 ## Layout
 
 ```
 src/
   app/                    routes only; each page renders one feature component
+  content/prompts.ts      the Task 2 prompt bank with per-question metadata
   styles/                 design tokens copied from the handoff's tokens/ (font families remapped in globals.css)
   components/ds/          design-system components (ProductCard, Button, Badge, ScoreBar, NavDock, …)
   components/shell/       brand header (logo tile + wordmark + avatar)
   features/
-    chainlab/             ChainLab: types, constants, sample specs, pure model helpers, review, UI
+    chainlab/             ChainLab: types, constants, pure model helpers, review, UI
     desk/                 Writing Desk + essay scoring
     guided/               Chép mẫu engine (also used by vocab practice)
     vocab/                vocab sets + builder
-    library/              prompt list, filters, mode picker
+    attempts/             attempt model, store (localStorage for now), workspace that autosaves
+    library/              prompt library, filters, mode picker
     dashboard/ guidebooks/ auth/ landing/
 ```
 
-The prototype read the current prompt from a `window` global. Here the prompt's `PromptSpec` (its questions and
-their types) is passed through `SpecContext`, and every helper in `chainlab/model.ts` takes the spec explicitly.
+The current prompt (its questions and their types) is passed through `SpecContext`, and every helper in
+`chainlab/model.ts` takes the prompt explicitly.
 
 ## What is mocked (swap points)
 
@@ -77,11 +96,12 @@ UI changes:
 | "Soát toàn bài" chain review | `features/chainlab/review.ts` → `requestChainReview` | AI review based on the book; same `ChainReview` shape |
 | Essay feedback + TR/CC/LR/GRA band | `features/desk/scoring.ts` → `requestEssayReview` | Real scoring where every comment quotes the essay |
 | "Hỏi" tutor replies | `features/chainlab/tutor.ts` | Tutor endpoint that reads prompt, chains and paragraph |
-| Prompt list + question data | `features/library/prompts.ts`, `features/chainlab/specs.ts` | Prompt import + question extraction |
+| Adding prompts | `content/prompts.ts` (edited by hand) | Admin import page: AI fills the metadata, you approve |
 | Chép mẫu sample essay | `features/guided/data.ts`, `GuidedFlow.tsx` | Several tagged sample essays per prompt |
 | Vocab sets + practice paragraphs | `features/vocab/data.ts` | Imported sets; paragraphs generated on demand |
 | Sign-in | `features/auth/Login.tsx` | Google OAuth |
-| Saving (chains, drafts, saved words, practice counts) | component state | Per-user persistence |
+| Saving attempts | `features/attempts/store.ts` (localStorage) | D1, per signed-in user |
+| Saved words, practice counts | component state | D1, per signed-in user |
 
 ## Open items carried over from the design chats
 

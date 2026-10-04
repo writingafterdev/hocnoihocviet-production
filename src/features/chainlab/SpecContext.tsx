@@ -1,11 +1,15 @@
 'use client';
 
 import { createContext, useContext } from 'react';
-import { CL_SPECS } from './specs';
 import type { PromptSpec } from './types';
 
-const SpecContext = createContext<PromptSpec>(CL_SPECS.childcare);
+const SpecContext = createContext<PromptSpec | null>(null);
 
 /** The prompt (and its questions) the current writing session answers. */
 export const SpecProvider = SpecContext.Provider;
-export const useSpec = () => useContext(SpecContext);
+
+export function useSpec(): PromptSpec {
+  const spec = useContext(SpecContext);
+  if (!spec) throw new Error('useSpec must be used inside <SpecProvider>');
+  return spec;
+}

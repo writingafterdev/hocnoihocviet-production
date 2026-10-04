@@ -26,10 +26,6 @@ function mockCheck(chain: Chain): ChainCheck {
   const all = st.join('||');
   if (filled.length < 2) return { snapshot: all, flags: [], vague: [], note: 'Cần ít nhất hai bước để soát.' };
   const pair = (i: number) => st[i] + '||' + st[i + 1];
-  if (chain.id === 'c2' && st[2] === 'Working parents rearrange work or childcare' && st[3]) {
-    return { snapshot: all, flags: [{ at: 2, snap: pair(2), q: 'Xáo lịch chưa phải là mất tiền. Ai biến việc xáo lịch thành áp lực tài chính, và bằng cách nào?' }], vague: [{ step: 3, snap: st[3], word: 'pressure', q: 'Áp lực kiểu gì: mất thu nhập, mệt mỏi, hay căng thẳng với chỗ làm?' }] };
-  }
-  if (chain.id === 'c1' && !chain.steps.some((x) => !x.trim())) return { snapshot: all, flags: [], vague: [] };
   let best = -1;
   for (let i = 0; i < st.length - 1; i++) { if (st[i].trim() && st[i + 1].trim()) best = i; }
   if (best < 0) return { snapshot: all, flags: [], vague: [] };
@@ -81,11 +77,6 @@ export function reviewChains(spec: PromptSpec, chains: Chain[], stance: string):
     }
   }
 
-  const txt = chains.map((c) => [c.title, ...c.steps, ...(c.split ? c.split.branches.flatMap((b) => [b.label, ...b.steps]) : [])].join(' ')).join(' ').toLowerCase();
-  if (spec.id === 'childcare' && !chains.some((c) => c.split)) push('cover', { where: 'Yêu cầu 3', text: 'Đề nói "all parents". Chưa mạch nào tách theo loại phụ huynh. Yêu cầu có công bằng với mọi nhà không?' });
-  const SH: [string, RegExp][] = [['Trẻ em', /child|kid|trẻ/], ['Nơi làm việc', /work|employer|job|chỗ làm/], ['Đơn vị đào tạo', /trainer|provider|teacher|người dạy|khoá học/], ['Chính phủ', /government|state|tax|chính phủ|nhà nước/]];
-  const noSH = SH.filter(([, r]) => !r.test(txt)).map((x) => x[0]);
-  if (spec.id === 'childcare' && noSH.length) push('cover', { where: 'Các bên liên quan', text: 'Chưa mạch nào nói đến ' + noSH.join(', ') + '. Có bên nào trong số này làm đổi kết luận không?' });
   spec.questions.forEach((q) => {
     if (spec.questions.length > 1 && !chains.some((c) => (c.q || 1) === q.n)) push('cover', { where: 'Câu ' + CL_CIRC[q.n - 1], text: 'Câu ' + CL_CIRC[q.n - 1] + ' (' + CL_SHAPE_LABEL[q.shape].toLowerCase() + ') chưa có mạch nào. Bài sẽ bỏ sót một phần đề.' });
   });

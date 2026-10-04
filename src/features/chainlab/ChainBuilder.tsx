@@ -21,19 +21,21 @@ export interface ChainBuilderProps {
   setChains: (fn: Chain[] | ((cs: Chain[]) => Chain[])) => void;
   stance: string;
   setStance: (s: string) => void;
+  /** Last "Soát toàn bài" result, kept on the attempt so it survives reloads. */
+  review: ChainReview | null;
+  setReview: (r: ChainReview | null) => void;
   onBack: () => void;
   onWrite: () => void;
 }
 
 /** Screen 1 of "Viết tự do": build chains per question, test them with lenses, sort them on the rope, write a stance. */
-export function ChainBuilder({ chains, setChains, stance, setStance, onBack, onWrite }: ChainBuilderProps) {
+export function ChainBuilder({ chains, setChains, stance, setStance, review, setReview, onBack, onWrite }: ChainBuilderProps) {
   const spec = useSpec();
   const bind = useReorder(chains, (n) => setChains(n));
   const [help, setHelp] = useState(false);
   const [sel, setSel] = useState<string | null>(null);
-  const [review, setReview] = useState<ChainReview | null>(null);
   const [running, setRunning] = useState(false);
-  const [railOpen, setRailOpen] = useState(true);
+  const [railOpen, setRailOpen] = useState(!review);
   const [focusId, setFocusId] = useState<string | null>(null);
   const [seen, setSeen] = useState<string[]>([]);
   const mainRef = useRef<HTMLElement>(null);

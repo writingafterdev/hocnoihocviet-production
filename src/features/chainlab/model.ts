@@ -76,4 +76,7 @@ export function openIssues(chain: Chain) {
   };
 }
 
-export const newChain = (q = 1): Chain => ({ id: 'c' + Date.now(), q, title: '', tone: 'benefit', pos: 50, area: '', steps: [''], split: null, findings: [], fixes: null });
+export const newChain = (q = 1): Chain => ({ id: 'c' + Math.random().toString(36).slice(2, 10), q, title: '', tone: 'benefit', pos: 50, area: '', steps: [''], split: null, findings: [], fixes: null });
+
+/** Starting point for a new attempt: one empty chain per question. */
+export const initialChains = (spec: PromptSpec): Chain[] => spec.questions.map((x) => newChain(x.n));

@@ -6,11 +6,17 @@ import { useState } from 'react';
 import { Check } from 'lucide-react';
 import { PageHeader } from '@/components/shell/BrandHeader';
 import { ModePickerModal } from './ModePickerModal';
-import { CATEGORIES_TASK1, CATEGORIES_TASK2, PROMPTS, TOPICS_TASK2, type LibraryPrompt, type Task } from './prompts';
+import { CATEGORIES_TASK1, CATEGORIES_TASK2, PROMPTS, TOPIC_ILLUSTRATION, TOPICS_TASK2, type Prompt, type Task } from '@/content/prompts';
+import { CL_CIRC, CL_SHAPE_LABEL } from '../chainlab/constants';
+import { startFreeAttempt } from '../attempts/start';
 
 const EASE = 'cubic-bezier(.16,1,.3,1)';
+const PAGE = 20;
 
-function Filter({ title, options, selected, onToggle }: { title: string; options: string[]; selected: string[]; onToggle: (v: string) => void }) {
+/** "① Nguyên nhân · ② Giải pháp" */
+const questionTypes = (p: Prompt) => p.questions.map((x) => (p.questions.length > 1 ? CL_CIRC[x.n - 1] + ' ' : '') + CL_SHAPE_LABEL[x.shape]).join(' · ');
+
+function Filter({ title, options, selected, onToggle }: { title: string; options: readonly string[]; selected: string[]; onToggle: (v: string) => void }) {
   return (
     <fieldset style={{ marginBottom: 32, border: 'none', padding: 0, minWidth: 0 }}>
       <legend style={{ fontFamily: 'var(--font-sans)', fontSize: 18, fontWeight: 600, color: '#141413', marginBottom: 20, padding: 0 }}>{title}</legend>
@@ -33,14 +39,14 @@ function Filter({ title, options, selected, onToggle }: { title: string; options
 }
 
 /** Prompt card: image + tags at rest; on hover it crossfades to the full prompt and a "Viết bài" button. */
-function PromptCard({ prompt, onWrite }: { prompt: LibraryPrompt; onWrite: () => void }) {
+function PromptCard({ prompt, onWrite }: { prompt: Prompt; onWrite: () => void }) {
   const [hover, setHover] = useState(false);
   const layer = (on: boolean): React.CSSProperties => ({ transition: 'opacity .32s ' + EASE + ', transform .42s ' + EASE, opacity: on ? 1 : 0, transform: on ? 'none' : 'translateY(6px)', pointerEvents: on ? 'auto' : 'none' });
   return (
     <article onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)} onFocus={() => setHover(true)} onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setHover(false); }} style={{ position: 'relative', display: 'grid', borderRadius: 14, background: '#fff', boxShadow: hover ? '0 8px 24px rgba(0,0,0,0.06), 0 0 0 1px rgba(0,0,0,0.06)' : '0 1px 4px rgba(0,0,0,0.04), 0 0 0 1px rgba(0,0,0,0.04)', transform: hover ? 'translateY(-2px)' : 'none', transition: 'box-shadow .35s ' + EASE + ', transform .35s ' + EASE, overflow: 'hidden', minHeight: 156 }}>
       <div aria-hidden={hover} style={{ gridArea: '1/1', display: 'flex', padding: 12, ...layer(!hover) }}>
-        <div style={{ width: 136, height: 132, borderRadius: 7, background: '#F4F4F2', flexShrink: 0, overflow: 'hidden' }}>
-          <img src={prompt.image} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+        <div style={{ width: 136, height: 132, borderRadius: 7, background: '#FFF6DA', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <img src={'/assets/illustrations/' + TOPIC_ILLUSTRATION[prompt.topic] + '.svg'} alt="" style={{ width: 64, height: 64, objectFit: 'contain' }} />
         </div>
         <div style={{ flex: 1, padding: '4px 16px' }}>
           <div style={{ display: 'flex', gap: 8, marginBottom: 10, flexWrap: 'wrap' }}>
@@ -48,6 +54,7 @@ function PromptCard({ prompt, onWrite }: { prompt: LibraryPrompt; onWrite: () =>
             <span style={{ borderRadius: 4, background: '#DCF5EC', padding: '4px 8px', fontFamily: 'var(--font-mono)', fontSize: 9, fontWeight: 600, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#167A59' }}>{prompt.topic}</span>
           </div>
           <p style={{ fontFamily: 'var(--font-sans)', fontSize: 14, fontWeight: 500, lineHeight: 1.55, color: '#141413', margin: 0 }}>{prompt.text}</p>
+          <p style={{ fontFamily: 'var(--font-sans)', fontSize: 11.5, fontWeight: 600, color: '#77776F', margin: '10px 0 0' }}>{questionTypes(prompt)}</p>
         </div>
       </div>
       <div style={{ gridArea: '1/1', display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: '16px 20px', ...layer(hover) }}>
@@ -69,8 +76,9 @@ export function PromptLibrary() {
   const [task, setTask] = useState<Task>('task2');
   const [cats, setCats] = useState<string[]>([]);
   const [topics, setTopics] = useState<string[]>([]);
-  const [modalPrompt, setModalPrompt] = useState<LibraryPrompt | null>(null);
-  const toggle = (arr: string[], setArr: (a: string[]) => void, v: string) => setArr(arr.includes(v) ? arr.filter((x) => x !== v) : [...arr, v]);
+  const [modalPrompt, setModalPrompt] = useState<Prompt | null>(null);
+  const [shown, setShown] = useState(PAGE);
+  const toggle = (arr: string[], setArr: (a: string[]) => void, v: string) => { setArr(arr.includes(v) ? arr.filter((x) => x !== v) : [...arr, v]); setShown(PAGE); };
   const filtered = PROMPTS.filter((p) => p.task === task && (cats.length === 0 || cats.includes(p.category)) && (topics.length === 0 || topics.includes(p.topic)));
 
   return (
@@ -98,7 +106,7 @@ export function PromptLibrary() {
               <div id="task-label" style={{ fontFamily: 'var(--font-sans)', fontSize: 18, fontWeight: 600, color: '#141413', marginBottom: 16 }}>Phần thi</div>
               <div role="tablist" aria-labelledby="task-label" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 4, padding: 4, borderRadius: 10, background: '#F4F4F2' }}>
                 {([['task2', 'Task 2'], ['task1', 'Task 1']] as const).map(([id, label]) => (
-                  <button key={id} type="button" role="tab" aria-selected={task === id} onClick={() => { setTask(id); setCats([]); setTopics([]); }} style={{ height: 36, borderRadius: 7, border: 'none', cursor: 'pointer', background: task === id ? '#fff' : 'transparent', boxShadow: task === id ? '0 1px 3px rgba(0,0,0,0.08)' : 'none', fontFamily: 'var(--font-sans)', fontSize: 14, fontWeight: 600, color: task === id ? '#141413' : '#857F70' }}>{label}</button>
+                  <button key={id} type="button" role="tab" aria-selected={task === id} onClick={() => { setTask(id); setCats([]); setTopics([]); setShown(PAGE); }} style={{ height: 36, borderRadius: 7, border: 'none', cursor: 'pointer', background: task === id ? '#fff' : 'transparent', boxShadow: task === id ? '0 1px 3px rgba(0,0,0,0.08)' : 'none', fontFamily: 'var(--font-sans)', fontSize: 14, fontWeight: 600, color: task === id ? '#141413' : '#857F70' }}>{label}</button>
                 ))}
               </div>
             </div>
@@ -108,7 +116,11 @@ export function PromptLibrary() {
             {task === 'task2' && <Filter title="Chủ đề" options={TOPICS_TASK2} selected={topics} onToggle={(v) => toggle(topics, setTopics, v)} />}
           </aside>
           <div style={{ flex: 1, minWidth: 0, width: '100%', display: 'flex', flexDirection: 'column', gap: 12 }}>
-            {filtered.map((p) => <PromptCard key={p.id} prompt={p} onWrite={() => setModalPrompt(p)} />)}
+            {filtered.length > 0 && <p style={{ fontFamily: 'var(--font-sans)', fontSize: 13, color: '#857F70', margin: '0 0 4px' }}>{filtered.length} đề</p>}
+            {filtered.slice(0, shown).map((p) => <PromptCard key={p.id} prompt={p} onWrite={() => setModalPrompt(p)} />)}
+            {filtered.length > shown && (
+              <button type="button" onClick={() => setShown(shown + PAGE)} className="pl-card" style={{ alignSelf: 'center', marginTop: 12, height: 42, padding: '0 20px', borderRadius: 10, border: '1px solid #E6E4DE', background: '#fff', cursor: 'pointer', fontFamily: 'var(--font-sans)', fontSize: 13, fontWeight: 600, color: '#141413' }}>Xem thêm {Math.min(PAGE, filtered.length - shown)} đề</button>
+            )}
             {filtered.length === 0 && (
               <div style={{ borderRadius: 14, border: '1px dashed #DAD8D2', padding: '48px 24px', textAlign: 'center' }}>
                 <p style={{ fontFamily: 'var(--font-sans)', fontSize: 15, fontWeight: 600, color: '#141413', margin: '0 0 6px' }}>{task === 'task1' ? 'Đề Task 1 đang được soạn' : 'Không có đề nào khớp bộ lọc'}</p>
@@ -118,7 +130,7 @@ export function PromptLibrary() {
           </div>
         </div>
       </div>
-      {modalPrompt && <ModePickerModal prompt={modalPrompt} onClose={() => setModalPrompt(null)} onStart={(mode) => router.push('/writing/' + modalPrompt.id + '/' + mode)} />}
+      {modalPrompt && <ModePickerModal prompt={modalPrompt} onClose={() => setModalPrompt(null)} onStart={async (mode) => router.push(mode === 'guided' ? '/writing/' + modalPrompt.id + '/guided' : await startFreeAttempt(modalPrompt))} onResume={(id) => router.push('/write/' + id + '/chains')} />}
     </div>
   );
 }
