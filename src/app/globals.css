@@ -1,0 +1,60 @@
+@import '../styles/colors.css';
+@import '../styles/typography.css';
+@import '../styles/spacing.css';
+@import '../styles/effects.css';
+
+/* Point the font tokens at the self-hosted next/font families (layout.tsx). */
+:root {
+  --font-sans: var(--nf-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-sans-market: var(--nf-market), ui-sans-serif, system-ui, sans-serif;
+  --font-serif: var(--nf-serif), Georgia, serif;
+  --font-heading: var(--nf-heading), var(--nf-serif), serif;
+  --font-display: 'NewYorker', var(--nf-heading), serif;
+  --font-mono: var(--nf-sans), ui-sans-serif, system-ui, sans-serif;
+}
+
+/* Page surface is white everywhere (product decision, overrides the cream --surface-base). */
+html, body { margin: 0; min-height: 100%; background: #fff; color: var(--text-primary); font-family: var(--font-sans); -webkit-font-smoothing: antialiased; }
+*, *::before, *::after { box-sizing: border-box; }
+a { color: #141413; text-decoration: none; }
+a:hover { color: #44443F; }
+
+/* ---- Shared interaction classes, ported from the UI kit shell ---- */
+.cl-btn { background: none; border: none; padding: 0; cursor: pointer; font: inherit; color: inherit; }
+.cl-btn:active { transform: scale(.97); }
+.cl-btn:disabled { cursor: default; }
+.cl-scroll { scrollbar-width: none; }
+.cl-scroll::-webkit-scrollbar { display: none; }
+.cl-reveal { opacity: 0; transition: opacity .15s; }
+.cl-node:hover > .cl-reveal, .cl-node:focus-within > .cl-reveal { opacity: 1; }
+.cl-plus:hover { border-color: #1FA97A !important; color: #1FA97A !important; }
+.cl-del:hover { color: #D5452E !important; }
+.cl-grip:hover { color: #77776F !important; }
+.cl-link:hover { color: #141413 !important; }
+.cl-lens:hover { border-color: #141413 !important; }
+.cl-word:hover { border-color: #141413 !important; background: #FFF6DA !important; }
+.cl-add:hover { border-color: #141413 !important; background: #FAF9F5 !important; color: #141413 !important; }
+.cl-primary:hover { opacity: .82; }
+.cl-ta:focus { background: #FAF9F5; }
+.cl-field:focus { background: #fff !important; border-color: #77776F !important; }
+.cl-askbox:focus-within { border-color: #77776F !important; }
+.cl-ta::placeholder { color: #9A9A93; }
+.cl-rv:hover { background: #F4F4F1; }
+.pl-card:hover { border-color: #9A9A93 !important; }
+
+.vb-icon:hover { background: #F2F0E9 !important; }
+.vb-topic:hover { border-color: #77776F !important; }
+.vb-row:hover td { background: #FAFAF8; }
+.vb-product { transition: transform .25s cubic-bezier(.16,1,.3,1), box-shadow .25s; }
+.vb-product:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,.07) !important; }
+.vb-check:hover { border-color: #141413 !important; }
+
+/* Dashboard hero cards lift 2px on hover (readme § Elevation). */
+.ds-product { transition: transform var(--duration-slow) var(--ease-default), box-shadow var(--duration-slow) var(--ease-default); }
+.ds-product[data-clickable='true']:hover { transform: translateY(-2px); box-shadow: var(--shadow-card-hover) !important; }
+.ds-product[data-clickable='true']:active { transform: scale(.99); box-shadow: var(--shadow-card-rest) !important; }
+
+@media (max-width: 900px) {
+  .pl-grid { flex-direction: column; }
+  .pl-grid > aside { width: 100% !important; }
+}

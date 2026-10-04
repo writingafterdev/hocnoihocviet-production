@@ -1,0 +1,114 @@
+/* ============================================================
+   COLOR TOKENS — hocnoihocviet
+   Source of truth: .impeccable.md (canonical color spec) reconciled
+   against the warm neutral scale actually shipped in NavDock, the
+   Dashboard hero cards, and public/landing.html. Two neutral tracks
+   coexist in the real product — both are kept below rather than
+   silently merged. See readme.md § Visual Foundations for the story.
+   ============================================================ */
+
+:root {
+  /* ---- Warm neutral scale (marketing site, NavDock, Dashboard) ---- */
+  --gray-0:   #FFFFFF;
+  --gray-50:  #FAF9F5;   /* brand cream — primary page surface */
+  --gray-100: #F2F0E9;
+  --gray-150: #EAE8DF;
+  --gray-200: #DEDAD0;   /* hairline borders, NavDock border */
+  --gray-300: #C8C4B5;
+  --gray-400: #A9A494;
+  --gray-500: #857F70;   /* secondary text, inactive nav icon/label */
+  --gray-600: #5E5950;
+  --gray-700: #3A3630;
+  --gray-800: #242019;
+  --gray-900: #141413;   /* brand ink — primary text, active surfaces */
+
+  /* ---- Ink scale (writing workbench / feedback UI track) ---- */
+  --ink-900: #141413;
+  --ink-800: #2B2B29;
+  --ink-700: #44443F;
+  --ink-600: #5C5C56;
+  --ink-500: #77776F;
+  --ink-400: #9A9A93;
+  --ink-300: #BDBDB7;
+  --ink-200: #DEDEDA;
+  --ink-100: #ECECEA;
+  --ink-50:  #F4F4F2;
+
+  /* ---- Paper & panels ---- */
+  --paper-white:    #FFFFFF;   /* default page & card surface */
+  --paper-panel:    #F9FAFC;   /* recessed panels, e.g. argument-graph canvas */
+  --paper-cream:    #FAF9F5;   /* illustration background, brand cream */
+
+  /* ---- Brand colors — functional, not decorative ---- */
+  /* Each brand hue names a product pillar. Keep the mapping stable:
+     never use mint for a Writing surface, sky for Reading, etc. */
+  --brand-mint:    #62DAB1;  /* Reading */
+  --brand-yellow:  #FFE17C;  /* Writing */
+  --brand-sky:     #97DBEC;  /* Speaking */
+  --brand-orange:  #FFB760;  /* Sources / magazines */
+
+  --brand-mint-soft:   #DCF5EC;
+  --brand-yellow-soft: #FFF6DA;
+  --brand-sky-soft:    #E4F5FA;
+  --brand-orange-soft: #FFEEDA;
+
+  /* Legacy near-duplicates still present in shipped screens.
+     Do not design new work against these — they read as implementation
+     drift, not intentional tokens. Kept here only so components ported
+     verbatim from the app remain traceable. */
+  --legacy-yellow: #FFE17B;
+  --legacy-sky-a:  #7CD1E8;
+  --legacy-sky-b:  #8CD6E8;
+
+  /* ---- Semantic (state) colors ---- */
+  --semantic-success:      #1FA97A;
+  --semantic-warning:      #D98A1F;
+  --semantic-danger:       #D5452E;
+  --semantic-info:         #2E9AC0;
+  --semantic-danger-soft:  #FBE4E0;
+  --semantic-warning-soft: #FFF6DA;
+
+  /* Muted score-band colors (IELTS band feedback, from landing.html tokens) */
+  --score-high:     #3D7A5B;  --score-high-bg: #EEF4F0;  /* band 7-9 */
+  --score-mid:      #8B6325;  --score-mid-bg:  #F7F1E6;  /* band 5-6 */
+  --score-low:      #8B3A35;  --score-low-bg:  #F5EDED;  /* band 1-4 */
+
+  /* ---- Publication theme colors (QuoteStack / source-branded surfaces) ---- */
+  --pub-economist-bg:      #F2EBE3;
+  --pub-economist-text:    #111111;
+  --pub-new-yorker-bg:     #EAE3D5;
+  --pub-new-yorker-text:   #1A1D1F;
+  --pub-new-scientist-bg:  #E6ECEF;
+  --pub-new-scientist-accent: #00315C;
+
+  /* ---- Accent (marketing CTAs only) ---- */
+  --accent-clay:      #C17040;
+  --accent-clay-hover: #A85D30;
+  --accent-clay-bg:    #F8EDE4;
+
+  /* ---- Marketing card surfaces (landing.html "3 products" cards) ---- */
+  --card-sage:      #8F9F7F;
+  --card-blush:     #EAD5CD;
+  --card-sand:       #ECE4CD;
+  --card-sage-tint:  #E7EDE0;
+
+  /* ---- Semantic aliases (roles, not raw values) ---- */
+  --surface-base:    var(--gray-50);
+  --surface-raised:  var(--gray-0);
+  --surface-sunken:  var(--gray-100);
+  --surface-overlay: var(--gray-150);
+  --surface-border:  var(--gray-200);
+  --surface-strong:  var(--gray-300);
+
+  --text-primary:    var(--gray-900);
+  --text-secondary:  var(--gray-600);
+  --text-tertiary:   var(--gray-500);
+  --text-disabled:   var(--gray-400);
+  --text-inverse:    var(--gray-50);
+
+  --interactive-default:  var(--gray-900);
+  --interactive-hover:    var(--gray-700);
+  --interactive-active:   var(--gray-800);
+  --interactive-disabled: var(--gray-300);
+  --interactive-focus:    var(--gray-900);
+}

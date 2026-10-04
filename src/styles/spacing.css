@@ -1,0 +1,56 @@
+/* ============================================================
+   SPACING & RADIUS TOKENS — hocnoihocviet
+   4px base unit. Generous scale — the product is a "quiet, focused
+   workspace" and favors whitespace. Confirmed against real component
+   padding (Dashboard cards, NavDock, DictionaryModal, ScoreBar).
+   ============================================================ */
+
+:root {
+  /* ---- Spacing scale ---- */
+  --space-0:  0;
+  --space-1:  0.25rem;  /* 4px */
+  --space-2:  0.5rem;   /* 8px */
+  --space-3:  0.75rem;  /* 12px */
+  --space-4:  1rem;     /* 16px */
+  --space-5:  1.25rem;  /* 20px */
+  --space-6:  1.5rem;   /* 24px */
+  --space-8:  2rem;     /* 32px */
+  --space-10: 2.5rem;   /* 40px */
+  --space-12: 3rem;     /* 48px */
+  --space-16: 4rem;     /* 64px */
+  --space-20: 5rem;     /* 80px */
+  --space-24: 6rem;     /* 96px */
+  --space-32: 8rem;     /* 128px */
+
+  /* ---- Semantic spacing ---- */
+  --gap-xs:  var(--space-2);
+  --gap-sm:  var(--space-3);
+  --gap-md:  var(--space-4);
+  --gap-lg:  var(--space-6);
+  --gap-xl:  var(--space-8);
+  --gap-2xl: var(--space-12);
+
+  --inset-xs: var(--space-2);
+  --inset-sm: var(--space-3);
+  --inset-md: var(--space-4);
+  --inset-lg: var(--space-6);
+  --inset-xl: var(--space-8);
+
+  /* ---- Radius ----
+     Two dialects coexist by design: the broader app (dashboard/marketing
+     cards) uses 16px; the Games / writing-workbench dialect uses a
+     tighter 10-12px for interactive controls. Pills are always full. */
+  --radius-xs:   2px;
+  --radius-sm:   4px;
+  --radius-md:   8px;
+  --radius-control: 10px;  /* game options, compact interactive controls */
+  --radius-lg:   12px;
+  --radius-xl:   16px;     /* default card radius */
+  --radius-2xl:  20px;
+  --radius-3xl:  24px;     /* largest surface cards only — do not exceed */
+  --radius-full: 9999px;
+
+  /* ---- Borders ---- */
+  --border-width:    1px;
+  --border-width-md: 2px;
+}

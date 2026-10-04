@@ -1,0 +1,53 @@
+/* ============================================================
+   ELEVATION & MOTION TOKENS — hocnoihocviet
+   Flat design — shadows are ambient/diffuse, never a hard directional
+   drop shadow. The two-layer "ambient" formula below is copy-pasted
+   verbatim across CardReader, DictionaryModal and QuoteStack in the
+   real app; keep using it rather than approximating.
+   ============================================================ */
+
+:root {
+  /* ---- Shadows ---- */
+  --shadow-none: none;
+  --shadow-xs:   0 1px 2px 0 oklch(7% 0.01 90 / 0.06);
+  --shadow-sm:   0 2px 6px 0 oklch(7% 0.01 90 / 0.08);
+
+  /* Ambient two-layer formula — cards, inputs, modals at rest */
+  --shadow-ambient-low:
+    0px 5.492px 5.492px 0px rgba(0,0,0,0.04),
+    0px 1.098px 3.295px 0px rgba(0,0,0,0.04);
+  /* Elevated overlays — NavDock pill, dropdowns, front card of a stack */
+  --shadow-ambient-high:
+    0px 13.18px 7.688px 0px rgba(0,0,0,0.02),
+    0px 5.492px 5.492px 0px rgba(0,0,0,0.04),
+    0px 1.098px 3.295px 0px rgba(0,0,0,0.04);
+
+  /* Dashboard hero-card rest / hover (distinct from the ambient formula) */
+  --shadow-card-rest:  0 2px 8px rgba(0,0,0,0.04);
+  --shadow-card-hover: 0 8px 20px rgba(0,0,0,0.07);
+
+  /* NavDock container */
+  --shadow-nav: 0 4px 24px rgba(0,0,0,0.06);
+
+  /* ---- Motion ---- */
+  --ease-default: cubic-bezier(0.2, 0, 0, 1); /* @kind other */
+  --ease-out:     cubic-bezier(0, 0, 0.3, 1); /* @kind other */
+  --ease-in-out:  cubic-bezier(0.4, 0, 0.2, 1); /* @kind other */
+  --ease-content: cubic-bezier(0.16, 1, 0.3, 1); /* @kind other */
+
+  --duration-fast:    80ms; /* @kind other */
+  --duration-default: 150ms; /* @kind other */
+  --duration-slow:    250ms; /* @kind other */
+  --duration-content: 400ms; /* @kind other */
+
+  /* Spring config for nav / active-pill transitions (framer-motion) */
+  --spring-nav-stiffness: 400; /* @kind other */
+  --spring-nav-damping:   32; /* @kind other */
+
+  /* ---- Z-index ---- */
+  --z-base:    0; /* @kind other */
+  --z-raised:  10; /* @kind other */
+  --z-overlay: 100; /* @kind other */
+  --z-modal:   200; /* @kind other */
+  --z-toast:   300; /* @kind other */
+}

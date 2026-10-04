@@ -1,0 +1,20 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "hocnoihocviet",
+  "main": ".open-next/worker.js",
+  "compatibility_date": "2026-10-01",
+  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
+  "services": [
+    {
+      // Self-reference binding used by OpenNext's cache; must match "name" above.
+      "binding": "WORKER_SELF_REFERENCE",
+      "service": "hocnoihocviet"
+    }
+  ],
+  "observability": { "enabled": true }
+  // Backend bindings (D1 database, R2 bucket, AI Gateway) get added here as those features land.
+}

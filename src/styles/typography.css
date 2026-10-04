@@ -1,0 +1,82 @@
+/* ============================================================
+   TYPOGRAPHY TOKENS — hocnoihocviet
+   Real product loads Be Vietnam Pro for UI (via next/font, for
+   Vietnamese diacritic coverage) and Lora + Newsreader for editorial
+   reading surfaces, plus a locally-hosted "NewYorker" masthead face
+   for the Reading module's display moments. Marketing (landing.html)
+   separately declares DM Sans + JetBrains Mono as its intended system
+   font pair. Both are real and shipped — kept as separate roles below
+   instead of collapsing them. See readme.md for the full story.
+   ============================================================ */
+
+
+@font-face {
+  font-family: 'NewYorker';
+  src: url('/assets/fonts/NewYorker.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  /* ---- Font families ---- */
+  --font-sans:        'Be Vietnam Pro', ui-sans-serif, system-ui, sans-serif;   /* primary UI — app shell, dashboard, nav */
+  --font-sans-market:  'DM Sans', ui-sans-serif, system-ui, sans-serif;          /* landing / growth pages */
+  --font-serif:       'Lora', Georgia, serif;                                   /* editorial body, pull quotes, marketing display */
+  --font-heading:     'Newsreader', 'Lora', serif;                              /* Reading-module article headlines */
+  --font-display:     'NewYorker', 'Newsreader', serif;                         /* Reading-module masthead / large editorial moments — use sparingly */
+  --font-mono:        'Be Vietnam Pro', ui-sans-serif, system-ui, sans-serif;    /* EXPERIMENT: was 'JetBrains Mono' — swapped to test a non-monospace label/metadata voice */
+
+  /* ---- Scale (major third, 1.25x) ---- */
+  --text-xs:   0.75rem;   /* 12px */
+  --text-sm:   0.875rem;  /* 14px */
+  --text-base: 1rem;      /* 16px */
+  --text-md:   1.125rem;  /* 18px */
+  --text-lg:   1.25rem;   /* 20px */
+  --text-xl:   1.5rem;    /* 24px */
+  --text-2xl:  1.875rem;  /* 30px */
+  --text-3xl:  2.25rem;   /* 36px */
+  --text-4xl:  3rem;      /* 48px */
+  --text-5xl:  3.75rem;   /* 60px */
+
+  /* ---- Line heights ---- */
+  --leading-tight:   1.2;
+  --leading-snug:    1.35;
+  --leading-normal:  1.5;
+  --leading-relaxed: 1.65;
+  --leading-loose:   1.8;
+
+  /* ---- Letter spacing ---- */
+  --tracking-tight:  -0.02em;
+  --tracking-snug:   -0.01em;
+  --tracking-normal: 0;
+  --tracking-wide:   0.04em;
+  --tracking-wider:  0.08em;
+  --tracking-caps:   0.14em;  /* uppercase mono/sans labels — very common in this product */
+
+  /* ---- Weights ---- */
+  --weight-regular:  400;
+  --weight-medium:   500;
+  --weight-semibold: 600;
+  --weight-bold:     700;
+
+  /* ---- Semantic roles ---- */
+  --type-display-family:  var(--font-serif);
+  --type-display-weight:  var(--weight-medium);
+  --type-display-leading: var(--leading-tight);
+
+  --type-heading-family:  var(--font-sans);
+  --type-heading-weight:  var(--weight-semibold);
+  --type-heading-leading: var(--leading-snug);
+
+  --type-body-family:  var(--font-sans);
+  --type-body-weight:  var(--weight-regular);
+  --type-body-leading: var(--leading-relaxed);
+
+  --type-label-family:  var(--font-sans);
+  --type-label-weight:  var(--weight-medium);
+  --type-label-leading: var(--leading-tight);
+
+  --type-mono-family: var(--font-mono);
+  --type-mono-weight: var(--weight-regular);
+}
