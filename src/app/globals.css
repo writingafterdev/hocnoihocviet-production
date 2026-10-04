@@ -3,16 +3,6 @@
 @import '../styles/spacing.css';
 @import '../styles/effects.css';
 
-/* Point the font tokens at the self-hosted next/font families (layout.tsx). */
-:root {
-  --font-sans: var(--nf-sans), ui-sans-serif, system-ui, sans-serif;
-  --font-sans-market: var(--nf-market), ui-sans-serif, system-ui, sans-serif;
-  --font-serif: var(--nf-serif), Georgia, serif;
-  --font-heading: var(--nf-heading), var(--nf-serif), serif;
-  --font-display: 'NewYorker', var(--nf-heading), serif;
-  --font-mono: var(--nf-sans), ui-sans-serif, system-ui, sans-serif;
-}
-
 /* Page surface is white everywhere (product decision, overrides the cream --surface-base). */
 html, body { margin: 0; min-height: 100%; background: #fff; color: var(--text-primary); font-family: var(--font-sans); -webkit-font-smoothing: antialiased; }
 *, *::before, *::after { box-sizing: border-box; }

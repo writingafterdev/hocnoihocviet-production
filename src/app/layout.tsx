@@ -1,5 +1,23 @@
 import type { Metadata } from 'next';
-import { Be_Vietnam_Pro, DM_Sans, Lora, Newsreader } from 'next/font/google';
+// Fonts ship with the app (Fontsource), so builds never download from Google. Family names match the design tokens.
+import '@fontsource/be-vietnam-pro/400.css';
+import '@fontsource/be-vietnam-pro/400-italic.css';
+import '@fontsource/be-vietnam-pro/500.css';
+import '@fontsource/be-vietnam-pro/600.css';
+import '@fontsource/be-vietnam-pro/700.css';
+import '@fontsource/dm-sans/400.css';
+import '@fontsource/dm-sans/400-italic.css';
+import '@fontsource/dm-sans/500.css';
+import '@fontsource/dm-sans/600.css';
+import '@fontsource/lora/400.css';
+import '@fontsource/lora/400-italic.css';
+import '@fontsource/lora/500.css';
+import '@fontsource/lora/500-italic.css';
+import '@fontsource/lora/600.css';
+import '@fontsource/lora/700.css';
+import '@fontsource/newsreader/400.css';
+import '@fontsource/newsreader/400-italic.css';
+import '@fontsource/newsreader/500.css';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -8,15 +26,9 @@ export const metadata: Metadata = {
   icons: { icon: '/assets/brand/logo-icon.svg' },
 };
 
-// Self-hosted at build time; the token files map --font-* onto these variables (see globals.css).
-const sans = Be_Vietnam_Pro({ subsets: ['latin', 'vietnamese'], weight: ['400', '500', '600', '700'], style: ['normal', 'italic'], variable: '--nf-sans', display: 'swap' });
-const market = DM_Sans({ subsets: ['latin'], weight: ['400', '500', '600'], style: ['normal', 'italic'], variable: '--nf-market', display: 'swap' });
-const serif = Lora({ subsets: ['latin', 'vietnamese'], weight: ['400', '500', '600', '700'], style: ['normal', 'italic'], variable: '--nf-serif', display: 'swap' });
-const heading = Newsreader({ subsets: ['latin'], weight: ['400', '500'], style: ['normal', 'italic'], variable: '--nf-heading', display: 'swap' });
-
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="vi" className={[sans.variable, market.variable, serif.variable, heading.variable].join(' ')}>
+    <html lang="vi">
       <body>{children}</body>
     </html>
   );
