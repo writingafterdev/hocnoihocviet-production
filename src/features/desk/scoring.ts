@@ -24,8 +24,8 @@ export interface EssayReview {
   /** One group per criterion: tr, cc, lr, gra. */
   groups: ReviewGroup[];
   scores: BandScores;
-  /** 'ai' = Claude; missing or 'mock' = rule-based checks. */
-  source?: 'ai' | 'mock';
+  /** 'ai' = Claude; 'sample' = the worked sample; missing or 'mock' = rule-based checks. */
+  source?: 'ai' | 'mock' | 'sample';
   /** Overall assessment across the four criteria (AI only). */
   summary?: string;
   /** Per criterion: why it got this band, and what would raise it (AI only). */

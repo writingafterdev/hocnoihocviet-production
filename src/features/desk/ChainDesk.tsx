@@ -152,7 +152,7 @@ function DeskScores({ review, tab, setTab, counts }: { review: EssayReview; tab:
     <section style={{ overflow: 'hidden', borderRadius: 18, border: '1px solid ' + CL.border, background: '#fff', flexShrink: 0 }}>
       <div style={{ display: 'flex', alignItems: 'center', minHeight: 50, padding: '0 18px', background: CL.panel, borderBottom: '1px solid ' + CL.ink2 }}>
         <span style={{ fontFamily: CL.sans, fontSize: 13.5, fontWeight: 600, color: CL.ink }}>Điểm</span>
-        <span style={{ marginLeft: 'auto', fontFamily: CL.sans, fontSize: 11, color: CL.ink5 }}>{review.source === 'ai' ? 'Ước tính' : 'Ước tính · bản thử'}</span>
+        <span style={{ marginLeft: 'auto', fontFamily: CL.sans, fontSize: 11, color: CL.ink5 }}>{review.source === 'ai' ? 'Ước tính' : review.source === 'sample' ? 'Bài chấm mẫu' : 'Ước tính · bản thử'}</span>
       </div>
       <div role="tablist" aria-label="Tiêu chí" style={{ display: 'grid', gridTemplateColumns: '1.25fr repeat(4, minmax(0,1fr))', gap: 6, padding: 12 }}>
         {box('band', 'Band', s.band)}{box('tr', 'TR', s.tr)}{box('cc', 'CC', s.cc)}{box('lr', 'LR', s.lr)}{box('gra', 'GRA', s.gra)}

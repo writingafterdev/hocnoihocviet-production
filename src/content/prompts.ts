@@ -402,6 +402,11 @@ const ENTRIES: Entry[] = [
     driver: 'Travelling or working before going to university', stakeholders: ['Học sinh', 'Gia đình', 'Trường đại học', 'Nhà tuyển dụng'] },
 
   // ---------------- Positive or Negative Development ----------------
+  { id: 'cheaper-international-travel', source: SAMPLE, category: 'Positive or Negative Development', topic: 'Travel and Transportation',
+    text: 'It has become easier and more affordable for people to travel to other countries. Is this a positive or negative development?',
+    questions: pn('Is this a positive or negative development?'),
+    reqs: ['Chốt rõ tích cực hay tiêu cực, không dừng ở "vừa lợi vừa hại".', 'So hai bên: bên nào đúng với nhiều người hơn, bên nào có cách khác để khắc phục.'],
+    driver: 'International travel becoming easier and cheaper', stakeholders: ['Người trước đây không đủ tiền đi', 'Doanh nghiệp, người dân nơi du lịch', 'Môi trường', 'Hãng hàng không'] },
   { id: 'working-from-home', source: SAMPLE, category: 'Positive or Negative Development', topic: 'Work and Careers',
     text: 'More and more people are choosing to work from home. Is this a positive or negative development?',
     questions: pn('Is this a positive or negative development?'),

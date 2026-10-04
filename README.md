@@ -46,8 +46,12 @@ D1 database, then deploys.
   - `GOOGLE_CLIENT_SECRET`
   - optional `ALLOWED_EMAILS`: a comma-separated list that limits who can sign up.
   - `ANTHROPIC_API_KEY`: turns on the AI review, scoring and translation. Without it the app uses the rule-based mocks.
-  - optional `AI_GATEWAY_URL`: send Claude calls through Cloudflare AI Gateway
-    (`https://gateway.ai.cloudflare.com/v1/<account>/<gateway>/anthropic`) for logs and caching.
+  - optional `AI_BASE_URL` + `AI_MODEL` (plain variables): use another Anthropic-compatible endpoint. Two uses:
+    - **Testing on ModelScope's free quota:** `AI_BASE_URL=https://api-inference.modelscope.cn`, `AI_MODEL=<a ModelScope
+      model ID>`, and the ModelScope access token as `ANTHROPIC_API_KEY`. Non-Claude models get plain Messages API calls:
+      no thinking, no fallbacks, and the JSON shape is requested in the prompt instead of enforced.
+    - **Cloudflare AI Gateway:** `AI_BASE_URL=https://gateway.ai.cloudflare.com/v1/<account>/<gateway>/anthropic`, with
+      `AI_MODEL` unset, for logs and caching.
 - **Setup check:** `/api/health` lists the D1 tables and which secrets are present (never their values).
 - **Google OAuth client:** authorised redirect URI `https://<host>/api/auth/callback/google`.
 

@@ -7,6 +7,7 @@ import { PageHeader } from '@/components/shell/BrandHeader';
 import { findPrompt } from '@/content/prompts';
 import { CL_CIRC, CL_SHAPE_LABEL } from '../chainlab/constants';
 import { wordCount } from '../desk/scoring';
+import { startSampleAttempt } from './start';
 import { attemptStore, SignedOutError, type Attempt } from './store';
 
 const date = (t: number) => new Date(t).toLocaleString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
@@ -16,6 +17,11 @@ export function AttemptHistory() {
   const router = useRouter();
   const [list, setList] = useState<Attempt[] | null>(null);
   const [failed, setFailed] = useState(false);
+  const [opening, setOpening] = useState(false);
+  const openSample = () => {
+    setOpening(true);
+    startSampleAttempt().then((url) => router.push(url), (e) => { setOpening(false); if (e instanceof SignedOutError) router.replace('/login?next=/attempts'); else setFailed(true); });
+  };
 
   useEffect(() => {
     attemptStore.list().then(setList, (e) => {
@@ -29,7 +35,14 @@ export function AttemptHistory() {
       <main style={{ maxWidth: 960, margin: '0 auto', padding: '10px 32px 96px', fontFamily: 'var(--font-sans)', color: '#141413' }}>
         <Link href="/writing" style={{ display: 'inline-block', fontSize: 13, fontWeight: 500, color: '#857F70', marginBottom: 32 }}>← Thư viện đề</Link>
         <h1 style={{ fontSize: 32, fontWeight: 600, letterSpacing: '-0.01em', margin: '0 0 8px' }}>Bài đã viết</h1>
-        <p style={{ fontSize: 15, color: '#857F70', margin: '0 0 36px' }}>Mỗi lần bạn bắt đầu một đề là một bài. Mở lại để viết tiếp hoặc xem nhận xét.</p>
+        <p style={{ fontSize: 15, color: '#857F70', margin: '0 0 20px' }}>Mỗi lần bạn bắt đầu một đề là một bài. Mở lại để viết tiếp hoặc xem nhận xét.</p>
+        <button type="button" onClick={openSample} disabled={opening} style={{ display: 'flex', alignItems: 'center', gap: 14, width: '100%', textAlign: 'left', borderRadius: 14, border: '1px solid #CDEFE2', background: '#F2FBF7', padding: '14px 20px', margin: '0 0 28px', cursor: 'pointer', fontFamily: 'inherit', color: '#141413' }}>
+          <span style={{ flex: 1 }}>
+            <span style={{ display: 'block', fontSize: 14, fontWeight: 600 }}>Xem một bài chấm mẫu</span>
+            <span style={{ display: 'block', fontSize: 12.5, color: '#5C5C56', marginTop: 3 }}>Bài band 7 về du lịch giá rẻ, với dàn ý, điểm từng tiêu chí và nhận xét gắn vào từng chỗ trong bài. Mở ra là một bản của riêng bạn, sửa thoải mái.</span>
+          </span>
+          <span style={{ flexShrink: 0, fontSize: 13, fontWeight: 600 }}>{opening ? 'Đang mở…' : 'Mở →'}</span>
+        </button>
         {failed && <p style={{ fontSize: 14, color: '#8B3A35' }}>Chưa tải được danh sách. Tải lại trang để thử lại.</p>}
         {list && list.length === 0 && (
           <div style={{ borderRadius: 14, border: '1px dashed #DAD8D2', padding: '48px 24px', textAlign: 'center' }}>

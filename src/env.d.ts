@@ -25,8 +25,10 @@ interface CloudflareEnv {
   ALLOWED_EMAILS?: string;
   /** Local testing only (.dev.vars): enables email + password sign-in. Never set in production. */
   DEV_PASSWORD_LOGIN?: string;
-  /** Claude API key for reviews, scoring and translation. Unset = the app falls back to the rule-based mocks. */
+  /** API key for reviews, scoring and translation (Claude, or the AI_BASE_URL provider's token). Unset = rule-based mocks. */
   ANTHROPIC_API_KEY?: string;
-  /** Optional: route Claude calls through Cloudflare AI Gateway, e.g. https://gateway.ai.cloudflare.com/v1/<account>/<gateway>/anthropic */
-  AI_GATEWAY_URL?: string;
+  /** Optional: another Anthropic-compatible endpoint, e.g. https://api-inference.modelscope.cn (testing) or Cloudflare AI Gateway. */
+  AI_BASE_URL?: string;
+  /** Optional: model ID for that endpoint, e.g. a ModelScope model. Unset = claude-opus-5-5. Non-Claude models skip thinking, fallbacks and enforced JSON. */
+  AI_MODEL?: string;
 }

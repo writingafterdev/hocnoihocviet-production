@@ -22,7 +22,8 @@ export async function GET(request: Request) {
       BETTER_AUTH_SECRET: !!env.BETTER_AUTH_SECRET && env.BETTER_AUTH_SECRET.length >= 32,
       GOOGLE_CLIENT_ID: !!env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_ID.endsWith('.apps.googleusercontent.com'),
       GOOGLE_CLIENT_SECRET: !!env.GOOGLE_CLIENT_SECRET,
-      ANTHROPIC_API_KEY: !!env.ANTHROPIC_API_KEY && env.ANTHROPIC_API_KEY.startsWith('sk-ant-'),
+      ANTHROPIC_API_KEY: !!env.ANTHROPIC_API_KEY && (!!env.AI_BASE_URL || env.ANTHROPIC_API_KEY.startsWith('sk-ant-')),
     },
+    ai: { endpoint: env.AI_BASE_URL ? new URL(env.AI_BASE_URL).host : 'api.anthropic.com', model: env.AI_MODEL || 'claude-opus-5-5' },
   }, { headers: { 'Cache-Control': 'no-store' } });
 }

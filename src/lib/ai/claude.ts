@@ -70,33 +70,48 @@ export async function ask<T = string>({ userId, kind, task, input, schema, effor
   if (!e.ANTHROPIC_API_KEY) throw new AiError('not_configured');
   const quota = await reserve(userId, kind);
   try {
-    const client = new Anthropic({ apiKey: e.ANTHROPIC_API_KEY, ...(e.AI_GATEWAY_URL ? { baseURL: e.AI_GATEWAY_URL } : {}), maxRetries: 2 });
+    const client = new Anthropic({ apiKey: e.ANTHROPIC_API_KEY, ...(e.AI_BASE_URL ? { baseURL: e.AI_BASE_URL } : {}), maxRetries: 2 });
+    const model = e.AI_MODEL || MODEL;
+    const claude = model.startsWith('claude-');
+    // The method text is identical for every request, so it is cached; the task text follows it.
+    const system = (extra: string) => grounded
+      ? [{ type: 'text' as const, text: METHOD, cache_control: { type: 'ephemeral' as const } }, { type: 'text' as const, text: task + extra }]
+      : [{ type: 'text' as const, text: task + extra }];
+    const messages = [{ role: 'user' as const, content: input }];
     // Streaming keeps the connection busy during long thinking; we only need the final message.
-    const msg = await client.beta.messages.stream({
-      model: MODEL,
-      max_tokens: maxTokens,
-      betas: ['server-side-fallback-2026-07-01'],
-      fallbacks: 'default',
-      thinking: { type: 'adaptive' },
-      output_config: { effort, ...(schema ? { format: { type: 'json_schema', schema } } : {}) },
-      // The method text is identical for every request, so it is cached; the task text follows it.
-      system: grounded
-        ? [{ type: 'text', text: METHOD, cache_control: { type: 'ephemeral' } }, { type: 'text', text: task }]
-        : [{ type: 'text', text: task }],
-      messages: [{ role: 'user', content: input }],
-    }).finalMessage();
+    const msg = claude
+      ? await client.beta.messages.stream({
+        model, max_tokens: maxTokens, messages, system: system(''),
+        betas: ['server-side-fallback-2026-07-01'],
+        fallbacks: 'default',
+        thinking: { type: 'adaptive' },
+        output_config: { effort, ...(schema ? { format: { type: 'json_schema', schema } } : {}) },
+      }).finalMessage()
+      // Other models behind an Anthropic-compatible API (e.g. ModelScope for testing): plain Messages API only,
+      // so the JSON shape is asked for in the prompt instead of enforced.
+      : await client.messages.stream({
+        model, max_tokens: Math.min(maxTokens, 8192), messages,
+        system: system(schema ? '\n\nOUTPUT FORMAT: reply with ONE JSON object and nothing else (no markdown, no code fences, no text before or after). It must match this JSON Schema exactly:\n' + JSON.stringify(schema) : ''),
+      }).finalMessage();
     await quota.record({ input: (msg.usage.input_tokens || 0) + (msg.usage.cache_read_input_tokens || 0) + (msg.usage.cache_creation_input_tokens || 0), output: msg.usage.output_tokens || 0 }).catch(() => {});
     if (msg.stop_reason === 'refusal') throw new AiError('refused');
     if (msg.stop_reason === 'max_tokens') throw new AiError('bad_output', 'max_tokens');
-    const text = msg.content.map((b) => (b.type === 'text' ? b.text : '')).join('');
+    const text = (msg.content as { type: string; text?: string }[]).map((b) => (b.type === 'text' ? b.text : '')).join('');
     if (!schema) return text.trim() as T;
-    try { return JSON.parse(text) as T; } catch { throw new AiError('bad_output', 'invalid_json'); }
+    try { return JSON.parse(claude ? text : jsonPart(text)) as T; } catch { throw new AiError('bad_output', 'invalid_json'); }
   } catch (err) {
     await quota.refund().catch(() => {});
     if (err instanceof AiError) throw err;
-    console.error('claude_call_failed', kind, err instanceof Anthropic.APIError ? (err.status ?? 'network') + ' ' + err.message : err);
+    console.error('ai_call_failed', kind, err instanceof Anthropic.APIError ? (err.status ?? 'network') + ' ' + err.message : err);
     throw new AiError('upstream');
   }
+}
+
+/** The JSON object inside a reply that may carry code fences or stray text (non-Claude models). */
+function jsonPart(text: string) {
+  const t = text.replace(/```(?:json)?/gi, '');
+  const a = t.indexOf('{'), b = t.lastIndexOf('}');
+  return a >= 0 && b > a ? t.slice(a, b + 1) : t;
 }
 
 const STATUS: Record<AiErrorCode, number> = { not_configured: 503, limit: 429, refused: 422, bad_output: 502, upstream: 502 };
