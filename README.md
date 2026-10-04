@@ -45,7 +45,7 @@ D1 database, then deploys.
   - `GOOGLE_CLIENT_ID`
   - `GOOGLE_CLIENT_SECRET`
   - optional `ALLOWED_EMAILS`: a comma-separated list that limits who can sign up.
-  - `ANTHROPIC_API_KEY`: turns on the AI review, scoring and tutor. Without it the app uses the rule-based mocks.
+  - `ANTHROPIC_API_KEY`: turns on the AI review, scoring and translation. Without it the app uses the rule-based mocks.
   - optional `AI_GATEWAY_URL`: send Claude calls through Cloudflare AI Gateway
     (`https://gateway.ai.cloudflare.com/v1/<account>/<gateway>/anthropic`) for logs and caching.
 - **Setup check:** `/api/health` lists the D1 tables and which secrets are present (never their values).
@@ -117,7 +117,7 @@ src/
 The current prompt (its questions and their types) is passed through `SpecContext`, and every helper in
 `chainlab/model.ts` takes the prompt explicitly.
 
-## AI review, scoring and tutor
+## AI review, scoring and translation
 
 Three features call Claude (`claude-opus-5-5`) from the Worker. The two reviews are grounded in the book's method,
 distilled in `src/lib/ai/method.ts`. That text is identical in every request, so it is prompt-cached.
