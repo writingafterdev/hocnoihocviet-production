@@ -119,14 +119,22 @@ The current prompt (its questions and their types) is passed through `SpecContex
 
 ## AI review, scoring and tutor
 
-Three features call Claude (`claude-opus-5-5`) from the Worker. Each is grounded in the book's method, distilled in
-`src/lib/ai/method.ts`. That text is identical in every request, so it is prompt-cached.
+Three features call Claude (`claude-opus-5-5`) from the Worker. The two reviews are grounded in the book's method,
+distilled in `src/lib/ai/method.ts`. That text is identical in every request, so it is prompt-cached.
 
 | Feature | Route | Server | Output |
 | --- | --- | --- | --- |
 | "Soát toàn bài" (ChainLab) | `POST /api/ai/chain-review` | `lib/ai/chain-review.ts` | Questions grouped as Mắt xích, Độ sâu, Trường hợp, Sợi dây, Lập trường, Độ phủ đề bài, Trùng ý. Logical Jumps and vague words are pinned to chain steps. |
-| "Nộp bài" (Writing Desk) | `POST /api/ai/essay-review` | `lib/ai/essay-review.ts` | Band plus TR / CC / LR / GRA, an overall comment, and comments grouped by criterion. |
-| "Hỏi" tutor | `POST /api/ai/tutor` | `lib/ai/tutor.ts` | A short reply that reads the prompt, the chains and the paragraph in focus. |
+| "Nộp bài" (Writing Desk) | `POST /api/ai/essay-review` | `lib/ai/essay-review.ts` | Band plus TR / CC / LR / GRA. Each criterion has why it got that band and how to go higher, then detailed comments. There is also an overall assessment. |
+| "Dịch" (both screens) | `POST /api/ai/translate` | `lib/ai/translate.ts` | Vietnamese ↔ English translation of up to 800 characters, nothing else. |
+
+- **Score bar = navigation:** Band shows the overall assessment and one line per criterion. TR / CC / LR / GRA show
+  that criterion's "Vì sao" and "Để lên", then its comments, and the essay shows only that criterion's highlights.
+  Clicking a highlight opens its criterion.
+- **Translator and prompt injection:**
+  - The request carries no book text, prompt or essay, only a short system prompt.
+  - The student's text sits between random per-request markers and is always treated as text to translate.
+  - The reply must be a JSON object with one `translation` field, and replies far longer than the input are rejected.
 
 - **Highlights:** every essay comment quotes the exact words it is about. The server finds each quote in the text,
   ignoring case and spacing, and drops any comment whose quote is not in the essay. After submitting, each paragraph
@@ -136,7 +144,7 @@ Three features call Claude (`claude-opus-5-5`) from the Worker. Each is grounded
 - **Grounding:** `method.ts` covers Phase 0–2, the nine question types and Module 2 (coherence and cohesion). The
   essay prompt reads Task Response in fixed steps, then Coherence (whole essay → paragraph → sentence), then Cohesion
   (sentence openings → reference words → connectors).
-- **Daily limits per student:** 10 chain reviews, 5 essay scorings and 40 tutor questions (`DAILY_LIMIT` in
+- **Daily limits per student:** 10 chain reviews, 5 essay scorings and 60 translations (`DAILY_LIMIT` in
   `lib/ai/claude.ts`). Days follow Vietnam time. Usage and token counts go in the D1 `ai_usage` table, and a failed
   call doesn't count. `GET /api/ai/usage` shows what's left today.
 - **Safety:** refusals fall back to another model on the server (`fallbacks: "default"`). Student text is treated as

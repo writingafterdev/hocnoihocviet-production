@@ -2,19 +2,18 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { AI_ERROR_TEXT, AiRequestError } from '../ai/request';
+import { Translator } from '../ai/Translator';
 import { CL, CL_CIRC, CL_SHAPE_LABEL } from '../chainlab/constants';
 import { chainStatus, ropeUnits, shapeOf } from '../chainlab/model';
 import { useSpec } from '../chainlab/SpecContext';
-import { DESK_ACTIONS, DESK_REPLIES, tutorAsk } from '../chainlab/tutor';
 import type { Chain, ReviewGroup, ReviewItem } from '../chainlab/types';
-import { Assistant } from '../chainlab/ui/Assistant';
 import { PromptBlock, RailTop } from '../chainlab/ui/ContextRail';
 import { backLinkStyle, ClIcon, ClLabel, ClTag, toolbarBtn } from '../chainlab/ui/primitives';
 import { ReviewPanel } from '../chainlab/ui/ReviewPanel';
 import { Rope } from '../chainlab/ui/Rope';
 import { WorkspaceGrid } from '../chainlab/ui/WorkspaceGrid';
 import type { EssayState } from '../attempts/store';
-import { CRITERION_STYLE, draftsKey, requestEssayReview, wordCount, type EssayReview, type EssaySection } from './scoring';
+import { CRITERIA, CRITERION_STYLE, draftsKey, requestEssayReview, wordCount, type EssayReview, type EssaySection } from './scoring';
 
 /** A chain in the Desk's plan rail: title + status, expandable to steps, cases and findings. */
 function OutlineItem({ chain, index, open, onToggle, chains }: { chain: Chain; index: number; open: boolean; onToggle: () => void; chains: Chain[] }) {
@@ -123,25 +122,68 @@ function MarkedText({ text, marks, active, onPick, onEdit, style }: { text: stri
   );
 }
 
-/** Estimated band + TR / CC / LR / GRA boxes and the overall comment, at the top of the feedback panel. */
-function DeskScores({ review }: { review: EssayReview }) {
+type Tab = 'band' | 'tr' | 'cc' | 'lr' | 'gra';
+const CRITERION_NAME: Record<string, string> = Object.fromEntries(CRITERIA);
+
+/**
+ * Score bar that doubles as navigation: Band = overview of the four criteria, TR / CC / LR / GRA = that
+ * criterion's assessment (why this band, how to go higher) followed by its detailed comments.
+ */
+function DeskScores({ review, tab, setTab, counts }: { review: EssayReview; tab: Tab; setTab: (t: Tab) => void; counts: Record<string, number> }) {
   const s = review.scores;
-  const box = (label: string, v: number, main?: boolean) => (
-    <div key={label} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, borderRadius: 12, padding: '12px 4px', background: main ? CL.mint : '#fff', border: '1px solid ' + (main ? CL.mint : CL.ink2) }}>
-      <span style={{ fontFamily: CL.sans, fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', color: main ? CL.greenText : CL.ink5 }}>{label}</span>
-      <span style={{ fontFamily: CL.sans, fontSize: main ? 24 : 20, fontWeight: 700, color: CL.ink, fontVariantNumeric: 'tabular-nums' }}>{v.toFixed(1)}</span>
-    </div>
-  );
+  const cr = review.criteria || {};
+  const box = (id: Tab, label: string, v: number) => {
+    const on = tab === id, main = id === 'band';
+    const accent = main ? null : CRITERION_STYLE[id];
+    return (
+      <button key={id} type="button" className="cl-btn" role="tab" aria-selected={on} onClick={() => setTab(id)} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, borderRadius: 12, padding: '11px 4px 10px', background: main ? (on ? CL.mint : CL.mintSoft) : on ? accent.soft : '#fff', border: '1px solid ' + (on ? (main ? CL.green : accent.line) : main ? CL.mintSoft : CL.ink2), boxShadow: on ? '0 0 0 1px ' + (main ? CL.green : accent.line) : 'none', transition: 'background .15s, border-color .15s' }}>
+        <span style={{ fontFamily: CL.sans, fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', color: main ? CL.greenText : on ? accent.line : CL.ink5 }}>{label}</span>
+        <span style={{ fontFamily: CL.sans, fontSize: main ? 24 : 20, fontWeight: 700, color: CL.ink, fontVariantNumeric: 'tabular-nums' }}>{v.toFixed(1)}</span>
+        {!main && <span style={{ fontFamily: CL.sans, fontSize: 10, fontWeight: 600, color: counts[id] ? accent.line : CL.ink4 }}>{counts[id] ? counts[id] + ' chỗ' : 'Ổn'}</span>}
+        {main && <span style={{ fontFamily: CL.sans, fontSize: 10, fontWeight: 600, color: CL.greenText }}>Tổng quan</span>}
+      </button>
+    );
+  };
+  const target = (v: number) => Math.min(9, Math.floor(v) + 1);
+  const para = (t: string) => <p style={{ margin: 0, fontFamily: CL.sans, fontSize: 12.5, lineHeight: 1.6, color: CL.ink7, textWrap: 'pretty' }}>{t}</p>;
+  const head = (t: string) => <span style={{ display: 'block', margin: '12px 0 4px', fontFamily: CL.sans, fontSize: 11, fontWeight: 700, letterSpacing: '0.04em', color: CL.ink }}>{t}</span>;
+  const c = tab !== 'band' ? cr[tab] : null;
   return (
     <section style={{ overflow: 'hidden', borderRadius: 18, border: '1px solid ' + CL.border, background: '#fff', flexShrink: 0 }}>
       <div style={{ display: 'flex', alignItems: 'center', minHeight: 50, padding: '0 18px', background: CL.panel, borderBottom: '1px solid ' + CL.ink2 }}>
         <span style={{ fontFamily: CL.sans, fontSize: 13.5, fontWeight: 600, color: CL.ink }}>Điểm</span>
         <span style={{ marginLeft: 'auto', fontFamily: CL.sans, fontSize: 11, color: CL.ink5 }}>{review.source === 'ai' ? 'Ước tính' : 'Ước tính · bản thử'}</span>
       </div>
-      <div style={{ display: 'grid', gridTemplateColumns: '1.25fr repeat(4, minmax(0,1fr))', gap: 6, padding: 12 }}>
-        {box('Band', s.band, true)}{box('TR', s.tr)}{box('CC', s.cc)}{box('LR', s.lr)}{box('GRA', s.gra)}
+      <div role="tablist" aria-label="Tiêu chí" style={{ display: 'grid', gridTemplateColumns: '1.25fr repeat(4, minmax(0,1fr))', gap: 6, padding: 12 }}>
+        {box('band', 'Band', s.band)}{box('tr', 'TR', s.tr)}{box('cc', 'CC', s.cc)}{box('lr', 'LR', s.lr)}{box('gra', 'GRA', s.gra)}
       </div>
-      {review.summary && <p style={{ margin: 0, padding: '2px 18px 16px', fontFamily: CL.sans, fontSize: 12.5, lineHeight: 1.6, color: CL.ink7, textWrap: 'pretty' }}>{review.summary}</p>}
+      <div style={{ padding: '2px 18px 16px' }}>
+        {tab === 'band' ? (
+          <>
+            {review.summary && para(review.summary)}
+            <div style={{ display: 'flex', flexDirection: 'column', marginTop: review.summary ? 10 : 0 }}>
+              {CRITERIA.map(([id, name]) => (
+                <button key={id} type="button" className="cl-btn cl-rv" onClick={() => setTab(id as Tab)} style={{ display: 'flex', flexDirection: 'column', alignItems: 'stretch', gap: 3, textAlign: 'left', padding: '10px 0', borderTop: '1px solid ' + CL.ink1 }}>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <span style={{ width: 8, height: 8, borderRadius: 2, background: CRITERION_STYLE[id].line }} />
+                    <span style={{ fontFamily: CL.sans, fontSize: 12.5, fontWeight: 600, color: CL.ink }}>{name}</span>
+                    <span style={{ fontFamily: CL.sans, fontSize: 12.5, fontWeight: 700, color: CL.ink, fontVariantNumeric: 'tabular-nums' }}>{s[id as 'tr'].toFixed(1)}</span>
+                    <span style={{ marginLeft: 'auto', fontFamily: CL.sans, fontSize: 11, color: CL.ink4 }}>{counts[id] ? counts[id] + ' chỗ' : 'Ổn'} ›</span>
+                  </span>
+                  {cr[id] && cr[id].why && <span style={{ paddingLeft: 16, fontFamily: CL.sans, fontSize: 12, lineHeight: 1.55, color: CL.ink6, textWrap: 'pretty' }}>{cr[id].why}</span>}
+                </button>
+              ))}
+            </div>
+          </>
+        ) : (
+          <>
+            <span style={{ display: 'flex', alignItems: 'center', gap: 8, fontFamily: CL.sans, fontSize: 13, fontWeight: 600, color: CL.ink }}><span style={{ width: 9, height: 9, borderRadius: 3, background: CRITERION_STYLE[tab].line }} />{CRITERION_NAME[tab]}</span>
+            {c && c.why ? <>{head('Vì sao ' + s[tab].toFixed(1))}{para(c.why)}</> : null}
+            {c && c.next && s[tab] < 9 ? <>{head('Để lên ' + target(s[tab]))}{para(c.next)}</> : null}
+            {!c && <p style={{ margin: '8px 0 0', fontFamily: CL.sans, fontSize: 12, color: CL.ink5 }}>Bản thử chỉ có nhận xét chi tiết.</p>}
+          </>
+        )}
+      </div>
     </section>
   );
 }
@@ -162,6 +204,7 @@ export function ChainDesk({ chains, stance, essay, setEssay, onBack }: { chains:
   const [seen, setSeen] = useState<string[]>([]);
   const [focusSec, setFocusSec] = useState<string | null>(null);
   const [active, setActive] = useState<string | null>(null);
+  const [tab, setTab] = useState<Tab>('band');
   const [editId, setEditId] = useState<string | null>(null);
   const mainRef = useRef<HTMLElement>(null);
   const focusTimer = useRef<ReturnType<typeof setTimeout>>(null);
@@ -185,13 +228,13 @@ export function ChainDesk({ chains, stance, essay, setEssay, onBack }: { chains:
     setRunning(true); setError(null);
     try {
       const r = await requestEssayReview(spec, sections, drafts, chains, stance);
-      setReview(r); setSeen([]); setRailOpen(false); setActive(null); setEditId(null);
+      setReview(r); setSeen([]); setRailOpen(false); setActive(null); setEditId(null); setTab('band');
     } catch (e) {
       setError(e instanceof AiRequestError ? AI_ERROR_TEXT[e.code] : AI_ERROR_TEXT.network);
     }
     setRunning(false);
   };
-  const closeReview = () => { setReview(null); setRailOpen(true); setActive(null); setEditId(null); };
+  const closeReview = () => { setReview(null); setRailOpen(true); setActive(null); setEditId(null); setTab('band'); };
   // A comment counts as fixed once the quoted words are gone, or (paragraph comments) once the paragraph changed.
   const fixedFn = (_g: ReviewGroup | null, it: ReviewItem) => {
     const cur = drafts[it.sectionId] || '';
@@ -201,13 +244,14 @@ export function ChainDesk({ chains, stance, essay, setEssay, onBack }: { chains:
   const open = review ? review.groups.flatMap((g) => g.items).filter((it) => !fixedFn(null, it)) : [];
   // Highlight colour per comment, from its criterion group.
   const groupOf = new Map<string, string>(review ? review.groups.flatMap((g) => g.items.map((it) => [it.key, g.id] as [string, string])) : []);
-  const marksFor = (sectionId: string): Mark[] => open.filter((it) => it.sectionId === sectionId && it.word).map((it) => {
+  // On a criterion tab only that criterion's highlights show; the Band tab shows them all.
+  const marksFor = (sectionId: string): Mark[] => open.filter((it) => it.sectionId === sectionId && it.word && (tab === 'band' || groupOf.get(it.key) === tab)).map((it) => {
     const st = CRITERION_STYLE[groupOf.get(it.key)] || CRITERION_STYLE.tr;
     return { key: it.key, word: it.word, line: st.line, soft: st.soft };
   });
   const go = (it: ReviewItem) => {
     setSeen((s) => (s.includes(it.key) ? s : [...s, it.key]));
-    setActive(it.key); setEditId(null);
+    setActive(it.key); setEditId(null); setTab((groupOf.get(it.key) as Tab) || 'band');
     const m = mainRef.current, sec = document.getElementById('desk-sec-' + it.sectionId);
     // Wait a frame so the paragraph is back in highlight view before measuring.
     requestAnimationFrame(() => {
@@ -223,7 +267,9 @@ export function ChainDesk({ chains, stance, essay, setEssay, onBack }: { chains:
       focusTimer.current = setTimeout(() => setFocusSec(null), 2000);
     }
   };
-  const pick = (key: string) => { setActive(key); setSeen((s) => (s.includes(key) ? s : [...s, key])); };
+  const pick = (key: string) => { setActive(key); setTab((groupOf.get(key) as Tab) || 'band'); setSeen((s) => (s.includes(key) ? s : [...s, key])); };
+  const counts = Object.fromEntries(CRITERIA.map(([id]) => [id, review ? review.groups.find((g) => g.id === id)?.items.filter((it) => !fixedFn(null, it)).length || 0 : 0]));
+  const shown = review && tab !== 'band' ? { ...review, groups: review.groups.filter((g) => g.id === tab) } : review;
   const addBody = () => setBodies([...bodies, 'body' + Date.now()]);
   const removeBody = (id: string) => setEssay((e) => { const d = { ...e.drafts }; delete d[id]; return { ...e, bodies: e.bodies.filter((b) => b !== id), drafts: d }; });
   const bodyCount = bodies.length;
@@ -308,7 +354,7 @@ export function ChainDesk({ chains, stance, essay, setEssay, onBack }: { chains:
             <span style={{ fontFamily: CL.sans, fontSize: 16, fontWeight: 600, color: CL.ink, fontVariantNumeric: 'tabular-nums' }}>{clock}</span>
           </div>
           {error && <span role="alert" style={{ marginLeft: 'auto', alignSelf: 'center', fontFamily: CL.sans, fontSize: 12, color: '#8B3A35' }}>{error}</span>}
-          <button type="button" className="cl-btn" onClick={() => setHelp(!help)} aria-pressed={help} style={{ marginLeft: error ? 0 : 'auto', height: 40, borderRadius: 12, border: '1px solid ' + (help ? CL.ink : CL.ink2), background: '#fff', color: CL.ink, fontFamily: CL.sans, fontSize: 13, fontWeight: 600, padding: '0 18px' }}>Hỏi</button>
+          <button type="button" className="cl-btn" onClick={() => setHelp(!help)} aria-pressed={help} style={{ marginLeft: error ? 0 : 'auto', height: 40, borderRadius: 12, border: '1px solid ' + (help ? CL.ink : CL.ink2), background: '#fff', color: CL.ink, fontFamily: CL.sans, fontSize: 13, fontWeight: 600, padding: '0 18px' }}>Dịch</button>
           <button type="button" className="cl-btn cl-primary" onClick={submit} disabled={running || (review && !stale)} style={{ height: 40, borderRadius: 12, background: CL.ink, color: '#fff', fontFamily: CL.sans, fontSize: 13, fontWeight: 600, padding: '0 20px', opacity: running || (review && !stale) ? 0.4 : 1 }}>{running ? 'Đang chấm… (khoảng 1 phút)' : review ? (stale ? 'Nộp lại' : 'Đã nộp') : 'Nộp bài'}</button>
         </div>
       </div>
@@ -326,8 +372,8 @@ export function ChainDesk({ chains, stance, essay, setEssay, onBack }: { chains:
         railOpen={railOpen}
         reviewOpen={!!review}
         main={main}
-        panel={review && <ReviewPanel title="Kết quả" review={review} stale={stale} running={running} onRerun={submit} rerunLabel="Nộp lại" onClose={closeReview} onGo={go} seen={seen} fixedFn={fixedFn} top={<DeskScores review={review} />} active={active} accents={CRITERION_STYLE} />}
-        overlay={help && <Assistant onClose={() => setHelp(false)} contextLabel={activeLabel} contextMeta={wordCount(drafts[activeId]) + ' từ'} intro="Mình đọc đoạn bạn đang viết cùng với các mạch bên trái. Bắt đầu từ một trong những việc này:" placeholder="Hỏi về đoạn này…" actions={DESK_ACTIONS} onAsk={tutorAsk(spec, () => ({ screen: 'essay', chains, stance, focus: { label: activeLabel, text: drafts[activeId] || '' } }), DESK_REPLIES)} />}
+        panel={review && <ReviewPanel title="Kết quả" review={shown} list={tab !== 'band'} showOk={false} emptyText="Không có nhận xét chi tiết cho tiêu chí này." stale={stale} running={running} onRerun={submit} rerunLabel="Nộp lại" onClose={closeReview} onGo={go} seen={seen} fixedFn={fixedFn} top={<DeskScores review={review} tab={tab} setTab={(t) => { setTab(t); setActive(null); }} counts={counts} />} active={active} accents={CRITERION_STYLE} />}
+        overlay={help && <Translator onClose={() => setHelp(false)} />}
       />
     </div>
   );

@@ -12,7 +12,7 @@ export class AiError extends Error {
 export interface Usage { input: number; output: number }
 
 /** Daily limits per student (Vietnam calendar day). */
-export const DAILY_LIMIT = { chain: 10, essay: 5, tutor: 40 } as const;
+export const DAILY_LIMIT = { chain: 10, essay: 5, translate: 60 } as const;
 export type AiKind = keyof typeof DAILY_LIMIT;
 
 const today = () => new Date(Date.now() + 7 * 3600_000).toISOString().slice(0, 10);
@@ -57,13 +57,15 @@ interface Ask {
   schema?: Record<string, unknown>;
   effort?: 'low' | 'medium' | 'high';
   maxTokens?: number;
+  /** false = send only `task` as the system prompt, without the book's method (e.g. the translator). */
+  grounded?: boolean;
 }
 
 /**
  * One Claude call grounded in the book. With `schema`, returns the parsed JSON; otherwise the text.
  * Counts against the student's daily allowance (refunded if the call fails).
  */
-export async function ask<T = string>({ userId, kind, task, input, schema, effort = 'medium', maxTokens = 16000 }: Ask): Promise<T> {
+export async function ask<T = string>({ userId, kind, task, input, schema, effort = 'medium', maxTokens = 16000, grounded = true }: Ask): Promise<T> {
   const e = await env();
   if (!e.ANTHROPIC_API_KEY) throw new AiError('not_configured');
   const quota = await reserve(userId, kind);
@@ -78,10 +80,9 @@ export async function ask<T = string>({ userId, kind, task, input, schema, effor
       thinking: { type: 'adaptive' },
       output_config: { effort, ...(schema ? { format: { type: 'json_schema', schema } } : {}) },
       // The method text is identical for every request, so it is cached; the task text follows it.
-      system: [
-        { type: 'text', text: METHOD, cache_control: { type: 'ephemeral' } },
-        { type: 'text', text: task },
-      ],
+      system: grounded
+        ? [{ type: 'text', text: METHOD, cache_control: { type: 'ephemeral' } }, { type: 'text', text: task }]
+        : [{ type: 'text', text: task }],
       messages: [{ role: 'user', content: input }],
     }).finalMessage();
     await quota.record({ input: (msg.usage.input_tokens || 0) + (msg.usage.cache_read_input_tokens || 0) + (msg.usage.cache_creation_input_tokens || 0), output: msg.usage.output_tokens || 0 }).catch(() => {});

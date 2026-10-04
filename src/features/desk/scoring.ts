@@ -26,8 +26,10 @@ export interface EssayReview {
   scores: BandScores;
   /** 'ai' = Claude; missing or 'mock' = rule-based checks. */
   source?: 'ai' | 'mock';
-  /** Two or three sentences on the essay as a whole (AI only). */
+  /** Overall assessment across the four criteria (AI only). */
   summary?: string;
+  /** Per criterion: why it got this band, and what would raise it (AI only). */
+  criteria?: Record<string, { why: string; next: string }>;
 }
 
 /** Feedback groups, one per IELTS criterion. */

@@ -27,10 +27,16 @@ export interface ReviewPanelProps {
   active?: string | null;
   /** Accent per group id (essay criteria), used for the quote bar and the group dot. */
   accents?: Record<string, { line: string; soft: string }>;
+  /** false = only `top` is shown (counts still cover every group). */
+  list?: boolean;
+  /** Show the "Ổn" box for groups without items. */
+  showOk?: boolean;
+  /** Shown when there are no items; null hides it. */
+  emptyText?: string | null;
 }
 
 /** Right-hand feedback panel: grouped questions, "Đã sửa?" once an item no longer applies. */
-export function ReviewPanel({ review, live, chains = [], stance, stale, running, onRerun, onClose, onGo, seen, fixedFn, top, title = 'Nhận xét', rerunLabel = 'Soát lại', active, accents }: ReviewPanelProps) {
+export function ReviewPanel({ review, live, chains = [], stance, stale, running, onRerun, onClose, onGo, seen, fixedFn, top, title = 'Nhận xét', rerunLabel = 'Soát lại', active, accents, list = true, showOk = true, emptyText = 'Không thấy vấn đề nào. Sẵn sàng viết.' }: ReviewPanelProps) {
   useEffect(() => {
     const el = active && document.getElementById('rv-' + active);
     if (el) el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
@@ -60,7 +66,7 @@ export function ReviewPanel({ review, live, chains = [], stance, stale, running,
       </div>
       <div className="cl-scroll" style={{ flex: 1, minHeight: 0, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 16, padding: '2px 2px 20px' }}>
         {top}
-        {groups.filter((g) => g.items.length).map((g) => {
+        {list && groups.filter((g) => g.items.length).map((g) => {
           const open = g.items.filter((it) => !it.fixed).length;
           return (
             <section key={g.id} style={{ overflow: 'hidden', borderRadius: 18, border: '1px solid ' + CL.border, background: '#fff', flexShrink: 0 }}>
@@ -90,7 +96,7 @@ export function ReviewPanel({ review, live, chains = [], stance, stale, running,
             </section>
           );
         })}
-        {ok.length > 0 && (
+        {list && showOk && ok.length > 0 && (
           <section style={{ borderRadius: 18, border: '1px solid ' + CL.border, background: '#fff', padding: '14px 18px', flexShrink: 0 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 10 }}>
               <ClIcon name="check" size={12} color={CL.green} />
@@ -101,7 +107,7 @@ export function ReviewPanel({ review, live, chains = [], stance, stale, running,
             </div>
           </section>
         )}
-        {total === 0 && <p style={{ margin: '8px 6px', fontFamily: CL.sans, fontSize: 13, color: CL.ink6 }}>Không thấy vấn đề nào. Sẵn sàng viết.</p>}
+        {list && total === 0 && emptyText && <p style={{ margin: '8px 6px', fontFamily: CL.sans, fontSize: 13, color: CL.ink6 }}>{emptyText}</p>}
       </div>
     </aside>
   );

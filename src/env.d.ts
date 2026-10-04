@@ -25,7 +25,7 @@ interface CloudflareEnv {
   ALLOWED_EMAILS?: string;
   /** Local testing only (.dev.vars): enables email + password sign-in. Never set in production. */
   DEV_PASSWORD_LOGIN?: string;
-  /** Claude API key for reviews, scoring and the tutor. Unset = the app falls back to the rule-based mocks. */
+  /** Claude API key for reviews, scoring and translation. Unset = the app falls back to the rule-based mocks. */
   ANTHROPIC_API_KEY?: string;
   /** Optional: route Claude calls through Cloudflare AI Gateway, e.g. https://gateway.ai.cloudflare.com/v1/<account>/<gateway>/anthropic */
   AI_GATEWAY_URL?: string;

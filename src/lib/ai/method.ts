@@ -1,6 +1,6 @@
 /**
  * The method from "The Art of Nuance in IELTS Writing", distilled for the AI reviewers.
- * Every review and tutor reply is grounded in this text, so the feedback uses the book's words
+ * Both reviews (chains and essay) are grounded in this text, so the feedback uses the book's words
  * (Driver, mạch, Logical Jump, Scope, ô 1–4…) and asks the questions the book teaches.
  * Keep it stable: it sits in the cached part of every request.
  */

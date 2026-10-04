@@ -2,13 +2,12 @@
 
 import { Fragment, useRef, useState } from 'react';
 import { AI_ERROR_TEXT, AiRequestError } from '../ai/request';
+import { Translator } from '../ai/Translator';
 import { CL, CL_CIRC, CL_FIXABLE, CL_SHAPE_LABEL } from './constants';
 import { newChain, ropeUnits, shapeOf } from './model';
 import { requestChainReview, reviewChains, reviewKey, type ChainReview } from './review';
 import { useSpec } from './SpecContext';
-import { BUILDER_ACTIONS, BUILDER_REPLIES, tutorAsk } from './tutor';
 import type { Chain, Question, ReviewItem, RopeUnit, Side } from './types';
-import { Assistant } from './ui/Assistant';
 import { ChainCard } from './ui/ChainCard';
 import { ContextRail } from './ui/ContextRail';
 import { backLinkStyle, ClIcon, ClLabel, toolbarBtn } from './ui/primitives';
@@ -146,11 +145,11 @@ export function ChainBuilder({ chains, setChains, stance, setStance, review, set
           {error && <span role="alert" style={{ fontFamily: CL.sans, fontSize: 12, color: '#8B3A35', marginRight: 4 }}>{error}</span>}
           {review && <button type="button" className="cl-btn" onClick={() => setRailOpen(!railOpen)} aria-pressed={railOpen} style={toolbarBtn(railOpen)}>Đề bài</button>}
           <button type="button" className="cl-btn" onClick={runAudit} disabled={running} style={{ ...toolbarBtn(false), color: CL.ink, padding: '8px 14px', opacity: running ? 0.6 : 1 }}>{running ? 'Đang soát…' : review ? 'Soát lại' : 'Soát toàn bài'}</button>
-          <button type="button" className="cl-btn" onClick={() => setHelp(!help)} aria-pressed={help} style={toolbarBtn(help)}>Hỏi</button>
+          <button type="button" className="cl-btn" onClick={() => setHelp(!help)} aria-pressed={help} style={toolbarBtn(help)}>Dịch</button>
           <button type="button" className="cl-btn cl-primary" onClick={onWrite} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, borderRadius: 5, background: CL.ink, color: '#fff', fontFamily: CL.sans, fontSize: 10.5, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', padding: '8px 14px' }}>Viết bài<ClIcon name="right" size={13} /></button>
         </div>
       </div>
-      {help && <Assistant onClose={() => setHelp(false)} contextLabel="Các mạch" contextMeta={chains.length + ' mạch'} intro="Mình đọc đề, các mạch và những gì bạn đã thử. Bắt đầu từ một trong những việc này:" placeholder="Hỏi về các mạch…" actions={BUILDER_ACTIONS} onAsk={tutorAsk(spec, () => ({ screen: 'chains', chains, stance }), BUILDER_REPLIES)} />}
+      {help && <Translator onClose={() => setHelp(false)} />}
       <WorkspaceGrid
         rail={<ContextRail />}
         railOpen={railOpen}
