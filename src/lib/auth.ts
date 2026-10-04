@@ -7,13 +7,17 @@ import { APIError, betterAuth } from 'better-auth';
  */
 export async function getAuth(request: Request) {
   const { env } = await getCloudflareContext({ async: true });
-  const origin = new URL(request.url).origin;
+  // The public origin. Prefer the Host header in case the runtime rewrote request.url.
+  const url = new URL(request.url);
+  const host = request.headers.get('x-forwarded-host') || request.headers.get('host') || url.host;
+  const proto = request.headers.get('x-forwarded-proto') || url.protocol.replace(':', '');
+  const origin = proto + '://' + host;
   const allowed = (env.ALLOWED_EMAILS || '').split(',').map((e) => e.trim().toLowerCase()).filter(Boolean);
   return betterAuth({
     database: env.DB,
     secret: env.BETTER_AUTH_SECRET,
     baseURL: origin,
-    trustedOrigins: [origin],
+    trustedOrigins: [...new Set([origin, url.origin])],
     socialProviders: {
       google: { clientId: env.GOOGLE_CLIENT_ID, clientSecret: env.GOOGLE_CLIENT_SECRET, prompt: 'select_account' },
     },

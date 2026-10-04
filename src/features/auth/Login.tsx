@@ -28,13 +28,18 @@ export function Login() {
   const { data: session } = useSession();
   const [hover, setHover] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [failure, setFailure] = useState<string | null>(null);
 
   useEffect(() => { if (session) router.replace(next); }, [session, next, router]);
 
   const google = async () => {
-    setBusy(true);
-    const { error: e } = await signIn.social({ provider: 'google', callbackURL: next, errorCallbackURL: '/login?next=' + encodeURIComponent(next) });
-    if (e) setBusy(false);
+    setBusy(true); setFailure(null);
+    try {
+      const { error: e } = await signIn.social({ provider: 'google', callbackURL: next, errorCallbackURL: '/login?next=' + encodeURIComponent(next) });
+      if (e) { setBusy(false); setFailure((e.status ? e.status + ' · ' : '') + (e.message || e.statusText || 'unknown error')); }
+    } catch (err) {
+      setBusy(false); setFailure(err instanceof Error ? err.message : String(err));
+    }
   };
   return (
     <div className="login-grid" style={{ minHeight: '100vh', display: 'grid', gridTemplateColumns: 'minmax(0,1.1fr) minmax(0,1fr)', background: '#fff', color: ink, fontFamily: 'var(--font-sans)' }}>
@@ -72,6 +77,11 @@ export function Login() {
           <span style={lbl}>Chào mừng trở lại</span>
           <h2 style={{ margin: '14px 0 12px', fontFamily: 'var(--font-serif)', fontWeight: 500, fontSize: 36, letterSpacing: '-0.02em' }}>Đăng nhập</h2>
           <p style={{ margin: '0 0 32px', fontSize: 15, lineHeight: 1.6, color: mute }}>Dùng tài khoản Google để tiếp tục. Không cần mật khẩu.</p>
+          {failure && (
+            <p role="alert" style={{ margin: '0 0 16px', padding: '10px 14px', borderRadius: 10, background: '#FBE4E0', color: '#8B3A35', fontSize: 13.5, lineHeight: 1.5 }}>
+              Chưa mở được trang đăng nhập Google. Chi tiết: <code>{failure}</code>
+            </p>
+          )}
           {error && (
             <p role="alert" style={{ margin: '0 0 16px', padding: '10px 14px', borderRadius: 10, background: '#FBE4E0', color: '#8B3A35', fontSize: 13.5, lineHeight: 1.5 }}>
               {/not_allowed|unable_to_create_user/i.test(error) ? 'Tài khoản này chưa được mở quyền dùng thử. Hãy dùng email bạn đã đăng ký.' : 'Chưa đăng nhập được. Thử lại nhé.'}
