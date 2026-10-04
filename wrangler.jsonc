@@ -20,7 +20,7 @@
     {
       "binding": "DB",
       "database_name": "hocnoihocviet-db",
-      "database_id": "REPLACE_WITH_D1_DATABASE_ID",
+      "database_id": "c06a31d4-1d1b-4839-b042-3c761291546e",
       "migrations_dir": "migrations"
     }
   ]
