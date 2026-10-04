@@ -16,6 +16,8 @@
     }
   ],
   "observability": { "enabled": true },
+  // Keep variables set in the dashboard when deploying from git (otherwise plain-text ones are wiped).
+  "keep_vars": true,
   "d1_databases": [
     {
       "binding": "DB",
