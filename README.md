@@ -45,6 +45,10 @@ D1 database, then deploys.
   - `GOOGLE_CLIENT_ID`
   - `GOOGLE_CLIENT_SECRET`
   - optional `ALLOWED_EMAILS`: a comma-separated list that limits who can sign up.
+  - `ANTHROPIC_API_KEY`: turns on the AI review, scoring and tutor. Without it the app uses the rule-based mocks.
+  - optional `AI_GATEWAY_URL`: send Claude calls through Cloudflare AI Gateway
+    (`https://gateway.ai.cloudflare.com/v1/<account>/<gateway>/anthropic`) for logs and caching.
+- **Setup check:** `/api/health` lists the D1 tables and which secrets are present (never their values).
 - **Google OAuth client:** authorised redirect URI `https://<host>/api/auth/callback/google`.
 
 **Running it locally on the Workers runtime:**
@@ -95,12 +99,14 @@ timer and submission result. It's stored as JSON in the D1 `attempt` table, thro
 src/
   app/                    routes only; each page renders one feature component
   content/prompts.ts      the Task 2 prompt bank with per-question metadata
+  lib/ai/                 Claude calls: method text, prompts + schemas, daily limits
   styles/                 design tokens copied from the handoff's tokens/ (font families remapped in globals.css)
   components/ds/          design-system components (ProductCard, Button, Badge, ScoreBar, NavDock, …)
   components/shell/       brand header (logo tile + wordmark + avatar)
   features/
     chainlab/             ChainLab: types, constants, pure model helpers, review, UI
     desk/                 Writing Desk + essay scoring
+    ai/                   client for /api/ai/* and its error messages
     guided/               Chép mẫu engine (also used by vocab practice)
     vocab/                vocab sets + builder
     attempts/             attempt model, API-backed store, workspace that autosaves, history page
@@ -111,16 +117,32 @@ src/
 The current prompt (its questions and their types) is passed through `SpecContext`, and every helper in
 `chainlab/model.ts` takes the prompt explicitly.
 
-## What is mocked (swap points)
+## AI review, scoring and tutor
 
-Every smart part of the prototype is kept as-is behind a small boundary, so real services can replace it without
-UI changes:
+Three features call Claude (`claude-opus-5-5`) from the Worker. Each is grounded in the book's method, distilled in
+`src/lib/ai/method.ts`. That text is identical in every request, so it is prompt-cached.
+
+| Feature | Route | Server | Output |
+| --- | --- | --- | --- |
+| "Soát toàn bài" (ChainLab) | `POST /api/ai/chain-review` | `lib/ai/chain-review.ts` | Questions grouped as Mắt xích, Độ sâu, Trường hợp, Sợi dây, Lập trường, Độ phủ đề bài, Trùng ý. Logical Jumps and vague words are pinned to chain steps. |
+| "Nộp bài" (Writing Desk) | `POST /api/ai/essay-review` | `lib/ai/essay-review.ts` | Band plus TR / CC / LR / GRA, an overall comment, and comments grouped by criterion. |
+| "Hỏi" tutor | `POST /api/ai/tutor` | `lib/ai/tutor.ts` | A short reply that reads the prompt, the chains and the paragraph in focus. |
+
+- **Quotes:** every essay comment must quote the essay. The server finds each quote in the text, ignoring case and
+  spacing, and drops any comment whose quote is not in the essay. A comment shows as "Đã sửa?" once its quoted words
+  are gone.
+- **Daily limits per student:** 10 chain reviews, 5 essay scorings and 40 tutor questions (`DAILY_LIMIT` in
+  `lib/ai/claude.ts`). Days follow Vietnam time. Usage and token counts go in the D1 `ai_usage` table, and a failed
+  call doesn't count. `GET /api/ai/usage` shows what's left today.
+- **Safety:** refusals fall back to another model on the server (`fallbacks: "default"`). Student text is treated as
+  data, never as instructions.
+- **Without `ANTHROPIC_API_KEY`:** the client falls back to the prototype's rule-based checks, and the score box says
+  "bản thử".
+
+## What is still mocked
 
 | Feature | File | Replace with |
 | --- | --- | --- |
-| "Soát toàn bài" chain review | `features/chainlab/review.ts` → `requestChainReview` | AI review based on the book; same `ChainReview` shape |
-| Essay feedback + TR/CC/LR/GRA band | `features/desk/scoring.ts` → `requestEssayReview` | Real scoring where every comment quotes the essay |
-| "Hỏi" tutor replies | `features/chainlab/tutor.ts` | Tutor endpoint that reads prompt, chains and paragraph |
 | Adding prompts | `content/prompts.ts` (edited by hand) | Admin import page: AI fills the metadata, you approve |
 | Chép mẫu sample essay | `features/guided/data.ts`, `GuidedFlow.tsx` | Several tagged sample essays per prompt |
 | Vocab sets + practice paragraphs | `features/vocab/data.ts` | Imported sets; paragraphs generated on demand |

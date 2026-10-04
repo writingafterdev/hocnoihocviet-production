@@ -13,7 +13,7 @@ export async function GET(request: Request) {
   } catch (e) {
     tables = 'error: ' + (e instanceof Error ? e.message : String(e));
   }
-  const need = ['user', 'session', 'account', 'verification', 'attempt'];
+  const need = ['user', 'session', 'account', 'verification', 'attempt', 'ai_usage'];
   return Response.json({
     origin: new URL(request.url).origin,
     host: request.headers.get('host'),
@@ -22,6 +22,7 @@ export async function GET(request: Request) {
       BETTER_AUTH_SECRET: !!env.BETTER_AUTH_SECRET && env.BETTER_AUTH_SECRET.length >= 32,
       GOOGLE_CLIENT_ID: !!env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_ID.endsWith('.apps.googleusercontent.com'),
       GOOGLE_CLIENT_SECRET: !!env.GOOGLE_CLIENT_SECRET,
+      ANTHROPIC_API_KEY: !!env.ANTHROPIC_API_KEY && env.ANTHROPIC_API_KEY.startsWith('sk-ant-'),
     },
   }, { headers: { 'Cache-Control': 'no-store' } });
 }

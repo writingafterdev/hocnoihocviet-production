@@ -2,6 +2,7 @@
 
 import type { ReactNode } from 'react';
 import { CL } from '../constants';
+import { chainSnap } from '../review';
 import type { Chain, ReviewGroup, ReviewItem } from '../types';
 import { ClIcon, ClLabel } from './primitives';
 
@@ -10,6 +11,8 @@ export interface ReviewPanelProps {
   /** A fresh run on the current input, used to mark items that no longer apply as fixed. */
   live?: { groups: ReviewGroup[] };
   chains?: Chain[];
+  /** Current stance, for comments on the stance. */
+  stance?: string;
   stale: boolean;
   running: boolean;
   onRerun: () => void;
@@ -23,13 +26,14 @@ export interface ReviewPanelProps {
 }
 
 /** Right-hand feedback panel: grouped questions, "Đã sửa?" once an item no longer applies. */
-export function ReviewPanel({ review, live, chains = [], stale, running, onRerun, onClose, onGo, seen, fixedFn, top, title = 'Nhận xét', rerunLabel = 'Soát lại' }: ReviewPanelProps) {
+export function ReviewPanel({ review, live, chains = [], stance, stale, running, onRerun, onClose, onGo, seen, fixedFn, top, title = 'Nhận xét', rerunLabel = 'Soát lại' }: ReviewPanelProps) {
   const liveSet = new Set((live || review).groups.flatMap((g) => g.items.map((it) => g.id + '|' + it.text)));
   const isFixed = fixedFn || ((g: ReviewGroup, it: ReviewItem) => {
+    if (it.snapKind === 'stance') return (stance || '') !== it.snap;
     if (it.snapKind) {
       const c = chains.find((x) => x.id === it.chainId);
       if (!c) return true;
-      const cur = it.snapKind === 'flag' ? c.steps[it.at] + '||' + c.steps[it.at + 1] : c.steps[it.at];
+      const cur = it.snapKind === 'flag' ? c.steps[it.at] + '||' + c.steps[it.at + 1] : it.snapKind === 'chain' ? chainSnap(c) : c.steps[it.at];
       return cur !== it.snap;
     }
     return !liveSet.has(g.id + '|' + it.text);
@@ -65,6 +69,7 @@ export function ReviewPanel({ review, live, chains = [], stale, running, onRerun
                         <span style={{ fontFamily: CL.sans, fontSize: 10.5, fontWeight: 600, color: CL.ink5 }}>{it.where}</span>
                         {it.fixed && <span style={{ marginLeft: 'auto', display: 'inline-flex', alignItems: 'center', gap: 4, borderRadius: 5, background: CL.mintSoft, padding: '2px 7px', fontFamily: CL.sans, fontSize: 10, fontWeight: 600, color: CL.greenText, whiteSpace: 'nowrap' }}><ClIcon name="check" size={10} color={CL.green} />Đã sửa?</span>}
                       </span>
+                      {it.quote && <span style={{ borderLeft: '2px solid ' + CL.ink2, paddingLeft: 9, fontFamily: CL.serif, fontSize: 13, lineHeight: 1.5, fontStyle: 'italic', color: CL.ink6, textWrap: 'pretty' }}>“{it.quote}”</span>}
                       <span style={{ fontFamily: CL.sans, fontSize: 12.5, lineHeight: 1.55, color: CL.ink8, textWrap: 'pretty', textDecoration: it.fixed ? 'line-through' : 'none', textDecorationColor: CL.ink3 }}>{it.text}</span>
                     </button>
                   );
@@ -87,5 +92,15 @@ export function ReviewPanel({ review, live, chains = [], stale, running, onRerun
         {total === 0 && <p style={{ margin: '8px 6px', fontFamily: CL.sans, fontSize: 13, color: CL.ink6 }}>Không thấy vấn đề nào. Sẵn sàng viết.</p>}
       </div>
     </aside>
+  );
+}
+
+/** Short overall comment above the grouped questions. */
+export function ReviewSummary({ title = 'Nhận xét chung', text }: { title?: string; text: string }) {
+  return (
+    <section style={{ borderRadius: 18, border: '1px solid ' + CL.border, background: '#fff', padding: '14px 18px', flexShrink: 0 }}>
+      <span style={{ display: 'block', marginBottom: 6, fontFamily: CL.sans, fontSize: 13.5, fontWeight: 600, color: CL.ink }}>{title}</span>
+      <p style={{ margin: 0, fontFamily: CL.sans, fontSize: 12.5, lineHeight: 1.6, color: CL.ink7, textWrap: 'pretty' }}>{text}</p>
+    </section>
   );
 }

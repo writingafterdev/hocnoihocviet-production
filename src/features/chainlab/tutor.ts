@@ -1,8 +1,10 @@
 /**
- * MOCK: canned "Hỏi" tutor replies from the prototype. The real tutor reads the prompt, the chains
- * and the paragraph in focus; swap these maps for a request to that endpoint.
+ * "Hỏi" tutor: quick actions, and the call to /api/ai/tutor (Claude reads the prompt, the chains and
+ * the paragraph in focus). The canned replies are only used when the AI is not configured.
  */
-import type { AssistantAction } from './ui/Assistant';
+import { AiRequestError, postAi } from '../ai/request';
+import type { Chain, PromptSpec } from './types';
+import type { AskFn, AssistantAction } from './ui/Assistant';
 
 export const BUILDER_ACTIONS: AssistantAction[] = [
   { label: 'Gợi ý stakeholder', desc: 'Nhìn Backward và Forward để tìm thêm người bị tác động.' },
@@ -27,3 +29,20 @@ export const DESK_REPLIES: Record<string, string> = {
   'Đoạn này dùng mạch nào?': 'Đặt từng câu của đoạn cạnh các bước của mạch bên trái. Bước nào chưa có câu tương ứng, và trường hợp nào (nhánh Scope) đã bị bỏ qua?',
   'Dịch một cụm từ': 'Gửi mình cụm tiếng Việt bạn muốn diễn đạt, mình sẽ gợi ý 2–3 cách viết hợp với giọng học thuật.',
 };
+
+/** An ask function for the Assistant drawer, bound to what the student is looking at. */
+export function tutorAsk(spec: PromptSpec, get: () => { screen: 'chains' | 'essay'; chains: Chain[]; stance: string; focus?: { label: string; text: string } }, canned: Record<string, string>): AskFn {
+  return async (question, history, lang) => {
+    const ctx = get();
+    try {
+      const r = await postAi<{ reply: string }>('tutor', {
+        promptId: spec.id, ...ctx, chains: ctx.chains.map(({ check, ...c }) => c),
+        history: history.map((m) => ({ from: m.from, text: m.text })), question, lang,
+      });
+      return r.reply;
+    } catch (e) {
+      if (e instanceof AiRequestError && e.code === 'not_configured') return canned[question] || 'Phần trợ lý AI chưa được bật.';
+      throw e;
+    }
+  };
+}

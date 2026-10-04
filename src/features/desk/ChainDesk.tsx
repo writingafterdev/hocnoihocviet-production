@@ -1,10 +1,11 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { AI_ERROR_TEXT, AiRequestError } from '../ai/request';
 import { CL, CL_CIRC, CL_SHAPE_LABEL } from '../chainlab/constants';
 import { chainStatus, ropeUnits, shapeOf } from '../chainlab/model';
 import { useSpec } from '../chainlab/SpecContext';
-import { DESK_ACTIONS, DESK_REPLIES } from '../chainlab/tutor';
+import { DESK_ACTIONS, DESK_REPLIES, tutorAsk } from '../chainlab/tutor';
 import type { Chain, ReviewGroup, ReviewItem } from '../chainlab/types';
 import { Assistant } from '../chainlab/ui/Assistant';
 import { PromptBlock, RailTop } from '../chainlab/ui/ContextRail';
@@ -13,7 +14,7 @@ import { ReviewPanel } from '../chainlab/ui/ReviewPanel';
 import { Rope } from '../chainlab/ui/Rope';
 import { WorkspaceGrid } from '../chainlab/ui/WorkspaceGrid';
 import type { EssayState } from '../attempts/store';
-import { draftsKey, requestEssayReview, reviewEssay, wordCount, type BandScores, type EssayReview, type EssaySection } from './scoring';
+import { draftsKey, requestEssayReview, wordCount, type EssayReview, type EssaySection } from './scoring';
 
 /** A chain in the Desk's plan rail: title + status, expandable to steps, cases and findings. */
 function OutlineItem({ chain, index, open, onToggle, chains }: { chain: Chain; index: number; open: boolean; onToggle: () => void; chains: Chain[] }) {
@@ -81,8 +82,9 @@ function DeskMark({ text, word }: { text: string; word: string }) {
   );
 }
 
-/** Estimated band + TR / CC / LR / GRA boxes, at the top of the feedback panel. */
-function DeskScores({ s }: { s: BandScores }) {
+/** Estimated band + TR / CC / LR / GRA boxes and the overall comment, at the top of the feedback panel. */
+function DeskScores({ review }: { review: EssayReview }) {
+  const s = review.scores;
   const box = (label: string, v: number, main?: boolean) => (
     <div key={label} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, borderRadius: 12, padding: '12px 4px', background: main ? CL.mint : '#fff', border: '1px solid ' + (main ? CL.mint : CL.ink2) }}>
       <span style={{ fontFamily: CL.sans, fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', color: main ? CL.greenText : CL.ink5 }}>{label}</span>
@@ -93,16 +95,15 @@ function DeskScores({ s }: { s: BandScores }) {
     <section style={{ overflow: 'hidden', borderRadius: 18, border: '1px solid ' + CL.border, background: '#fff', flexShrink: 0 }}>
       <div style={{ display: 'flex', alignItems: 'center', minHeight: 50, padding: '0 18px', background: CL.panel, borderBottom: '1px solid ' + CL.ink2 }}>
         <span style={{ fontFamily: CL.sans, fontSize: 13.5, fontWeight: 600, color: CL.ink }}>Điểm</span>
-        <span style={{ marginLeft: 'auto', fontFamily: CL.sans, fontSize: 11, color: CL.ink5 }}>Ước tính</span>
+        <span style={{ marginLeft: 'auto', fontFamily: CL.sans, fontSize: 11, color: CL.ink5 }}>{review.source === 'ai' ? 'Ước tính' : 'Ước tính · bản thử'}</span>
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: '1.25fr repeat(4, minmax(0,1fr))', gap: 6, padding: 12 }}>
         {box('Band', s.band, true)}{box('TR', s.tr)}{box('CC', s.cc)}{box('LR', s.lr)}{box('GRA', s.gra)}
       </div>
+      {review.summary && <p style={{ margin: 0, padding: '2px 18px 16px', fontFamily: CL.sans, fontSize: 12.5, lineHeight: 1.6, color: CL.ink7, textWrap: 'pretty' }}>{review.summary}</p>}
     </section>
   );
 }
-
-const escapeRe = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
 /** Screen 2 of "Viết tự do": write the essay beside the plan, then submit for TR / CC / LR / GRA feedback. */
 export function ChainDesk({ chains, stance, essay, setEssay, onBack }: { chains: Chain[]; stance: string; essay: EssayState; setEssay: (fn: (e: EssayState) => EssayState) => void; onBack: () => void }) {
@@ -115,6 +116,7 @@ export function ChainDesk({ chains, stance, essay, setEssay, onBack }: { chains:
   const [help, setHelp] = useState(false);
   const [activeId, setActiveId] = useState('intro');
   const [running, setRunning] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [railOpen, setRailOpen] = useState(!essay.review);
   const [seen, setSeen] = useState<string[]>([]);
   const [focusSec, setFocusSec] = useState<string | null>(null);
@@ -137,18 +139,21 @@ export function ChainDesk({ chains, stance, essay, setEssay, onBack }: { chains:
   const activeLabel = (sections.find((x) => x.id === activeId) || sections[0]).label;
   const stale = review && review.key !== draftsKey(drafts);
   const submit = async () => {
-    setRunning(true);
-    const r = await requestEssayReview(spec, sections, drafts, chains, stance);
-    setReview(r); setSeen([]); setRunning(false); setRailOpen(false);
+    setRunning(true); setError(null);
+    try {
+      const r = await requestEssayReview(spec, sections, drafts, chains, stance);
+      setReview(r); setSeen([]); setRailOpen(false);
+    } catch (e) {
+      setError(e instanceof AiRequestError ? AI_ERROR_TEXT[e.code] : AI_ERROR_TEXT.network);
+    }
+    setRunning(false);
   };
   const closeReview = () => { setReview(null); setRailOpen(true); };
-  const live = review && stale ? reviewEssay(spec, sections, drafts, chains, stance) : review;
-  const liveSet = new Set(live ? live.groups.flatMap((g) => g.items.map((it) => g.id + '|' + it.sectionId + '|' + it.text)) : []);
+  // A comment counts as fixed once the quoted words are gone, or (paragraph comments) once the paragraph changed.
   const fixedFn = (_g: ReviewGroup | null, it: ReviewItem) => {
-    if (it.word) return !new RegExp('\\b' + escapeRe(it.word) + '\\b', 'i').test(drafts[it.sectionId] || '');
-    const gid = it.key.replace(/\d+$/, '');
-    if (gid === 'length') return !live.groups.find((x) => x.id === 'length').items.some((x) => x.sectionId === it.sectionId);
-    return !liveSet.has(gid + '|' + it.sectionId + '|' + it.text);
+    const cur = drafts[it.sectionId] || '';
+    if (it.word) return !cur.toLowerCase().includes(it.word.toLowerCase());
+    return it.snap != null && cur !== it.snap;
   };
   const open = review ? review.groups.flatMap((g) => g.items).filter((it) => !fixedFn(null, it)) : [];
   const go = (it: ReviewItem) => {
@@ -236,8 +241,9 @@ export function ChainDesk({ chains, stance, essay, setEssay, onBack }: { chains:
             <span style={{ fontFamily: CL.sans, fontSize: 12, color: CL.ink5 }}>Thời gian</span>
             <span style={{ fontFamily: CL.sans, fontSize: 16, fontWeight: 600, color: CL.ink, fontVariantNumeric: 'tabular-nums' }}>{clock}</span>
           </div>
-          <button type="button" className="cl-btn" onClick={() => setHelp(!help)} aria-pressed={help} style={{ marginLeft: 'auto', height: 40, borderRadius: 12, border: '1px solid ' + (help ? CL.ink : CL.ink2), background: '#fff', color: CL.ink, fontFamily: CL.sans, fontSize: 13, fontWeight: 600, padding: '0 18px' }}>Hỏi</button>
-          <button type="button" className="cl-btn cl-primary" onClick={submit} disabled={running || (review && !stale)} style={{ height: 40, borderRadius: 12, background: CL.ink, color: '#fff', fontFamily: CL.sans, fontSize: 13, fontWeight: 600, padding: '0 20px', opacity: running || (review && !stale) ? 0.4 : 1 }}>{running ? 'Đang chấm…' : review ? (stale ? 'Nộp lại' : 'Đã nộp') : 'Nộp bài'}</button>
+          {error && <span role="alert" style={{ marginLeft: 'auto', alignSelf: 'center', fontFamily: CL.sans, fontSize: 12, color: '#8B3A35' }}>{error}</span>}
+          <button type="button" className="cl-btn" onClick={() => setHelp(!help)} aria-pressed={help} style={{ marginLeft: error ? 0 : 'auto', height: 40, borderRadius: 12, border: '1px solid ' + (help ? CL.ink : CL.ink2), background: '#fff', color: CL.ink, fontFamily: CL.sans, fontSize: 13, fontWeight: 600, padding: '0 18px' }}>Hỏi</button>
+          <button type="button" className="cl-btn cl-primary" onClick={submit} disabled={running || (review && !stale)} style={{ height: 40, borderRadius: 12, background: CL.ink, color: '#fff', fontFamily: CL.sans, fontSize: 13, fontWeight: 600, padding: '0 20px', opacity: running || (review && !stale) ? 0.4 : 1 }}>{running ? 'Đang chấm… (khoảng 1 phút)' : review ? (stale ? 'Nộp lại' : 'Đã nộp') : 'Nộp bài'}</button>
         </div>
       </div>
     </main>
@@ -254,8 +260,8 @@ export function ChainDesk({ chains, stance, essay, setEssay, onBack }: { chains:
         railOpen={railOpen}
         reviewOpen={!!review}
         main={main}
-        panel={review && <ReviewPanel title="Kết quả" review={review} stale={stale} running={running} onRerun={submit} rerunLabel="Nộp lại" onClose={closeReview} onGo={go} seen={seen} fixedFn={fixedFn} top={<DeskScores s={review.scores} />} />}
-        overlay={help && <Assistant onClose={() => setHelp(false)} contextLabel={activeLabel} contextMeta={wordCount(drafts[activeId]) + ' từ'} intro="Mình đọc đoạn bạn đang viết cùng với các mạch bên trái. Bắt đầu từ một trong những việc này:" placeholder="Hỏi về đoạn này…" actions={DESK_ACTIONS} replies={DESK_REPLIES} />}
+        panel={review && <ReviewPanel title="Kết quả" review={review} stale={stale} running={running} onRerun={submit} rerunLabel="Nộp lại" onClose={closeReview} onGo={go} seen={seen} fixedFn={fixedFn} top={<DeskScores review={review} />} />}
+        overlay={help && <Assistant onClose={() => setHelp(false)} contextLabel={activeLabel} contextMeta={wordCount(drafts[activeId]) + ' từ'} intro="Mình đọc đoạn bạn đang viết cùng với các mạch bên trái. Bắt đầu từ một trong những việc này:" placeholder="Hỏi về đoạn này…" actions={DESK_ACTIONS} onAsk={tutorAsk(spec, () => ({ screen: 'essay', chains, stance, focus: { label: activeLabel, text: drafts[activeId] || '' } }), DESK_REPLIES)} />}
       />
     </div>
   );

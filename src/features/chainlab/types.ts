@@ -87,10 +87,14 @@ export interface ReviewItem {
   chainId?: string;
   sectionId?: string;
   target?: 'stance';
-  snapKind?: 'flag' | 'vague';
+  /** What `snap` captured, so the panel can tell when the student has changed it: two steps, one step, a whole chain, the stance. */
+  snapKind?: 'flag' | 'vague' | 'chain' | 'stance';
   at?: number;
   snap?: string;
+  /** Exact words the comment is about; underlined in the essay. */
   word?: string;
+  /** Essay feedback: the quoted passage, shown above the comment. */
+  quote?: string;
   para?: boolean;
   fixed?: boolean;
 }

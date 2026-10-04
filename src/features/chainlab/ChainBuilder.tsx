@@ -1,17 +1,18 @@
 'use client';
 
 import { Fragment, useRef, useState } from 'react';
+import { AI_ERROR_TEXT, AiRequestError } from '../ai/request';
 import { CL, CL_CIRC, CL_FIXABLE, CL_SHAPE_LABEL } from './constants';
 import { newChain, ropeUnits, shapeOf } from './model';
 import { requestChainReview, reviewChains, reviewKey, type ChainReview } from './review';
 import { useSpec } from './SpecContext';
-import { BUILDER_ACTIONS, BUILDER_REPLIES } from './tutor';
+import { BUILDER_ACTIONS, BUILDER_REPLIES, tutorAsk } from './tutor';
 import type { Chain, Question, ReviewItem, RopeUnit, Side } from './types';
 import { Assistant } from './ui/Assistant';
 import { ChainCard } from './ui/ChainCard';
 import { ContextRail } from './ui/ContextRail';
 import { backLinkStyle, ClIcon, ClLabel, toolbarBtn } from './ui/primitives';
-import { ReviewPanel } from './ui/ReviewPanel';
+import { ReviewPanel, ReviewSummary } from './ui/ReviewPanel';
 import { Rope } from './ui/Rope';
 import { useReorder } from './ui/useReorder';
 import { WorkspaceGrid } from './ui/WorkspaceGrid';
@@ -35,6 +36,7 @@ export function ChainBuilder({ chains, setChains, stance, setStance, review, set
   const [help, setHelp] = useState(false);
   const [sel, setSel] = useState<string | null>(null);
   const [running, setRunning] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [railOpen, setRailOpen] = useState(!review);
   const [focusId, setFocusId] = useState<string | null>(null);
   const [seen, setSeen] = useState<string[]>([]);
@@ -57,10 +59,16 @@ export function ChainBuilder({ chains, setChains, stance, setStance, review, set
   const stale = review && review.key !== reviewKey(chains, stance);
 
   const runAudit = async () => {
-    setRunning(true);
-    const r = await requestChainReview(spec, chains, stance);
-    setChains((cs) => cs.map((c) => ({ ...c, check: r.checks[c.id] })));
-    setReview(r); setSeen([]); setRunning(false); setRailOpen(false);
+    setRunning(true); setError(null);
+    try {
+      const r = await requestChainReview(spec, chains, stance);
+      setChains((cs) => cs.map((c) => ({ ...c, check: r.checks[c.id] })));
+      setReview(r); setSeen([]); setRailOpen(false);
+    } catch (e) {
+      // A signed-out error is handled by the workspace's next save; show the rest here.
+      setError(e instanceof AiRequestError ? AI_ERROR_TEXT[e.code] : AI_ERROR_TEXT.network);
+    }
+    setRunning(false);
   };
   const closeReview = () => { setReview(null); setRailOpen(true); setFocusId(null); };
   const go = (it: ReviewItem) => {
@@ -135,19 +143,20 @@ export function ChainBuilder({ chains, setChains, stance, setStance, review, set
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', minHeight: 42, paddingBottom: 12 }}>
         <button type="button" className="cl-btn cl-link" onClick={onBack} style={backLinkStyle}><ClIcon name="left" size={14} />Thư viện đề</button>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          {error && <span role="alert" style={{ fontFamily: CL.sans, fontSize: 12, color: '#8B3A35', marginRight: 4 }}>{error}</span>}
           {review && <button type="button" className="cl-btn" onClick={() => setRailOpen(!railOpen)} aria-pressed={railOpen} style={toolbarBtn(railOpen)}>Đề bài</button>}
           <button type="button" className="cl-btn" onClick={runAudit} disabled={running} style={{ ...toolbarBtn(false), color: CL.ink, padding: '8px 14px', opacity: running ? 0.6 : 1 }}>{running ? 'Đang soát…' : review ? 'Soát lại' : 'Soát toàn bài'}</button>
           <button type="button" className="cl-btn" onClick={() => setHelp(!help)} aria-pressed={help} style={toolbarBtn(help)}>Hỏi</button>
           <button type="button" className="cl-btn cl-primary" onClick={onWrite} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, borderRadius: 5, background: CL.ink, color: '#fff', fontFamily: CL.sans, fontSize: 10.5, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', padding: '8px 14px' }}>Viết bài<ClIcon name="right" size={13} /></button>
         </div>
       </div>
-      {help && <Assistant onClose={() => setHelp(false)} contextLabel="Các mạch" contextMeta={chains.length + ' mạch'} intro="Mình đọc đề, các mạch và những gì bạn đã thử. Bắt đầu từ một trong những việc này:" placeholder="Hỏi về các mạch…" actions={BUILDER_ACTIONS} replies={BUILDER_REPLIES} />}
+      {help && <Assistant onClose={() => setHelp(false)} contextLabel="Các mạch" contextMeta={chains.length + ' mạch'} intro="Mình đọc đề, các mạch và những gì bạn đã thử. Bắt đầu từ một trong những việc này:" placeholder="Hỏi về các mạch…" actions={BUILDER_ACTIONS} onAsk={tutorAsk(spec, () => ({ screen: 'chains', chains, stance }), BUILDER_REPLIES)} />}
       <WorkspaceGrid
         rail={<ContextRail />}
         railOpen={railOpen}
         reviewOpen={!!review}
         main={<main ref={mainRef} className="cl-scroll" style={{ position: 'relative', minHeight: 0, minWidth: 0, overflowY: 'auto', padding: 2 }}>{body}</main>}
-        panel={review && <ReviewPanel review={review} live={stale ? reviewChains(spec, chains, stance) : review} chains={chains} stale={stale} running={running} onRerun={runAudit} onClose={closeReview} onGo={go} seen={seen} />}
+        panel={review && <ReviewPanel review={review} live={stale && review.source !== 'ai' ? reviewChains(spec, chains, stance) : review} chains={chains} stance={stance} top={review.summary && <ReviewSummary text={review.summary} />} stale={stale} running={running} onRerun={runAudit} onClose={closeReview} onGo={go} seen={seen} />}
       />
     </div>
   );

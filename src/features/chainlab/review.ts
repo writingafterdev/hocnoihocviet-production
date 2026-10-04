@@ -1,10 +1,10 @@
 /**
  * "Soát toàn bài" — whole-plan review for ChainLab.
  *
- * MOCK: these are the prototype's rule-based checks. The real version is an AI review based on
- * The Art of Nuance. Replace `requestChainReview` with an API call that returns the same shape;
- * nothing else in the UI needs to change.
+ * The review comes from /api/ai/chain-review (Claude, grounded in The Art of Nuance; see src/lib/ai).
+ * `reviewChains` holds the prototype's rule-based checks, used only when the AI is not configured.
  */
+import { postAi, AiRequestError } from '../ai/request';
 import { CL_CIRC, CL_SHAPE_LABEL } from './constants';
 import { hasVerdict, lensesFor, ropeUnits, shapeOf } from './model';
 import type { Chain, ChainCheck, PromptSpec, ReviewGroup, ReviewItem } from './types';
@@ -13,12 +13,19 @@ export interface ChainReview {
   key: string;
   checks: Record<string, ChainCheck>;
   groups: ReviewGroup[];
+  /** 'ai' = Claude; missing or 'mock' = rule-based checks. */
+  source?: 'ai' | 'mock';
+  /** One or two sentences on the plan as a whole (AI only). */
+  summary?: string;
 }
 
-const GROUPS: [string, string][] = [['logic', 'Mắt xích'], ['depth', 'Độ sâu'], ['scope', 'Trường hợp'], ['rope', 'Sợi dây'], ['stance', 'Lập trường'], ['cover', 'Độ phủ đề bài'], ['overlap', 'Trùng ý']];
+export const CHAIN_GROUPS: [string, string][] = [['logic', 'Mắt xích'], ['depth', 'Độ sâu'], ['scope', 'Trường hợp'], ['rope', 'Sợi dây'], ['stance', 'Lập trường'], ['cover', 'Độ phủ đề bài'], ['overlap', 'Trùng ý']];
 
 /** Identity of the input a review was run on, so the UI can tell when it is stale. */
 export const reviewKey = (chains: Chain[], stance: string) => JSON.stringify(chains.map(({ check, ...r }) => r)) + '|' + stance;
+
+/** What a chain-level comment was about; when it changes, the comment shows as "Đã sửa?". */
+export const chainSnap = (c: Chain) => JSON.stringify([c.title, c.area, c.steps, c.split, c.findings.map((f) => [f.kind, f.text, f.side, f.target]), c.side, c.fixes]);
 
 function mockCheck(chain: Chain): ChainCheck {
   const st = chain.steps;
@@ -34,7 +41,7 @@ function mockCheck(chain: Chain): ChainCheck {
 
 export function reviewChains(spec: PromptSpec, chains: Chain[], stance: string): ChainReview {
   const G: Record<string, ReviewItem[]> = {};
-  GROUPS.forEach(([k]) => (G[k] = []));
+  CHAIN_GROUPS.forEach(([k]) => (G[k] = []));
   const checks: Record<string, ChainCheck> = {};
   const nm = (c: Chain, i: number) => 'Mạch ' + (i + 1) + (c.title ? ' · ' + c.title : '');
   const push = (g: string, it: Omit<ReviewItem, 'key'>) => G[g].push({ key: g + G[g].length, ...it });
@@ -93,11 +100,17 @@ export function reviewChains(spec: PromptSpec, chains: Chain[], stance: string):
   return {
     key: reviewKey(chains, stance),
     checks,
-    groups: GROUPS.filter(([id]) => verdict || (id !== 'rope' && id !== 'stance')).map(([id, title]) => ({ id, title, items: G[id] })),
+    source: 'mock',
+    groups: CHAIN_GROUPS.filter(([id]) => verdict || (id !== 'rope' && id !== 'stance')).map(([id, title]) => ({ id, title, items: G[id] })),
   };
 }
 
-/** Async boundary the UI calls. Swap the body for a fetch to the real review endpoint. */
-export function requestChainReview(spec: PromptSpec, chains: Chain[], stance: string): Promise<ChainReview> {
-  return new Promise((resolve) => setTimeout(() => resolve(reviewChains(spec, chains, stance)), 700));
+/** Asks the AI to review the plan. Falls back to the rule-based checks when the AI is not configured. */
+export async function requestChainReview(spec: PromptSpec, chains: Chain[], stance: string): Promise<ChainReview> {
+  try {
+    return await postAi<ChainReview>('chain-review', { promptId: spec.id, chains: chains.map(({ check, ...c }) => c), stance });
+  } catch (e) {
+    if (e instanceof AiRequestError && e.code === 'not_configured') return reviewChains(spec, chains, stance);
+    throw e;
+  }
 }

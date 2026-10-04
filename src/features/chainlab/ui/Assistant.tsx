@@ -1,12 +1,15 @@
 'use client';
 
-import { Fragment, useState } from 'react';
+import { Fragment, useEffect, useRef, useState } from 'react';
+import { AI_ERROR_TEXT, AiRequestError } from '../../ai/request';
 import { CL } from '../constants';
 import { ClIcon, ClLabel } from './primitives';
 
 export interface AssistantAction { label: string; desc: string }
 
-interface Message { from: 'me' | 'ai'; text: string; ctx?: string }
+export interface Message { from: 'me' | 'ai'; text: string; ctx?: string; error?: boolean }
+
+export type AskFn = (question: string, history: Message[], lang: 'vi' | 'en') => Promise<string>;
 
 export interface AssistantProps {
   onClose: () => void;
@@ -15,20 +18,32 @@ export interface AssistantProps {
   intro: string;
   placeholder: string;
   actions: AssistantAction[];
-  /** MOCK: canned replies keyed by action label. Replace with a call to the tutoring endpoint. */
-  replies: Record<string, string>;
+  /** Asks the tutor (/api/ai/tutor). */
+  onAsk: AskFn;
 }
 
 /** "Hỏi" drawer: a context-aware tutor pinned to the right edge. */
-export function Assistant({ onClose, contextLabel, contextMeta, intro, placeholder, actions, replies }: AssistantProps) {
+export function Assistant({ onClose, contextLabel, contextMeta, intro, placeholder, actions, onAsk }: AssistantProps) {
   const [ask, setAsk] = useState('');
   const [lang, setLang] = useState<'vi' | 'en'>('vi');
   const [messages, setMessages] = useState<Message[]>([]);
-  const send = (t: string) => {
-    if (!t || !t.trim()) return;
-    const reply = replies[t] || 'Mình sẽ đọc câu hỏi này cùng với nội dung bạn đang làm.';
-    setMessages((m) => [...m, { from: 'me', text: t.trim() }, { from: 'ai', text: reply, ctx: contextLabel }]);
-    setAsk('');
+  const [pending, setPending] = useState(false);
+  const listRef = useRef<HTMLDivElement>(null);
+  useEffect(() => { const el = listRef.current; if (el) el.scrollTop = el.scrollHeight; }, [messages, pending]);
+  const send = async (t: string) => {
+    const q = (t || '').trim();
+    if (!q || pending) return;
+    const history = messages.filter((m) => !m.error);
+    setMessages((m) => [...m, { from: 'me', text: q }]);
+    setAsk(''); setPending(true);
+    const ctx = contextLabel;
+    try {
+      const reply = await onAsk(q, history, lang);
+      setMessages((m) => [...m, { from: 'ai', text: reply, ctx }]);
+    } catch (e) {
+      setMessages((m) => [...m, { from: 'ai', text: e instanceof AiRequestError ? AI_ERROR_TEXT[e.code] : AI_ERROR_TEXT.network, ctx, error: true }]);
+    }
+    setPending(false);
   };
   return (
     <div role="dialog" aria-label="Trợ lý" style={{ position: 'fixed', top: 16, right: 16, bottom: 16, width: 380, maxWidth: 'calc(100% - 32px)', zIndex: 30, display: 'flex', flexDirection: 'column', borderRadius: 18, border: '1px solid ' + CL.border, background: '#fff', boxShadow: '0 24px 60px rgba(20,20,19,0.14), 0 4px 12px rgba(20,20,19,0.06)', overflow: 'hidden' }}>
@@ -42,7 +57,7 @@ export function Assistant({ onClose, contextLabel, contextMeta, intro, placehold
         <span style={{ borderRadius: 5, border: '1px solid ' + CL.ink2, background: '#fff', padding: '3px 8px', fontFamily: CL.sans, fontSize: 11, fontWeight: 600, color: CL.ink }}>{contextLabel}</span>
         <span style={{ marginLeft: 'auto', fontFamily: CL.sans, fontSize: 11, color: CL.ink4, whiteSpace: 'nowrap' }}>{contextMeta}</span>
       </div>
-      <div className="cl-scroll" style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: '20px 22px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+      <div ref={listRef} className="cl-scroll" style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: '20px 22px', display: 'flex', flexDirection: 'column', gap: 12 }}>
         {!messages.length && (
           <Fragment>
             <p style={{ margin: 0, fontFamily: CL.serif, fontSize: 15, lineHeight: 1.55, color: CL.ink8, textWrap: 'pretty' }}>{intro}</p>
@@ -64,9 +79,10 @@ export function Assistant({ onClose, contextLabel, contextMeta, intro, placehold
         ) : (
           <div key={i} style={{ alignSelf: 'flex-start', maxWidth: '92%', display: 'flex', flexDirection: 'column', gap: 6 }}>
             <ClLabel color={CL.ink4} style={{ fontSize: 9.5 }}>Trợ lý · {m.ctx}</ClLabel>
-            <div style={{ borderRadius: 10, border: '1px solid ' + CL.ink1, background: '#FCFCFB', padding: '11px 14px', fontFamily: CL.sans, fontSize: 12.5, lineHeight: 1.6, color: CL.ink7 }}>{m.text}</div>
+            <div style={{ borderRadius: 10, border: '1px solid ' + CL.ink1, background: '#FCFCFB', padding: '11px 14px', fontFamily: CL.sans, fontSize: 12.5, lineHeight: 1.6, color: m.error ? '#8B3A35' : CL.ink7, whiteSpace: 'pre-wrap' }}>{m.text}</div>
           </div>
         ))}
+        {pending && <span aria-live="polite" style={{ alignSelf: 'flex-start', fontFamily: CL.sans, fontSize: 12, color: CL.ink4 }}>Đang nghĩ…</span>}
       </div>
       <div style={{ padding: '12px 14px 14px', borderTop: '1px solid ' + CL.ink1 }}>
         {messages.length > 0 && (
@@ -79,7 +95,7 @@ export function Assistant({ onClose, contextLabel, contextMeta, intro, placehold
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 6 }}>
             <button type="button" className="cl-btn" onClick={() => setLang(lang === 'vi' ? 'en' : 'vi')} style={{ borderRadius: 5, border: '1px solid ' + CL.ink2, padding: '4px 8px', fontFamily: CL.sans, fontSize: 10.5, fontWeight: 700, color: CL.ink6 }}>{lang === 'vi' ? 'Trả lời: Tiếng Việt' : 'Reply: English'}</button>
             <span style={{ marginLeft: 'auto', fontFamily: CL.sans, fontSize: 10.5, color: CL.ink4 }}>Enter để gửi</span>
-            <button type="button" className="cl-btn cl-primary" onClick={() => send(ask)} disabled={!ask.trim()} aria-label="Gửi" style={{ width: 34, height: 34, borderRadius: 7, background: CL.ink, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: ask.trim() ? 1 : 0.3 }}><ClIcon name="right" size={14} /></button>
+            <button type="button" className="cl-btn cl-primary" onClick={() => send(ask)} disabled={!ask.trim() || pending} aria-label="Gửi" style={{ width: 34, height: 34, borderRadius: 7, background: CL.ink, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: ask.trim() ? 1 : 0.3 }}><ClIcon name="right" size={14} /></button>
           </div>
         </div>
       </div>

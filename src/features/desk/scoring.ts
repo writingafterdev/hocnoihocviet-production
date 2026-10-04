@@ -1,10 +1,11 @@
 /**
  * "Nộp bài" — essay feedback and band estimate for the Writing Desk.
  *
- * MOCK: rule-based checks and a heuristic band from the prototype. The real version scores
- * TR / CC / LR / GRA with an AI examiner, and every comment must quote the essay. Replace
- * `requestEssayReview` with an API call returning the same `EssayReview` shape.
+ * Scores and comments come from /api/ai/essay-review (Claude as examiner, grounded in The Art of
+ * Nuance; see src/lib/ai): band + TR / CC / LR / GRA, comments grouped by criterion, each quoting
+ * the essay. `reviewEssay` holds the prototype's rule-based checks, used only when the AI is not configured.
  */
+import { AiRequestError, postAi } from '../ai/request';
 import { hasVerdict } from '../chainlab/model';
 import type { Chain, PromptSpec, ReviewGroup, ReviewItem } from '../chainlab/types';
 
@@ -20,11 +21,23 @@ export interface BandScores { band: number; tr: number; cc: number; lr: number; 
 
 export interface EssayReview {
   key: string;
+  /** One group per criterion: tr, cc, lr, gra. */
   groups: ReviewGroup[];
   scores: BandScores;
+  /** 'ai' = Claude; missing or 'mock' = rule-based checks. */
+  source?: 'ai' | 'mock';
+  /** Two or three sentences on the essay as a whole (AI only). */
+  summary?: string;
 }
 
-const GROUPS: [string, string][] = [['plan', 'Bám mạch'], ['stance', 'Lập trường'], ['structure', 'Cấu trúc đoạn'], ['cohesion', 'Mạch lạc'], ['vague', 'Từ mơ hồ'], ['length', 'Độ dài']];
+/** Feedback groups, one per IELTS criterion. */
+export const CRITERIA: [string, string][] = [['tr', 'Task Response'], ['cc', 'Coherence & Cohesion'], ['lr', 'Lexical Resource'], ['gra', 'Grammatical Range & Accuracy']];
+
+/** Overall band: mean of the four criteria, rounded to the nearest half band (.25 and .75 round up). */
+export const bandOf = (tr: number, cc: number, lr: number, gra: number) => Math.round(((tr + cc + lr + gra) / 4) * 2) / 2;
+
+// Mock checks, and the criterion each one counts towards.
+const GROUPS: [string, string][] = [['plan', 'tr'], ['stance', 'tr'], ['length', 'tr'], ['structure', 'cc'], ['cohesion', 'cc'], ['vague', 'lr']];
 const VAGUE = ['things', 'stuff', 'a lot', 'very', 'good', 'bad', 'pressure', 'many people', 'nowadays'];
 
 export const wordCount = (t?: string) => (t && t.trim() ? t.trim().split(/\s+/).length : 0);
@@ -77,15 +90,26 @@ export function reviewEssay(spec: PromptSpec, sections: EssaySection[], drafts: 
   const cc = clamp(7 - G.cohesion.length * 0.5 - G.structure.length * 0.25);
   const lr = clamp(6.5 + (words > 200 ? 0.5 : 0) - G.vague.length * 0.5);
   const gra = clamp(6.5 + (words > 200 ? 0.5 : 0) - (nIss > 8 ? 0.5 : 0));
-  const band = clamp((tr + cc + lr + gra) / 4);
   return {
-    groups: GROUPS.filter(([id]) => verdict || id !== 'stance').map(([id, title]) => ({ id, title, items: G[id] })),
-    scores: { band, tr, cc, lr, gra },
+    source: 'mock',
+    groups: CRITERIA.map(([id, title]) => ({ id, title, items: GROUPS.filter(([, c]) => c === id).flatMap(([g]) => G[g]) })),
+    scores: { band: bandOf(tr, cc, lr, gra), tr, cc, lr, gra },
     key: draftsKey(drafts),
   };
 }
 
-/** Async boundary the UI calls. Swap the body for a fetch to the real scoring endpoint. */
-export function requestEssayReview(spec: PromptSpec, sections: EssaySection[], drafts: Record<string, string>, chains: Chain[], stance: string): Promise<EssayReview> {
-  return new Promise((resolve) => setTimeout(() => resolve(reviewEssay(spec, sections, drafts, chains, stance)), 900));
+/** Sends the essay for scoring. Falls back to the rule-based checks when the AI is not configured. */
+export async function requestEssayReview(spec: PromptSpec, sections: EssaySection[], drafts: Record<string, string>, chains: Chain[], stance: string): Promise<EssayReview> {
+  try {
+    const r = await postAi<EssayReview>('essay-review', {
+      promptId: spec.id,
+      sections: sections.map((s) => ({ id: s.id, label: s.label, text: drafts[s.id] || '' })),
+      chains: chains.map(({ check, ...c }) => c),
+      stance,
+    });
+    return { ...r, key: draftsKey(drafts) };
+  } catch (e) {
+    if (e instanceof AiRequestError && e.code === 'not_configured') return reviewEssay(spec, sections, drafts, chains, stance);
+    throw e;
+  }
 }
