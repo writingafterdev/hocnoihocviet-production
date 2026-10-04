@@ -95,6 +95,8 @@ export interface ReviewItem {
   word?: string;
   /** Essay feedback: the quoted passage, shown above the comment. */
   quote?: string;
+  /** Essay feedback: a drop-in replacement for `quote`, when the fix fits inside it. */
+  fix?: string;
   para?: boolean;
   fixed?: boolean;
 }

@@ -128,9 +128,14 @@ Three features call Claude (`claude-opus-5-5`) from the Worker. Each is grounded
 | "Nộp bài" (Writing Desk) | `POST /api/ai/essay-review` | `lib/ai/essay-review.ts` | Band plus TR / CC / LR / GRA, an overall comment, and comments grouped by criterion. |
 | "Hỏi" tutor | `POST /api/ai/tutor` | `lib/ai/tutor.ts` | A short reply that reads the prompt, the chains and the paragraph in focus. |
 
-- **Quotes:** every essay comment must quote the essay. The server finds each quote in the text, ignoring case and
-  spacing, and drops any comment whose quote is not in the essay. A comment shows as "Đã sửa?" once its quoted words
-  are gone.
+- **Highlights:** every essay comment quotes the exact words it is about. The server finds each quote in the text,
+  ignoring case and spacing, and drops any comment whose quote is not in the essay. After submitting, each paragraph
+  shows its quotes highlighted in the criterion's colour. Clicking a highlight selects its comment, and clicking a
+  comment scrolls to its highlight. LR and GRA comments, and small TR/CC fixes, carry a drop-in fix. A comment shows
+  as "Đã sửa?" once its quoted words are gone.
+- **Grounding:** `method.ts` covers Phase 0–2, the nine question types and Module 2 (coherence and cohesion). The
+  essay prompt reads Task Response in fixed steps, then Coherence (whole essay → paragraph → sentence), then Cohesion
+  (sentence openings → reference words → connectors).
 - **Daily limits per student:** 10 chain reviews, 5 essay scorings and 40 tutor questions (`DAILY_LIMIT` in
   `lib/ai/claude.ts`). Days follow Vietnam time. Usage and token counts go in the D1 `ai_usage` table, and a failed
   call doesn't count. `GET /api/ai/usage` shows what's left today.

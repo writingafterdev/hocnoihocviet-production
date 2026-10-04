@@ -1,6 +1,6 @@
 'use client';
 
-import type { ReactNode } from 'react';
+import { useEffect, type ReactNode } from 'react';
 import { CL } from '../constants';
 import { chainSnap } from '../review';
 import type { Chain, ReviewGroup, ReviewItem } from '../types';
@@ -23,10 +23,18 @@ export interface ReviewPanelProps {
   top?: ReactNode;
   title?: string;
   rerunLabel?: string;
+  /** The item picked from a highlight in the essay; shown selected and scrolled into view. */
+  active?: string | null;
+  /** Accent per group id (essay criteria), used for the quote bar and the group dot. */
+  accents?: Record<string, { line: string; soft: string }>;
 }
 
 /** Right-hand feedback panel: grouped questions, "Đã sửa?" once an item no longer applies. */
-export function ReviewPanel({ review, live, chains = [], stance, stale, running, onRerun, onClose, onGo, seen, fixedFn, top, title = 'Nhận xét', rerunLabel = 'Soát lại' }: ReviewPanelProps) {
+export function ReviewPanel({ review, live, chains = [], stance, stale, running, onRerun, onClose, onGo, seen, fixedFn, top, title = 'Nhận xét', rerunLabel = 'Soát lại', active, accents }: ReviewPanelProps) {
+  useEffect(() => {
+    const el = active && document.getElementById('rv-' + active);
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }, [active]);
   const liveSet = new Set((live || review).groups.flatMap((g) => g.items.map((it) => g.id + '|' + it.text)));
   const isFixed = fixedFn || ((g: ReviewGroup, it: ReviewItem) => {
     if (it.snapKind === 'stance') return (stance || '') !== it.snap;
@@ -57,20 +65,24 @@ export function ReviewPanel({ review, live, chains = [], stance, stale, running,
           return (
             <section key={g.id} style={{ overflow: 'hidden', borderRadius: 18, border: '1px solid ' + CL.border, background: '#fff', flexShrink: 0 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, minHeight: 50, padding: '0 18px', background: CL.panel, borderBottom: '1px solid ' + CL.ink2 }}>
+                {accents && accents[g.id] && <span style={{ width: 9, height: 9, borderRadius: 3, background: accents[g.id].line, flexShrink: 0 }} />}
                 <span style={{ fontFamily: CL.sans, fontSize: 13.5, fontWeight: 600, color: CL.ink }}>{g.title}</span>
                 <span style={{ marginLeft: 'auto', fontFamily: CL.sans, fontSize: 11, fontWeight: 600, color: open ? CL.ink5 : CL.greenText }}>{open ? open + ' chỗ' : 'Đã sửa hết'}</span>
               </div>
               <div style={{ display: 'flex', flexDirection: 'column' }}>
                 {g.items.map((it, k) => {
-                  const dim = it.fixed || seen.includes(it.key);
+                  const on = active === it.key;
+                  const dim = !on && (it.fixed || seen.includes(it.key));
+                  const accent = accents && accents[g.id];
                   return (
-                    <button key={it.key} type="button" className="cl-btn cl-rv" onClick={() => onGo(it)} style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 5, width: '100%', textAlign: 'left', padding: '13px 18px', borderTop: k ? '1px solid ' + CL.ink1 : 'none', opacity: dim ? 0.5 : 1, transition: 'background .15s, opacity .25s' }}>
+                    <button key={it.key} id={'rv-' + it.key} type="button" className="cl-btn cl-rv" onClick={() => onGo(it)} aria-pressed={on} style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 5, width: '100%', textAlign: 'left', padding: '13px 18px', borderTop: k ? '1px solid ' + CL.ink1 : 'none', background: on ? (accent ? accent.soft : CL.panel) : undefined, boxShadow: on ? 'inset 3px 0 0 ' + (accent ? accent.line : CL.ink) : 'none', opacity: dim ? 0.5 : 1, transition: 'background .15s, opacity .25s' }}>
                       <span style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%' }}>
                         <span style={{ fontFamily: CL.sans, fontSize: 10.5, fontWeight: 600, color: CL.ink5 }}>{it.where}</span>
                         {it.fixed && <span style={{ marginLeft: 'auto', display: 'inline-flex', alignItems: 'center', gap: 4, borderRadius: 5, background: CL.mintSoft, padding: '2px 7px', fontFamily: CL.sans, fontSize: 10, fontWeight: 600, color: CL.greenText, whiteSpace: 'nowrap' }}><ClIcon name="check" size={10} color={CL.green} />Đã sửa?</span>}
                       </span>
-                      {it.quote && <span style={{ borderLeft: '2px solid ' + CL.ink2, paddingLeft: 9, fontFamily: CL.serif, fontSize: 13, lineHeight: 1.5, fontStyle: 'italic', color: CL.ink6, textWrap: 'pretty' }}>“{it.quote}”</span>}
+                      {it.quote && <span style={{ borderLeft: '2px solid ' + (accent ? accent.line : CL.ink2), paddingLeft: 9, fontFamily: CL.serif, fontSize: 13, lineHeight: 1.5, fontStyle: 'italic', color: CL.ink6, textWrap: 'pretty' }}>“{it.quote}”</span>}
                       <span style={{ fontFamily: CL.sans, fontSize: 12.5, lineHeight: 1.55, color: CL.ink8, textWrap: 'pretty', textDecoration: it.fixed ? 'line-through' : 'none', textDecorationColor: CL.ink3 }}>{it.text}</span>
+                      {it.fix && <span style={{ display: 'inline-flex', alignItems: 'baseline', gap: 6, fontFamily: CL.serif, fontSize: 13, lineHeight: 1.5, color: CL.greenText }}><span style={{ fontFamily: CL.sans, fontSize: 10, fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', color: CL.green }}>Sửa</span>{it.fix}</span>}
                     </button>
                   );
                 })}

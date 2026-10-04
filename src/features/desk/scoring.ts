@@ -33,6 +33,14 @@ export interface EssayReview {
 /** Feedback groups, one per IELTS criterion. */
 export const CRITERIA: [string, string][] = [['tr', 'Task Response'], ['cc', 'Coherence & Cohesion'], ['lr', 'Lexical Resource'], ['gra', 'Grammatical Range & Accuracy']];
 
+/** Highlight colours per criterion: underline/bar and soft background. */
+export const CRITERION_STYLE: Record<string, { line: string; soft: string }> = {
+  tr: { line: '#D5452E', soft: '#FBE4E0' },
+  cc: { line: '#C08A00', soft: '#FFF3CC' },
+  lr: { line: '#17839A', soft: '#E1F3F8' },
+  gra: { line: '#6A4BC4', soft: '#EEE9FB' },
+};
+
 /** Overall band: mean of the four criteria, rounded to the nearest half band (.25 and .75 round up). */
 export const bandOf = (tr: number, cc: number, lr: number, gra: number) => Math.round(((tr + cc + lr + gra) / 4) * 2) / 2;
 
