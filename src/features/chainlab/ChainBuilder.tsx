@@ -1,6 +1,6 @@
 'use client';
 
-import { Fragment, useRef, useState } from 'react';
+import { Fragment, useEffect, useRef, useState } from 'react';
 import { AI_ERROR_TEXT, AiRequestError } from '../ai/request';
 import { Translator } from '../ai/Translator';
 import { CL, CL_CIRC, CL_FIXABLE, CL_SHAPE_LABEL } from './constants';
@@ -14,7 +14,7 @@ import { backLinkStyle, ClIcon, ClLabel, toolbarBtn } from './ui/primitives';
 import { ReviewPanel, ReviewSummary } from './ui/ReviewPanel';
 import { Rope } from './ui/Rope';
 import { useReorder } from './ui/useReorder';
-import { WorkspaceGrid } from './ui/WorkspaceGrid';
+import { useThreePanels, WorkspaceGrid } from './ui/WorkspaceGrid';
 
 export interface ChainBuilderProps {
   chains: Chain[];
@@ -36,7 +36,10 @@ export function ChainBuilder({ chains, setChains, stance, setStance, review, set
   const [sel, setSel] = useState<string | null>(null);
   const [running, setRunning] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [railOpen, setRailOpen] = useState(!review);
+  const three = useThreePanels();
+  const [railOpen, setRailOpen] = useState(true);
+  // Narrow screen: the rail would cover the work as a drawer, so start it closed while a side panel is open.
+  useEffect(() => { if (!three && (review || help)) setRailOpen(false); }, [three]); // eslint-disable-line react-hooks/exhaustive-deps
   const [focusId, setFocusId] = useState<string | null>(null);
   const [seen, setSeen] = useState<string[]>([]);
   const mainRef = useRef<HTMLElement>(null);
@@ -62,7 +65,7 @@ export function ChainBuilder({ chains, setChains, stance, setStance, review, set
     try {
       const r = await requestChainReview(spec, chains, stance);
       setChains((cs) => cs.map((c) => ({ ...c, check: r.checks[c.id] })));
-      setReview(r); setSeen([]); setRailOpen(false);
+      setReview(r); setSeen([]); if (!three) setRailOpen(false);
     } catch (e) {
       // A signed-out error is handled by the workspace's next save; show the rest here.
       setError(e instanceof AiRequestError ? AI_ERROR_TEXT[e.code] : AI_ERROR_TEXT.network);
@@ -143,19 +146,20 @@ export function ChainBuilder({ chains, setChains, stance, setStance, review, set
         <button type="button" className="cl-btn cl-link" onClick={onBack} style={backLinkStyle}><ClIcon name="left" size={14} />Thư viện đề</button>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           {error && <span role="alert" style={{ fontFamily: CL.sans, fontSize: 12, color: '#8B3A35', marginRight: 4 }}>{error}</span>}
-          {review && <button type="button" className="cl-btn" onClick={() => setRailOpen(!railOpen)} aria-pressed={railOpen} style={toolbarBtn(railOpen)}>Đề bài</button>}
+          <button type="button" className="cl-btn" onClick={() => setRailOpen(!railOpen)} aria-pressed={railOpen} style={toolbarBtn(railOpen)}>Đề bài</button>
           <button type="button" className="cl-btn" onClick={runAudit} disabled={running} style={{ ...toolbarBtn(false), color: CL.ink, padding: '8px 14px', opacity: running ? 0.6 : 1 }}>{running ? 'Đang soát…' : review ? 'Soát lại' : 'Soát toàn bài'}</button>
-          <button type="button" className="cl-btn" onClick={() => setHelp(!help)} aria-pressed={help} style={toolbarBtn(help)}>Dịch</button>
+          <button type="button" className="cl-btn" onClick={() => { if (!help && !three) setRailOpen(false); setHelp(!help); }} aria-pressed={help} style={toolbarBtn(help)}>Dịch</button>
           <button type="button" className="cl-btn cl-primary" onClick={onWrite} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, borderRadius: 5, background: CL.ink, color: '#fff', fontFamily: CL.sans, fontSize: 10.5, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', padding: '8px 14px' }}>Viết bài<ClIcon name="right" size={13} /></button>
         </div>
       </div>
-      {help && <Translator onClose={() => setHelp(false)} />}
       <WorkspaceGrid
         rail={<ContextRail />}
         railOpen={railOpen}
         reviewOpen={!!review}
         main={<main ref={mainRef} className="cl-scroll" style={{ position: 'relative', minHeight: 0, minWidth: 0, overflowY: 'auto', padding: 2 }}>{body}</main>}
         panel={review && <ReviewPanel review={review} live={stale && review.source !== 'ai' ? reviewChains(spec, chains, stance) : review} chains={chains} stance={stance} top={review.summary && <ReviewSummary text={review.summary} />} stale={stale} running={running} onRerun={runAudit} onClose={closeReview} onGo={go} seen={seen} />}
+        side={<Translator onClose={() => setHelp(false)} />}
+        sideOpen={help}
       />
     </div>
   );

@@ -11,7 +11,7 @@ import { PromptBlock, RailTop } from '../chainlab/ui/ContextRail';
 import { backLinkStyle, ClIcon, ClLabel, ClTag, toolbarBtn } from '../chainlab/ui/primitives';
 import { ReviewPanel, Rich } from '../chainlab/ui/ReviewPanel';
 import { Rope } from '../chainlab/ui/Rope';
-import { WorkspaceGrid } from '../chainlab/ui/WorkspaceGrid';
+import { useThreePanels, WorkspaceGrid } from '../chainlab/ui/WorkspaceGrid';
 import type { EssayState } from '../attempts/store';
 import { CRITERIA, CRITERION_STYLE, draftsKey, requestEssayReview, wordCount, type EssayReview, type EssaySection } from './scoring';
 
@@ -218,7 +218,10 @@ export function ChainDesk({ chains, stance, essay, setEssay, onBack }: { chains:
   const [activeId, setActiveId] = useState('intro');
   const [running, setRunning] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [railOpen, setRailOpen] = useState(!essay.review);
+  const three = useThreePanels();
+  const [railOpen, setRailOpen] = useState(true);
+  // Narrow screen: the rail would cover the work as a drawer, so start it closed while a side panel is open.
+  useEffect(() => { if (!three && (essay.review || help)) setRailOpen(false); }, [three]); // eslint-disable-line react-hooks/exhaustive-deps
   const [seen, setSeen] = useState<string[]>([]);
   const [focusSec, setFocusSec] = useState<string | null>(null);
   const [active, setActive] = useState<string | null>(null);
@@ -246,7 +249,7 @@ export function ChainDesk({ chains, stance, essay, setEssay, onBack }: { chains:
     setRunning(true); setError(null);
     try {
       const r = await requestEssayReview(spec, sections, drafts, chains, stance);
-      setReview(r); setSeen([]); setRailOpen(false); setActive(null); setEditId(null); setTab('band');
+      setReview(r); setSeen([]); if (!three) setRailOpen(false); setActive(null); setEditId(null); setTab('band');
     } catch (e) {
       setError(e instanceof AiRequestError ? AI_ERROR_TEXT[e.code] : AI_ERROR_TEXT.network);
     }
@@ -372,7 +375,7 @@ export function ChainDesk({ chains, stance, essay, setEssay, onBack }: { chains:
             <span style={{ fontFamily: CL.sans, fontSize: 16, fontWeight: 600, color: CL.ink, fontVariantNumeric: 'tabular-nums' }}>{clock}</span>
           </div>
           {error && <span role="alert" style={{ marginLeft: 'auto', alignSelf: 'center', fontFamily: CL.sans, fontSize: 12, color: '#8B3A35' }}>{error}</span>}
-          <button type="button" className="cl-btn" onClick={() => setHelp(!help)} aria-pressed={help} style={{ marginLeft: error ? 0 : 'auto', height: 40, borderRadius: 12, border: '1px solid ' + (help ? CL.ink : CL.ink2), background: '#fff', color: CL.ink, fontFamily: CL.sans, fontSize: 13, fontWeight: 600, padding: '0 18px' }}>Dịch</button>
+          <button type="button" className="cl-btn" onClick={() => { if (!help && !three) setRailOpen(false); setHelp(!help); }} aria-pressed={help} style={{ marginLeft: error ? 0 : 'auto', height: 40, borderRadius: 12, border: '1px solid ' + (help ? CL.ink : CL.ink2), background: '#fff', color: CL.ink, fontFamily: CL.sans, fontSize: 13, fontWeight: 600, padding: '0 18px' }}>Dịch</button>
           <button type="button" className="cl-btn cl-primary" onClick={submit} disabled={running || (review && !stale)} style={{ height: 40, borderRadius: 12, background: CL.ink, color: '#fff', fontFamily: CL.sans, fontSize: 13, fontWeight: 600, padding: '0 20px', opacity: running || (review && !stale) ? 0.4 : 1 }}>{running ? 'Đang chấm… (khoảng 1 phút)' : review ? (stale ? 'Nộp lại' : 'Đã nộp') : 'Nộp bài'}</button>
         </div>
       </div>
@@ -383,7 +386,7 @@ export function ChainDesk({ chains, stance, essay, setEssay, onBack }: { chains:
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column', maxWidth: 1710, margin: '0 auto', padding: '12px 40px 16px' }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', minHeight: 42, paddingBottom: 12 }}>
         <button type="button" className="cl-btn cl-link" onClick={onBack} style={backLinkStyle}><ClIcon name="left" size={14} />Quay lại các mạch</button>
-        {review && <button type="button" className="cl-btn" onClick={() => setRailOpen(!railOpen)} aria-pressed={railOpen} style={toolbarBtn(railOpen)}>Đề bài</button>}
+        <button type="button" className="cl-btn" onClick={() => setRailOpen(!railOpen)} aria-pressed={railOpen} style={toolbarBtn(railOpen)}>Đề bài</button>
       </div>
       <WorkspaceGrid
         rail={rail}
@@ -391,7 +394,8 @@ export function ChainDesk({ chains, stance, essay, setEssay, onBack }: { chains:
         reviewOpen={!!review}
         main={main}
         panel={review && <ReviewPanel title="Kết quả" review={shown} list={tab !== 'band'} showOk={false} emptyText="Không có nhận xét chi tiết cho tiêu chí này." stale={stale} running={running} onRerun={submit} rerunLabel="Nộp lại" onClose={closeReview} onGo={go} seen={seen} fixedFn={fixedFn} header={false} top={<DeskScores review={review} tab={tab} setTab={(t) => { setTab(t); setActive(null); }} counts={counts} onClose={closeReview} />} active={active} accents={CRITERION_STYLE} cards />}
-        overlay={help && <Translator onClose={() => setHelp(false)} />}
+        side={<Translator onClose={() => setHelp(false)} />}
+        sideOpen={help}
       />
     </div>
   );

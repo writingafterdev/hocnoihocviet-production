@@ -43,7 +43,7 @@ export function Translator({ onClose }: { onClose: () => void }) {
   };
 
   return (
-    <div role="dialog" aria-label="Dịch" style={{ position: 'fixed', top: 16, right: 16, bottom: 16, width: 380, maxWidth: 'calc(100% - 32px)', zIndex: 30, display: 'flex', flexDirection: 'column', borderRadius: 18, border: '1px solid ' + CL.border, background: '#fff', boxShadow: '0 24px 60px rgba(20,20,19,0.14), 0 4px 12px rgba(20,20,19,0.06)', overflow: 'hidden' }}>
+    <section aria-label="Dịch" style={{ flex: 1, minHeight: 0, height: '100%', display: 'flex', flexDirection: 'column', borderRadius: 18, border: '1px solid ' + CL.border, background: '#fff', overflow: 'hidden' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, minHeight: 58, padding: '0 10px 0 22px', borderBottom: '1px solid ' + CL.ink1 }}>
         <span style={{ width: 8, height: 8, borderRadius: 999, background: CL.mint }} />
         <ClLabel color={CL.ink}>Dịch</ClLabel>
@@ -84,6 +84,6 @@ export function Translator({ onClose }: { onClose: () => void }) {
           </div>
         ))}
       </div>
-    </div>
+    </section>
   );
 }
