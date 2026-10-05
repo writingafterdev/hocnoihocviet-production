@@ -103,7 +103,7 @@ function MarkedText({ text, marks, active, onPick, onEdit, style }: { text: stri
   const { runs, starts } = markRuns(text, marks);
   const ids = new Set<string>();
   return (
-    <div role="textbox" aria-readonly="true" tabIndex={0} className="desk-swap" onClick={onEdit} onKeyDown={(e) => { if (e.key === 'Enter') onEdit(); }} title="Bấm vào chữ để sửa đoạn này" style={{ ...style, cursor: 'text', whiteSpace: 'pre-wrap', overflowWrap: 'break-word' }}>
+    <div role="textbox" aria-readonly="true" tabIndex={0} onClick={onEdit} onKeyDown={(e) => { if (e.key === 'Enter') onEdit(); }} title="Bấm vào chữ để sửa đoạn này" style={{ ...style, cursor: 'text', whiteSpace: 'pre-wrap', overflowWrap: 'break-word' }}>
       {runs.map((r) => {
         if (!r.on.length) return <span key={r.a}>{text.slice(r.a, r.b)}</span>;
         const m = r.on[0];
@@ -335,6 +335,8 @@ export function ChainDesk({ chains, stance, essay, setEssay, onBack }: { chains:
     const st = CRITERION_STYLE[groupOf.get(it.key)] || CRITERION_STYLE.tr;
     return { key: it.key, word: it.word, line: st.line, soft: st.soft };
   });
+  // A reviewed paragraph shows its highlights until the student clicks into it.
+  const reviewing = (id: string) => !!review && editId !== id && !!(drafts[id] || '').trim();
   const go = (it: ReviewItem) => {
     setSeen((s) => (s.includes(it.key) ? s : [...s, it.key]));
     setActive(it.key); setEditId(null); setTab((groupOf.get(it.key) as Tab) || 'band');
@@ -422,13 +424,15 @@ export function ChainDesk({ chains, stance, essay, setEssay, onBack }: { chains:
                   {isBody && bodyCount > 1 && <button type="button" className="cl-btn cl-del" onClick={() => removeBody(s.id)} aria-label="Xoá đoạn" style={{ alignSelf: 'center', width: 24, height: 24, display: 'flex', alignItems: 'center', justifyContent: 'center', color: CL.ink3 }}><ClIcon name="trash" size={13} /></button>}
                 </div>
                 <div style={{ position: 'relative' }}>
-                  {review && editId !== s.id && (drafts[s.id] || '').trim() ? (
-                    <MarkedText text={drafts[s.id]} marks={marksFor(s.id)} active={active} onPick={pick} onEdit={() => { setEditId(s.id); setActiveId(s.id); }}
-                      style={{ minHeight: isBody ? 150 : 96, borderRadius: 12, border: '1px solid ' + (focusSec === s.id ? CL.ink : CL.ink2), boxShadow: focusSec === s.id ? '0 0 0 4px ' + CL.ink1 : 'none', fontFamily: CL.serif, fontSize: 15.5, lineHeight: 1.7, color: CL.ink8, padding: '14px 18px', transition: 'border-color .15s, box-shadow .3s' }} />
-                  ) : (<>
-                  <DeskMarks text={drafts[s.id] || ''} marks={marksFor(s.id)} />
-                  <textarea className="cl-ta cl-field desk-swap" autoFocus={!!review && editId === s.id} value={drafts[s.id] || ''} onFocus={() => setActiveId(s.id)} onBlur={() => { if (editId === s.id) setEditId(null); }} onChange={(e) => { const v = e.target.value; setEssay((x) => ({ ...x, drafts: { ...x.drafts, [s.id]: v } })); }} placeholder={s.placeholder} aria-label={s.label} rows={isBody ? 5 : 3} style={{ display: 'block', width: '100%', minHeight: isBody ? 150 : 96, resize: 'none', borderRadius: 12, border: '1px solid ' + (focusSec === s.id ? CL.ink : activeId === s.id ? CL.ink4 : CL.ink2), boxShadow: focusSec === s.id ? '0 0 0 4px ' + CL.ink1 : 'none', outline: 'none', background: 'transparent', position: 'relative', fontFamily: CL.serif, fontSize: 15.5, lineHeight: 1.7, color: CL.ink8, padding: '14px 18px', fieldSizing: 'content', transition: 'border-color .15s, box-shadow .3s' } as React.CSSProperties} />
-                  </>)}
+                  {/* Both views stay mounted: the textarea owns the box, the highlighted text is laid over it and fades out when editing starts. */}
+                  {!review && <DeskMarks text={drafts[s.id] || ''} marks={marksFor(s.id)} />}
+                  <textarea id={'ta-' + s.id} className="cl-ta cl-field" value={drafts[s.id] || ''} onFocus={() => { setActiveId(s.id); if (review) setEditId(s.id); }} onBlur={() => { if (editId === s.id) setEditId(null); }} onChange={(e) => { const v = e.target.value; setEssay((x) => ({ ...x, drafts: { ...x.drafts, [s.id]: v } })); }} placeholder={s.placeholder} aria-label={s.label} rows={isBody ? 5 : 3} style={{ display: 'block', width: '100%', minHeight: isBody ? 150 : 96, resize: 'none', borderRadius: 12, border: '1px solid ' + (focusSec === s.id ? CL.ink : activeId === s.id ? CL.ink4 : CL.ink2), boxShadow: focusSec === s.id ? '0 0 0 4px ' + CL.ink1 : 'none', outline: 'none', background: 'transparent', position: 'relative', fontFamily: CL.serif, fontSize: 15.5, lineHeight: 1.7, color: reviewing(s.id) ? 'transparent' : CL.ink8, caretColor: CL.ink8, padding: '14px 18px', fieldSizing: 'content', transition: 'color .22s ease, border-color .15s, box-shadow .3s, background-color .22s ease' } as React.CSSProperties} />
+                  {review && (drafts[s.id] || '').trim() && (
+                    <div aria-hidden={editId === s.id} style={{ position: 'absolute', inset: 0, opacity: reviewing(s.id) ? 1 : 0, visibility: reviewing(s.id) ? 'visible' : 'hidden', pointerEvents: reviewing(s.id) ? 'auto' : 'none', transition: 'opacity .22s ease, visibility 0s linear ' + (reviewing(s.id) ? '0s' : '.22s') }}>
+                      <MarkedText text={drafts[s.id]} marks={marksFor(s.id)} active={active} onPick={pick} onEdit={() => { setEditId(s.id); setActiveId(s.id); document.getElementById('ta-' + s.id)?.focus(); }}
+                        style={{ height: '100%', boxSizing: 'border-box', borderRadius: 12, border: '1px solid transparent', fontFamily: CL.serif, fontSize: 15.5, lineHeight: 1.7, color: CL.ink8, padding: '14px 18px' }} />
+                    </div>
+                  )}
                 </div>
               </section>
             );
