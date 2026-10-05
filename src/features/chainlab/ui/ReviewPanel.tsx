@@ -35,6 +35,8 @@ export interface ReviewPanelProps {
   emptyText?: string | null;
   /** Essay feedback: each item is its own card (error name, comment, "Sửa lại"), without group headers. */
   cards?: boolean;
+  /** false = no title row (title, count, close); `top` then carries its own close button. */
+  header?: boolean;
 }
 
 /** Text with **bold** spans, as the AI writes key terms. */
@@ -60,7 +62,7 @@ function CommentCard({ it, on, dim, accent, onGo }: { it: ReviewItem; on: boolea
 }
 
 /** Right-hand feedback panel: grouped questions, "Đã sửa?" once an item no longer applies. */
-export function ReviewPanel({ review, live, chains = [], stance, stale, running, onRerun, onClose, onGo, seen, fixedFn, top, title = 'Nhận xét', rerunLabel = 'Soát lại', active, accents, list = true, showOk = true, emptyText = 'Không thấy vấn đề nào. Sẵn sàng viết.', cards = false }: ReviewPanelProps) {
+export function ReviewPanel({ review, live, chains = [], stance, stale, running, onRerun, onClose, onGo, seen, fixedFn, top, title = 'Nhận xét', rerunLabel = 'Soát lại', active, accents, list = true, showOk = true, emptyText = 'Không thấy vấn đề nào. Sẵn sàng viết.', cards = false, header = true }: ReviewPanelProps) {
   useEffect(() => {
     const el = active && document.getElementById('rv-' + active);
     if (el) el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
@@ -82,12 +84,12 @@ export function ReviewPanel({ review, live, chains = [], stance, stale, running,
   const ok = groups.filter((g) => !g.items.length);
   return (
     <aside style={{ height: '100%', display: 'flex', flexDirection: 'column', minHeight: 0 }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10, minHeight: 42, padding: '0 4px 12px 6px' }}>
+      {header && <div style={{ display: 'flex', alignItems: 'center', gap: 10, minHeight: 42, padding: '0 4px 12px 6px' }}>
         <ClLabel color={CL.ink}>{title}</ClLabel>
         <span style={{ fontFamily: CL.sans, fontSize: 11, color: CL.ink4 }}>{left === total ? total + ' câu hỏi' : 'Còn ' + left + ' / ' + total}</span>
         {stale && <button type="button" className="cl-btn" onClick={onRerun} disabled={running} style={{ marginLeft: 'auto', borderRadius: 7, border: '1px solid ' + CL.ink2, background: '#fff', padding: '5px 10px', fontFamily: CL.sans, fontSize: 11, fontWeight: 600, color: CL.ink }}>{running ? 'Đang chấm…' : rerunLabel}</button>}
         <button type="button" className="cl-btn" onClick={onClose} aria-label="Đóng" style={{ marginLeft: stale ? 0 : 'auto', width: 32, height: 32, display: 'grid', placeItems: 'center', color: CL.ink5 }}><ClIcon name="x" size={15} /></button>
-      </div>
+      </div>}
       <div className="cl-scroll" style={{ flex: 1, minHeight: 0, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 16, padding: '2px 2px 20px' }}>
         {top}
         {list && cards && groups.flatMap((g) => g.items.map((it) => (

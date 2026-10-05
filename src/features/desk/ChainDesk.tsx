@@ -130,13 +130,13 @@ const CRITERION_NAME: Record<string, string> = Object.fromEntries(CRITERIA);
  * Score bar that doubles as navigation: Band = overview of the four criteria, TR / CC / LR / GRA = that
  * criterion's assessment (why this band, how to go higher) followed by its detailed comments.
  */
-function DeskScores({ review, tab, setTab, counts }: { review: EssayReview; tab: Tab; setTab: (t: Tab) => void; counts: Record<string, number> }) {
+function DeskScores({ review, tab, setTab, counts, onClose }: { review: EssayReview; tab: Tab; setTab: (t: Tab) => void; counts: Record<string, number>; onClose: () => void }) {
   const s = review.scores;
-  // One colour only: the selected tile is mint, the rest are plain grey; no outlines.
+  // Just the tiles: the selected one is mint, the rest have no fill and no outline.
   const box = (id: Tab, label: string, v: number) => {
     const on = tab === id, main = id === 'band';
     return (
-      <button key={id} type="button" className="cl-btn" role="tab" aria-selected={on} onClick={() => setTab(id)} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, borderRadius: 12, padding: '11px 4px 10px', background: on ? CL.mintSoft : '#F4F4F1', border: 'none', transition: 'background .15s' }}>
+      <button key={id} type="button" className="cl-btn" role="tab" aria-selected={on} onClick={() => setTab(id)} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, borderRadius: 12, padding: '11px 4px 10px', background: on ? CL.mintSoft : 'transparent', border: 'none', transition: 'background .15s' }}>
         <span style={{ fontFamily: CL.sans, fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', color: on ? CL.greenText : CL.ink5 }}>{label}</span>
         <span style={{ fontFamily: CL.sans, fontSize: main ? 24 : 20, fontWeight: 700, color: on ? CL.greenText : CL.ink, fontVariantNumeric: 'tabular-nums' }}>{v.toFixed(1)}</span>
         <span style={{ fontFamily: CL.sans, fontSize: 10, fontWeight: 600, color: on ? CL.greenText : CL.ink4 }}>{main ? 'Tổng quan' : counts[id] ? counts[id] + ' lỗi' : 'Ổn'}</span>
@@ -145,15 +145,12 @@ function DeskScores({ review, tab, setTab, counts }: { review: EssayReview; tab:
   };
   return (
     <>
-      <section style={{ overflow: 'hidden', borderRadius: 18, border: '1px solid ' + CL.border, background: '#fff', flexShrink: 0 }}>
-        <div style={{ display: 'flex', alignItems: 'center', minHeight: 50, padding: '0 18px', background: CL.panel, borderBottom: '1px solid ' + CL.ink2 }}>
-          <span style={{ fontFamily: CL.sans, fontSize: 13.5, fontWeight: 600, color: CL.ink }}>Điểm</span>
-          <span style={{ marginLeft: 'auto', fontFamily: CL.sans, fontSize: 11, color: CL.ink5 }}>{review.source === 'ai' ? 'Ước tính' : review.source === 'sample' ? 'Bài chấm mẫu' : 'Ước tính · bản thử'}</span>
-        </div>
-        <div role="tablist" aria-label="Tiêu chí" style={{ display: 'grid', gridTemplateColumns: '1.25fr repeat(4, minmax(0,1fr))', gap: 6, padding: 12 }}>
+      <div style={{ display: 'flex', alignItems: 'flex-start', gap: 4, flexShrink: 0 }}>
+        <div role="tablist" aria-label="Tiêu chí" style={{ flex: 1, minWidth: 0, display: 'grid', gridTemplateColumns: '1.25fr repeat(4, minmax(0,1fr))', gap: 4 }}>
           {box('band', 'Band', s.band)}{box('tr', 'TR', s.tr)}{box('cc', 'CC', s.cc)}{box('lr', 'LR', s.lr)}{box('gra', 'GRA', s.gra)}
         </div>
-      </section>
+        <button type="button" className="cl-btn" onClick={onClose} aria-label="Đóng kết quả" style={{ width: 30, height: 30, display: 'grid', placeItems: 'center', color: CL.ink5 }}><ClIcon name="x" size={15} /></button>
+      </div>
       {tab === 'band' && review.summary && (
         <section style={{ borderRadius: 18, border: '1px solid ' + CL.border, background: '#fff', padding: '16px 18px 18px', flexShrink: 0 }}>
           <span style={{ display: 'block', marginBottom: 8, fontFamily: CL.sans, fontSize: 15, fontWeight: 600, color: CL.ink }}>Nhận xét chung</span>
@@ -393,7 +390,7 @@ export function ChainDesk({ chains, stance, essay, setEssay, onBack }: { chains:
         railOpen={railOpen}
         reviewOpen={!!review}
         main={main}
-        panel={review && <ReviewPanel title="Kết quả" review={shown} list={tab !== 'band'} showOk={false} emptyText="Không có nhận xét chi tiết cho tiêu chí này." stale={stale} running={running} onRerun={submit} rerunLabel="Nộp lại" onClose={closeReview} onGo={go} seen={seen} fixedFn={fixedFn} top={<DeskScores review={review} tab={tab} setTab={(t) => { setTab(t); setActive(null); }} counts={counts} />} active={active} accents={CRITERION_STYLE} cards />}
+        panel={review && <ReviewPanel title="Kết quả" review={shown} list={tab !== 'band'} showOk={false} emptyText="Không có nhận xét chi tiết cho tiêu chí này." stale={stale} running={running} onRerun={submit} rerunLabel="Nộp lại" onClose={closeReview} onGo={go} seen={seen} fixedFn={fixedFn} header={false} top={<DeskScores review={review} tab={tab} setTab={(t) => { setTab(t); setActive(null); }} counts={counts} onClose={closeReview} />} active={active} accents={CRITERION_STYLE} cards />}
         overlay={help && <Translator onClose={() => setHelp(false)} />}
       />
     </div>
