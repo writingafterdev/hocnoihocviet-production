@@ -8,7 +8,7 @@ import { GW_VOCAB_PALETTE, type GuidedSample } from '../guided/data';
 import { GuidedWriting } from '../guided/GuidedWriting';
 import { AI_ERROR_TEXT, AiRequestError, postAi } from '../ai/request';
 import { SignedOutError } from '../attempts/store';
-import { VB_SKILLS, type VocabItem, type VocabSkill, type VocabTopic } from './data';
+import { groupPhrases, VB_SKILLS, type VocabItem, type VocabSkill, type VocabTopic } from './data';
 
 const VB = {
   head: 'var(--ink-50)', border: 'var(--ink-200)', line: 'var(--ink-100)', strong: 'var(--ink-300)',
@@ -218,20 +218,12 @@ export function VocabBuilder({ onBack }: { onBack: () => void }) {
     }
     setMaking(false);
   };
-  // Many ticked phrases are first split into paragraph-sized groups that belong together; each group is one paragraph.
+  // Many ticked phrases are split into paragraph-sized groups of the same theme; each group is one paragraph.
   const go = async () => {
     const phrases = choose();
     if (!phrases.length || making) return;
-    setMaking(true); setNote(null);
-    let groups = [{ name: '', phrases }];
-    if (phrases.length > 6) {
-      try { groups = (await postAi<{ groups: { name: string; phrases: string[] }[] }>('vocab-groups', { skillId, phrases })).groups; }
-      catch (e) {
-        if (fail(e)) return;
-        setMaking(false); setNote(e instanceof AiRequestError ? AI_ERROR_TEXT[e.code] : AI_ERROR_TEXT.network); return;
-      }
-    }
-    await paragraph(groups, 0, null);
+    // Grouping uses each phrase's theme (see VB_THEMES), so it is instant and needs no AI call.
+    await paragraph(groupPhrases(skill, phrases), 0, null);
   };
 
   if (practice) {
@@ -290,7 +282,7 @@ export function VocabBuilder({ onBack }: { onBack: () => void }) {
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
               {note && <span role="alert" style={{ maxWidth: 320, fontFamily: VB.sans, fontSize: 12, color: '#8B3A35' }}>{note}</span>}
               <span style={{ fontFamily: VB.sans, fontSize: 13, color: picked.length > MAX_TICK ? '#8B3A35' : VB.ink3 }}>{picked.length > MAX_TICK ? 'Tối đa ' + MAX_TICK + ' cụm; sẽ dùng ' + MAX_TICK + ' cụm đầu' : picked.length > 6 ? 'Đã chọn ' + picked.length + ' cụm · sẽ chia thành vài đoạn' : picked.length ? 'Đã chọn ' + picked.length + ' cụm' : 'Chọn cụm muốn luyện, hoặc để trống'}</span>
-              <button type="button" className="cl-btn cl-primary" disabled={!rows.length || making} onClick={() => go()} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, height: 42, borderRadius: 12, background: VB.ink, color: '#fff', fontFamily: VB.sans, fontSize: 13.5, fontWeight: 600, padding: '0 18px', opacity: rows.length && !making ? 1 : 0.35 }}><Sparkles size={15} strokeWidth={2} />{making ? (picked.length > 6 ? 'Đang chia nhóm…' : 'Đang tạo đoạn…') : 'Tạo đoạn mẫu'}</button>
+              <button type="button" className="cl-btn cl-primary" disabled={!rows.length || making} onClick={() => go()} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, height: 42, borderRadius: 12, background: VB.ink, color: '#fff', fontFamily: VB.sans, fontSize: 13.5, fontWeight: 600, padding: '0 18px', opacity: rows.length && !making ? 1 : 0.35 }}><Sparkles size={15} strokeWidth={2} />{making ? 'Đang tạo đoạn…' : 'Tạo đoạn mẫu'}</button>
             </div>
           </div>
           {rows.length ? (

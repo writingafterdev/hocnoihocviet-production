@@ -178,3 +178,55 @@ export const VB_SKILLS: VocabSkill[] = [
   { id: 'task1', pillar: 'var(--brand-orange, #FFB760)', soft: 'var(--brand-orange-soft, #FFEEDA)', ill: '/assets/illustrations/il-progress.svg', icon: 'chart', eyebrow: 'Writing Task 1', title: 'Từ vựng Task 1', desc: 'Ngôn ngữ mô tả xu hướng, so sánh số liệu, quy trình và bản đồ.', topics: VB_T1_TOPICS },
   { id: 'speaking', pillar: 'var(--brand-sky, #97DBEC)', soft: 'var(--brand-sky-soft, #E4F5FA)', ill: '/assets/illustrations/il-conversation.svg', icon: 'message', eyebrow: 'Speaking', title: 'Từ vựng Speaking', desc: 'Cụm tự nhiên cho Part 1, 2, 3: sở thích, quê nhà, công việc…', topics: VB_SP_TOPICS },
 ];
+
+/**
+ * Theme of each phrase inside its topic, so many ticked phrases can be split into paragraphs that belong
+ * together without an AI call. New phrases need a theme here (a classifier could suggest one at import time).
+ */
+const VB_THEMES: Record<string, string[]> = {
+  'Cách học và tư duy': ['rote learning', 'critical thinking', 'academic performance'],
+  'Kỹ năng cho tương lai': ['equip students with', 'a well-rounded education', 'lifelong learning', 'vocational training'],
+  'Cơ hội và công bằng': ['tuition fees', 'widen inequality', 'bridge the gap'],
+  'Nguyên nhân và tác hại': ['carbon emissions', 'single-use plastic', 'long-term consequences'],
+  'Giải pháp cho môi trường': ['take drastic measures', 'renewable energy', 'public transport', 'raise awareness', 'environmentally friendly'],
+  'Mô tả xu hướng': ['rise sharply', 'fall steadily', 'fluctuate', 'peak at', 'remain stable'],
+  'So sánh số liệu': ['twice as many as', 'account for', 'slightly higher than', 'in contrast'],
+  'Sở thích': ['unwind', 'be really into', 'pick up a hobby', 'take my mind off'],
+  'Quê nhà': ['bustling', 'laid-back', "a stone's throw from"],
+};
+const THEME_OF = new Map(Object.entries(VB_THEMES).flatMap(([theme, ps]) => ps.map((p) => [p, theme] as [string, string])));
+
+export interface VocabGroup { name: string; phrases: string[] }
+export const GROUP_MAX = 6;
+
+/**
+ * Splits ticked phrases into paragraph-sized groups (≤ GROUP_MAX) of the same theme, in topic order.
+ * Small groups (< 3) are merged with a neighbour from the same topic when they fit together.
+ */
+export function groupPhrases(skill: VocabSkill, phrases: string[]): VocabGroup[] {
+  if (phrases.length <= GROUP_MAX) return [{ name: '', phrases }];
+  const groups: (VocabGroup & { topic: string })[] = [];
+  skill.topics.forEach((t) => {
+    const mine = t.items.map((i) => i.en).filter((p) => phrases.includes(p));
+    const byTheme = new Map<string, string[]>();
+    mine.forEach((p) => { const th = THEME_OF.get(p) || t.vi; byTheme.set(th, [...(byTheme.get(th) || []), p]); });
+    byTheme.forEach((ps, name) => {
+      // Split an oversized theme evenly, e.g. 8 → 4 + 4 rather than 6 + 2.
+      const n = Math.ceil(ps.length / GROUP_MAX), size = Math.ceil(ps.length / n);
+      for (let i = 0; i < ps.length; i += size) groups.push({ name, topic: t.id, phrases: ps.slice(i, i + size) });
+    });
+  });
+  for (let i = 0; i < groups.length; i++) {
+    const g = groups[i];
+    if (g.phrases.length >= 3) continue;
+    const near = [groups[i - 1], groups[i + 1]].filter((x) => x && x.topic === g.topic && x.phrases.length + g.phrases.length <= GROUP_MAX)
+      .sort((a, b) => a.phrases.length - b.phrases.length)[0];
+    if (near) {
+      const before = groups.indexOf(near) < i;
+      near.phrases = before ? [...near.phrases, ...g.phrases] : [...g.phrases, ...near.phrases];
+      near.name = before ? near.name + ' · ' + g.name : g.name + ' · ' + near.name;
+      groups.splice(i, 1); i--;
+    }
+  }
+  return groups.map(({ name, phrases: ps }) => ({ name, phrases: ps }));
+}
