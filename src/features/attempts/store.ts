@@ -14,6 +14,10 @@ export interface EssayState {
   /** Time spent on the Writing Desk. */
   seconds: number;
   review: EssayReview | null;
+  /** "Sửa bài": scores hidden, the student fixes each commented error, then submits again. */
+  fixing?: boolean;
+  /** Scores of the review before the latest one, to show how much a resubmission moved them. */
+  prevScores?: EssayReview['scores'] | null;
 }
 
 export interface Attempt {

@@ -1,6 +1,6 @@
 'use client';
 
-import { Fragment, useEffect, type ReactNode } from 'react';
+import { Fragment, useEffect, useState, type ReactNode } from 'react';
 import { CL } from '../constants';
 import { chainSnap } from '../review';
 import type { Chain, ReviewGroup, ReviewItem } from '../types';
@@ -37,6 +37,8 @@ export interface ReviewPanelProps {
   cards?: boolean;
   /** false = no title row (title, count, close); `top` then carries its own close button. */
   header?: boolean;
+  /** "Sửa bài": each card's fix is hidden behind "Xem gợi ý". */
+  hideFix?: boolean;
 }
 
 /** Text with **bold** spans, as the AI writes key terms. */
@@ -47,7 +49,9 @@ export function Rich({ text }: { text: string }) {
 const fixedBadge = <span style={{ marginLeft: 'auto', display: 'inline-flex', alignItems: 'center', gap: 4, borderRadius: 5, background: CL.mintSoft, padding: '2px 7px', fontFamily: CL.sans, fontSize: 10, fontWeight: 600, color: CL.greenText, whiteSpace: 'nowrap' }}><ClIcon name="check" size={10} color={CL.green} />Đã sửa?</span>;
 
 /** One essay comment as a card: the error's name, what is wrong, and the fix. */
-function CommentCard({ it, on, dim, accent, onGo }: { it: ReviewItem; on: boolean; dim: boolean; accent?: { line: string; soft: string }; onGo: (it: ReviewItem) => void }) {
+function CommentCard({ it, on, dim, accent, onGo, hideFix }: { it: ReviewItem; on: boolean; dim: boolean; accent?: { line: string; soft: string }; onGo: (it: ReviewItem) => void; hideFix?: boolean }) {
+  const [peek, setPeek] = useState(false);
+  const reveal = (e: React.SyntheticEvent) => { e.stopPropagation(); setPeek(!peek); };
   return (
     <button id={'rv-' + it.key} type="button" className="cl-btn cl-rv" onClick={() => onGo(it)} aria-pressed={on} style={{ display: 'flex', flexDirection: 'column', alignItems: 'stretch', gap: 8, width: '100%', flexShrink: 0, textAlign: 'left', borderRadius: 16, border: '1px solid ' + (on && accent ? accent.line : CL.border), background: '#fff', padding: '15px 18px 16px', opacity: dim ? 0.55 : 1, transition: 'border-color .15s, opacity .25s' }}>
       <span style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
@@ -56,13 +60,14 @@ function CommentCard({ it, on, dim, accent, onGo }: { it: ReviewItem; on: boolea
         {it.fixed ? fixedBadge : it.label && <span style={{ marginLeft: 'auto', flexShrink: 0, fontFamily: CL.sans, fontSize: 11, color: CL.ink4, whiteSpace: 'nowrap' }}>{it.where}</span>}
       </span>
       <span style={{ fontFamily: CL.sans, fontSize: 13.5, lineHeight: 1.6, color: CL.ink8, textWrap: 'pretty' }}><Rich text={it.text} /></span>
-      {it.fix && <span style={{ fontFamily: CL.sans, fontSize: 13.5, lineHeight: 1.55, textWrap: 'pretty' }}><span style={{ color: CL.ink4 }}>Sửa lại: </span><b style={{ fontWeight: 700, color: CL.green }}>{it.fix}</b></span>}
+      {it.fix && (!hideFix || peek) && <span style={{ fontFamily: CL.sans, fontSize: 13.5, lineHeight: 1.55, textWrap: 'pretty' }}><span style={{ color: CL.ink4 }}>Sửa lại: </span><b style={{ fontWeight: 700, color: CL.green }}>{it.fix}</b></span>}
+      {it.fix && hideFix && !it.fixed && <span role="button" tabIndex={0} className="cl-link" onClick={reveal} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') reveal(e); }} style={{ alignSelf: 'flex-start', fontFamily: CL.sans, fontSize: 12.5, fontWeight: 600, color: '#2B6BE8', cursor: 'pointer' }}>{peek ? 'Ẩn gợi ý' : 'Xem gợi ý'}</span>}
     </button>
   );
 }
 
 /** Right-hand feedback panel: grouped questions, "Đã sửa?" once an item no longer applies. */
-export function ReviewPanel({ review, live, chains = [], stance, stale, running, onRerun, onClose, onGo, seen, fixedFn, top, title = 'Nhận xét', rerunLabel = 'Soát lại', active, accents, list = true, showOk = true, emptyText = 'Không thấy vấn đề nào. Sẵn sàng viết.', cards = false, header = true }: ReviewPanelProps) {
+export function ReviewPanel({ review, live, chains = [], stance, stale, running, onRerun, onClose, onGo, seen, fixedFn, top, title = 'Nhận xét', rerunLabel = 'Soát lại', active, accents, list = true, showOk = true, emptyText = 'Không thấy vấn đề nào. Sẵn sàng viết.', cards = false, header = true, hideFix = false }: ReviewPanelProps) {
   useEffect(() => {
     const el = active && document.getElementById('rv-' + active);
     if (el) el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
@@ -93,7 +98,7 @@ export function ReviewPanel({ review, live, chains = [], stance, stale, running,
       <div className="cl-scroll" style={{ flex: 1, minHeight: 0, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 16, padding: '2px 2px 20px' }}>
         {top}
         {list && cards && groups.flatMap((g) => g.items.map((it) => (
-          <CommentCard key={it.key} it={it} on={active === it.key} dim={active !== it.key && (it.fixed || seen.includes(it.key))} accent={accents && accents[g.id]} onGo={onGo} />
+          <CommentCard key={it.key} it={it} on={active === it.key} dim={active !== it.key && (it.fixed || seen.includes(it.key))} accent={accents && accents[g.id]} onGo={onGo} hideFix={hideFix} />
         )))}
         {list && !cards && groups.filter((g) => g.items.length).map((g) => {
           const open = g.items.filter((it) => !it.fixed).length;

@@ -130,8 +130,9 @@ const CRITERION_NAME: Record<string, string> = Object.fromEntries(CRITERIA);
  * Score bar that doubles as navigation: Band = overview of the four criteria, TR / CC / LR / GRA = that
  * criterion's assessment (why this band, how to go higher) followed by its detailed comments.
  */
-function DeskScores({ review, tab, setTab, counts, onClose }: { review: EssayReview; tab: Tab; setTab: (t: Tab) => void; counts: Record<string, number>; onClose: () => void }) {
+function DeskScores({ review, prev, tab, setTab, counts, onClose, onFix }: { review: EssayReview; prev?: EssayReview['scores'] | null; tab: Tab; setTab: (t: Tab) => void; counts: Record<string, number>; onClose: () => void; onFix: () => void }) {
   const s = review.scores;
+  const left = CRITERIA.reduce((n, [id]) => n + (counts[id] || 0), 0);
   // Just the tiles: the selected one is mint, the rest have no fill and no outline.
   const box = (id: Tab, label: string, v: number) => {
     const on = tab === id, main = id === 'band';
@@ -139,6 +140,7 @@ function DeskScores({ review, tab, setTab, counts, onClose }: { review: EssayRev
       <button key={id} type="button" className="cl-btn" role="tab" aria-selected={on} onClick={() => setTab(id)} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, borderRadius: 12, padding: '11px 4px 10px', background: on ? CL.mintSoft : 'transparent', border: 'none', transition: 'background .15s' }}>
         <span style={{ fontFamily: CL.sans, fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', color: on ? CL.greenText : CL.ink5 }}>{label}</span>
         <span style={{ fontFamily: CL.sans, fontSize: main ? 24 : 20, fontWeight: 700, color: on ? CL.greenText : CL.ink, fontVariantNumeric: 'tabular-nums' }}>{v.toFixed(1)}</span>
+        {prev && prev[id] !== v && <span title={'Lần trước: ' + prev[id].toFixed(1)} style={{ fontFamily: CL.sans, fontSize: 10, fontWeight: 700, color: v > prev[id] ? CL.green : CL.red, fontVariantNumeric: 'tabular-nums' }}>{(v > prev[id] ? '+' : '−') + Math.abs(v - prev[id]).toFixed(1)}</span>}
         <span style={{ fontFamily: CL.sans, fontSize: 10, fontWeight: 600, color: on ? CL.greenText : CL.ink4 }}>{main ? 'Tổng quan' : counts[id] ? counts[id] + ' lỗi' : 'Ổn'}</span>
       </button>
     );
@@ -157,10 +159,48 @@ function DeskScores({ review, tab, setTab, counts, onClose }: { review: EssayRev
           <p style={{ margin: 0, fontFamily: CL.sans, fontSize: 13, lineHeight: 1.6, color: CL.ink7, textWrap: 'pretty' }}><Rich text={review.summary} /></p>
         </section>
       )}
+      {tab === 'band' && left > 0 && (
+        <section style={{ display: 'flex', alignItems: 'center', gap: 14, borderRadius: 18, border: '1px solid ' + CL.border, background: '#fff', padding: '14px 16px 14px 18px', flexShrink: 0 }}>
+          <span style={{ flex: 1, minWidth: 0 }}>
+            <span style={{ display: 'block', fontFamily: CL.sans, fontSize: 15, fontWeight: 600, color: CL.ink }}>Sửa bài</span>
+            <span style={{ display: 'block', marginTop: 3, fontFamily: CL.sans, fontSize: 12.5, lineHeight: 1.5, color: CL.ink5 }}>Ẩn điểm, tự sửa {left} lỗi trong bài, rồi nộp lại để chấm lại.</span>
+          </span>
+          <button type="button" className="cl-btn cl-primary" onClick={onFix} style={{ flexShrink: 0, height: 38, borderRadius: 12, background: CL.ink, color: '#fff', fontFamily: CL.sans, fontSize: 13, fontWeight: 600, padding: '0 16px' }}>Bắt đầu sửa</button>
+        </section>
+      )}
       {(tab === 'band' ? CRITERIA.map(([id]) => id) : [tab]).map((id) => (
         <CriterionCard key={id + (tab === 'band' ? '-all' : '-one')} id={id} review={review} count={counts[id] || 0} startOpen={tab !== 'band'} onOpen={tab === 'band' ? () => setTab(id as Tab) : undefined} />
       ))}
     </>
+  );
+}
+
+/**
+ * "Sửa bài" header, in place of the scores: how many errors are left, and the criteria as filters
+ * (counts only, no bands). "Xem điểm" leaves the mode.
+ */
+function FixBar({ tab, setTab, counts, totals, onExit }: { tab: Tab; setTab: (t: Tab) => void; counts: Record<string, number>; totals: Record<string, number>; onExit: () => void }) {
+  const left = CRITERIA.reduce((n, [id]) => n + (counts[id] || 0), 0);
+  const total = CRITERIA.reduce((n, [id]) => n + (totals[id] || 0), 0);
+  const pill = (id: Tab, label: string, n: number) => {
+    const on = tab === id;
+    return <button key={id} type="button" className="cl-btn" role="tab" aria-selected={on} onClick={() => setTab(id)} style={{ borderRadius: 999, background: on ? CL.mintSoft : 'transparent', padding: '6px 9px', fontFamily: CL.sans, fontSize: 12, fontWeight: 600, color: on ? CL.greenText : CL.ink5, whiteSpace: 'nowrap' }}>{label} <span style={{ fontVariantNumeric: 'tabular-nums', opacity: 0.8 }}>{n}</span></button>;
+  };
+  return (
+    <section style={{ borderRadius: 18, border: '1px solid ' + CL.border, background: '#fff', padding: '16px 18px 12px', flexShrink: 0 }}>
+      <div style={{ display: 'flex', alignItems: 'baseline', gap: 10 }}>
+        <span style={{ fontFamily: CL.sans, fontSize: 15, fontWeight: 600, color: CL.ink }}>Đang sửa bài</span>
+        <span style={{ fontFamily: CL.sans, fontSize: 12.5, color: left ? CL.ink5 : CL.greenText, fontWeight: left ? 400 : 600 }}>{left ? 'Còn ' + left + ' / ' + total + ' lỗi' : 'Đã sửa hết. Nộp lại để chấm.'}</span>
+        <button type="button" className="cl-btn cl-link" onClick={onExit} style={{ marginLeft: 'auto', fontFamily: CL.sans, fontSize: 12, fontWeight: 600, color: CL.ink5 }}>Xem điểm</button>
+      </div>
+      <div style={{ height: 5, borderRadius: 999, background: CL.ink1, margin: '10px 0 10px', overflow: 'hidden' }}>
+        <div style={{ width: (total ? ((total - left) / total) * 100 : 0) + '%', height: '100%', borderRadius: 999, background: CL.mint, transition: 'width .4s' }} />
+      </div>
+      <div role="tablist" aria-label="Tiêu chí" style={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
+        {pill('band', 'Tất cả', left)}{CRITERIA.map(([id]) => pill(id as Tab, id.toUpperCase(), counts[id] || 0))}
+      </div>
+      <p style={{ margin: '8px 0 0', fontFamily: CL.sans, fontSize: 11.5, lineHeight: 1.5, color: CL.ink4 }}>Bấm chữ trong bài để sửa. Gợi ý cách sửa được ẩn; mở khi cần.</p>
+    </section>
   );
 }
 
@@ -214,6 +254,8 @@ export function ChainDesk({ chains, stance, essay, setEssay, onBack }: { chains:
   const { bodies, drafts, review, seconds: secs } = essay;
   const setBodies = (b: string[]) => setEssay((e) => ({ ...e, bodies: b }));
   const setReview = (r: EssayReview | null) => setEssay((e) => ({ ...e, review: r }));
+  const fixing = !!(essay.fixing && essay.review);
+  const setFixing = (on: boolean) => { setEssay((e) => ({ ...e, fixing: on })); setTab('band'); setActive(null); };
   const [help, setHelp] = useState(false);
   const [activeId, setActiveId] = useState('intro');
   const [running, setRunning] = useState(false);
@@ -249,13 +291,13 @@ export function ChainDesk({ chains, stance, essay, setEssay, onBack }: { chains:
     setRunning(true); setError(null);
     try {
       const r = await requestEssayReview(spec, sections, drafts, chains, stance);
-      setReview(r); setSeen([]); if (!three) setRailOpen(false); setActive(null); setEditId(null); setTab('band');
+      setEssay((e) => ({ ...e, review: r, fixing: false, prevScores: e.review ? e.review.scores : null })); setSeen([]); if (!three) setRailOpen(false); setActive(null); setEditId(null); setTab('band');
     } catch (e) {
       setError(e instanceof AiRequestError ? AI_ERROR_TEXT[e.code] : AI_ERROR_TEXT.network);
     }
     setRunning(false);
   };
-  const closeReview = () => { setReview(null); setRailOpen(true); setActive(null); setEditId(null); setTab('band'); };
+  const closeReview = () => { setEssay((e) => ({ ...e, review: null, fixing: false })); setRailOpen(true); setActive(null); setEditId(null); setTab('band'); };
   // A comment counts as fixed once the quoted words are gone, or (paragraph comments) once the paragraph changed.
   const fixedFn = (_g: ReviewGroup | null, it: ReviewItem) => {
     const cur = drafts[it.sectionId] || '';
@@ -291,6 +333,7 @@ export function ChainDesk({ chains, stance, essay, setEssay, onBack }: { chains:
   const pick = (key: string) => { setActive(key); setTab((groupOf.get(key) as Tab) || 'band'); setSeen((s) => (s.includes(key) ? s : [...s, key])); };
   const counts = Object.fromEntries(CRITERIA.map(([id]) => [id, review ? review.groups.find((g) => g.id === id)?.items.filter((it) => !fixedFn(null, it)).length || 0 : 0]));
   const shown = review && tab !== 'band' ? { ...review, groups: review.groups.filter((g) => g.id === tab) } : review;
+  const totals = Object.fromEntries(CRITERIA.map(([id]) => [id, review ? review.groups.find((g) => g.id === id)?.items.length || 0 : 0]));
   const addBody = () => setBodies([...bodies, 'body' + Date.now()]);
   const removeBody = (id: string) => setEssay((e) => { const d = { ...e.drafts }; delete d[id]; return { ...e, bodies: e.bodies.filter((b) => b !== id), drafts: d }; });
   const bodyCount = bodies.length;
@@ -371,7 +414,7 @@ export function ChainDesk({ chains, stance, essay, setEssay, onBack }: { chains:
         </div>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 12, padding: '22px 22px 20px' }}>
           {error && <span role="alert" style={{ fontFamily: CL.sans, fontSize: 12, color: '#8B3A35' }}>{error}</span>}
-          <button type="button" className="cl-btn cl-primary" onClick={submit} disabled={running || (review && !stale)} style={{ height: 40, borderRadius: 12, background: CL.ink, color: '#fff', fontFamily: CL.sans, fontSize: 13, fontWeight: 600, padding: '0 20px', opacity: running || (review && !stale) ? 0.4 : 1 }}>{running ? 'Đang chấm… (khoảng 1 phút)' : review ? (stale ? 'Nộp lại' : 'Đã nộp') : 'Nộp bài'}</button>
+          <button type="button" className="cl-btn cl-primary" onClick={submit} disabled={running || (review && !stale)} style={{ height: 40, borderRadius: 12, background: CL.ink, color: '#fff', fontFamily: CL.sans, fontSize: 13, fontWeight: 600, padding: '0 20px', opacity: running || (review && !stale) ? 0.4 : 1 }}>{running ? 'Đang chấm… (khoảng 1 phút)' : review ? (stale ? (fixing ? 'Nộp bài đã sửa' : 'Nộp lại') : fixing ? 'Sửa bài rồi nộp lại' : 'Đã nộp') : 'Nộp bài'}</button>
         </div>
       </div>
     </main>
@@ -397,7 +440,7 @@ export function ChainDesk({ chains, stance, essay, setEssay, onBack }: { chains:
         railOpen={railOpen}
         reviewOpen={!!review}
         main={main}
-        panel={review && <ReviewPanel title="Kết quả" review={shown} list={tab !== 'band'} showOk={false} emptyText="Không có nhận xét chi tiết cho tiêu chí này." stale={stale} running={running} onRerun={submit} rerunLabel="Nộp lại" onClose={closeReview} onGo={go} seen={seen} fixedFn={fixedFn} header={false} top={<DeskScores review={review} tab={tab} setTab={(t) => { setTab(t); setActive(null); }} counts={counts} onClose={closeReview} />} active={active} accents={CRITERION_STYLE} cards />}
+        panel={review && <ReviewPanel title="Kết quả" review={shown} list={fixing || tab !== 'band'} hideFix={fixing} showOk={false} emptyText="Không có nhận xét chi tiết cho tiêu chí này." stale={stale} running={running} onRerun={submit} rerunLabel="Nộp lại" onClose={closeReview} onGo={go} seen={seen} fixedFn={fixedFn} header={false} top={fixing ? <FixBar tab={tab} setTab={(t) => { setTab(t); setActive(null); }} counts={counts} totals={totals} onExit={() => setFixing(false)} /> : <DeskScores review={review} prev={essay.prevScores} tab={tab} setTab={(t) => { setTab(t); setActive(null); }} counts={counts} onClose={closeReview} onFix={() => setFixing(true)} />} active={active} accents={CRITERION_STYLE} cards />}
         side={<Translator onClose={() => setHelp(false)} />}
         sideOpen={help}
       />
