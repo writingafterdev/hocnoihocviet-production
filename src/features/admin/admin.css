@@ -1,33 +1,33 @@
 /* Admin page. Same look as the rest of the app: white page, hairline cards, black ink buttons. */
-.ad { font-family: var(--font-sans); color: #141413; }
-.ad *, .ad *::before, .ad *::after { box-sizing: border-box; }
-.ad-card { background: #fff; border: 1px solid #D6D6D0; border-radius: 18px; }
-.ad-label { font-size: 11px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: #77776F; }
-.ad-h2 { margin: 0; font-size: 16px; font-weight: 700; letter-spacing: -.01em; color: #141413; }
-.ad-pill { display: inline-flex; align-items: center; gap: 6px; border-radius: 999px; padding: 3px 10px; font-size: 12px; font-weight: 600; white-space: nowrap; }
-.ad-pill.ok { background: #DCF5EC; color: #17664F; }
-.ad-pill.warn { background: #FFF6DA; color: #765A00; }
-.ad-pill.bad { background: #FBE4E0; color: #8B3A35; }
-.ad-pill.info { background: #E4F5FA; color: #1F6A85; }
-.ad-pill.idle { background: #F4F4F2; color: #5C5C56; }
-.ad-dot { width: 7px; height: 7px; border-radius: 99px; background: currentColor; }
-.ad-btn { height: 40px; border-radius: 12px; border: 1px solid #DEDEDA; background: #fff; color: #141413; font: inherit; font-size: 13px; font-weight: 600; padding: 0 16px; display: inline-flex; align-items: center; gap: 8px; cursor: pointer; transition: border-color .14s; }
-.ad-btn:hover:not(:disabled) { border-color: #141413; }
-.ad-btn:disabled { opacity: .4; cursor: default; }
-.ad-btn.sm { height: 34px; padding: 0 12px; }
-.ad-btn.icon { width: 40px; padding: 0; justify-content: center; }
-.ad-btn[aria-pressed="true"] { background: #141413; border-color: #141413; color: #fff; }
-.ad :focus-visible { outline: 2px solid #141413; outline-offset: 2px; }
-.ad-tabs a { display: inline-flex; align-items: center; height: 36px; padding: 0 14px; border-radius: 999px; font-size: 13.5px; font-weight: 500; color: #5C5C56; text-decoration: none; transition: background .14s; }
-.ad-tabs a:hover { background: #F4F4F2; color: #141413; }
-.ad-field { height: 40px; border-radius: 10px; border: 1px solid #DEDEDA; background: #fff; font: inherit; font-size: 13.5px; color: #141413; padding: 0 12px; }
-.ad-bar { height: 6px; border-radius: 99px; background: #ECECEA; overflow: hidden; }
-.ad-bar > i { display: block; height: 100%; border-radius: 99px; background: #141413; }
-.ad-bar.green > i { background: #1FA97A; }
-.ad-bar.red > i { background: #D5452E; }
-.ad-th { font-size: 12.5px; font-weight: 600; color: #141413; }
-.ad-row:hover { background: #FAFAF8; }
-.ad-num { font-variant-numeric: tabular-nums; }
-.ad-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
-.ad-sub { font-size: 12px; font-weight: 400; color: #77776F; }
-.ad-li { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-top: 1px solid #ECECEA; }
+.adm { font-family: var(--font-sans); color: #141413; }
+.adm *, .adm *::before, .adm *::after { box-sizing: border-box; }
+.adm-card { background: #fff; border: 1px solid #D6D6D0; border-radius: 18px; }
+.adm-label { font-size: 11px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: #77776F; }
+.adm-h2 { margin: 0; font-size: 16px; font-weight: 700; letter-spacing: -.01em; color: #141413; }
+.adm-pill { display: inline-flex; align-items: center; gap: 6px; border-radius: 999px; padding: 3px 10px; font-size: 12px; font-weight: 600; white-space: nowrap; }
+.adm-pill.ok { background: #DCF5EC; color: #17664F; }
+.adm-pill.warn { background: #FFF6DA; color: #765A00; }
+.adm-pill.bad { background: #FBE4E0; color: #8B3A35; }
+.adm-pill.info { background: #E4F5FA; color: #1F6A85; }
+.adm-pill.idle { background: #F4F4F2; color: #5C5C56; }
+.adm-dot { width: 7px; height: 7px; border-radius: 99px; background: currentColor; }
+.adm-btn { height: 40px; border-radius: 12px; border: 1px solid #DEDEDA; background: #fff; color: #141413; font: inherit; font-size: 13px; font-weight: 600; padding: 0 16px; display: inline-flex; align-items: center; gap: 8px; cursor: pointer; transition: border-color .14s; }
+.adm-btn:hover:not(:disabled) { border-color: #141413; }
+.adm-btn:disabled { opacity: .4; cursor: default; }
+.adm-btn.sm { height: 34px; padding: 0 12px; }
+.adm-btn.icon { width: 40px; padding: 0; justify-content: center; }
+.adm-btn[aria-pressed="true"] { background: #141413; border-color: #141413; color: #fff; }
+.adm :focus-visible { outline: 2px solid #141413; outline-offset: 2px; }
+.adm-tabs a { display: inline-flex; align-items: center; height: 36px; padding: 0 14px; border-radius: 999px; font-size: 13.5px; font-weight: 500; color: #5C5C56; text-decoration: none; transition: background .14s; }
+.adm-tabs a:hover { background: #F4F4F2; color: #141413; }
+.adm-field { height: 40px; border-radius: 10px; border: 1px solid #DEDEDA; background: #fff; font: inherit; font-size: 13.5px; color: #141413; padding: 0 12px; }
+.adm-bar { height: 6px; border-radius: 99px; background: #ECECEA; overflow: hidden; }
+.adm-bar > i { display: block; height: 100%; border-radius: 99px; background: #141413; }
+.adm-bar.green > i { background: #1FA97A; }
+.adm-bar.red > i { background: #D5452E; }
+.adm-th { font-size: 12.5px; font-weight: 600; color: #141413; }
+.adm-row:hover { background: #FAFAF8; }
+.adm-num { font-variant-numeric: tabular-nums; }
+.adm-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.adm-sub { font-size: 12px; font-weight: 400; color: #77776F; }
+.adm-li { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-top: 1px solid #ECECEA; }
