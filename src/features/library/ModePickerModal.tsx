@@ -3,6 +3,7 @@
 import { Fragment, useEffect, useState } from 'react';
 import { X } from 'lucide-react';
 import type { Prompt } from '@/content/prompts';
+import { SAMPLE_IDS } from '@/content/samples';
 import { attemptStore, type Attempt } from '../attempts/store';
 
 export type WritingMode = 'free' | 'guided';
@@ -28,11 +29,11 @@ function OptionPreview({ kind }: { kind: WritingMode }) {
   );
 }
 
-function ModeOption({ selected, onClick, title, desc, kind }: { selected: boolean; onClick: () => void; title: string; desc: string; kind: WritingMode }) {
+function ModeOption({ selected, onClick, title, desc, kind, disabled, badge }: { selected: boolean; onClick: () => void; title: string; desc: string; kind: WritingMode; disabled?: boolean; badge?: string }) {
   return (
-    <button type="button" role="radio" aria-checked={selected} onClick={onClick} style={{ cursor: 'pointer', textAlign: 'left', font: 'inherit', borderRadius: 14, border: selected ? '2px solid #141413' : '1px solid #E6E4DE', background: '#fff', padding: 16, flex: 1, minWidth: 220 }}>
+    <button type="button" role="radio" aria-checked={selected} aria-disabled={disabled} disabled={disabled} onClick={onClick} style={{ cursor: disabled ? 'not-allowed' : 'pointer', opacity: disabled ? 0.55 : 1, textAlign: 'left', font: 'inherit', borderRadius: 14, border: selected ? '2px solid #141413' : '1px solid #E6E4DE', background: '#fff', padding: 16, flex: 1, minWidth: 220 }}>
       <OptionPreview kind={kind} />
-      <h3 style={{ fontFamily: 'var(--font-sans)', fontSize: 15, fontWeight: 600, color: '#141413', margin: '14px 0 6px' }}>{title}</h3>
+      <h3 style={{ display: 'flex', alignItems: 'center', gap: 8, fontFamily: 'var(--font-sans)', fontSize: 15, fontWeight: 600, color: '#141413', margin: '14px 0 6px' }}>{title}{badge && <span style={{ borderRadius: 4, background: '#ECEAE4', padding: '1px 6px', fontSize: 10, fontWeight: 700, color: '#857F70' }}>{badge}</span>}</h3>
       <p style={{ fontFamily: 'var(--font-sans)', fontSize: 12.5, lineHeight: 1.55, color: '#6E6B64', margin: 0 }}>{desc}</p>
     </button>
   );
@@ -67,7 +68,7 @@ export function ModePickerModal({ prompt, onClose, onStart, onResume }: { prompt
         <p id="mode-title" style={{ fontFamily: 'var(--font-sans)', fontSize: 15, fontWeight: 600, color: '#141413', margin: '0 0 14px' }}>Chọn chế độ làm bài</p>
         <div role="radiogroup" aria-labelledby="mode-title" style={{ display: 'flex', flexWrap: 'wrap', gap: 14, marginBottom: 22 }}>
           <ModeOption kind="free" selected={mode === 'free'} onClick={() => setMode('free')} title="Viết tự do" desc="Dựng mạch lập luận cho từng câu hỏi, rồi tự viết bài bên cạnh dàn ý. Không gợi ý, chấm TR / CC / LR / GRA khi nộp." />
-          <ModeOption kind="guided" selected={mode === 'guided'} onClick={() => setMode('guided')} title="Chép mẫu" desc="Viết lại bài mẫu từng câu từ nghĩa tiếng Việt, chữ cái đầu và công cụ lập luận. Không chấm điểm." />
+          <ModeOption kind="guided" selected={mode === 'guided'} onClick={() => setMode('guided')} title="Chép mẫu" desc="Viết lại bài mẫu từng câu từ nghĩa tiếng Việt, chữ cái đầu và công cụ lập luận. Không chấm điểm." disabled={!SAMPLE_IDS.has(prompt.id)} badge={SAMPLE_IDS.has(prompt.id) ? undefined : 'Chưa có bài mẫu'} />
         </div>
         <button type="button" disabled={starting} onClick={() => { setStarting(true); onStart(mode); }} style={{ width: '100%', height: 46, borderRadius: 10, border: 'none', background: '#141413', color: '#fff', fontFamily: 'var(--font-sans)', fontSize: 13, fontWeight: 600, cursor: 'pointer', opacity: starting ? 0.6 : 1 }}>{mode === 'free' && last ? 'Bắt đầu bài mới' : 'Bắt đầu làm bài'}</button>
         {mode === 'free' && last && (

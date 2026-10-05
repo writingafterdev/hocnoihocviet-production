@@ -3,13 +3,13 @@
 import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
 import { CL } from '../chainlab/constants';
 import { backLinkStyle, ClIcon, ClLabel } from '../chainlab/ui/primitives';
-import { GW_SAMPLES, GW_TOOL_STYLE, GW_VOCAB_STYLE, type GuidedSample, type Segment } from './data';
+import { GW_SAMPLES, GW_VOCAB_STYLE, toolStyle, type GuidedSample, type Segment } from './data';
 import { mask, partial, wordStates, words as splitWords } from './matching';
 
 const vStyle = (seg: Segment, k: number) => (seg.vocabStyle && seg.vocabStyle[k]) || GW_VOCAB_STYLE;
 
 function ToolChip({ tool, small }: { tool: string; small?: boolean }) {
-  const s = GW_TOOL_STYLE[tool] || GW_TOOL_STYLE['Mắt xích'];
+  const s = toolStyle(tool);
   return <span style={{ display: 'inline-block', borderRadius: 5, padding: small ? '2px 6px' : '4px 8px', background: s.bg, color: s.fg, fontFamily: CL.sans, fontSize: small ? 9 : 9.5, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', whiteSpace: 'nowrap', verticalAlign: 'middle' }}>{tool}</span>;
 }
 
@@ -29,7 +29,7 @@ function barColor(seg: Segment) {
     const c = seg.vocab.map((_, k) => vStyle(seg, k).hl);
     return c.length > 1 ? 'linear-gradient(90deg,' + c.map((x, k) => x + ' ' + (k * 100 / c.length) + '%,' + x + ' ' + ((k + 1) * 100 / c.length) + '%').join(',') + ')' : c[0];
   }
-  const ts = GW_TOOL_STYLE[seg.tool] || GW_TOOL_STYLE['Mắt xích'];
+  const ts = toolStyle(seg.tool);
   return ts.fg === '#FFFFFF' ? '#FFE17C' : ts.bg;
 }
 

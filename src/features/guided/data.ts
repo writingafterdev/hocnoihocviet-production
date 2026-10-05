@@ -1,6 +1,6 @@
 /**
- * Chép mẫu content. MOCK: one hand-tagged sample essay. In production there are several tagged
- * sample essays per prompt; GuidedWriting renders any `GuidedSample`.
+ * Chép mẫu types and styles. The sample essays themselves live in src/content/samples/<promptId>.json
+ * (checked by scripts/check-samples.mjs); `charity` below is the prototype's original sample.
  */
 
 export interface VocabStyle { bg: string; fg: string; hl: string }
@@ -36,7 +36,17 @@ export const GW_TOOL_STYLE: Record<string, { bg: string; fg: string }> = {
   'Khả thi': { bg: '#DEDEDA', fg: '#2B2B29' },
   'With/Without': { bg: '#E4F5FA', fg: '#17667A' },
   'Nối về': { bg: '#FFF6DA', fg: '#765A00' },
+  // The book's sentence labels (SAMPLE essays): what the sentence does, then which Phase 2 tool it uses.
+  'Đề hỏi gì': { bg: '#E6ECF3', fg: '#33475E' },
+  'Mạch': { bg: '#F1F1EE', fg: '#44443F' },
+  'Scope': { bg: '#FFF6DA', fg: '#765A00' },
+  'Dài hạn': { bg: '#DCF5EC', fg: '#17664F' },
+  'Quy mô': { bg: '#FFEEDA', fg: '#7B4D10' },
+  'Phản biện': { bg: '#FBE4E0', fg: '#8B3A35' },
 };
+
+/** Style for a tool label; combined labels ("Phản biện + With/Without") take the first one's colours. */
+export const toolStyle = (tool: string) => GW_TOOL_STYLE[tool] || GW_TOOL_STYLE[(tool || '').split(' + ')[0]] || GW_TOOL_STYLE['Mắt xích'];
 
 export const GW_VOCAB_STYLE: VocabStyle = { bg: '#FFF6DA', fg: '#765A00', hl: '#FFE17C' };
 // One colour per vocab item in a set, so each phrase keeps its colour on its chip, its bar and its highlight.

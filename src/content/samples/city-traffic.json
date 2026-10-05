@@ -1,0 +1,30 @@
+{
+  "promptId": "city-traffic",
+  "source": "hocnoihocviet",
+  "note": "Viết theo phương pháp của sách: Dạng 7, đi ngược dòng lên bậc môi trường và thể chế, giải pháp đúng bậc với nguyên nhân.",
+  "paragraphs": [
+    [
+      { "tool": "Đề hỏi gì", "mark": "a daily problem in many large cities", "en": "Traffic congestion has become a daily problem in many large cities around the world.", "vi": "Ùn tắc giao thông đã trở thành chuyện hằng ngày ở nhiều thành phố lớn trên thế giới." },
+      { "tool": "Đề hỏi gì", "mark": "the solutions must target these same areas", "en": "Although individual drivers are often blamed, the main causes lie in how cities provide public transport and how they are planned, so the solutions must target these same areas.", "vi": "Dù người lái xe thường bị đổ lỗi, nguyên nhân chính lại nằm ở cách thành phố cung cấp giao thông công cộng và cách thành phố được quy hoạch, nên giải pháp phải nhắm đúng vào những chỗ đó." }
+    ],
+    [
+      { "tool": "Mạch", "mark": "too slow or too limited to compete with the car", "en": "The most widespread cause is that public transport in many cities is too slow or too limited to compete with the car.", "vi": "Nguyên nhân phổ biến nhất là giao thông công cộng ở nhiều thành phố quá chậm hoặc quá ít để cạnh tranh với xe riêng." },
+      { "tool": "Mạch", "mark": "have little reason to do so", "en": "When buses are stuck in the same traffic as private vehicles and trains do not reach the suburbs where most people live, commuters who could leave their cars at home have little reason to do so.", "vi": "Khi xe buýt kẹt chung với xe riêng và tàu không tới được vùng ngoại ô nơi phần lớn người dân sống, những người đi làm có thể để xe ở nhà cũng chẳng có lý do gì để làm vậy." },
+      { "tool": "Scope", "mark": "not only to those who simply prefer driving", "en": "This applies to residents of almost every growing city, not only to those who simply prefer driving.", "vi": "Điều này đúng với cư dân ở hầu hết các thành phố đang phát triển, chứ không chỉ với những người đơn giản là thích lái xe." },
+      { "tool": "Mạch", "mark": "lies in urban planning", "en": "A second cause lies in urban planning.", "vi": "Nguyên nhân thứ hai nằm ở quy hoạch đô thị." },
+      { "tool": "Mạch", "mark": "separated homes from workplaces, schools and shops", "en": "Many cities have separated homes from workplaces, schools and shops, so everyday errands require long journeys that are difficult to make on foot or by bicycle.", "vi": "Nhiều thành phố đã tách khu nhà ở ra khỏi chỗ làm, trường học và cửa hàng, nên những việc hằng ngày đòi hỏi những quãng đường dài khó đi bộ hay đạp xe." },
+      { "tool": "Dài hạn", "mark": "keeps growing as the population rises", "en": "Once a city is built this way, the number of car journeys keeps growing as the population rises.", "vi": "Một khi thành phố đã được xây theo cách đó, số chuyến đi bằng ô tô cứ tăng dần theo dân số." }
+    ],
+    [
+      { "tool": "Mạch", "mark": "a genuine alternative", "en": "The first solution, therefore, is to make public transport a genuine alternative.", "vi": "Vì vậy, giải pháp đầu tiên là biến giao thông công cộng thành một lựa chọn thay thế thật sự." },
+      { "tool": "Mạch", "mark": "removes the main reason they drive", "en": "Dedicated bus lanes, more frequent services and rail links to outer districts would allow commuters to reach work as quickly by public transport as by car, which removes the main reason they drive.", "vi": "Làn đường riêng cho xe buýt, chuyến dày hơn và tuyến tàu ra các quận ngoài sẽ giúp người đi làm tới chỗ làm bằng giao thông công cộng nhanh ngang ô tô, từ đó xoá đi lý do chính khiến họ lái xe." },
+      { "tool": "Khả thi", "mark": "use roads that already exist", "en": "Bus lanes in particular can be introduced quickly and cheaply, since they use roads that already exist.", "vi": "Riêng làn xe buýt thì có thể làm nhanh và rẻ, vì chúng dùng những con đường sẵn có." },
+      { "tool": "Mạch", "mark": "mixed neighbourhoods", "en": "In the longer term, planning rules should encourage mixed neighbourhoods where housing, offices and services are built close together.", "vi": "Về lâu dài, quy định quy hoạch nên khuyến khích những khu dân cư hỗn hợp, nơi nhà ở, văn phòng và dịch vụ được xây gần nhau." },
+      { "tool": "Nối về", "mark": "shortening the journeys people need to make", "en": "This addresses the second cause directly by shortening the journeys people need to make in the first place.", "vi": "Cách này xử lý thẳng nguyên nhân thứ hai bằng cách rút ngắn chính những quãng đường người ta cần đi." }
+    ],
+    [
+      { "tool": "Nối về", "mark": "weak public transport and planning", "en": "In conclusion, city traffic is caused mainly by weak public transport and planning that spreads daily activities far apart.", "vi": "Tóm lại, giao thông đô thị ùn tắc chủ yếu do giao thông công cộng yếu và quy hoạch khiến các hoạt động hằng ngày nằm cách xa nhau." },
+      { "tool": "Nối về", "mark": "better planning provides the lasting solution", "en": "Improving public transport offers the quickest relief, while better planning provides the lasting solution.", "vi": "Cải thiện giao thông công cộng giúp giảm tắc nhanh nhất, còn quy hoạch tốt hơn mới là giải pháp lâu dài." }
+    ]
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "promptId": "cheaper-international-travel",
+  "source": "book",
+  "note": "The Art of Nuance, Phase 2, Ví dụ 4",
+  "paragraphs": [
+    [
+      { "tool": "Đề hỏi gì", "mark": "within reach of far more people", "en": "International travel is now within reach of far more people than in the past.", "vi": "Du lịch nước ngoài giờ đã nằm trong tầm với của nhiều người hơn hẳn so với trước đây." },
+      { "tool": "Lập trường", "mark": "it is a positive development overall", "en": "Although this trend carries a significant environmental cost, I believe it is a positive development overall, because it opens up opportunities that were once limited to the wealthy and supports economies that depend on visitors.", "vi": "Dù xu hướng này có cái giá đáng kể về môi trường, tôi cho rằng nhìn chung đây là một thay đổi tích cực, vì nó mở ra những cơ hội trước đây chỉ dành cho người giàu và nuôi sống những nền kinh tế dựa vào khách du lịch." }
+    ],
+    [
+      { "tool": "Mạch", "mark": "wider access", "en": "The most important benefit is wider access.", "vi": "Lợi ích quan trọng nhất là nhiều người được đi hơn." },
+      { "tool": "Scope + With/Without", "mark": "the real change lies in the opportunities", "en": "People on high incomes have always been able to travel abroad, so the real change lies in the opportunities now available to those who previously could not afford it.", "vi": "Người thu nhập cao thì lúc nào cũng đi nước ngoài được, nên thay đổi thật sự nằm ở những cơ hội giờ mở ra cho những người trước đây không đủ tiền đi." },
+      { "tool": "Mạch", "mark": "experience other cultures and places first-hand", "en": "For them, cheaper travel means the chance to experience other cultures and places first-hand.", "vi": "Với họ, du lịch rẻ hơn nghĩa là có cơ hội tận mắt trải nghiệm những nền văn hoá và vùng đất khác." },
+      { "tool": "Mạch", "mark": "benefits the destinations they visit", "en": "This also benefits the destinations they visit.", "vi": "Điều này cũng có lợi cho những nơi họ đến." },
+      { "tool": "Mạch + Scope", "mark": "provides income and jobs for local businesses", "en": "Tourists spend money on accommodation, food, transport and activities, which provides income and jobs for local businesses, particularly in areas where tourism is a major source of employment.", "vi": "Khách du lịch chi tiền cho chỗ ở, ăn uống, đi lại và các hoạt động, từ đó mang lại thu nhập và việc làm cho doanh nghiệp địa phương, nhất là ở những nơi du lịch là nguồn việc làm chính." }
+    ],
+    [
+      { "tool": "Mạch", "mark": "its impact on the environment", "en": "The strongest argument against this trend is its impact on the environment.", "vi": "Lý lẽ mạnh nhất chống lại xu hướng này là tác động của nó tới môi trường." },
+      { "tool": "Dài hạn", "mark": "accumulate year after year", "en": "More international journeys mean more long-distance flights, and the emissions they produce accumulate year after year.", "vi": "Nhiều chuyến đi quốc tế hơn nghĩa là nhiều chuyến bay đường dài hơn, và lượng khí thải của chúng cộng dồn qua từng năm." },
+      { "tool": "Scope", "mark": "this harm is global and long-lasting", "en": "Unlike crowding, which mainly affects destinations with limited infrastructure, this harm is global and long-lasting.", "vi": "Khác với chuyện quá tải, vốn chủ yếu ảnh hưởng tới những nơi hạ tầng yếu, tác hại này mang tính toàn cầu và kéo dài." },
+      { "tool": "Phản biện + With/Without", "mark": "rather than from travel becoming affordable in itself", "en": "However, the environmental damage stems from the volume of flights and the fuel they use rather than from travel becoming affordable in itself.", "vi": "Tuy nhiên, tác hại môi trường đến từ số lượng chuyến bay và nhiên liệu chúng dùng, chứ không phải từ bản thân việc du lịch trở nên rẻ hơn." },
+      { "tool": "Nối về", "mark": "without removing the opportunity to travel", "en": "It can therefore be reduced through measures such as more fuel-efficient aircraft, taxes on emissions and encouraging rail travel for shorter journeys, without removing the opportunity to travel from those who have only recently gained it.", "vi": "Vì vậy, có thể giảm tác hại này bằng những biện pháp như máy bay tiết kiệm nhiên liệu hơn, đánh thuế khí thải và khuyến khích đi tàu cho các chặng ngắn, mà không lấy đi cơ hội đi lại của những người chỉ mới có được nó." }
+    ],
+    [
+      { "tool": "Lập trường", "mark": "make this a positive development overall", "en": "In conclusion, while the environmental cost of increased international travel is serious and must be tackled, I believe the wider access to travel and the economic benefits it brings make this a positive development overall.", "vi": "Tóm lại, dù cái giá môi trường của việc du lịch quốc tế tăng lên là nghiêm trọng và phải được xử lý, tôi cho rằng việc nhiều người được đi hơn cùng lợi ích kinh tế mà nó mang lại khiến đây nhìn chung là một thay đổi tích cực." }
+    ]
+  ]
+}
