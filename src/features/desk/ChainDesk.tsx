@@ -103,7 +103,7 @@ function MarkedText({ text, marks, active, onPick, onEdit, style }: { text: stri
   const { runs, starts } = markRuns(text, marks);
   const ids = new Set<string>();
   return (
-    <div role="textbox" aria-readonly="true" tabIndex={0} onClick={onEdit} onKeyDown={(e) => { if (e.key === 'Enter') onEdit(); }} title="Bấm vào chữ để sửa đoạn này" style={{ ...style, cursor: 'text', whiteSpace: 'pre-wrap', overflowWrap: 'break-word' }}>
+    <div role="textbox" aria-readonly="true" tabIndex={0} className="desk-swap" onClick={onEdit} onKeyDown={(e) => { if (e.key === 'Enter') onEdit(); }} title="Bấm vào chữ để sửa đoạn này" style={{ ...style, cursor: 'text', whiteSpace: 'pre-wrap', overflowWrap: 'break-word' }}>
       {runs.map((r) => {
         if (!r.on.length) return <span key={r.a}>{text.slice(r.a, r.b)}</span>;
         const m = r.on[0];
@@ -113,8 +113,8 @@ function MarkedText({ text, marks, active, onPick, onEdit, style }: { text: stri
         if (id) ids.add(id.key);
         return (
           <span key={r.a} id={id ? 'hl-' + id.key : undefined} role="button" tabIndex={-1} className="desk-hl" onClick={(e) => { e.stopPropagation(); onPick(on ? r.on.find((x) => x.key === active).key : m.key); }}
-            // Same look as Chép mẫu highlights: a soft fill with rounded corners; the selected one gets a ring.
-            style={{ background: on ? m.line + '40' : m.soft, borderRadius: 3, padding: '0 2px', boxDecorationBreak: 'clone', WebkitBoxDecorationBreak: 'clone', cursor: 'pointer', boxShadow: on ? '0 0 0 1.5px ' + m.line : 'none', transition: 'box-shadow .2s, background .2s' }}>
+            // Same look as Chép mẫu highlights: a soft fill with rounded corners; the selected one is a deeper fill, no outline.
+            style={{ background: on ? m.line + '40' : m.soft, borderRadius: 3, padding: '0 2px', boxDecorationBreak: 'clone', WebkitBoxDecorationBreak: 'clone', cursor: 'pointer', transition: 'background .2s' }}>
             {text.slice(r.a, r.b)}
           </span>
         );
@@ -427,7 +427,7 @@ export function ChainDesk({ chains, stance, essay, setEssay, onBack }: { chains:
                       style={{ minHeight: isBody ? 150 : 96, borderRadius: 12, border: '1px solid ' + (focusSec === s.id ? CL.ink : CL.ink2), boxShadow: focusSec === s.id ? '0 0 0 4px ' + CL.ink1 : 'none', fontFamily: CL.serif, fontSize: 15.5, lineHeight: 1.7, color: CL.ink8, padding: '14px 18px', transition: 'border-color .15s, box-shadow .3s' }} />
                   ) : (<>
                   <DeskMarks text={drafts[s.id] || ''} marks={marksFor(s.id)} />
-                  <textarea className="cl-ta cl-field" autoFocus={!!review && editId === s.id} value={drafts[s.id] || ''} onFocus={() => setActiveId(s.id)} onBlur={() => { if (editId === s.id) setEditId(null); }} onChange={(e) => { const v = e.target.value; setEssay((x) => ({ ...x, drafts: { ...x.drafts, [s.id]: v } })); }} placeholder={s.placeholder} aria-label={s.label} rows={isBody ? 5 : 3} style={{ display: 'block', width: '100%', minHeight: isBody ? 150 : 96, resize: 'none', borderRadius: 12, border: '1px solid ' + (focusSec === s.id ? CL.ink : activeId === s.id ? CL.ink4 : CL.ink2), boxShadow: focusSec === s.id ? '0 0 0 4px ' + CL.ink1 : 'none', outline: 'none', background: 'transparent', position: 'relative', fontFamily: CL.serif, fontSize: 15.5, lineHeight: 1.7, color: CL.ink8, padding: '14px 18px', fieldSizing: 'content', transition: 'border-color .15s, box-shadow .3s' } as React.CSSProperties} />
+                  <textarea className="cl-ta cl-field desk-swap" autoFocus={!!review && editId === s.id} value={drafts[s.id] || ''} onFocus={() => setActiveId(s.id)} onBlur={() => { if (editId === s.id) setEditId(null); }} onChange={(e) => { const v = e.target.value; setEssay((x) => ({ ...x, drafts: { ...x.drafts, [s.id]: v } })); }} placeholder={s.placeholder} aria-label={s.label} rows={isBody ? 5 : 3} style={{ display: 'block', width: '100%', minHeight: isBody ? 150 : 96, resize: 'none', borderRadius: 12, border: '1px solid ' + (focusSec === s.id ? CL.ink : activeId === s.id ? CL.ink4 : CL.ink2), boxShadow: focusSec === s.id ? '0 0 0 4px ' + CL.ink1 : 'none', outline: 'none', background: 'transparent', position: 'relative', fontFamily: CL.serif, fontSize: 15.5, lineHeight: 1.7, color: CL.ink8, padding: '14px 18px', fieldSizing: 'content', transition: 'border-color .15s, box-shadow .3s' } as React.CSSProperties} />
                   </>)}
                 </div>
               </section>

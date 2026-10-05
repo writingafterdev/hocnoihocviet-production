@@ -57,12 +57,13 @@ function CommentCard({ it, on, dim, accent, onGo, hideFix, onTick }: { it: Revie
   const [peek, setPeek] = useState(false);
   const reveal = (e: React.SyntheticEvent) => { e.stopPropagation(); setPeek(!peek); };
   return (
-    <button id={'rv-' + it.key} type="button" className="cl-btn cl-rv" onClick={() => onGo(it)} aria-pressed={on} style={{ display: 'flex', flexDirection: 'column', alignItems: 'stretch', gap: 8, width: '100%', flexShrink: 0, textAlign: 'left', borderRadius: 16, border: '1px solid ' + (on && accent ? accent.line : CL.border), background: '#fff', padding: '15px 18px 16px', opacity: dim ? 0.55 : 1, transition: 'border-color .15s, opacity .25s' }}>
+    <button id={'rv-' + it.key} type="button" className="cl-btn cl-rv" onClick={() => onGo(it)} aria-pressed={on} style={{ display: 'flex', flexDirection: 'column', alignItems: 'stretch', gap: 8, width: '100%', flexShrink: 0, textAlign: 'left', borderRadius: 16, border: '1px solid ' + CL.border, background: '#fff', padding: '15px 18px 16px', opacity: dim ? 0.55 : 1, transition: 'opacity .25s' }}>
       <span style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
         {accent && <span style={{ alignSelf: 'center', width: 8, height: 8, borderRadius: 999, background: accent.line, flexShrink: 0 }} />}
         <span style={{ fontFamily: CL.sans, fontSize: 15, fontWeight: 600, color: CL.ink, textDecoration: it.fixed ? 'line-through' : 'none', textDecorationColor: CL.ink3 }}>{it.label || it.where}</span>
         {it.fixed && !onTick ? fixedBadgeOf(false) : it.label && <span style={{ marginLeft: 'auto', flexShrink: 0, fontFamily: CL.sans, fontSize: 11, color: CL.ink4, whiteSpace: 'nowrap' }}>{it.where}</span>}
       </span>
+      {hideFix && it.word && <span title={it.word} style={{ borderLeft: '3px solid ' + (accent ? accent.line : CL.ink3), paddingLeft: 10, fontFamily: CL.serif, fontSize: 13.5, lineHeight: 1.5, fontStyle: 'italic', color: CL.ink5, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' } as React.CSSProperties}>{it.word}</span>}
       <span style={{ fontFamily: CL.sans, fontSize: 13.5, lineHeight: 1.6, color: CL.ink8, textWrap: 'pretty' }}><Rich text={it.text} /></span>
       {it.fix && (!hideFix || peek) && <span style={{ fontFamily: CL.sans, fontSize: 13.5, lineHeight: 1.55, textWrap: 'pretty' }}><span style={{ color: CL.ink4 }}>Sửa lại: </span><b style={{ fontWeight: 700, color: CL.green }}>{it.fix}</b></span>}
       {(onTick || (it.fix && hideFix)) && (

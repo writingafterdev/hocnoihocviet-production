@@ -25,6 +25,10 @@ a:hover { color: #44443F; }
 .cl-word:hover { border-color: #141413 !important; background: #FFF6DA !important; }
 .cl-add:hover { border-color: #141413 !important; background: #FAF9F5 !important; color: #141413 !important; }
 .cl-primary:hover { opacity: .82; }
+@keyframes desk-fade { from { opacity: 0; } to { opacity: 1; } }
+.desk-swap { animation: desk-fade .28s ease-out; }
+.desk-swap.cl-field { transition: background-color .28s ease, border-color .28s ease; }
+@media (prefers-reduced-motion: reduce) { .desk-swap { animation: none; } }
 .cl-ta:focus { background: #FAF9F5; }
 .cl-field:focus { background: #fff !important; border-color: #77776F !important; }
 .cl-askbox:focus-within { border-color: #77776F !important; }
