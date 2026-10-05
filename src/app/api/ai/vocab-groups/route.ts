@@ -3,6 +3,7 @@ import { decideChoices } from '@/lib/ai/decision';
 import { getUser } from '@/lib/auth';
 
 const MAX_PHRASES = 30;
+const MIN_CONFIDENCE = 0.4;
 const reply = (body: unknown, status = 200) => Response.json(body, { status, headers: { 'Cache-Control': 'no-store' } });
 
 /**
@@ -30,6 +31,7 @@ export async function POST(request: Request) {
     criteria,
   }]));
   const answers = await decideChoices({ skill: skill.eyebrow, phrases }, questions);
-  const themeOf = (p: string) => { const a = answers && answers['p' + phrases.indexOf(p)]; return a ? themes[+a.slice(1)] : undefined; };
+  // Low-confidence answers keep the phrase's hand-tagged theme.
+  const themeOf = (p: string) => { const a = answers && answers['p' + phrases.indexOf(p)]; return a && a.confidence >= MIN_CONFIDENCE ? themes[+a.choice.slice(1)] : undefined; };
   return reply({ groups: groupPhrases(skill, phrases, themeOf), by: answers && Object.keys(answers).length ? 'decision-model' : 'themes' });
 }
