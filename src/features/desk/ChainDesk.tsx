@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { Fragment, useEffect, useRef, useState } from 'react';
 import { AI_ERROR_TEXT, AiRequestError } from '../ai/request';
 import { Translator } from '../ai/Translator';
 import { CL, CL_CIRC, CL_SHAPE_LABEL } from '../chainlab/constants';
@@ -93,7 +93,7 @@ function DeskMarks({ text, marks }: { text: string; marks: Mark[] }) {
   const { runs } = markRuns(text, marks);
   return (
     <div aria-hidden="true" style={{ position: 'absolute', inset: 0, pointerEvents: 'none', padding: '14px 18px', border: '1px solid transparent', fontFamily: 'var(--font-serif)', fontSize: 15.5, lineHeight: 1.7, color: 'transparent', whiteSpace: 'pre-wrap', overflowWrap: 'break-word' }}>
-      {runs.map((r) => <span key={r.a} style={r.on.length ? { borderBottom: '2px solid ' + r.on[0].line } : undefined}>{text.slice(r.a, r.b)}</span>)}
+      {runs.map((r) => <span key={r.a} style={r.on.length ? { background: r.on[0].soft, borderRadius: 3, boxDecorationBreak: 'clone', WebkitBoxDecorationBreak: 'clone' } : undefined}>{text.slice(r.a, r.b)}</span>)}
     </div>
   );
 }
@@ -113,7 +113,8 @@ function MarkedText({ text, marks, active, onPick, onEdit, style }: { text: stri
         if (id) ids.add(id.key);
         return (
           <span key={r.a} id={id ? 'hl-' + id.key : undefined} role="button" tabIndex={-1} className="desk-hl" onClick={(e) => { e.stopPropagation(); onPick(on ? r.on.find((x) => x.key === active).key : m.key); }}
-            style={{ background: on ? m.soft : m.soft + 'AA', borderBottom: '2px solid ' + m.line, borderRadius: 2, cursor: 'pointer', boxShadow: on ? '0 0 0 2px ' + m.line + '55' : 'none', transition: 'box-shadow .2s, background .2s' }}>
+            // Same look as Chép mẫu highlights: a soft fill with rounded corners; the selected one gets a ring.
+            style={{ background: on ? m.line + '40' : m.soft, borderRadius: 3, padding: '0 2px', boxDecorationBreak: 'clone', WebkitBoxDecorationBreak: 'clone', cursor: 'pointer', boxShadow: on ? '0 0 0 1.5px ' + m.line : 'none', transition: 'box-shadow .2s, background .2s' }}>
             {text.slice(r.a, r.b)}
           </span>
         );
@@ -144,44 +145,66 @@ function DeskScores({ review, tab, setTab, counts }: { review: EssayReview; tab:
       </button>
     );
   };
-  const target = (v: number) => Math.min(9, Math.floor(v) + 1);
-  const para = (t: string) => <p style={{ margin: 0, fontFamily: CL.sans, fontSize: 12.5, lineHeight: 1.6, color: CL.ink7, textWrap: 'pretty' }}>{t}</p>;
-  const head = (t: string) => <span style={{ display: 'block', margin: '12px 0 4px', fontFamily: CL.sans, fontSize: 11, fontWeight: 700, letterSpacing: '0.04em', color: CL.ink }}>{t}</span>;
-  const c = tab !== 'band' ? cr[tab] : null;
   return (
-    <section style={{ overflow: 'hidden', borderRadius: 18, border: '1px solid ' + CL.border, background: '#fff', flexShrink: 0 }}>
-      <div style={{ display: 'flex', alignItems: 'center', minHeight: 50, padding: '0 18px', background: CL.panel, borderBottom: '1px solid ' + CL.ink2 }}>
-        <span style={{ fontFamily: CL.sans, fontSize: 13.5, fontWeight: 600, color: CL.ink }}>Điểm</span>
-        <span style={{ marginLeft: 'auto', fontFamily: CL.sans, fontSize: 11, color: CL.ink5 }}>{review.source === 'ai' ? 'Ước tính' : review.source === 'sample' ? 'Bài chấm mẫu' : 'Ước tính · bản thử'}</span>
+    <>
+      <section style={{ overflow: 'hidden', borderRadius: 18, border: '1px solid ' + CL.border, background: '#fff', flexShrink: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'center', minHeight: 50, padding: '0 18px', background: CL.panel, borderBottom: '1px solid ' + CL.ink2 }}>
+          <span style={{ fontFamily: CL.sans, fontSize: 13.5, fontWeight: 600, color: CL.ink }}>Điểm</span>
+          <span style={{ marginLeft: 'auto', fontFamily: CL.sans, fontSize: 11, color: CL.ink5 }}>{review.source === 'ai' ? 'Ước tính' : review.source === 'sample' ? 'Bài chấm mẫu' : 'Ước tính · bản thử'}</span>
+        </div>
+        <div role="tablist" aria-label="Tiêu chí" style={{ display: 'grid', gridTemplateColumns: '1.25fr repeat(4, minmax(0,1fr))', gap: 6, padding: 12 }}>
+          {box('band', 'Band', s.band)}{box('tr', 'TR', s.tr)}{box('cc', 'CC', s.cc)}{box('lr', 'LR', s.lr)}{box('gra', 'GRA', s.gra)}
+        </div>
+        {tab === 'band' && review.summary && <p style={{ margin: 0, padding: '2px 18px 16px', fontFamily: CL.sans, fontSize: 12.5, lineHeight: 1.6, color: CL.ink7, textWrap: 'pretty' }}><Rich text={review.summary} /></p>}
+      </section>
+      {(tab === 'band' ? CRITERIA.map(([id]) => id) : [tab]).map((id) => (
+        <CriterionCard key={id + (tab === 'band' ? '-all' : '-one')} id={id} review={review} count={counts[id] || 0} startOpen={tab !== 'band'} onOpen={tab === 'band' ? () => setTab(id as Tab) : undefined} />
+      ))}
+    </>
+  );
+}
+
+const CRITERION_SUB: Record<string, string> = { tr: 'Trả lời đúng yêu cầu đề bài', cc: 'Mạch lạc và liên kết', lr: 'Từ vựng', gra: 'Ngữ pháp' };
+
+/** Text with **bold** spans, as the AI writes key terms. */
+function Rich({ text }: { text: string }) {
+  return <>{text.split(/\*\*(.+?)\*\*/g).map((t, k) => (k % 2 ? <b key={k} style={{ fontWeight: 700, color: CL.ink }}>{t}</b> : <Fragment key={k}>{t}</Fragment>))}</>;
+}
+
+/**
+ * One criterion's assessment: title, Vietnamese subtitle, "n lỗi", and the explanation
+ * (1/ why this band · 2/ why not higher or lower · 3/ how to improve), collapsed behind "Xem thêm…".
+ */
+function CriterionCard({ id, review, count, startOpen, onOpen }: { id: string; review: EssayReview; count: number; startOpen: boolean; onOpen?: () => void }) {
+  const [open, setOpen] = useState(startOpen);
+  const st = CRITERION_STYLE[id], c = review.criteria && review.criteria[id];
+  const score = review.scores[id as 'tr'];
+  const q = (t: string) => <span style={{ display: 'block', margin: '10px 0 3px', fontFamily: CL.sans, fontSize: 13, fontWeight: 700, color: CL.ink }}>{t}</span>;
+  const body = (t: string, clamp?: boolean) => (
+    <p style={{ margin: 0, fontFamily: CL.sans, fontSize: 13, lineHeight: 1.6, color: CL.ink7, textWrap: 'pretty', ...(clamp ? { display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' } : {}) } as React.CSSProperties}><Rich text={t} /></p>
+  );
+  const link = (label: string, fn: () => void) => <button type="button" className="cl-btn cl-link" onClick={fn} style={{ marginTop: 6, fontFamily: CL.sans, fontSize: 13, fontWeight: 600, color: '#2B6BE8' }}>{label}</button>;
+  return (
+    <section style={{ borderRadius: 18, border: '1px solid ' + CL.border, background: '#fff', padding: '16px 18px 18px', flexShrink: 0 }}>
+      <div onClick={onOpen} role={onOpen ? 'button' : undefined} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, cursor: onOpen ? 'pointer' : 'default' }}>
+        <span style={{ flex: 1, minWidth: 0 }}>
+          <span style={{ display: 'block', fontFamily: CL.sans, fontSize: 15, fontWeight: 600, color: CL.ink }}>{CRITERION_NAME[id]} <span style={{ fontWeight: 500, color: CL.ink4, fontVariantNumeric: 'tabular-nums' }}>· {score.toFixed(1)}</span></span>
+          <span style={{ display: 'block', marginTop: 3, fontFamily: CL.sans, fontSize: 12.5, color: CL.ink5 }}>{CRITERION_SUB[id]}</span>
+        </span>
+        <span style={{ flexShrink: 0, borderRadius: 999, background: count ? st.soft : CL.mintSoft, color: count ? st.line : CL.greenText, padding: '3px 10px', fontFamily: CL.sans, fontSize: 12, fontWeight: 600 }}>{count ? count + ' lỗi' : 'Ổn'}</span>
       </div>
-      <div role="tablist" aria-label="Tiêu chí" style={{ display: 'grid', gridTemplateColumns: '1.25fr repeat(4, minmax(0,1fr))', gap: 6, padding: 12 }}>
-        {box('band', 'Band', s.band)}{box('tr', 'TR', s.tr)}{box('cc', 'CC', s.cc)}{box('lr', 'LR', s.lr)}{box('gra', 'GRA', s.gra)}
-      </div>
-      <div style={{ padding: '2px 18px 16px' }}>
-        {tab === 'band' ? (
+      <div style={{ marginTop: 12, borderRadius: 12, background: '#F3F3F1', padding: '12px 14px 14px' }}>
+        <span style={{ display: 'block', fontFamily: CL.sans, fontSize: 13, fontWeight: 700, color: CL.ink }}>Giải thích:</span>
+        {c && c.why ? (
           <>
-            {review.summary && para(review.summary)}
-            <div style={{ display: 'flex', flexDirection: 'column', marginTop: review.summary ? 10 : 0 }}>
-              {CRITERIA.map(([id, name]) => (
-                <button key={id} type="button" className="cl-btn cl-rv" onClick={() => setTab(id as Tab)} style={{ display: 'flex', flexDirection: 'column', alignItems: 'stretch', gap: 3, textAlign: 'left', padding: '10px 0', borderTop: '1px solid ' + CL.ink1 }}>
-                  <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <span style={{ width: 8, height: 8, borderRadius: 2, background: CRITERION_STYLE[id].line }} />
-                    <span style={{ fontFamily: CL.sans, fontSize: 12.5, fontWeight: 600, color: CL.ink }}>{name}</span>
-                    <span style={{ fontFamily: CL.sans, fontSize: 12.5, fontWeight: 700, color: CL.ink, fontVariantNumeric: 'tabular-nums' }}>{s[id as 'tr'].toFixed(1)}</span>
-                    <span style={{ marginLeft: 'auto', fontFamily: CL.sans, fontSize: 11, color: CL.ink4 }}>{counts[id] ? counts[id] + ' chỗ' : 'Ổn'} ›</span>
-                  </span>
-                  {cr[id] && cr[id].why && <span style={{ paddingLeft: 16, fontFamily: CL.sans, fontSize: 12, lineHeight: 1.55, color: CL.ink6, textWrap: 'pretty' }}>{cr[id].why}</span>}
-                </button>
-              ))}
-            </div>
+            {q('1/ Tại sao bài đạt band điểm này?')}
+            {body(c.why, !open)}
+            {open && c.gap ? <>{q('2/ Tại sao bài không đạt band cao hơn hoặc band thấp hơn?')}{body(c.gap)}</> : null}
+            {open && c.next && score < 9 ? <>{q('3/ Hướng cải thiện')}{body(c.next)}</> : null}
+            {link(open ? 'Thu gọn' : 'Xem thêm...', () => setOpen(!open))}
           </>
         ) : (
-          <>
-            <span style={{ display: 'flex', alignItems: 'center', gap: 8, fontFamily: CL.sans, fontSize: 13, fontWeight: 600, color: CL.ink }}><span style={{ width: 9, height: 9, borderRadius: 3, background: CRITERION_STYLE[tab].line }} />{CRITERION_NAME[tab]}</span>
-            {c && c.why ? <>{head('Vì sao ' + s[tab].toFixed(1))}{para(c.why)}</> : null}
-            {c && c.next && s[tab] < 9 ? <>{head('Để lên ' + target(s[tab]))}{para(c.next)}</> : null}
-            {!c && <p style={{ margin: '8px 0 0', fontFamily: CL.sans, fontSize: 12, color: CL.ink5 }}>Bản thử chỉ có nhận xét chi tiết.</p>}
-          </>
+          <p style={{ margin: '6px 0 0', fontFamily: CL.sans, fontSize: 12.5, color: CL.ink5 }}>Bản thử chỉ có nhận xét chi tiết.</p>
         )}
       </div>
     </section>

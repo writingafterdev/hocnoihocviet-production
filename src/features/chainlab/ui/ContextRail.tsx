@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { CL, CL_CIRC, CL_IMPACT_AREAS, CL_SHAPE_LABEL } from '../constants';
+import { CL, CL_CIRC, CL_SHAPE_LABEL } from '../constants';
 import { useSpec } from '../SpecContext';
 import { ClLabel } from './primitives';
 
@@ -37,7 +37,7 @@ export function RailTop() {
   );
 }
 
-/** Left rail in ChainLab: prompt, requirements, driver, stakeholders, the 5 impact areas. */
+/** Left rail in ChainLab: prompt, requirements, driver, stakeholders. (The 5 impact areas are picked on each chain card.) */
 export function ContextRail() {
   const [hints, setHints] = useState(true);
   const spec = useSpec();
@@ -73,24 +73,10 @@ export function ContextRail() {
               </section>
             )}
             <div style={{ height: 24 }} />
-            <section style={{ paddingBottom: 24, borderBottom: '1px solid ' + CL.ink1 }}>
+            <section style={{ paddingBottom: 8 }}>
               <ClLabel color={CL.ink}>Các bên liên quan</ClLabel>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 12 }}>
                 {(spec.stakeholders || []).map((s) => <span key={s} style={{ borderRadius: 7, border: '1px solid ' + CL.ink2, background: '#fff', padding: '6px 11px', fontFamily: CL.sans, fontSize: 12, fontWeight: 600, color: CL.ink8 }}>{s}</span>)}
-              </div>
-            </section>
-            <section style={{ paddingTop: 24 }}>
-              <ClLabel color={CL.ink}>5 vùng tác động</ClLabel>
-              <div style={{ display: 'flex', flexDirection: 'column', marginTop: 8 }}>
-                {CL_IMPACT_AREAS.map(([l, t], k) => (
-                  <div key={l} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '11px 0', borderTop: k ? '1px solid ' + CL.ink1 : 'none' }}>
-                    <span style={{ width: 20, height: 20, borderRadius: 6, background: CL.ink1, display: 'grid', placeItems: 'center', flexShrink: 0, fontFamily: CL.sans, fontSize: 10.5, fontWeight: 700, color: CL.ink }}>{k + 1}</span>
-                    <span style={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 }}>
-                      <span style={{ fontFamily: CL.sans, fontSize: 13, fontWeight: 600, color: CL.ink }}>{l}</span>
-                      <span style={{ fontFamily: CL.sans, fontSize: 11.5, color: CL.ink5 }}>{t}</span>
-                    </span>
-                  </div>
-                ))}
               </div>
             </section>
           </div>

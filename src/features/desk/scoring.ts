@@ -28,8 +28,8 @@ export interface EssayReview {
   source?: 'ai' | 'mock' | 'sample';
   /** Overall assessment across the four criteria (AI only). */
   summary?: string;
-  /** Per criterion: why it got this band, and what would raise it (AI only). */
-  criteria?: Record<string, { why: string; next: string }>;
+  /** Per criterion: why it got this band, why not higher or lower, and what would raise it (AI only). May contain **bold**. */
+  criteria?: Record<string, { why: string; gap?: string; next: string }>;
 }
 
 /** Feedback groups, one per IELTS criterion. */
@@ -37,10 +37,10 @@ export const CRITERIA: [string, string][] = [['tr', 'Task Response'], ['cc', 'Co
 
 /** Highlight colours per criterion: underline/bar and soft background. */
 export const CRITERION_STYLE: Record<string, { line: string; soft: string }> = {
-  tr: { line: '#D5452E', soft: '#FBE4E0' },
-  cc: { line: '#C08A00', soft: '#FFF3CC' },
-  lr: { line: '#17839A', soft: '#E1F3F8' },
-  gra: { line: '#6A4BC4', soft: '#EEE9FB' },
+  tr: { line: '#D5452E', soft: '#FADAD4' },
+  cc: { line: '#C08A00', soft: '#FFEDB3' },
+  lr: { line: '#17839A', soft: '#D3EEF5' },
+  gra: { line: '#6A4BC4', soft: '#E6DFFA' },
 };
 
 /** Overall band: mean of the four criteria, rounded to the nearest half band (.25 and .75 round up). */

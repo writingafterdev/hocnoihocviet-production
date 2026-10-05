@@ -77,25 +77,29 @@ const COMMENTS: Record<string, C[]> = {
   ],
 };
 
-const CRITERIA_TEXT: Record<string, { score: number; why: string; next: string }> = {
+const CRITERIA_TEXT: Record<string, { score: number; why: string; gap: string; next: string }> = {
   tr: {
     score: 6.5,
     why: 'Lập trường trả lời đúng câu hỏi (positive) và gần như mọi dòng của dàn ý đều có mặt. Nhưng dòng quan trọng nhất của ô 3, câu With/Without về khí thải, bị thiếu, câu kết chỉ đếm ý, và có cụm nói chung chung. Bài cũng mới khoảng 200 từ, dưới 250 nên bị trừ ở TR.',
+    gap: 'Bài chưa lên **band 7** vì lập trường mới chỉ **developed**, chưa **well-developed**: ô 2 chưa được ô 3 trả lời hết, và câu kết chưa có lý do (**conclusions unjustified**). Bài không xuống **band 6** vì lập trường rõ, nhất quán, và các ý chính đều có mạch đủ bước.',
     next: 'Thêm câu With/Without ngay trước các biện pháp: tác hại đến từ số chuyến bay và nhiên liệu, không phải từ việc du lịch rẻ. Viết lại câu kết bằng đúng lý do đó, và giữ nhánh Scope cho mạch thu nhập. Viết đủ 250 từ.',
   },
   cc: {
     score: 7,
     why: 'Khung bài hợp lý và có tiến trình rõ, nhưng thứ tự ý trong đoạn mới "nhìn chung hợp lý": đoạn ô 1 đi sau đoạn rebuttal dùng tới nó, ý phụ quá tải chen vào giữa làm "It" và "this problem" trỏ sai, và ý chính của đoạn ô 1 nằm trong một vế phụ.',
+    gap: 'Bài chưa lên **band 8** vì người đọc chưa theo được **with ease**: phải dừng lại ở "those who have only recently gained it", ở "It" và ở "this problem". Bài không xuống **band 6** vì mỗi đoạn vẫn có ý trung tâm và tiến trình chung rõ ràng.',
     next: 'Sửa từ to xuống nhỏ: đổi chỗ hai đoạn thân bài, mở mỗi đoạn bằng ý chính của nó, đưa quá tải thành một vế "Unlike…". Nhiều lỗi chữ trỏ và từ nối sẽ tự hết, phần còn lại thì bỏ bớt từ nối dư.',
   },
   lr: {
     score: 7,
     why: 'Vốn từ đủ rộng và chính xác cho chủ đề, với nhiều collocation tự nhiên (default option, first-hand, fuel-efficient aircraft, carbon taxes). Vài chỗ còn chung chung hoặc sáo.',
+    gap: 'Bài chưa lên **band 8** vì còn những cụm chung chung như "harmful to the planet" và cụm sáo "cannot be ignored". Bài không xuống **band 6** vì collocation tự nhiên, gần như không có lỗi dùng từ.',
     next: 'Thay các cụm chung chung bằng từ nói đúng điều bài đang chứng minh, và tránh các cụm sáo ở kết bài.',
   },
   gra: {
     score: 7.5,
     why: 'Nhiều câu phức không lỗi, dùng mệnh đề quan hệ và cấu trúc "allow … to …" chính xác. Chỉ có một chỗ trật tự cụm động từ làm câu vướng.',
+    gap: 'Bài chưa lên **band 8** vì cấu trúc còn khá giống nhau (nhiều vế "which"), và có một chỗ trật tự cụm động từ. Bài không xuống **band 7** vì phần lớn câu không lỗi và câu phức được kiểm soát tốt.',
     next: 'Giữ độ chính xác, và kiểm tra lại các cụm động từ có tiểu từ (take away, carry out) khi tân ngữ dài.',
   },
 };
@@ -116,7 +120,7 @@ export function sampleReview(): EssayReview {
     key: draftsKey(SAMPLE_DRAFTS),
     source: 'sample',
     summary: `Một bài band 7 điển hình (${words} từ): lập trường có, tiếng Anh khá, đọc được từ đầu tới cuối, nhưng người đọc vẫn phải dừng lại vài lần. TR đang kéo điểm xuống nhiều nhất, vì ô 3 thiếu câu With/Without và câu kết chỉ đếm ý. Việc quan trọng nhất là mở lại dàn ý, thêm dòng còn thiếu, rồi sắp lại hai đoạn thân bài.`,
-    criteria: Object.fromEntries(CRITERIA.map(([id]) => [id, { why: CRITERIA_TEXT[id].why, next: CRITERIA_TEXT[id].next }])),
+    criteria: Object.fromEntries(CRITERIA.map(([id]) => [id, { why: CRITERIA_TEXT[id].why, gap: CRITERIA_TEXT[id].gap, next: CRITERIA_TEXT[id].next }])),
     groups,
     scores: { ...s, band: bandOf(s.tr, s.cc, s.lr, s.gra) },
   };

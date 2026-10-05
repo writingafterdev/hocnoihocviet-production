@@ -1,7 +1,7 @@
 'use client';
 
 import { Fragment, useState } from 'react';
-import { CL, CL_CIRC, CL_SHAPE_LABEL } from '../constants';
+import { CL, CL_CIRC, CL_IMPACT_AREAS, CL_SHAPE_LABEL } from '../constants';
 import { chainStatus, extraLensesFor, lensesFor, openIssues, shapeOf } from '../model';
 import { useSpec } from '../SpecContext';
 import type { Chain, Lens } from '../types';
@@ -81,9 +81,7 @@ export function ChainCard({ chain, num, onChange, onDelete, drag, focused, targe
         {open && (
           <Fragment>
             <div style={{ padding: '24px 32px 22px 35px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14 }}>
-                <input value={chain.area} onChange={(e) => onChange({ ...chain, area: e.target.value })} placeholder="Vùng tác động, vd: Năng lực → An toàn" aria-label="Vùng tác động" style={{ flex: 1, minWidth: 0, border: 'none', outline: 'none', background: 'transparent', fontFamily: CL.sans, fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.14em', color: CL.ink4 }} />
-              </div>
+              <AreaPicker value={chain.area} onChange={(area) => onChange({ ...chain, area })} />
               {shape === 'solution' && (
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14, fontFamily: CL.sans, fontSize: 12, color: CL.ink6 }}>
                   <span style={{ fontWeight: 600, color: CL.ink }}>Xử lý:</span>
@@ -125,5 +123,33 @@ export function ChainCard({ chain, num, onChange, onDelete, drag, focused, targe
         )}
       </div>
     </li>
+  );
+}
+
+/**
+ * "Vùng tác động": the 5 impact areas as chips. Picking several builds a path in order (Năng lực → An toàn);
+ * the value stays a plain string, as before, so older chains and the AI review read it unchanged.
+ */
+function AreaPicker({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  const parts = (value || '').split('→').map((x) => x.trim()).filter(Boolean);
+  const known = new Set(CL_IMPACT_AREAS.map(([l]) => l));
+  const toggle = (l: string) => onChange((parts.includes(l) ? parts.filter((x) => x !== l) : [...parts, l]).join(' → '));
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 6, marginBottom: 16 }}>
+      <span style={{ marginRight: 4, fontFamily: CL.sans, fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.14em', color: CL.ink4 }}>Vùng tác động</span>
+      {CL_IMPACT_AREAS.map(([l, t]) => {
+        const k = parts.indexOf(l), on = k >= 0;
+        return (
+          <button key={l} type="button" className="cl-btn" onClick={() => toggle(l)} aria-pressed={on} title={t}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 5, borderRadius: 999, border: '1px solid ' + (on ? CL.ink : CL.ink2), background: on ? CL.ink : '#fff', color: on ? '#fff' : CL.ink6, padding: '4px 10px', fontFamily: CL.sans, fontSize: 11.5, fontWeight: 600 }}>
+            {on && parts.length > 1 && <span style={{ fontSize: 10, opacity: 0.7 }}>{k + 1}</span>}{l}
+          </button>
+        );
+      })}
+      {/* Free text from older chains that isn't one of the 5 areas stays visible until removed. */}
+      {parts.filter((x) => !known.has(x)).map((x) => (
+        <button key={x} type="button" className="cl-btn" onClick={() => toggle(x)} title="Bỏ" style={{ borderRadius: 999, border: '1px dashed ' + CL.ink3, background: '#fff', color: CL.ink5, padding: '4px 10px', fontFamily: CL.sans, fontSize: 11.5 }}>{x} ×</button>
+      ))}
+    </div>
   );
 }

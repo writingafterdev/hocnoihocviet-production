@@ -13,8 +13,10 @@ Bạn là giám khảo IELTS Writing Task 2 có kinh nghiệm và là người h
 
 1. Chấm bốn tiêu chí TR, CC, LR, GRA theo mô tả band công khai (mỗi điểm là bội số của 0.5, từ 1 tới 9). Chấm như giám khảo thật: không nâng điểm để động viên, không hạ điểm vì bài không theo dàn ý nếu bài vẫn trả lời tốt đề. Bài dưới 250 từ bị trừ ở TR. Đoạn trống hoặc bài rất ngắn thì điểm phải phản ánh đúng điều đó.
    Với MỖI tiêu chí, ngoài score còn viết:
-   - why: 2–3 câu tiếng Việt giải thích vì sao bài ở đúng band này, đối chiếu với mô tả band (điều bài đã đạt, và điều giữ bài lại ở band này), nhắc tới chỗ cụ thể trong bài. Không nói chung chung kiểu "bài có từ vựng khá tốt".
+   - why: 2–3 câu tiếng Việt: vì sao bài ở đúng band này, đối chiếu với mô tả band (điều bài đã đạt), nhắc tới chỗ cụ thể trong bài. Không nói chung chung kiểu "bài có từ vựng khá tốt".
+   - gap: 2–4 câu tiếng Việt: vì sao bài KHÔNG đạt band kế tiếp (thiếu đúng điều gì mà mô tả band trên đòi, ở chỗ nào trong bài), và vì sao bài KHÔNG rơi xuống band thấp hơn (đã giữ được điều gì).
    - next: 1–3 câu tiếng Việt nói việc cụ thể nhất để lên band kế tiếp của tiêu chí đó, theo đúng thứ tự ưu tiên (việc làm tăng điểm nhiều nhất trước). Nếu điểm đã là 9 thì để "".
+   Trong why, gap và next, có thể in đậm 1–3 cụm then chốt bằng **…** (thuật ngữ của sách, mức band, hoặc cụm tiếng Anh trích từ bài).
    why và next là phần nhận xét chung của tiêu chí; các nhận xét chi tiết ở comments là bằng chứng cho chúng, nên why/next nên khớp với những nhận xét nặng nhất của tiêu chí đó.
 2. Viết nhận xét, xếp theo đúng tiêu chí:
    - tr · Task Response: soát theo đúng các bước ở phần "SOÁT TASK RESPONSE" bên dưới.
@@ -126,8 +128,8 @@ const SCHEMA = {
       properties: Object.fromEntries(['tr', 'cc', 'lr', 'gra'].map((k) => [k, {
         type: 'object',
         additionalProperties: false,
-        required: ['score', 'why', 'next'],
-        properties: { score: { type: 'number' }, why: { type: 'string' }, next: { type: 'string' } },
+        required: ['score', 'why', 'gap', 'next'],
+        properties: { score: { type: 'number' }, why: { type: 'string' }, gap: { type: 'string' }, next: { type: 'string' } },
       }])),
     },
     summary: { type: 'string' },
@@ -181,7 +183,7 @@ const clampBand = (x: number) => Math.max(1, Math.min(9, Math.round((Number(x) |
 export async function aiEssayReview(userId: string, prompt: Prompt, sections: SectionIn[], chains: Chain[], stance: string): Promise<EssayReview> {
   const words = sections.reduce((n, s) => n + (s.text.trim() ? s.text.trim().split(/\s+/).length : 0), 0);
   const essay = sections.map((s) => `<section id="${s.id}" label="${s.label}">\n${s.text.trim() || '(trống)'}\n</section>`).join('\n');
-  const out = await ask<{ criteria: Record<'tr' | 'cc' | 'lr' | 'gra', { score: number; why: string; next: string }>; summary: string; comments: Comment[] }>({
+  const out = await ask<{ criteria: Record<'tr' | 'cc' | 'lr' | 'gra', { score: number; why: string; gap?: string; next: string }>; summary: string; comments: Comment[] }>({
     userId, kind: 'essay', task: TASK, schema: SCHEMA, effort: 'high',
     input: describePrompt(prompt) + '\n\n' + describeChains(prompt, chains, stance) + `\n\nBÀI VIẾT (${words} từ)\n` + essay,
   });
@@ -213,7 +215,7 @@ export async function aiEssayReview(userId: string, prompt: Prompt, sections: Se
     key: draftsKey(Object.fromEntries(sections.map((s) => [s.id, s.text]))),
     source: 'ai',
     summary: (out.summary || '').trim(),
-    criteria: Object.fromEntries(CRITERIA.map(([id]) => [id, { why: (cr[id as 'tr']?.why || '').trim(), next: (cr[id as 'tr']?.next || '').trim() }])),
+    criteria: Object.fromEntries(CRITERIA.map(([id]) => [id, { why: (cr[id as 'tr']?.why || '').trim(), gap: (cr[id as 'tr']?.gap || '').trim(), next: (cr[id as 'tr']?.next || '').trim() }])),
     groups,
     scores: { tr, cc, lr, gra, band: bandOf(tr, cc, lr, gra) },
   };
