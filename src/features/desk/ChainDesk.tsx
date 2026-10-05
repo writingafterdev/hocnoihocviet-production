@@ -189,9 +189,9 @@ function FixBar({ tab, setTab, counts, totals, onExit }: { tab: Tab; setTab: (t:
   return (
     <section style={{ borderRadius: 18, border: '1px solid ' + CL.border, background: '#fff', padding: '16px 18px 12px', flexShrink: 0 }}>
       <div style={{ display: 'flex', alignItems: 'baseline', gap: 10 }}>
-        <span style={{ fontFamily: CL.sans, fontSize: 15, fontWeight: 600, color: CL.ink }}>Đang sửa bài</span>
-        <span style={{ fontFamily: CL.sans, fontSize: 12.5, color: left ? CL.ink5 : CL.greenText, fontWeight: left ? 400 : 600 }}>{left ? 'Còn ' + left + ' / ' + total + ' lỗi' : 'Đã sửa hết. Nộp lại để chấm.'}</span>
-        <button type="button" className="cl-btn cl-link" onClick={onExit} style={{ marginLeft: 'auto', fontFamily: CL.sans, fontSize: 12, fontWeight: 600, color: CL.ink5 }}>Xem điểm</button>
+        <span style={{ fontFamily: CL.sans, fontSize: 15, fontWeight: 600, color: CL.ink, whiteSpace: 'nowrap' }}>Đang sửa bài</span>
+        <span style={{ fontFamily: CL.sans, fontSize: 12.5, color: left ? CL.ink5 : CL.greenText, fontWeight: left ? 400 : 600 }}>{left ? 'Còn ' + left + ' / ' + total + ' lỗi' : 'Đã tick hết. Nộp lại để chấm.'}</span>
+        <button type="button" className="cl-btn cl-link" onClick={onExit} style={{ marginLeft: 'auto', whiteSpace: 'nowrap', fontFamily: CL.sans, fontSize: 12, fontWeight: 600, color: CL.ink5 }}>Xem điểm</button>
       </div>
       <div style={{ height: 5, borderRadius: 999, background: CL.ink1, margin: '10px 0 10px', overflow: 'hidden' }}>
         <div style={{ width: (total ? ((total - left) / total) * 100 : 0) + '%', height: '100%', borderRadius: 999, background: CL.mint, transition: 'width .4s' }} />
@@ -199,7 +199,7 @@ function FixBar({ tab, setTab, counts, totals, onExit }: { tab: Tab; setTab: (t:
       <div role="tablist" aria-label="Tiêu chí" style={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
         {pill('band', 'Tất cả', left)}{CRITERIA.map(([id]) => pill(id as Tab, id.toUpperCase(), counts[id] || 0))}
       </div>
-      <p style={{ margin: '8px 0 0', fontFamily: CL.sans, fontSize: 11.5, lineHeight: 1.5, color: CL.ink4 }}>Bấm chữ trong bài để sửa. Gợi ý cách sửa được ẩn; mở khi cần.</p>
+      <p style={{ margin: '8px 0 0', fontFamily: CL.sans, fontSize: 11.5, lineHeight: 1.5, color: CL.ink4 }}>Bấm chữ trong bài để sửa, rồi tick “Đã sửa” trên từng lỗi. Gợi ý được ẩn; mở khi cần. Nộp lại để AI kiểm tra.</p>
     </section>
   );
 }
@@ -310,18 +310,22 @@ export function ChainDesk({ chains, stance, essay, setEssay, onBack }: { chains:
     setRunning(true); setError(null);
     try {
       const r = await requestEssayReview(spec, sections, drafts, chains, stance);
-      setEssay((e) => ({ ...e, review: r, fixing: false, prevScores: e.review ? e.review.scores : null })); setSeen([]); if (!three) setRailOpen(false); setActive(null); setEditId(null); setTab('band');
+      setEssay((e) => ({ ...e, review: r, fixing: false, ticked: [], prevScores: e.review ? e.review.scores : null })); setSeen([]); if (!three) setRailOpen(false); setActive(null); setEditId(null); setTab('band');
     } catch (e) {
       setError(e instanceof AiRequestError ? AI_ERROR_TEXT[e.code] : AI_ERROR_TEXT.network);
     }
     setRunning(false);
   };
-  const closeReview = () => { setEssay((e) => ({ ...e, review: null, fixing: false })); setRailOpen(true); setActive(null); setEditId(null); setTab('band'); };
-  // A comment counts as fixed once the quoted words are gone, or (paragraph comments) once the paragraph changed.
-  const fixedFn = (_g: ReviewGroup | null, it: ReviewItem) => {
-    const cur = drafts[it.sectionId] || '';
-    if (it.word) return !cur.toLowerCase().includes(it.word.toLowerCase());
-    return it.snap != null && cur !== it.snap;
+  const closeReview = () => { setEssay((e) => ({ ...e, review: null, fixing: false, ticked: [] })); setRailOpen(true); setActive(null); setEditId(null); setTab('band'); };
+  // Nothing is detected: a comment stays until the student ticks it ("Sửa bài") and a resubmit settles it.
+  const ticked = essay.ticked || [];
+  const fixedFn = (_g: ReviewGroup | null, it: ReviewItem) => ticked.includes(it.key);
+  const tick = (it: ReviewItem) => setEssay((e) => { const t = e.ticked || []; return { ...e, ticked: t.includes(it.key) ? t.filter((k) => k !== it.key) : [...t, it.key] }; });
+  // "Sửa bài" lists the comments in the order of the essay, so errors on one sentence sit together.
+  const place = (it: ReviewItem) => {
+    const k = sections.findIndex((x) => x.id === it.sectionId);
+    const at = (drafts[it.sectionId] || '').toLowerCase().indexOf((it.word || '').toLowerCase());
+    return (k < 0 ? 99 : k) * 1e6 + (it.word && at >= 0 ? at : 5e5);
   };
   const open = review ? review.groups.flatMap((g) => g.items).filter((it) => !fixedFn(null, it)) : [];
   // Highlight colour per comment, from its criterion group.
@@ -459,7 +463,7 @@ export function ChainDesk({ chains, stance, essay, setEssay, onBack }: { chains:
         railOpen={railOpen}
         reviewOpen={!!review}
         main={main}
-        panel={review && <ReviewPanel title="Kết quả" review={shown} list={fixing || tab !== 'band'} hideFix={fixing} showOk={false} emptyText="Không có nhận xét chi tiết cho tiêu chí này." stale={stale} running={running} onRerun={submit} rerunLabel="Nộp lại" onClose={closeReview} onGo={go} seen={seen} fixedFn={fixedFn} header={false} top={fixing ? <FixBar tab={tab} setTab={(t) => { setTab(t); setActive(null); }} counts={counts} totals={totals} onExit={() => setFixing(false)} /> : <DeskScores review={review} prev={essay.prevScores} tab={tab} setTab={(t) => { setTab(t); setActive(null); }} counts={counts} onClose={closeReview} onFix={() => setFixing(true)} onRetry={retry} retrying={retrying} />} active={active} accents={CRITERION_STYLE} cards />}
+        panel={review && <ReviewPanel title="Kết quả" review={shown} list={fixing || tab !== 'band'} hideFix={fixing} onTick={fixing ? tick : undefined} sortItems={fixing ? (a, b) => place(a) - place(b) : undefined} showOk={false} emptyText="Không có nhận xét chi tiết cho tiêu chí này." stale={stale} running={running} onRerun={submit} rerunLabel="Nộp lại" onClose={closeReview} onGo={go} seen={seen} fixedFn={fixedFn} header={false} top={fixing ? <FixBar tab={tab} setTab={(t) => { setTab(t); setActive(null); }} counts={counts} totals={totals} onExit={() => setFixing(false)} /> : <DeskScores review={review} prev={essay.prevScores} tab={tab} setTab={(t) => { setTab(t); setActive(null); }} counts={counts} onClose={closeReview} onFix={() => setFixing(true)} onRetry={retry} retrying={retrying} />} active={active} accents={CRITERION_STYLE} cards />}
         side={<Translator onClose={() => setHelp(false)} />}
         sideOpen={help}
       />

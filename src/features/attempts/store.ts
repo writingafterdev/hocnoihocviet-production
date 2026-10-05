@@ -16,6 +16,8 @@ export interface EssayState {
   review: EssayReview | null;
   /** "Sửa bài": scores hidden, the student fixes each commented error, then submits again. */
   fixing?: boolean;
+  /** Keys of the comments the student ticked "Đã sửa" in "Sửa bài". Their own to-do list; nothing is detected. */
+  ticked?: string[];
   /** Scores of the review before the latest one, to show how much a resubmission moved them. */
   prevScores?: EssayReview['scores'] | null;
 }
