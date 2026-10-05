@@ -1,6 +1,6 @@
 'use client';
 
-import { Fragment, useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { AI_ERROR_TEXT, AiRequestError } from '../ai/request';
 import { Translator } from '../ai/Translator';
 import { CL, CL_CIRC, CL_SHAPE_LABEL } from '../chainlab/constants';
@@ -9,7 +9,7 @@ import { useSpec } from '../chainlab/SpecContext';
 import type { Chain, ReviewGroup, ReviewItem } from '../chainlab/types';
 import { PromptBlock, RailTop } from '../chainlab/ui/ContextRail';
 import { backLinkStyle, ClIcon, ClLabel, ClTag, toolbarBtn } from '../chainlab/ui/primitives';
-import { ReviewPanel } from '../chainlab/ui/ReviewPanel';
+import { ReviewPanel, Rich } from '../chainlab/ui/ReviewPanel';
 import { Rope } from '../chainlab/ui/Rope';
 import { WorkspaceGrid } from '../chainlab/ui/WorkspaceGrid';
 import type { EssayState } from '../attempts/store';
@@ -132,16 +132,14 @@ const CRITERION_NAME: Record<string, string> = Object.fromEntries(CRITERIA);
  */
 function DeskScores({ review, tab, setTab, counts }: { review: EssayReview; tab: Tab; setTab: (t: Tab) => void; counts: Record<string, number> }) {
   const s = review.scores;
-  const cr = review.criteria || {};
+  // One colour only: the selected tile is mint, the rest are plain grey; no outlines.
   const box = (id: Tab, label: string, v: number) => {
     const on = tab === id, main = id === 'band';
-    const accent = main ? null : CRITERION_STYLE[id];
     return (
-      <button key={id} type="button" className="cl-btn" role="tab" aria-selected={on} onClick={() => setTab(id)} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, borderRadius: 12, padding: '11px 4px 10px', background: main ? (on ? CL.mint : CL.mintSoft) : on ? accent.soft : '#fff', border: '1px solid ' + (on ? (main ? CL.green : accent.line) : main ? CL.mintSoft : CL.ink2), boxShadow: on ? '0 0 0 1px ' + (main ? CL.green : accent.line) : 'none', transition: 'background .15s, border-color .15s' }}>
-        <span style={{ fontFamily: CL.sans, fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', color: main ? CL.greenText : on ? accent.line : CL.ink5 }}>{label}</span>
-        <span style={{ fontFamily: CL.sans, fontSize: main ? 24 : 20, fontWeight: 700, color: CL.ink, fontVariantNumeric: 'tabular-nums' }}>{v.toFixed(1)}</span>
-        {!main && <span style={{ fontFamily: CL.sans, fontSize: 10, fontWeight: 600, color: counts[id] ? accent.line : CL.ink4 }}>{counts[id] ? counts[id] + ' chỗ' : 'Ổn'}</span>}
-        {main && <span style={{ fontFamily: CL.sans, fontSize: 10, fontWeight: 600, color: CL.greenText }}>Tổng quan</span>}
+      <button key={id} type="button" className="cl-btn" role="tab" aria-selected={on} onClick={() => setTab(id)} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, borderRadius: 12, padding: '11px 4px 10px', background: on ? CL.mintSoft : '#F4F4F1', border: 'none', transition: 'background .15s' }}>
+        <span style={{ fontFamily: CL.sans, fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', color: on ? CL.greenText : CL.ink5 }}>{label}</span>
+        <span style={{ fontFamily: CL.sans, fontSize: main ? 24 : 20, fontWeight: 700, color: on ? CL.greenText : CL.ink, fontVariantNumeric: 'tabular-nums' }}>{v.toFixed(1)}</span>
+        <span style={{ fontFamily: CL.sans, fontSize: 10, fontWeight: 600, color: on ? CL.greenText : CL.ink4 }}>{main ? 'Tổng quan' : counts[id] ? counts[id] + ' lỗi' : 'Ổn'}</span>
       </button>
     );
   };
@@ -155,8 +153,13 @@ function DeskScores({ review, tab, setTab, counts }: { review: EssayReview; tab:
         <div role="tablist" aria-label="Tiêu chí" style={{ display: 'grid', gridTemplateColumns: '1.25fr repeat(4, minmax(0,1fr))', gap: 6, padding: 12 }}>
           {box('band', 'Band', s.band)}{box('tr', 'TR', s.tr)}{box('cc', 'CC', s.cc)}{box('lr', 'LR', s.lr)}{box('gra', 'GRA', s.gra)}
         </div>
-        {tab === 'band' && review.summary && <p style={{ margin: 0, padding: '2px 18px 16px', fontFamily: CL.sans, fontSize: 12.5, lineHeight: 1.6, color: CL.ink7, textWrap: 'pretty' }}><Rich text={review.summary} /></p>}
       </section>
+      {tab === 'band' && review.summary && (
+        <section style={{ borderRadius: 18, border: '1px solid ' + CL.border, background: '#fff', padding: '16px 18px 18px', flexShrink: 0 }}>
+          <span style={{ display: 'block', marginBottom: 8, fontFamily: CL.sans, fontSize: 15, fontWeight: 600, color: CL.ink }}>Nhận xét chung</span>
+          <p style={{ margin: 0, fontFamily: CL.sans, fontSize: 13, lineHeight: 1.6, color: CL.ink7, textWrap: 'pretty' }}><Rich text={review.summary} /></p>
+        </section>
+      )}
       {(tab === 'band' ? CRITERIA.map(([id]) => id) : [tab]).map((id) => (
         <CriterionCard key={id + (tab === 'band' ? '-all' : '-one')} id={id} review={review} count={counts[id] || 0} startOpen={tab !== 'band'} onOpen={tab === 'band' ? () => setTab(id as Tab) : undefined} />
       ))}
@@ -165,11 +168,6 @@ function DeskScores({ review, tab, setTab, counts }: { review: EssayReview; tab:
 }
 
 const CRITERION_SUB: Record<string, string> = { tr: 'Trả lời đúng yêu cầu đề bài', cc: 'Mạch lạc và liên kết', lr: 'Từ vựng', gra: 'Ngữ pháp' };
-
-/** Text with **bold** spans, as the AI writes key terms. */
-function Rich({ text }: { text: string }) {
-  return <>{text.split(/\*\*(.+?)\*\*/g).map((t, k) => (k % 2 ? <b key={k} style={{ fontWeight: 700, color: CL.ink }}>{t}</b> : <Fragment key={k}>{t}</Fragment>))}</>;
-}
 
 /**
  * One criterion's assessment: title, Vietnamese subtitle, "n lỗi", and the explanation
@@ -395,7 +393,7 @@ export function ChainDesk({ chains, stance, essay, setEssay, onBack }: { chains:
         railOpen={railOpen}
         reviewOpen={!!review}
         main={main}
-        panel={review && <ReviewPanel title="Kết quả" review={shown} list={tab !== 'band'} showOk={false} emptyText="Không có nhận xét chi tiết cho tiêu chí này." stale={stale} running={running} onRerun={submit} rerunLabel="Nộp lại" onClose={closeReview} onGo={go} seen={seen} fixedFn={fixedFn} top={<DeskScores review={review} tab={tab} setTab={(t) => { setTab(t); setActive(null); }} counts={counts} />} active={active} accents={CRITERION_STYLE} />}
+        panel={review && <ReviewPanel title="Kết quả" review={shown} list={tab !== 'band'} showOk={false} emptyText="Không có nhận xét chi tiết cho tiêu chí này." stale={stale} running={running} onRerun={submit} rerunLabel="Nộp lại" onClose={closeReview} onGo={go} seen={seen} fixedFn={fixedFn} top={<DeskScores review={review} tab={tab} setTab={(t) => { setTab(t); setActive(null); }} counts={counts} />} active={active} accents={CRITERION_STYLE} cards />}
         overlay={help && <Translator onClose={() => setHelp(false)} />}
       />
     </div>

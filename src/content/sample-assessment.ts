@@ -49,31 +49,31 @@ export const SAMPLE_DRAFTS: Record<string, string> = {
 
 const LABEL: Record<string, string> = { intro: 'Mở bài', body1: 'Thân bài 1', body2: 'Thân bài 2', conclusion: 'Kết bài' };
 
-type C = { sec: string; quote: string; text: string; fix?: string; chain?: string };
+type C = { label: string; sec: string; quote: string; text: string; fix?: string; chain?: string };
 
 const COMMENTS: Record<string, C[]> = {
   tr: [
-    { sec: 'body1', chain: 'sample5', quote: 'Nevertheless, this problem can be tackled through more fuel-efficient aircraft, carbon taxes and better rail links', text: 'Ô 3 đi thẳng tới các biện pháp, nhưng chưa nói vì sao du lịch rẻ không phải là nguyên nhân. Người đọc vẫn có thể nghĩ cách giảm khí thải nhanh nhất là làm vé đắt lại. Dòng With/Without trong dàn ý (tác hại đến từ số chuyến bay và nhiên liệu) đang bị thiếu, nên ô 2 chưa được trả lời hết.' },
-    { sec: 'conclusion', quote: 'cheaper travel brings more benefits than drawbacks', text: 'Câu kết đang đếm ý ("nhiều lợi hơn hại") thay vì nói lý do. Lý do nào trong bài làm bên lợi ích thắng? Đây là chỗ band 6 gọi là kết luận chưa có lý do.' },
-    { sec: 'body2', chain: 'sample3', quote: 'the local economy develops', text: 'Cụm này bài nào về du lịch cũng viết được (over-generalise). Scope trong dàn ý đã tìm ra thu nhập này rõ nhất ở đâu; câu viết chưa giữ lại điều đó.' },
+    { label: 'Thiếu With/Without', sec: 'body1', chain: 'sample5', quote: 'Nevertheless, this problem can be tackled through more fuel-efficient aircraft, carbon taxes and better rail links', text: 'Ô 3 đi thẳng tới các biện pháp, nhưng chưa nói vì sao du lịch rẻ không phải là nguyên nhân. Người đọc vẫn có thể nghĩ cách giảm khí thải nhanh nhất là làm vé đắt lại. **Dòng With/Without** trong dàn ý (tác hại đến từ số chuyến bay và nhiên liệu) đang bị thiếu, nên ô 2 chưa được trả lời hết.' },
+    { label: 'Kết luận chưa có lý do', sec: 'conclusion', quote: 'cheaper travel brings more benefits than drawbacks', text: 'Câu kết đang đếm ý ("nhiều lợi hơn hại") thay vì nói lý do. Lý do nào trong bài làm bên lợi ích thắng? Đây là chỗ band 6 gọi là **kết luận chưa có lý do**.' },
+    { label: 'Nói chung chung', sec: 'body2', chain: 'sample3', quote: 'the local economy develops', text: 'Cụm này bài nào về du lịch cũng viết được (over-generalise). Scope trong dàn ý đã tìm ra thu nhập này rõ nhất ở đâu; câu viết chưa giữ lại điều đó.' },
   ],
   cc: [
-    { sec: 'body1', chain: 'sample1a', quote: 'those who have only recently gained it', text: 'Cả bài: câu rebuttal nhắc tới một nhóm người mà người đọc chỉ gặp ở đoạn sau. Thứ người đọc cần để hiểu câu này lại đến sau nó, nên đoạn ô 1 phải đi trước đoạn ô 2 + ô 3.' },
-    { sec: 'intro', quote: 'although it places a serious burden on the environment', text: 'Cả bài: câu lập trường dừng ở tác hại, mà cái đứng cuối là cái người đọc mang theo. Đưa vế thừa nhận lên đầu câu để câu dừng ở lập trường. Câu kết cũng đang dừng ở tác hại.' },
-    { sec: 'body1', chain: 'sample4', quote: 'Moreover, popular destinations are becoming increasingly crowded, which makes daily life more difficult for local residents.', text: 'Trong đoạn: quá tải chỉ để so với khí thải nhưng đứng thành câu riêng, mở bằng Moreover, nên người đọc coi nó là tác hại thứ hai và chờ bài trả lời nó. Viết thành một vế phụ trong câu khí thải ("Unlike crowding, …").' },
-    { sec: 'body1', quote: 'It also accumulates', text: 'Chữ trỏ: "It" đứng ngay sau câu quá tải nên đọc lên như trỏ vào quá tải, trong khi chữ khí thải chưa xuất hiện lần nào. Đây là hậu quả của câu quá tải chen vào giữa.', fix: 'The resulting emissions also accumulate' },
-    { sec: 'body2', chain: 'sample1a', quote: 'People on high incomes have always been able to go abroad whenever they wished.', text: 'Trong đoạn: câu With/Without đứng trước ý chính của nó, nên câu đầu đoạn không cho người đọc biết đoạn này là ô nào. Mở đoạn bằng ý chính, rồi đưa câu này xuống ngay sau.' },
-    { sec: 'body2', quote: 'which is the most significant benefit of this trend', text: 'Trong đoạn: điều cả đoạn muốn chứng minh lại nằm trong một vế "which", nên người đọc đọc nó như lời nói thêm. Đưa nó lên phần chính của câu đầu đoạn: "The most significant benefit of this trend is wider access to travel."' },
-    { sec: 'body1', quote: 'which is harmful to the planet because each long-haul flight burns enormous amounts of fuel', text: 'Trong câu: câu đi tới tác hại rồi lùi về nguyên nhân bằng "because". Nguyên nhân trước, kết quả sau: nhiên liệu → khí thải → tác hại.' },
-    { sec: 'body2', quote: 'Furthermore, tourists also', text: 'Đầu câu và từ nối: câu trước nói về những người mới đi được, nên câu này nên mở bằng chính họ. "Furthermore … also" cũng nói "thêm một ý" hai lần.', fix: 'These new travellers also' },
-    { sec: 'body2', quote: 'As a result, this creates', text: 'Từ nối dư: "creates" đã là kết quả, nên "As a result" nói quan hệ đó lần thứ hai.', fix: 'This creates' },
+    { label: 'Sai thứ tự đoạn', sec: 'body1', chain: 'sample1a', quote: 'those who have only recently gained it', text: 'Câu rebuttal nhắc tới một nhóm người mà người đọc chỉ gặp ở đoạn sau. Thứ người đọc cần để hiểu câu này lại đến sau nó, nên **đoạn ô 1 phải đi trước** đoạn ô 2 + ô 3.' },
+    { label: 'Câu lập trường dừng sai chỗ', sec: 'intro', quote: 'although it places a serious burden on the environment', text: 'Câu lập trường dừng ở tác hại, mà cái đứng cuối là cái người đọc mang theo. Đưa vế thừa nhận lên đầu câu để câu dừng ở lập trường. Câu kết cũng đang dừng ở tác hại.' },
+    { label: 'Ý phụ chen giữa', sec: 'body1', chain: 'sample4', quote: 'Moreover, popular destinations are becoming increasingly crowded, which makes daily life more difficult for local residents.', text: 'Quá tải chỉ để so với khí thải nhưng đứng thành câu riêng, mở bằng Moreover, nên người đọc coi nó là tác hại thứ hai và chờ bài trả lời nó. Viết thành một vế phụ trong câu khí thải ("Unlike crowding, …").' },
+    { label: 'Chữ trỏ mơ hồ', sec: 'body1', quote: 'It also accumulates', text: '"It" đứng ngay sau câu quá tải nên đọc lên như trỏ vào quá tải, trong khi chữ khí thải chưa xuất hiện lần nào. Đây là hậu quả của câu quá tải chen vào giữa.', fix: 'The resulting emissions also accumulate' },
+    { label: 'Câu đầu đoạn là ý phụ', sec: 'body2', chain: 'sample1a', quote: 'People on high incomes have always been able to go abroad whenever they wished.', text: 'Câu With/Without đứng trước ý chính của nó, nên câu đầu đoạn không cho người đọc biết đoạn này là ô nào. Mở đoạn bằng ý chính, rồi đưa câu này xuống ngay sau.' },
+    { label: 'Ý chính nằm trong vế phụ', sec: 'body2', quote: 'which is the most significant benefit of this trend', text: 'Điều cả đoạn muốn chứng minh lại nằm trong một vế "which", nên người đọc đọc nó như lời nói thêm. Đưa nó lên phần chính của câu đầu đoạn: "The most significant benefit of this trend is wider access to travel."' },
+    { label: 'Mũi tên nhân quả đi ngược', sec: 'body1', quote: 'which is harmful to the planet because each long-haul flight burns enormous amounts of fuel', text: 'Câu đi tới tác hại rồi lùi về nguyên nhân bằng "because". Nguyên nhân trước, kết quả sau: nhiên liệu → khí thải → tác hại.' },
+    { label: 'Đầu câu không nối', sec: 'body2', quote: 'Furthermore, tourists also', text: 'Câu trước nói về những người mới đi được, nên câu này nên mở bằng chính họ. "Furthermore … also" cũng nói "thêm một ý" hai lần.', fix: 'These new travellers also' },
+    { label: 'Từ nối dư', sec: 'body2', quote: 'As a result, this creates', text: '"creates" đã là kết quả, nên "As a result" nói quan hệ đó lần thứ hai.', fix: 'This creates' },
   ],
   lr: [
-    { sec: 'body1', quote: 'harmful to the planet', text: 'Khá chung so với phần còn lại của câu. Điều bài nói là khí thải, nên một cụm chính xác hơn sẽ đỡ cho lập luận.', fix: 'damaging to the climate' },
-    { sec: 'conclusion', quote: 'cannot be ignored', text: 'Cụm sáo, hay gặp ở kết bài. Một động từ nói việc phải làm thì khớp với ô 3 hơn.', fix: 'must be addressed' },
+    { label: 'Từ chung chung', sec: 'body1', quote: 'harmful to the planet', text: 'Khá chung so với phần còn lại của câu. Điều bài nói là khí thải, nên một cụm chính xác hơn sẽ đỡ cho lập luận.', fix: 'damaging to the climate' },
+    { label: 'Cụm sáo', sec: 'conclusion', quote: 'cannot be ignored', text: 'Cụm sáo, hay gặp ở kết bài. Một động từ nói việc phải làm thì khớp với ô 3 hơn.', fix: 'must be addressed' },
   ],
   gra: [
-    { sec: 'body1', quote: 'without taking the opportunity to travel away from those', text: 'Cụm động từ "take away" bị tách quá xa, câu đọc lên vướng. Đặt "away" ngay sau "taking".', fix: 'without taking away the opportunity to travel from those' },
+    { label: 'Sai trật tự cụm động từ', sec: 'body1', quote: 'without taking the opportunity to travel away from those', text: 'Cụm động từ "take away" bị tách quá xa, câu đọc lên vướng. Đặt "away" ngay sau "taking".', fix: 'without taking away the opportunity to travel from those' },
   ],
 };
 
@@ -111,7 +111,7 @@ export function sampleReview(): EssayReview {
     items: COMMENTS[id].map((c, k) => {
       if (!SAMPLE_DRAFTS[c.sec].includes(c.quote)) throw new Error('sample quote not in essay: ' + c.quote);
       const chainNo = c.chain ? SAMPLE_CHAINS.findIndex((x) => x.id === c.chain) + 1 : 0;
-      return { key: id + k, sectionId: c.sec, where: LABEL[c.sec] + (chainNo ? ' · Mạch ' + chainNo : ''), ...(c.chain ? { chainId: c.chain } : {}), word: c.quote, quote: c.quote, snap: SAMPLE_DRAFTS[c.sec], text: c.text, ...(c.fix ? { fix: c.fix } : {}) };
+      return { key: id + k, sectionId: c.sec, where: LABEL[c.sec] + (chainNo ? ' · Mạch ' + chainNo : ''), ...(c.chain ? { chainId: c.chain } : {}), word: c.quote, quote: c.quote, snap: SAMPLE_DRAFTS[c.sec], label: c.label, text: c.text, ...(c.fix ? { fix: c.fix } : {}) };
     }),
   }));
   const s = Object.fromEntries(CRITERIA.map(([id]) => [id, CRITERIA_TEXT[id].score])) as Record<'tr' | 'cc' | 'lr' | 'gra', number>;

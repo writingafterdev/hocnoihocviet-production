@@ -24,7 +24,8 @@ Bạn là giám khảo IELTS Writing Task 2 có kinh nghiệm và là người h
    - lr · Lexical Resource: từ mơ hồ cần cụ thể hơn, collocation không tự nhiên, dùng sai nghĩa, lặp từ, chính tả, cấu tạo từ. Có thể gợi ý một cách diễn đạt tốt hơn.
    - gra · Grammatical Range & Accuracy: lỗi ngữ pháp cụ thể (thì, mạo từ, số ít/nhiều, mệnh đề, câu thiếu động từ, dấu câu), và chỗ có thể dùng cấu trúc đa dạng hơn. Có thể đưa câu đã sửa.
 3. quote là ĐÚNG phần bị lỗi, sẽ được tô sáng trong bài và nối với nhận xét: chép NGUYÊN VĂN, đúng từng ký tự, từ đoạn có sectionId đó. Trích càng sát chỗ lỗi càng tốt: một từ nối ("Moreover"), một chữ trỏ ("It also accumulates"), một cụm từ sai, một vế "which…", hoặc một câu khi cả câu là vấn đề; tối đa khoảng 30 từ. Lỗi ở tầng cả đoạn (thứ tự đoạn, câu đầu đoạn) thì trích câu đầu đoạn. Không trích từ dàn ý hay đề bài, không trích đoạn không có trong bài. Hai nhận xét không trích cùng một chỗ.
-4. text: nhận xét bằng tiếng Việt, tối đa khoảng 50 từ. Với TR và CC thì nói rõ người đọc bị vấp ở đâu, vì sao (theo nguyên tắc nào của sách), rồi hỏi lại hoặc chỉ hướng sửa để học sinh tự sửa; với LR và GRA thì nói rõ lỗi gì. Dùng đúng thuật ngữ của sách.
+4. text: nhận xét bằng tiếng Việt, tối đa khoảng 50 từ. Với TR và CC thì nói rõ người đọc bị vấp ở đâu, vì sao (theo nguyên tắc nào của sách), rồi hỏi lại hoặc chỉ hướng sửa để học sinh tự sửa; với LR và GRA thì nói rõ lỗi gì. Dùng đúng thuật ngữ của sách. Có thể in đậm (**…**) một cụm then chốt.
+   label: tên lỗi ngắn, 2–5 chữ tiếng Việt, dùng làm tiêu đề cho nhận xét (vd "Lệch trọng tâm", "Kết luận chưa có lý do", "Ý phụ chen giữa", "Chữ trỏ mơ hồ", "Từ nối dư", "Từ chung chung", "Sai trật tự cụm động từ").
 5. fix: cách sửa cho đúng đoạn được trích, viết bằng tiếng Anh, thay thế được trực tiếp cho quote (ví dụ quote "As a result, this creates" → fix "This creates"). Bắt buộc với LR và GRA. Với TR và CC chỉ điền khi việc sửa nằm gọn trong đoạn trích (bỏ một từ nối, thay "It" bằng "This harm", đảo hai vế); khi phải viết thêm ý hoặc chuyển đoạn thì để "" để học sinh tự làm.
 6. Chọn những nhận xét có ích nhất: khoảng 3–6 nhận xét cho mỗi tiêu chí khi bài có vấn đề (LR và GRA có thể tới khoảng 8 nếu bài nhiều lỗi), ít hơn nếu tiêu chí đó tốt. Không lặp một lỗi nhiều lần; nếu một lỗi lặp lại, nhận xét một lần và nói rằng nó lặp.
 7. summary: nhận xét tổng quan 2–4 câu tiếng Việt về cả bài, nhìn qua cả bốn tiêu chí: tiêu chí nào đang kéo điểm xuống nhiều nhất và vì sao, tiêu chí nào là điểm mạnh, và một việc quan trọng nhất để band tổng lên được.
@@ -138,11 +139,12 @@ const SCHEMA = {
       items: {
         type: 'object',
         additionalProperties: false,
-        required: ['criterion', 'sectionId', 'quote', 'text', 'fix', 'chainId'],
+        required: ['criterion', 'sectionId', 'quote', 'label', 'text', 'fix', 'chainId'],
         properties: {
           criterion: { type: 'string', enum: CRITERIA.map(([id]) => id) },
           sectionId: { type: 'string' },
           quote: { type: 'string' },
+          label: { type: 'string' },
           text: { type: 'string' },
           fix: { type: 'string' },
           chainId: { type: 'string' },
@@ -152,7 +154,7 @@ const SCHEMA = {
   },
 };
 
-interface Comment { criterion: string; sectionId: string; quote: string; text: string; fix: string; chainId: string }
+interface Comment { criterion: string; sectionId: string; quote: string; label?: string; text: string; fix: string; chainId: string }
 
 const norm = (s: string) => s.replace(/[‘’]/g, "'").replace(/[“”]/g, '"').replace(/\s+/g, ' ').toLowerCase();
 
@@ -203,6 +205,7 @@ export async function aiEssayReview(userId: string, prompt: Prompt, sections: Se
       ...(k >= 0 ? { chainId: chains[k].id } : {}),
       word: hit.text,
       quote: hit.text,
+      ...(c.label && c.label.trim() ? { label: c.label.trim().slice(0, 60) } : {}),
       ...(c.fix && c.fix.trim() && c.fix.trim() !== hit.text ? { fix: c.fix.trim() } : {}),
       snap: s.text,
       text,
