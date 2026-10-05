@@ -29,3 +29,22 @@ Chain review and translation still use one-piece replies; if chain review starts
 2. Split each criterion further (e.g. TR by body paragraph, CC by layer) so each reply stays well under ~100 s.
 3. Workers Paid ($5/month): go back to server-side streaming.
 
+
+## Essay review: every part still exceeds the CPU limit (seen 2026-10-05 14:48, Workers Free)
+
+**What happens.** "Nộp bài" → "Máy chủ AI đang bận". Each of the five `POST /api/ai/essay-review` parts ends
+with "Worker exceeded CPU time limit" (twice per request), all within ~60 ms of each other, so the work before
+the AI call is what runs out, not the streaming. The scores shown are the old review's.
+
+**Likely cause.** Even with streaming pass-through, each part still does, inside Next.js: the request routing,
+Better Auth's session check (cookie signature), parsing and validating the body (essay + chains), a D1 claim,
+and building the prompt (describePrompt/describeChains, the ~20 KB method text, JSON.stringify of the schema).
+Five of these start at the same moment in one isolate, so they also compete for the same CPU.
+
+**Ways to fix (not done yet).**
+1. Handle `/api/ai/*` before Next.js: a small custom Worker entry that checks the session cookie against D1
+   directly and calls the AI, falling through to OpenNext for everything else.
+2. Build the prompt once in the "start" request and keep it in D1 under the ticket, so each part only claims
+   and forwards; prebuild constant strings (method + task + schema text) at module load.
+3. Send the parts one after another instead of all five at once (slower).
+4. Workers Paid ($5/month).
