@@ -108,9 +108,16 @@ export function PromptLibrary() {
             <div style={{ marginBottom: 32 }}>
               <div id="task-label" style={{ fontFamily: 'var(--font-sans)', fontSize: 18, fontWeight: 600, color: '#141413', marginBottom: 16 }}>Phần thi</div>
               <div role="tablist" aria-labelledby="task-label" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 4, padding: 4, borderRadius: 10, background: '#F4F4F2' }}>
-                {([['task2', 'Task 2'], ['task1', 'Task 1']] as const).map(([id, label]) => (
-                  <button key={id} type="button" role="tab" aria-selected={task === id} onClick={() => { setTask(id); setCats([]); setTopics([]); setShown(PAGE); }} style={{ height: 36, borderRadius: 7, border: 'none', cursor: 'pointer', background: task === id ? '#fff' : 'transparent', boxShadow: task === id ? '0 1px 3px rgba(0,0,0,0.08)' : 'none', fontFamily: 'var(--font-sans)', fontSize: 14, fontWeight: 600, color: task === id ? '#141413' : '#857F70' }}>{label}</button>
-                ))}
+                {([['task2', 'Task 2'], ['task1', 'Task 1']] as const).map(([id, label]) => {
+                  // Task 1 has no prompts or writing flow yet.
+                  const soon = id === 'task1';
+                  return (
+                    <button key={id} type="button" role="tab" aria-selected={task === id} aria-disabled={soon} disabled={soon} title={soon ? 'Task 1 sắp ra mắt' : undefined} onClick={() => { setTask(id); setCats([]); setTopics([]); setShown(PAGE); }} style={{ height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, borderRadius: 7, border: 'none', cursor: soon ? 'not-allowed' : 'pointer', background: task === id ? '#fff' : 'transparent', boxShadow: task === id ? '0 1px 3px rgba(0,0,0,0.08)' : 'none', fontFamily: 'var(--font-sans)', fontSize: 14, fontWeight: 600, color: task === id ? '#141413' : soon ? '#B5B2A8' : '#857F70' }}>
+                      {label}
+                      {soon && <span style={{ borderRadius: 4, background: '#ECEAE4', padding: '1px 5px', fontSize: 9.5, fontWeight: 700, letterSpacing: '0.04em', color: '#857F70' }}>SẮP CÓ</span>}
+                    </button>
+                  );
+                })}
               </div>
             </div>
             <div style={{ height: 1, background: 'rgba(0,0,0,0.05)', marginBottom: 32 }} />
