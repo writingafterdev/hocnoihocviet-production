@@ -103,7 +103,7 @@ function DeskMarks({ text, marks }: { text: string; marks: Mark[] }) {
  * this layer only paints the quotes (multiplied over the words) and fades out when the paragraph is edited.
  * Clicks on a quote pick its comment; clicks anywhere else go through to the textarea.
  */
-function HighlightLayer({ text, marks, active, onPick, live, style }: { live: boolean; text: string; marks: Mark[]; active: string | null; onPick: (key: string) => void; style: React.CSSProperties }) {
+function HighlightLayer({ text, marks, active, onPick, onEdit, editing, caret, style }: { editing: boolean; caret: number | null; text: string; marks: Mark[]; active: string | null; onPick: (key: string) => void; onEdit: (at: number) => void; style: React.CSSProperties }) {
   const { runs, starts } = markRuns(text, marks);
   const ids = new Set<string>();
   return (
@@ -112,13 +112,16 @@ function HighlightLayer({ text, marks, active, onPick, live, style }: { live: bo
         if (!r.on.length) return <span key={r.a}>{text.slice(r.a, r.b)}</span>;
         const m = r.on[0];
         const on = r.on.some((x) => x.key === active);
+        // While editing, only the quote the caret is in fades; the others keep their highlight.
+        const at = starts.get(m.key);
+        const gone = editing && caret != null && at != null && caret > at && caret <= at + m.word.length;
         // The first run of each mark carries its id, so the panel can scroll to it.
         const id = r.on.find((x) => starts.get(x.key) === r.a && !ids.has(x.key));
         if (id) ids.add(id.key);
         return (
-          <span key={r.a} id={id ? 'hl-' + id.key : undefined} role="button" tabIndex={-1} className="desk-hl" onClick={() => onPick(on ? r.on.find((x) => x.key === active).key : m.key)}
+          <span key={r.a} id={id ? 'hl-' + id.key : undefined} role="button" tabIndex={-1} className="desk-hl" onClick={() => (on && !editing ? onEdit(r.b) : onPick(on ? r.on.find((x) => x.key === active).key : m.key))}
             // Same look as Chép mẫu highlights: a soft fill with rounded corners; the selected one is a deeper fill, no outline.
-            style={{ pointerEvents: live ? 'auto' : 'none', background: on ? m.line + '40' : m.soft, borderRadius: 3, padding: '0 2px', margin: '0 -2px', boxDecorationBreak: 'clone', WebkitBoxDecorationBreak: 'clone', cursor: 'pointer', transition: 'background .2s' }}>
+            style={{ pointerEvents: editing ? 'none' : 'auto', background: gone ? 'transparent' : on ? m.line + '40' : m.soft, borderRadius: 3, padding: '0 2px', margin: '0 -2px', boxDecorationBreak: 'clone', WebkitBoxDecorationBreak: 'clone', cursor: 'pointer', transition: 'background-color .22s ease' }}>
             {text.slice(r.a, r.b)}
           </span>
         );
@@ -292,6 +295,7 @@ export function ChainDesk({ chains, stance, essay, setEssay, onBack }: { chains:
   const [active, setActive] = useState<string | null>(null);
   const [tab, setTab] = useState<Tab>('band');
   const [editId, setEditId] = useState<string | null>(null);
+  const [caret, setCaret] = useState<number | null>(null);
   const mainRef = useRef<HTMLElement>(null);
   const focusTimer = useRef<ReturnType<typeof setTimeout>>(null);
 
@@ -339,8 +343,6 @@ export function ChainDesk({ chains, stance, essay, setEssay, onBack }: { chains:
     const st = CRITERION_STYLE[groupOf.get(it.key)] || CRITERION_STYLE.tr;
     return { key: it.key, word: it.word, line: st.line, soft: st.soft };
   });
-  // A reviewed paragraph shows its highlights until the student clicks into it.
-  const reviewing = (id: string) => !!review && editId !== id && !!(drafts[id] || '').trim();
   const go = (it: ReviewItem) => {
     setSeen((s) => (s.includes(it.key) ? s : [...s, it.key]));
     setActive(it.key); setEditId(null); setTab((groupOf.get(it.key) as Tab) || 'band');
@@ -428,12 +430,13 @@ export function ChainDesk({ chains, stance, essay, setEssay, onBack }: { chains:
                   {isBody && bodyCount > 1 && <button type="button" className="cl-btn cl-del" onClick={() => removeBody(s.id)} aria-label="Xoá đoạn" style={{ alignSelf: 'center', width: 24, height: 24, display: 'flex', alignItems: 'center', justifyContent: 'center', color: CL.ink3 }}><ClIcon name="trash" size={13} /></button>}
                 </div>
                 <div style={{ position: 'relative' }}>
-                  {/* The textarea holds the text and never changes; the highlights are a layer over it that fades out when editing starts. */}
+                  {/* The textarea holds the text and never changes; the highlights are a layer over it, and only the quote being edited fades. */}
                   {!review && <DeskMarks text={drafts[s.id] || ''} marks={marksFor(s.id)} />}
-                  <textarea id={'ta-' + s.id} className="cl-ta cl-field" value={drafts[s.id] || ''} onFocus={() => { setActiveId(s.id); if (review) setEditId(s.id); }} onBlur={() => { if (editId === s.id) setEditId(null); }} onChange={(e) => { const v = e.target.value; setEssay((x) => ({ ...x, drafts: { ...x.drafts, [s.id]: v } })); }} placeholder={s.placeholder} aria-label={s.label} rows={isBody ? 5 : 3} style={{ display: 'block', width: '100%', minHeight: isBody ? 150 : 96, resize: 'none', borderRadius: 12, border: '1px solid ' + (focusSec === s.id ? CL.ink : activeId === s.id ? CL.ink4 : CL.ink2), boxShadow: focusSec === s.id ? '0 0 0 4px ' + CL.ink1 : 'none', outline: 'none', background: review ? '#fff' : 'transparent', position: 'relative', fontFamily: CL.serif, fontSize: 15.5, lineHeight: 1.7, color: CL.ink8, padding: '14px 18px', fieldSizing: 'content', transition: 'border-color .15s, box-shadow .3s' } as React.CSSProperties} />
+                  <textarea id={'ta-' + s.id} className="cl-ta cl-field" value={drafts[s.id] || ''} onFocus={() => { setActiveId(s.id); if (review) setEditId(s.id); }} onBlur={() => { if (editId === s.id) { setEditId(null); setCaret(null); } }} onSelect={(e) => setCaret(e.currentTarget.selectionStart)} onChange={(e) => { const v = e.target.value; setEssay((x) => ({ ...x, drafts: { ...x.drafts, [s.id]: v } })); }} placeholder={s.placeholder} aria-label={s.label} rows={isBody ? 5 : 3} style={{ display: 'block', width: '100%', minHeight: isBody ? 150 : 96, resize: 'none', borderRadius: 12, border: '1px solid ' + (focusSec === s.id ? CL.ink : activeId === s.id ? CL.ink4 : CL.ink2), boxShadow: focusSec === s.id ? '0 0 0 4px ' + CL.ink1 : 'none', outline: 'none', background: review ? '#fff' : 'transparent', position: 'relative', fontFamily: CL.serif, fontSize: 15.5, lineHeight: 1.7, color: CL.ink8, padding: '14px 18px', fieldSizing: 'content', transition: 'border-color .15s, box-shadow .3s' } as React.CSSProperties} />
                   {review && (drafts[s.id] || '').trim() && (
-                    <div style={{ position: 'absolute', inset: 0, mixBlendMode: 'multiply', pointerEvents: 'none', opacity: reviewing(s.id) ? 1 : 0, transition: 'opacity .22s ease' }}>
-                      <HighlightLayer text={drafts[s.id]} marks={marksFor(s.id)} active={active} onPick={pick} live={reviewing(s.id)}
+                    <div style={{ position: 'absolute', inset: 0, mixBlendMode: 'multiply', pointerEvents: 'none' }}>
+                      <HighlightLayer text={drafts[s.id]} marks={marksFor(s.id)} active={active} onPick={pick} editing={editId === s.id} caret={caret}
+                        onEdit={(at) => { setEditId(s.id); setActiveId(s.id); const ta = document.getElementById('ta-' + s.id) as HTMLTextAreaElement; if (ta) { ta.focus(); ta.setSelectionRange(at, at); } setCaret(at); }}
                         style={{ height: '100%', boxSizing: 'border-box', border: '1px solid transparent', fontFamily: CL.serif, fontSize: 15.5, lineHeight: 1.7, padding: '14px 18px' }} />
                     </div>
                   )}
