@@ -34,8 +34,12 @@ async function reserve(userId: string, kind: AiKind) {
   if (!res.meta.changes) throw new AiError('limit');
   return {
     refund: () => DB.prepare('update ai_usage set count = count - 1 where userId = ? and day = ? and kind = ? and count > 0').bind(userId, day, kind).run(),
-    record: (u: Usage) => DB.prepare('update ai_usage set inputTokens = inputTokens + ?, outputTokens = outputTokens + ? where userId = ? and day = ? and kind = ?').bind(u.input, u.output, userId, day, kind).run(),
+    record: (u: Usage) => recordTokens(DB, userId, kind, u, day),
   };
+}
+
+function recordTokens(DB: D1Database, userId: string, kind: AiKind, u: Usage, day = today()) {
+  return DB.prepare('update ai_usage set inputTokens = inputTokens + ?, outputTokens = outputTokens + ? where userId = ? and day = ? and kind = ?').bind(u.input, u.output, userId, day, kind).run();
 }
 
 /** How many uses are left today, per kind. */
@@ -63,16 +67,25 @@ interface Ask {
   maxTokens?: number;
   /** false = send only `task` as the system prompt, without the book's method (e.g. the translator). */
   grounded?: boolean;
+  /** false = don't take a use from the allowance: the caller already did, via `reserveUse` (one essay = several calls). */
+  counted?: boolean;
+}
+
+/** Takes one use for a request made of several `ask` calls (with counted: false). Call `refund` if it fails as a whole. */
+export async function reserveUse(userId: string, kind: AiKind) {
+  if (!(await env()).ANTHROPIC_API_KEY) throw new AiError('not_configured');
+  return reserve(userId, kind);
 }
 
 /**
  * One Claude call grounded in the book. With `schema`, returns the parsed JSON; otherwise the text.
  * Counts against the student's daily allowance (refunded if the call fails).
  */
-export async function ask<T = string>({ userId, kind, task, input, schema, effort = 'medium', maxTokens = 16000, grounded = true }: Ask): Promise<T> {
+export async function ask<T = string>({ userId, kind, task, input, schema, effort = 'medium', maxTokens = 16000, grounded = true, counted = true }: Ask): Promise<T> {
   const e = await env();
   if (!e.ANTHROPIC_API_KEY) throw new AiError('not_configured');
-  const quota = await reserve(userId, kind);
+  const quota = counted ? await reserve(userId, kind) : null;
+  const { DB } = e;
   try {
     const model = e.AI_MODEL || MODEL;
     const claude = model.startsWith('claude-');
@@ -100,7 +113,8 @@ export async function ask<T = string>({ userId, kind, task, input, schema, effor
         system: system(schema ? '\n\nOUTPUT FORMAT: reply with ONE JSON object and nothing else (no markdown, no code fences, no text before or after). Inside string values never use the straight double quote character; write quotations with “ ” instead. It must match this JSON Schema exactly:\n' + JSON.stringify(schema) : ''),
       }).finalMessage();
     console.log('ai_call', kind, model, (Date.now() - started) + 'ms', 'in=' + (msg.usage.input_tokens || 0), 'out=' + (msg.usage.output_tokens || 0), msg.stop_reason);
-    await quota.record({ input: (msg.usage.input_tokens || 0) + (msg.usage.cache_read_input_tokens || 0) + (msg.usage.cache_creation_input_tokens || 0), output: msg.usage.output_tokens || 0 }).catch(() => {});
+    const used = { input: (msg.usage.input_tokens || 0) + (msg.usage.cache_read_input_tokens || 0) + (msg.usage.cache_creation_input_tokens || 0), output: msg.usage.output_tokens || 0 };
+    await (quota ? quota.record(used) : recordTokens(DB, userId, kind, used)).catch(() => {});
     if (msg.stop_reason === 'refusal') throw new AiError('refused');
     const text = (msg.content as { type: string; text?: string }[]).map((b) => (b.type === 'text' ? b.text : '')).join('');
     const bad = (why: string) => { console.error('ai_bad_output', kind, model, why, msg.stop_reason, 'out=' + (msg.usage.output_tokens || 0), JSON.stringify(text.slice(0, 300))); return new AiError('bad_output', why); };
@@ -117,7 +131,7 @@ export async function ask<T = string>({ userId, kind, task, input, schema, effor
     // Models without enforced JSON (e.g. Qwen) sometimes leave quotes unescaped or add trailing commas.
     try { return JSON.parse(jsonrepair(jsonPart(text))) as T; } catch { throw bad('invalid_json'); }
   } catch (err) {
-    await quota.refund().catch(() => {});
+    if (quota) await quota.refund().catch(() => {});
     if (err instanceof AiError) throw err;
     if (err instanceof Anthropic.APIConnectionTimeoutError) { console.error('ai_call_timeout', kind); throw new AiError('timeout'); }
     console.error('ai_call_failed', kind, err instanceof Anthropic.APIError ? (err.status ?? 'network') + ' ' + err.message : err);
