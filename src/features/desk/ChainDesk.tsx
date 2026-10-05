@@ -369,13 +369,8 @@ export function ChainDesk({ chains, stance, essay, setEssay, onBack }: { chains:
           })}
           <button type="button" className="cl-btn cl-link" onClick={addBody} style={{ alignSelf: 'flex-start', display: 'inline-flex', alignItems: 'center', gap: 6, marginTop: -12, fontFamily: CL.sans, fontSize: 12, fontWeight: 600, color: CL.ink5 }}><ClIcon name="plus" size={13} />Thêm đoạn thân bài</button>
         </div>
-        <div style={{ display: 'flex', alignItems: 'flex-end', gap: 10, padding: '22px 22px 20px' }}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-            <span style={{ fontFamily: CL.sans, fontSize: 12, color: CL.ink5 }}>Thời gian</span>
-            <span style={{ fontFamily: CL.sans, fontSize: 16, fontWeight: 600, color: CL.ink, fontVariantNumeric: 'tabular-nums' }}>{clock}</span>
-          </div>
-          {error && <span role="alert" style={{ marginLeft: 'auto', alignSelf: 'center', fontFamily: CL.sans, fontSize: 12, color: '#8B3A35' }}>{error}</span>}
-          <button type="button" className="cl-btn" onClick={() => { if (!help && !three) setRailOpen(false); setHelp(!help); }} aria-pressed={help} style={{ marginLeft: error ? 0 : 'auto', height: 40, borderRadius: 12, border: '1px solid ' + (help ? CL.ink : CL.ink2), background: '#fff', color: CL.ink, fontFamily: CL.sans, fontSize: 13, fontWeight: 600, padding: '0 18px' }}>Dịch</button>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 12, padding: '22px 22px 20px' }}>
+          {error && <span role="alert" style={{ fontFamily: CL.sans, fontSize: 12, color: '#8B3A35' }}>{error}</span>}
           <button type="button" className="cl-btn cl-primary" onClick={submit} disabled={running || (review && !stale)} style={{ height: 40, borderRadius: 12, background: CL.ink, color: '#fff', fontFamily: CL.sans, fontSize: 13, fontWeight: 600, padding: '0 20px', opacity: running || (review && !stale) ? 0.4 : 1 }}>{running ? 'Đang chấm… (khoảng 1 phút)' : review ? (stale ? 'Nộp lại' : 'Đã nộp') : 'Nộp bài'}</button>
         </div>
       </div>
@@ -385,8 +380,17 @@ export function ChainDesk({ chains, stance, essay, setEssay, onBack }: { chains:
   return (
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column', maxWidth: 1710, margin: '0 auto', padding: '12px 40px 16px' }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', minHeight: 42, paddingBottom: 12 }}>
-        <button type="button" className="cl-btn cl-link" onClick={onBack} style={backLinkStyle}><ClIcon name="left" size={14} />Quay lại các mạch</button>
-        <button type="button" className="cl-btn" onClick={() => setRailOpen(!railOpen)} aria-pressed={railOpen} style={toolbarBtn(railOpen)}>Đề bài</button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 18 }}>
+          <button type="button" className="cl-btn cl-link" onClick={onBack} style={backLinkStyle}><ClIcon name="left" size={14} />Quay lại các mạch</button>
+          <span aria-label="Thời gian" title="Thời gian" style={{ display: 'inline-flex', alignItems: 'baseline', gap: 8, paddingLeft: 18, borderLeft: '1px solid ' + CL.ink2 }}>
+            <span style={{ fontFamily: CL.sans, fontSize: 12, color: CL.ink5 }}>Thời gian</span>
+            <span style={{ fontFamily: CL.sans, fontSize: 15, fontWeight: 600, color: CL.ink, fontVariantNumeric: 'tabular-nums' }}>{clock}</span>
+          </span>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <button type="button" className="cl-btn" onClick={() => setRailOpen(!railOpen)} aria-pressed={railOpen} style={toolbarBtn(railOpen)}>Đề bài</button>
+          <button type="button" className="cl-btn" onClick={() => { if (!help && !three) setRailOpen(false); setHelp(!help); }} aria-pressed={help} style={toolbarBtn(help)}>Dịch</button>
+        </div>
       </div>
       <WorkspaceGrid
         rail={rail}
