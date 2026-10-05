@@ -26,3 +26,32 @@ export async function addPracticed(userId: string, phrases: string[]) {
   const d = await db(), now = Date.now();
   await d.batch(phrases.map((p) => d.prepare('insert into vocab_progress (userId, phrase, saved, practiced, updatedAt) values (?, ?, 0, 1, ?) on conflict (userId, phrase) do update set practiced = practiced + 1, updatedAt = excluded.updatedAt').bind(userId, p, now)));
 }
+
+/** A phrase the student saved from the translator. */
+export interface CustomPhrase { id: string; en: string; vi: string; createdAt: number }
+
+export const CUSTOM_MAX = 500;
+
+export async function listCustom(userId: string): Promise<CustomPhrase[]> {
+  const { results } = await (await db()).prepare('select id, en, vi, createdAt from vocab_custom where userId = ? order by createdAt desc').bind(userId).all<CustomPhrase>();
+  return results;
+}
+
+/** Saves a phrase (the same English again just updates its meaning). Returns it, or null when the book is full. */
+export async function addCustom(userId: string, en: string, vi: string): Promise<CustomPhrase | null> {
+  const d = await db();
+  const n = await d.prepare('select count(*) as n from vocab_custom where userId = ?').bind(userId).first<{ n: number }>();
+  const existing = await d.prepare('select id, createdAt from vocab_custom where userId = ? and lower(en) = lower(?)').bind(userId, en).first<{ id: string; createdAt: number }>();
+  if (existing) {
+    await d.prepare('update vocab_custom set en = ?, vi = ? where userId = ? and id = ?').bind(en, vi, userId, existing.id).run();
+    return { id: existing.id, en, vi, createdAt: existing.createdAt };
+  }
+  if (n && n.n >= CUSTOM_MAX) return null;
+  const row = { id: crypto.randomUUID(), en, vi, createdAt: Date.now() };
+  await d.prepare('insert into vocab_custom (userId, id, en, vi, createdAt) values (?, ?, ?, ?, ?)').bind(userId, row.id, en, vi, row.createdAt).run();
+  return row;
+}
+
+export async function deleteCustom(userId: string, id: string) {
+  await (await db()).prepare('delete from vocab_custom where userId = ? and id = ?').bind(userId, id).run();
+}

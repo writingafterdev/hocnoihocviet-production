@@ -21,6 +21,7 @@ export function Translator({ onClose }: { onClose: () => void }) {
   const [items, setItems] = useState<Item[]>([]);
   const [pending, setPending] = useState(false);
   const [copied, setCopied] = useState<number | null>(null);
+  const [saved, setSaved] = useState<Record<number, 'saving' | 'saved' | 'full' | 'error'>>({});
 
   const onText = (v: string) => { setText(v); if (!manual && v.trim()) setDir(guess(v)); };
   const send = async () => {
@@ -38,6 +39,20 @@ export function Translator({ onClose }: { onClose: () => void }) {
     }
     setPending(false);
   };
+  // Saves the pair to the student's word book ("Sổ từ của tôi" on the Vocab page): English + Vietnamese.
+  const pair = (it: Item) => (it.dir === 'vi-en' ? { en: it.translation || '', vi: it.source } : { en: it.source, vi: it.translation || '' });
+  const savable = (it: Item) => { const p = pair(it); return !!p.en && !!p.vi && p.en.length <= 300 && p.vi.length <= 600; };
+  const save = async (it: Item) => {
+    if (saved[it.id] === 'saving' || saved[it.id] === 'saved') return;
+    setSaved((s) => ({ ...s, [it.id]: 'saving' }));
+    let state: 'saved' | 'full' | 'error' = 'error';
+    try {
+      const r = await fetch('/api/vocab/mine', { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'same-origin', body: JSON.stringify(pair(it)) });
+      state = r.ok ? 'saved' : r.status === 409 ? 'full' : 'error';
+    } catch { /* network: error */ }
+    setSaved((s) => ({ ...s, [it.id]: state }));
+  };
+  const SAVE_LABEL = { saving: 'Đang lưu…', saved: 'Đã lưu', full: 'Sổ từ đã đầy', error: 'Lưu lỗi, thử lại' };
   const copy = (it: Item) => {
     navigator.clipboard?.writeText(it.translation || '').then(() => { setCopied(it.id); setTimeout(() => setCopied(null), 1500); }, () => {});
   };
@@ -64,7 +79,7 @@ export function Translator({ onClose }: { onClose: () => void }) {
       <div className="cl-scroll" style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: '16px 16px 20px', display: 'flex', flexDirection: 'column', gap: 12 }}>
         {!items.length && <p style={{ margin: '4px 6px', fontFamily: CL.sans, fontSize: 12.5, lineHeight: 1.6, color: CL.ink5 }}>Chỉ dịch qua lại giữa tiếng Việt và tiếng Anh. Chiều dịch tự đổi theo chữ bạn gõ; bấm nút chiều dịch để đổi tay.</p>}
         {items.map((it) => (
-          <div key={it.id} style={{ borderRadius: 12, border: '1px solid ' + CL.ink1, overflow: 'hidden' }}>
+          <div key={it.id} style={{ flexShrink: 0, borderRadius: 12, border: '1px solid ' + CL.ink1, overflow: 'hidden' }}>
             <div style={{ padding: '10px 14px', background: '#FCFCFB', borderBottom: '1px solid ' + CL.ink1 }}>
               <span style={{ display: 'block', marginBottom: 4, fontFamily: CL.sans, fontSize: 10, fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', color: CL.ink4 }}>{LABEL[it.dir]}</span>
               <span style={{ fontFamily: CL.sans, fontSize: 12.5, lineHeight: 1.55, color: CL.ink6, whiteSpace: 'pre-wrap' }}>{it.source}</span>
@@ -73,7 +88,12 @@ export function Translator({ onClose }: { onClose: () => void }) {
               {it.translation != null ? (
                 <>
                   <span style={{ flex: 1, fontFamily: CL.serif, fontSize: 14.5, lineHeight: 1.55, color: CL.ink, whiteSpace: 'pre-wrap' }}>{it.translation || '—'}</span>
-                  {it.translation && <button type="button" className="cl-btn" onClick={() => copy(it)} style={{ flexShrink: 0, borderRadius: 5, border: '1px solid ' + CL.ink2, padding: '3px 8px', fontFamily: CL.sans, fontSize: 10.5, fontWeight: 600, color: copied === it.id ? CL.greenText : CL.ink6 }}>{copied === it.id ? 'Đã chép' : 'Chép'}</button>}
+                  {it.translation && (
+                    <span style={{ flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
+                      <button type="button" className="cl-btn" onClick={() => copy(it)} style={{ borderRadius: 5, border: '1px solid ' + CL.ink2, padding: '3px 8px', fontFamily: CL.sans, fontSize: 10.5, fontWeight: 600, color: copied === it.id ? CL.greenText : CL.ink6 }}>{copied === it.id ? 'Đã chép' : 'Chép'}</button>
+                      {savable(it) && <button type="button" className="cl-btn" onClick={() => save(it)} disabled={saved[it.id] === 'saving' || saved[it.id] === 'saved'} title="Lưu vào Sổ từ của tôi (trang Từ vựng)" style={{ borderRadius: 5, border: '1px solid ' + (saved[it.id] === 'saved' ? CL.mintSoft : CL.ink2), background: saved[it.id] === 'saved' ? CL.mintSoft : '#fff', padding: '3px 8px', fontFamily: CL.sans, fontSize: 10.5, fontWeight: 600, color: saved[it.id] === 'saved' ? CL.greenText : saved[it.id] === 'error' || saved[it.id] === 'full' ? CL.redText : CL.ink6, whiteSpace: 'nowrap' }}>{saved[it.id] ? SAVE_LABEL[saved[it.id]] : 'Lưu từ'}</button>}
+                    </span>
+                  )}
                 </>
               ) : it.error ? (
                 <span style={{ fontFamily: CL.sans, fontSize: 12.5, color: CL.redText }}>{it.error}</span>

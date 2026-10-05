@@ -1,6 +1,6 @@
 'use client';
 
-import { ArrowLeft, Bookmark, Check, Circle, CircleCheck, Hash, Sparkles, Volume2, type LucideIcon } from 'lucide-react';
+import { ArrowLeft, Bookmark, BookOpen, Check, Circle, CircleCheck, Hash, Sparkles, Trash2, Volume2, type LucideIcon } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState, type ReactNode } from 'react';
 import { PageHeader } from '@/components/shell/BrandHeader';
@@ -34,7 +34,7 @@ const speak = (t: string) => {
 };
 
 /** Landing: one card per skill. */
-function Landing({ savedCount, onOpen, onBack }: { savedCount: (sk: VocabSkill) => number; onOpen: (id: VocabSkill['id']) => void; onBack: () => void }) {
+function Landing({ savedCount, onOpen, onBack, mineCount, onMine }: { savedCount: (sk: VocabSkill) => number; onOpen: (id: VocabSkill['id']) => void; onBack: () => void; mineCount: number; onMine: () => void }) {
   return (
     <main style={{ maxWidth: 1120, margin: '0 auto', padding: '8px 32px 60px', fontFamily: VB.sans, color: VB.ink }}>
       <button type="button" onClick={onBack} style={{ border: 'none', background: 'transparent', cursor: 'pointer', fontFamily: VB.sans, fontSize: 13, fontWeight: 500, color: '#857F70', padding: 0, marginBottom: 28 }}>← Trang chủ</button>
@@ -76,7 +76,71 @@ function Landing({ savedCount, onOpen, onBack }: { savedCount: (sk: VocabSkill) 
           })}
         </div>
       </section>
+      <section style={{ paddingTop: 36 }}>
+        <h2 style={{ fontSize: 15, fontWeight: 700, letterSpacing: '-0.01em', margin: '0 0 14px' }}>Của bạn</h2>
+        <button type="button" className="cl-btn vb-product" onClick={onMine} style={{ display: 'flex', alignItems: 'center', gap: 16, width: '100%', maxWidth: 560, textAlign: 'left', cursor: 'pointer', borderRadius: 18, border: '1px solid ' + VB.border, background: '#fff', padding: '18px 20px', color: VB.ink }}>
+          <span style={{ width: 48, height: 48, borderRadius: 12, background: VB.yellowSoft, display: 'grid', placeItems: 'center', flexShrink: 0 }}><BookOpen size={22} strokeWidth={2} /></span>
+          <span style={{ flex: 1, minWidth: 0 }}>
+            <span style={{ display: 'block', fontSize: 17, fontWeight: 700, letterSpacing: '-0.02em' }}>Sổ từ của tôi</span>
+            <span style={{ display: 'block', marginTop: 3, fontSize: 13, lineHeight: 1.5, color: '#716D63' }}>Những từ và cụm bạn lưu khi dùng Dịch trong lúc lập ý và viết bài.</span>
+          </span>
+          <span style={{ fontSize: 13, fontWeight: 600, whiteSpace: 'nowrap' }}>{mineCount} cụm →</span>
+        </button>
+      </section>
     </main>
+  );
+}
+
+interface MinePhrase { id: string; en: string; vi: string; createdAt: number }
+
+/** "Sổ từ của tôi": phrases saved from the translator, newest first. */
+function MyWords({ items, loaded, onDelete, onBack }: { items: MinePhrase[]; loaded: boolean; onDelete: (id: string) => void; onBack: () => void }) {
+  const [q, setQ] = useState('');
+  const shown = q.trim() ? items.filter((it) => (it.en + ' ' + it.vi).toLowerCase().includes(q.trim().toLowerCase())) : items;
+  const td: React.CSSProperties = { padding: '14px 14px', verticalAlign: 'top', borderTop: '1px solid ' + VB.line, fontFamily: VB.sans };
+  return (
+    <div style={{ maxWidth: 1120, margin: '0 auto', padding: '0 40px 24px' }}>
+      <button type="button" className="cl-btn cl-link" onClick={onBack} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, marginBottom: 16, fontFamily: VB.label, fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.14em', color: VB.ink3 }}><ArrowLeft size={15} strokeWidth={2} />Từ vựng</button>
+      <section style={{ borderRadius: 16, border: '1px solid ' + VB.border, background: '#fff', overflow: 'hidden' }}>
+        <div style={{ display: 'flex', alignItems: 'flex-end', gap: 20, flexWrap: 'wrap', padding: '22px 24px 18px' }}>
+          <div style={{ flex: 1, minWidth: 240 }}>
+            <VbLabel>Của bạn</VbLabel>
+            <h1 style={{ margin: '8px 0 0', fontFamily: VB.sans, fontSize: 28, fontWeight: 600, letterSpacing: '-0.01em', color: VB.ink }}>Sổ từ của tôi</h1>
+            <p style={{ margin: '6px 0 0', fontFamily: VB.sans, fontSize: 13.5, color: VB.ink3 }}>{items.length} cụm · Lưu thêm bằng nút "Lưu từ" trong mục Dịch.</p>
+          </div>
+          {items.length > 8 && <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Tìm trong sổ từ…" aria-label="Tìm trong sổ từ" style={{ width: 240, height: 40, borderRadius: 10, border: '1px solid ' + VB.border, padding: '0 12px', fontFamily: VB.sans, fontSize: 13.5, outline: 'none' }} />}
+        </div>
+        {!loaded ? (
+          <div style={{ padding: '32px 24px 40px', borderTop: '1px solid ' + VB.line, fontFamily: VB.sans, fontSize: 14, color: VB.ink3 }}>Đang tải…</div>
+        ) : shown.length ? (
+          <table style={{ width: '100%', tableLayout: 'fixed', borderCollapse: 'collapse' }}>
+            <colgroup><col style={{ width: '42%' }} /><col /><col style={{ width: 120 }} /><col style={{ width: 56 }} /></colgroup>
+            <thead>
+              <tr style={{ background: VB.head }}>
+                {['Tiếng Anh', 'Nghĩa', 'Ngày lưu', ''].map((h, k) => <th key={k} style={{ padding: '12px 14px', textAlign: 'left', fontFamily: VB.sans, fontSize: 13, fontWeight: 600, color: VB.ink }}>{h}</th>)}
+              </tr>
+            </thead>
+            <tbody>
+              {shown.map((it) => (
+                <tr key={it.id}>
+                  <td style={td}>
+                    <span style={{ display: 'flex', alignItems: 'flex-start', gap: 6 }}>
+                      <span style={{ fontSize: 15, fontWeight: 600, lineHeight: 1.45, color: VB.ink, overflowWrap: 'anywhere' }}>{it.en}</span>
+                      <button type="button" className="cl-btn vb-icon" onClick={() => speak(it.en)} aria-label="Nghe phát âm" style={{ flexShrink: 0, width: 26, height: 26, marginTop: -1, borderRadius: 999, display: 'grid', placeItems: 'center', color: VB.ink4 }}><Volume2 size={14} strokeWidth={2} /></button>
+                    </span>
+                  </td>
+                  <td style={{ ...td, fontSize: 14, lineHeight: 1.55, color: VB.ink2, overflowWrap: 'anywhere' }}>{it.vi}</td>
+                  <td style={{ ...td, fontSize: 12.5, color: VB.ink4 }}>{new Date(it.createdAt).toLocaleDateString('vi-VN')}</td>
+                  <td style={td}><button type="button" className="cl-btn vb-icon" onClick={() => onDelete(it.id)} aria-label={'Xoá ' + it.en} style={{ width: 30, height: 30, marginTop: -4, borderRadius: 999, display: 'grid', placeItems: 'center', color: VB.ink4 }}><Trash2 size={15} strokeWidth={2} /></button></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        ) : (
+          <div style={{ padding: '32px 24px 40px', borderTop: '1px solid ' + VB.line, fontFamily: VB.sans, fontSize: 14, lineHeight: 1.6, color: VB.ink3 }}>{items.length ? 'Không có cụm nào khớp.' : 'Chưa có từ nào. Khi lập ý hoặc viết bài, mở Dịch, dịch một từ hay cụm, rồi bấm "Lưu từ".'}</div>
+        )}
+      </section>
+    </div>
   );
 }
 
@@ -148,6 +212,9 @@ export function VocabBuilder({ onBack }: { onBack: () => void }) {
   const [round, setRound] = useState(0);
   const [making, setMaking] = useState(false);
   const [note, setNote] = useState<string | null>(null);
+  const [mineOpen, setMineOpen] = useState(false);
+  const [mine, setMine] = useState<MinePhrase[]>([]);
+  const [mineLoaded, setMineLoaded] = useState(false);
 
   const signedOut = () => router.replace('/login?next=/vocab');
   const send = (body: unknown) => fetch('/api/vocab', { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'same-origin', body: JSON.stringify(body) })
@@ -159,7 +226,15 @@ export function VocabBuilder({ onBack }: { onBack: () => void }) {
       const d = await r.json();
       setSavedState(d.saved || {}); setCount(d.practiced || {});
     }, () => {});
+    fetch('/api/vocab/mine', { credentials: 'same-origin' }).then(async (r) => {
+      if (r.ok) setMine((await r.json()).items || []);
+      setMineLoaded(true);
+    }, () => setMineLoaded(true));
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  const deleteMine = (id: string) => {
+    setMine((m) => m.filter((x) => x.id !== id));
+    fetch('/api/vocab/mine?id=' + encodeURIComponent(id), { method: 'DELETE', credentials: 'same-origin' }).then((r) => { if (r.status === 401) signedOut(); }, () => {});
+  };
   const toggleSaved = (en: string) => {
     const next = !saved[en];
     setSavedState((s) => ({ ...s, [en]: next }));
@@ -175,7 +250,8 @@ export function VocabBuilder({ onBack }: { onBack: () => void }) {
     </div>
   );
 
-  if (!skill) return shell(<Landing savedCount={savedCount} onBack={onBack} onOpen={(id) => { const sk = VB_SKILLS.find((s) => s.id === id); setSkillId(id); setTopicId(sk.topics[0].id); }} />);
+  if (mineOpen) return shell(<MyWords items={mine} loaded={mineLoaded} onDelete={deleteMine} onBack={() => setMineOpen(false)} />);
+  if (!skill) return shell(<Landing savedCount={savedCount} mineCount={mine.length} onMine={() => setMineOpen(true)} onBack={onBack} onOpen={(id) => { const sk = VB_SKILLS.find((s) => s.id === id); setSkillId(id); setTopicId(sk.topics[0].id); }} />);
 
   const isSaved = topicId === 'saved';
   const topic = skill.topics.find((t) => t.id === topicId);
