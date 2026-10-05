@@ -1,4 +1,5 @@
 import Anthropic from '@anthropic-ai/sdk';
+import { jsonrepair } from 'jsonrepair';
 import { getCloudflareContext } from '@opennextjs/cloudflare';
 import { METHOD } from './method';
 
@@ -96,15 +97,18 @@ export async function ask<T = string>({ userId, kind, task, input, schema, effor
       // so the JSON shape is asked for in the prompt instead of enforced.
       : await client.messages.stream({
         model, max_tokens: Math.min(maxTokens, 8192), messages,
-        system: system(schema ? '\n\nOUTPUT FORMAT: reply with ONE JSON object and nothing else (no markdown, no code fences, no text before or after). It must match this JSON Schema exactly:\n' + JSON.stringify(schema) : ''),
+        system: system(schema ? '\n\nOUTPUT FORMAT: reply with ONE JSON object and nothing else (no markdown, no code fences, no text before or after). Inside string values never use the straight double quote character; write quotations with “ ” instead. It must match this JSON Schema exactly:\n' + JSON.stringify(schema) : ''),
       }).finalMessage();
     console.log('ai_call', kind, model, (Date.now() - started) + 'ms', 'in=' + (msg.usage.input_tokens || 0), 'out=' + (msg.usage.output_tokens || 0), msg.stop_reason);
     await quota.record({ input: (msg.usage.input_tokens || 0) + (msg.usage.cache_read_input_tokens || 0) + (msg.usage.cache_creation_input_tokens || 0), output: msg.usage.output_tokens || 0 }).catch(() => {});
     if (msg.stop_reason === 'refusal') throw new AiError('refused');
-    if (msg.stop_reason === 'max_tokens') throw new AiError('bad_output', 'max_tokens');
     const text = (msg.content as { type: string; text?: string }[]).map((b) => (b.type === 'text' ? b.text : '')).join('');
+    const bad = (why: string) => { console.error('ai_bad_output', kind, model, why, msg.stop_reason, 'out=' + (msg.usage.output_tokens || 0), JSON.stringify(text.slice(0, 300))); return new AiError('bad_output', why); };
+    if (msg.stop_reason === 'max_tokens') throw bad('max_tokens');
     if (!schema) return text.trim() as T;
-    try { return JSON.parse(claude ? text : jsonPart(text)) as T; } catch { throw new AiError('bad_output', 'invalid_json'); }
+    try { return JSON.parse(claude ? text : jsonPart(text)) as T; } catch { /* try a repair below */ }
+    // Models without enforced JSON (e.g. Qwen) sometimes leave quotes unescaped or add trailing commas.
+    try { return JSON.parse(jsonrepair(jsonPart(text))) as T; } catch { throw bad('invalid_json'); }
   } catch (err) {
     await quota.refund().catch(() => {});
     if (err instanceof AiError) throw err;
