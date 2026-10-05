@@ -104,7 +104,14 @@ export async function ask<T = string>({ userId, kind, task, input, schema, effor
     if (msg.stop_reason === 'refusal') throw new AiError('refused');
     const text = (msg.content as { type: string; text?: string }[]).map((b) => (b.type === 'text' ? b.text : '')).join('');
     const bad = (why: string) => { console.error('ai_bad_output', kind, model, why, msg.stop_reason, 'out=' + (msg.usage.output_tokens || 0), JSON.stringify(text.slice(0, 300))); return new AiError('bad_output', why); };
-    if (msg.stop_reason === 'max_tokens') throw bad('max_tokens');
+    if (msg.stop_reason === 'max_tokens') {
+      // Non-Claude models cap output lower; a long review can run out near the end. Close the JSON and keep
+      // what arrived if every top-level field is there (only the last few comments are lost).
+      const kept = !claude && schema ? salvage(text, schema) : null;
+      if (!kept) throw bad('max_tokens');
+      console.warn('ai_truncated_kept', kind, model, 'out=' + (msg.usage.output_tokens || 0));
+      return kept as T;
+    }
     if (!schema) return text.trim() as T;
     try { return JSON.parse(claude ? text : jsonPart(text)) as T; } catch { /* try a repair below */ }
     // Models without enforced JSON (e.g. Qwen) sometimes leave quotes unescaped or add trailing commas.
@@ -116,6 +123,21 @@ export async function ask<T = string>({ userId, kind, task, input, schema, effor
     console.error('ai_call_failed', kind, err instanceof Anthropic.APIError ? (err.status ?? 'network') + ' ' + err.message : err);
     throw new AiError('upstream');
   }
+}
+
+/** Repairs a reply cut off mid-JSON; null unless every required top-level field survived. */
+function salvage(text: string, schema: Record<string, unknown>): unknown {
+  const a = text.indexOf('{');
+  if (a < 0) return null;
+  try {
+    const out = JSON.parse(jsonrepair(text.slice(a).replace(/```\s*$/, '')));
+    const req = (schema.required as string[]) || [];
+    if (!out || typeof out !== 'object' || !req.every((k) => k in out)) return null;
+    // The item that was being written when the reply stopped is incomplete: drop it.
+    const last = Object.keys(out).pop();
+    if (Array.isArray(out[last])) out[last].pop();
+    return out;
+  } catch { return null; }
 }
 
 /** The JSON object inside a reply that may carry code fences or stray text (non-Claude models). */
@@ -131,5 +153,7 @@ const STATUS: Record<AiErrorCode, number> = { not_configured: 503, limit: 429, r
 export function aiErrorResponse(err: unknown) {
   const code: AiErrorCode = err instanceof AiError ? err.code : 'upstream';
   if (!(err instanceof AiError)) console.error('ai_route_failed', err);
-  return Response.json({ error: code }, { status: STATUS[code], headers: { 'Cache-Control': 'no-store' } });
+  // `detail` (e.g. max_tokens, invalid_json) shows up in the browser's network tab, for debugging.
+  const detail = err instanceof AiError && err.message !== code ? err.message : undefined;
+  return Response.json({ error: code, ...(detail ? { detail } : {}) }, { status: STATUS[code], headers: { 'Cache-Control': 'no-store' } });
 }
