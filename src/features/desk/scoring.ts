@@ -110,16 +110,38 @@ export function reviewEssay(spec: PromptSpec, sections: EssaySection[], drafts: 
 
 /** Sends the essay for scoring. Falls back to the rule-based checks when the AI is not configured. */
 export async function requestEssayReview(spec: PromptSpec, sections: EssaySection[], drafts: Record<string, string>, chains: Chain[], stance: string): Promise<EssayReview> {
+  const body = {
+    promptId: spec.id,
+    sections: sections.map((s) => ({ id: s.id, label: s.label, text: drafts[s.id] || '' })),
+    chains: chains.map(({ check, ...c }) => c),
+    stance,
+  };
+  let ticket: string;
   try {
-    const r = await postAi<EssayReview>('essay-review', {
-      promptId: spec.id,
-      sections: sections.map((s) => ({ id: s.id, label: s.label, text: drafts[s.id] || '' })),
-      chains: chains.map(({ check, ...c }) => c),
-      stance,
-    });
-    return { ...r, key: draftsKey(drafts) };
+    ({ ticket } = await postAi<{ ticket: string }>('essay-review', { ...body, part: 'start' }));
   } catch (e) {
     if (e instanceof AiRequestError && e.code === 'not_configured') return reviewEssay(spec, sections, drafts, chains, stance);
     throw e;
   }
+  // Scores and each criterion's comments are separate requests (each stays within the server's CPU limit),
+  // sent together under one ticket = one use of the daily allowance.
+  type Scores = Pick<EssayReview, 'scores' | 'summary' | 'criteria'>;
+  const [scored, ...parts] = await Promise.allSettled([
+    postAi<Scores>('essay-review', { ...body, part: 'scores', ticket }),
+    ...CRITERIA.map(([id]) => postAi<{ items: ReviewItem[] }>('essay-review', { ...body, part: id, ticket })),
+  ]);
+  if (scored.status === 'rejected') throw scored.reason;
+  // Two criteria can quote the same words; keep the first (TR, CC, LR, GRA order) so highlights don't stack.
+  const taken = new Set<string>();
+  const groups = CRITERIA.map(([id, title], k) => {
+    const r = parts[k];
+    const items = r.status === 'fulfilled' ? (r.value.items || []).filter((it) => {
+      const at = it.sectionId + '|' + it.quote;
+      if (taken.has(at)) return false;
+      taken.add(at);
+      return true;
+    }) : [];
+    return { id, title, items };
+  });
+  return { ...scored.value, key: draftsKey(drafts), source: 'ai', groups };
 }

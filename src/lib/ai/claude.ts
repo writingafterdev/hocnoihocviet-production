@@ -1,4 +1,3 @@
-import Anthropic from '@anthropic-ai/sdk';
 import { jsonrepair } from 'jsonrepair';
 import { getCloudflareContext } from '@opennextjs/cloudflare';
 import { METHOD } from './method';
@@ -67,14 +66,42 @@ interface Ask {
   maxTokens?: number;
   /** false = send only `task` as the system prompt, without the book's method (e.g. the translator). */
   grounded?: boolean;
-  /** false = don't take a use from the allowance: the caller already did, via `reserveUse` (one essay = several calls). */
+  /** false = don't take a use from the allowance: the caller already did, via `startTicket` (one essay = several calls). */
   counted?: boolean;
 }
 
-/** Takes one use for a request made of several `ask` calls (with counted: false). Call `refund` if it fails as a whole. */
-export async function reserveUse(userId: string, kind: AiKind) {
-  if (!(await env()).ANTHROPIC_API_KEY) throw new AiError('not_configured');
-  return reserve(userId, kind);
+const TICKET_MS = 15 * 60_000;
+
+/**
+ * Takes one use of the allowance for a request the browser sends in parts (each part is its own Worker
+ * request, so each gets its own CPU budget). Returns a ticket; each part can be claimed with it once.
+ */
+export async function startTicket(userId: string, kind: AiKind) {
+  const { DB, ANTHROPIC_API_KEY } = await env();
+  if (!ANTHROPIC_API_KEY) throw new AiError('not_configured');
+  await reserve(userId, kind);
+  const id = crypto.randomUUID();
+  await DB.batch([
+    DB.prepare('delete from ai_ticket where created < ?').bind(Date.now() - 24 * 3600_000),
+    DB.prepare('insert into ai_ticket (id, userId, day, kind, created) values (?, ?, ?, ?, ?)').bind(id, userId, today(), kind, Date.now()),
+  ]);
+  return id;
+}
+
+/** Claims one part of a ticket; false if the ticket is unknown, someone else's, expired, or the part was already claimed. */
+export async function claimTicket(userId: string, ticket: string, part: string) {
+  const { DB } = await env();
+  const res = await DB.prepare("update ai_ticket set used = used || ? where id = ? and userId = ? and created > ? and instr(used, ?) = 0")
+    .bind('|' + part, ticket, userId, Date.now() - TICKET_MS, '|' + part).run();
+  return !!res.meta.changes;
+}
+
+/** Gives the ticket's use back (once), e.g. when the essay could not be scored. */
+export async function refundTicket(userId: string, ticket: string) {
+  const { DB } = await env();
+  const row = await DB.prepare("update ai_ticket set used = used || '|refunded' where id = ? and userId = ? and instr(used, '|refunded') = 0 returning day, kind")
+    .bind(ticket, userId).first<{ day: string; kind: string }>();
+  if (row) await DB.prepare('update ai_usage set count = count - 1 where userId = ? and day = ? and kind = ? and count > 0').bind(userId, row.day, row.kind).run();
 }
 
 /**
@@ -89,29 +116,27 @@ export async function ask<T = string>({ userId, kind, task, input, schema, effor
   try {
     const model = e.AI_MODEL || MODEL;
     const claude = model.startsWith('claude-');
-    // Hard ceiling per attempt, one retry: a stuck provider must fail fast enough for the browser to show an error.
-    const client = new Anthropic({ apiKey: e.ANTHROPIC_API_KEY, ...(e.AI_BASE_URL ? { baseURL: e.AI_BASE_URL } : {}), maxRetries: 1, timeout: TIMEOUT_MS[kind] });
     const started = Date.now();
     // The method text is identical for every request, so it is cached; the task text follows it.
     const system = (extra: string) => grounded
-      ? [{ type: 'text' as const, text: METHOD, cache_control: { type: 'ephemeral' as const } }, { type: 'text' as const, text: task + extra }]
-      : [{ type: 'text' as const, text: task + extra }];
-    const messages = [{ role: 'user' as const, content: input }];
-    // Streaming keeps the connection busy during long thinking; we only need the final message.
-    const msg = claude
-      ? await client.beta.messages.stream({
+      ? [{ type: 'text', text: METHOD, cache_control: { type: 'ephemeral' } }, { type: 'text', text: task + extra }]
+      : [{ type: 'text', text: task + extra }];
+    const messages = [{ role: 'user', content: input }];
+    // One plain request, no streaming: the reply arrives as one JSON document, which costs the Worker far less
+    // CPU than parsing hundreds of stream events (Workers Free allows 10 ms of CPU per request; waiting is free).
+    const msg = await callMessages(e, kind, claude
+      ? {
         model, max_tokens: maxTokens, messages, system: system(''),
-        betas: ['server-side-fallback-2026-07-01'],
         fallbacks: 'default',
         thinking: { type: 'adaptive' },
         output_config: { effort, ...(schema ? { format: { type: 'json_schema', schema } } : {}) },
-      }).finalMessage()
-      // Other models behind an Anthropic-compatible API (e.g. ModelScope for testing): plain Messages API only,
+      }
+      // Other models behind an Anthropic-compatible API (e.g. Model Studio for testing): plain Messages API only,
       // so the JSON shape is asked for in the prompt instead of enforced.
-      : await client.messages.stream({
+      : {
         model, max_tokens: Math.min(maxTokens, 8192), messages,
         system: system(schema ? '\n\nOUTPUT FORMAT: reply with ONE JSON object and nothing else (no markdown, no code fences, no text before or after). Inside string values never use the straight double quote character; write quotations with “ ” instead. It must match this JSON Schema exactly:\n' + JSON.stringify(schema) : ''),
-      }).finalMessage();
+      }, claude ? 'server-side-fallback-2026-07-01' : '');
     console.log('ai_call', kind, model, (Date.now() - started) + 'ms', 'in=' + (msg.usage.input_tokens || 0), 'out=' + (msg.usage.output_tokens || 0), msg.stop_reason);
     const used = { input: (msg.usage.input_tokens || 0) + (msg.usage.cache_read_input_tokens || 0) + (msg.usage.cache_creation_input_tokens || 0), output: msg.usage.output_tokens || 0 };
     await (quota ? quota.record(used) : recordTokens(DB, userId, kind, used)).catch(() => {});
@@ -133,9 +158,37 @@ export async function ask<T = string>({ userId, kind, task, input, schema, effor
   } catch (err) {
     if (quota) await quota.refund().catch(() => {});
     if (err instanceof AiError) throw err;
-    if (err instanceof Anthropic.APIConnectionTimeoutError) { console.error('ai_call_timeout', kind); throw new AiError('timeout'); }
-    console.error('ai_call_failed', kind, err instanceof Anthropic.APIError ? (err.status ?? 'network') + ' ' + err.message : err);
+    console.error('ai_call_failed', kind, err);
     throw new AiError('upstream');
+  }
+}
+
+interface Message {
+  content: { type: string; text?: string }[];
+  stop_reason: string;
+  usage: { input_tokens?: number; output_tokens?: number; cache_read_input_tokens?: number; cache_creation_input_tokens?: number };
+}
+
+/** POST /v1/messages with a time limit per attempt and one retry on network errors, 429 and 5xx. */
+async function callMessages(e: CloudflareEnv, kind: AiKind, body: Record<string, unknown>, beta: string): Promise<Message> {
+  const url = (e.AI_BASE_URL || 'https://api.anthropic.com').replace(/\/+$/, '') + '/v1/messages';
+  const headers: Record<string, string> = { 'content-type': 'application/json', 'x-api-key': e.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01', ...(beta ? { 'anthropic-beta': beta } : {}) };
+  const payload = JSON.stringify(body);
+  for (let attempt = 0; ; attempt++) {
+    let res: Response;
+    try {
+      res = await fetch(url, { method: 'POST', headers, body: payload, signal: AbortSignal.timeout(TIMEOUT_MS[kind]) });
+    } catch (err) {
+      const timedOut = err instanceof Error && (err.name === 'TimeoutError' || err.name === 'AbortError');
+      if (attempt < 1 && !timedOut) continue;
+      console.error(timedOut ? 'ai_call_timeout' : 'ai_call_failed', kind, err instanceof Error ? err.message : err);
+      throw new AiError(timedOut ? 'timeout' : 'upstream');
+    }
+    if (res.ok) return (await res.json()) as Message;
+    const detail = (await res.text().catch(() => '')).slice(0, 300);
+    if (attempt < 1 && (res.status === 429 || res.status >= 500)) { await new Promise((r) => setTimeout(r, 1000)); continue; }
+    console.error('ai_call_failed', kind, res.status, detail);
+    throw new AiError('upstream', 'http_' + res.status);
   }
 }
 

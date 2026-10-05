@@ -1,8 +1,8 @@
 /** "Nộp bài": the AI scores the essay on TR / CC / LR / GRA, and every comment quotes the essay. */
 import type { Prompt } from '@/content/prompts';
 import type { Chain, ReviewItem } from '@/features/chainlab/types';
-import { bandOf, CRITERIA, draftsKey, type EssayReview } from '@/features/desk/scoring';
-import { AiError, ask, reserveUse } from './claude';
+import { bandOf, CRITERIA, type EssayReview } from '@/features/desk/scoring';
+import { ask } from './claude';
 import { describeChains, describePrompt } from './describe';
 
 export interface SectionIn { id: string; label: string; text: string }
@@ -191,41 +191,49 @@ function locate(sections: SectionIn[], prefer: string, quote: string): { id: str
 
 const clampBand = (x: number) => Math.max(1, Math.min(9, Math.round((Number(x) || 0) * 2) / 2));
 
-export async function aiEssayReview(userId: string, prompt: Prompt, sections: SectionIn[], chains: Chain[], stance: string): Promise<EssayReview> {
+const essayInput = (prompt: Prompt, sections: SectionIn[], chains: Chain[], stance: string) => {
   const words = sections.reduce((n, s) => n + (s.text.trim() ? s.text.trim().split(/\s+/).length : 0), 0);
   const essay = sections.map((s) => `<section id="${s.id}" label="${s.label}">\n${s.text.trim() || '(trống)'}\n</section>`).join('\n');
-  const input = describePrompt(prompt) + '\n\n' + describeChains(prompt, chains, stance) + `\n\nBÀI VIẾT (${words} từ)\n` + essay;
-  // One essay = one use of the allowance, but five calls in parallel: the scores, then each criterion's
-  // comments on its own, so no criterion's feedback is cut short by the length of a single reply.
-  const quota = await reserveUse(userId, 'essay');
-  const base = { userId, kind: 'essay' as const, input, effort: 'high' as const, counted: false };
-  const [scored, ...perCriterion] = await Promise.allSettled([
-    ask<{ criteria: Record<'tr' | 'cc' | 'lr' | 'gra', { score: number; why: string; gap?: string; next: string }>; summary: string }>({ ...base, task: TASK + ONLY_SCORES, schema: SCORE_SCHEMA }),
-    ...CRITERIA.map(([id, name]) => ask<{ comments: Comment[] }>({ ...base, task: TASK + ONLY_COMMENTS(id, name), schema: COMMENTS_SCHEMA(id) })
-      .then((r) => (r.comments || []).map((c) => ({ ...c, criterion: id })))),
-  ]);
-  if (scored.status === 'rejected' || perCriterion.every((r) => r.status === 'rejected')) {
-    await quota.refund().catch(() => {});
-    const why = scored.status === 'rejected' ? scored.reason : (perCriterion[0] as PromiseRejectedResult).reason;
-    throw why instanceof AiError ? why : new AiError('upstream');
-  }
-  perCriterion.forEach((r, k) => { if (r.status === 'rejected') console.error('essay_comments_failed', CRITERIA[k][0], r.reason instanceof Error ? r.reason.message : r.reason); });
-  const out = { ...scored.value, comments: perCriterion.flatMap((r) => (r.status === 'fulfilled' ? r.value : [])) };
-  // Separate calls can quote the same words; keep the first (criteria are in order TR, CC, LR, GRA).
-  const taken = new Set<string>();
+  return describePrompt(prompt) + '\n\n' + describeChains(prompt, chains, stance) + `\n\nBÀI VIẾT (${words} từ)\n` + essay;
+};
 
-  const groups = CRITERIA.map(([id, title]) => ({ id, title, items: [] as ReviewItem[] }));
+export interface EssayScores { scores: EssayReview['scores']; summary: string; criteria: EssayReview['criteria'] }
+
+/**
+ * An essay review is five AI calls: the scores (this) and one per criterion (essayComments). The browser
+ * sends them as separate requests under one ticket, so each runs in its own Worker request.
+ */
+export async function essayScores(userId: string, prompt: Prompt, sections: SectionIn[], chains: Chain[], stance: string): Promise<EssayScores> {
+  const out = await ask<{ criteria: Record<'tr' | 'cc' | 'lr' | 'gra', { score: number; why: string; gap?: string; next: string }>; summary: string }>({
+    userId, kind: 'essay', counted: false, effort: 'high', task: TASK + ONLY_SCORES, schema: SCORE_SCHEMA, input: essayInput(prompt, sections, chains, stance),
+  });
+  const cr = out.criteria || ({} as typeof out.criteria);
+  const tr = clampBand(cr.tr?.score), cc = clampBand(cr.cc?.score), lr = clampBand(cr.lr?.score), gra = clampBand(cr.gra?.score);
+  return {
+    summary: (out.summary || '').trim(),
+    criteria: Object.fromEntries(CRITERIA.map(([id]) => [id, { why: (cr[id as 'tr']?.why || '').trim(), gap: (cr[id as 'tr']?.gap || '').trim(), next: (cr[id as 'tr']?.next || '').trim() }])),
+    scores: { tr, cc, lr, gra, band: bandOf(tr, cc, lr, gra) },
+  };
+}
+
+/** One criterion's detailed comments, each pointing at the exact words in the essay. */
+export async function essayComments(userId: string, criterion: string, prompt: Prompt, sections: SectionIn[], chains: Chain[], stance: string): Promise<ReviewItem[]> {
+  const name = CRITERIA.find(([id]) => id === criterion)[1];
+  const out = await ask<{ comments: Comment[] }>({
+    userId, kind: 'essay', counted: false, effort: 'high', task: TASK + ONLY_COMMENTS(criterion, name), schema: COMMENTS_SCHEMA(criterion), input: essayInput(prompt, sections, chains, stance),
+  });
+  const items: ReviewItem[] = [];
+  const taken = new Set<string>();
   for (const c of out.comments || []) {
-    const g = groups.find((x) => x.id === c.criterion);
     const text = (c.text || '').trim();
-    const hit = g && text && locate(sections, c.sectionId, c.quote || '');
+    const hit = text && locate(sections, c.sectionId, c.quote || '');
     if (!hit) continue; // every comment must point at the essay
     if (taken.has(hit.id + '|' + hit.text)) continue;
     taken.add(hit.id + '|' + hit.text);
     const s = sections.find((x) => x.id === hit.id);
     const k = chains.findIndex((x) => x.id === c.chainId);
-    g.items.push({
-      key: g.id + g.items.length,
+    items.push({
+      key: criterion + items.length,
       sectionId: hit.id,
       where: s.label + (k >= 0 ? ' · Mạch ' + (k + 1) : ''),
       ...(k >= 0 ? { chainId: chains[k].id } : {}),
@@ -237,15 +245,5 @@ export async function aiEssayReview(userId: string, prompt: Prompt, sections: Se
       text,
     });
   }
-
-  const cr = out.criteria || ({} as typeof out.criteria);
-  const tr = clampBand(cr.tr?.score), cc = clampBand(cr.cc?.score), lr = clampBand(cr.lr?.score), gra = clampBand(cr.gra?.score);
-  return {
-    key: draftsKey(Object.fromEntries(sections.map((s) => [s.id, s.text]))),
-    source: 'ai',
-    summary: (out.summary || '').trim(),
-    criteria: Object.fromEntries(CRITERIA.map(([id]) => [id, { why: (cr[id as 'tr']?.why || '').trim(), gap: (cr[id as 'tr']?.gap || '').trim(), next: (cr[id as 'tr']?.next || '').trim() }])),
-    groups,
-    scores: { tr, cc, lr, gra, band: bandOf(tr, cc, lr, gra) },
-  };
+  return items;
 }
