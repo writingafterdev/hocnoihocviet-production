@@ -53,6 +53,8 @@ D1 database, then deploys.
       no thinking, no fallbacks, and the JSON shape is requested in the prompt instead of enforced.
     - **Cloudflare AI Gateway:** `AI_BASE_URL=https://gateway.ai.cloudflare.com/v1/<account>/<gateway>/anthropic`, with
       `AI_MODEL` unset, for logs and caching.
+  - optional `DECISION_URL`: the decision model's endpoint. When `AI_BASE_URL` is a Model Studio host it's derived
+    automatically (`…/compatible-mode/v1/systemone`).
 - **Setup check:** `/api/health` lists the D1 tables and which secrets are present (never their values).
 - **Google OAuth client:** authorised redirect URI `https://<host>/api/auth/callback/google`.
 
@@ -131,7 +133,7 @@ distilled in `src/lib/ai/method.ts`. That text is identical in every request, so
 | --- | --- | --- | --- |
 | "Soát toàn bài" (ChainLab) | `POST /api/ai/chain-review` | `lib/ai/chain-review.ts` | Questions grouped as Mắt xích, Độ sâu, Trường hợp, Sợi dây, Lập trường, Độ phủ đề bài, Trùng ý. Logical Jumps and vague words are pinned to chain steps. |
 | "Nộp bài" (Writing Desk) | `POST /api/ai/essay-review` | `lib/ai/essay-review.ts` | Band plus TR / CC / LR / GRA. Each criterion has why it got that band and how to go higher, then detailed comments. There is also an overall assessment. |
-| "Tạo đoạn mẫu" (Vocab) | `POST /api/ai/vocab-paragraph` | `lib/ai/vocab-paragraph.ts` | Up to 30 ticked phrases. More than 6 are split into paragraph-sized groups by each phrase's theme (`VB_THEMES` in `features/vocab/data.ts`, no AI call), then each group gets its own paragraph, practised one after another. Each sentence comes with its Vietnamese translation. Only phrases from the app's own sets are accepted. Falls back to the pre-written paragraphs. |
+| "Tạo đoạn mẫu" (Vocab) | `POST /api/ai/vocab-paragraph` | `lib/ai/vocab-paragraph.ts` | Up to 30 ticked phrases. More than 6 are classified into themes by Alibaba's decision model (`decision-model-preview`, `/api/ai/vocab-groups`, `lib/ai/decision.ts`). Phrases it can't classify, or all of them when it's unavailable, use the hand-tagged themes in `VB_THEMES`. The phrases are then split into paragraph-sized groups, and each group gets its own paragraph, practised one after another. Each sentence comes with its Vietnamese translation. Only phrases from the app's own sets are accepted. Falls back to the pre-written paragraphs. |
 | "Dịch" (both screens) | `POST /api/ai/translate` | `lib/ai/translate.ts` | Vietnamese ↔ English translation of up to 800 characters, nothing else. |
 
 - **Score bar = navigation:** Band shows the overall assessment and one line per criterion. TR / CC / LR / GRA show

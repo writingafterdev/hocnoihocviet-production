@@ -196,6 +196,12 @@ const VB_THEMES: Record<string, string[]> = {
 };
 const THEME_OF = new Map(Object.entries(VB_THEMES).flatMap(([theme, ps]) => ps.map((p) => [p, theme] as [string, string])));
 
+/** The themes used by a skill's phrases: the label set a classifier chooses from. */
+export function themesFor(skill: VocabSkill): string[] {
+  const mine = new Set(skill.topics.flatMap((t) => t.items.map((i) => i.en)));
+  return Object.entries(VB_THEMES).filter(([, ps]) => ps.some((p) => mine.has(p))).map(([name]) => name);
+}
+
 export interface VocabGroup { name: string; phrases: string[] }
 export const GROUP_MAX = 6;
 
@@ -203,13 +209,13 @@ export const GROUP_MAX = 6;
  * Splits ticked phrases into paragraph-sized groups (≤ GROUP_MAX) of the same theme, in topic order.
  * Small groups (< 3) are merged with a neighbour from the same topic when they fit together.
  */
-export function groupPhrases(skill: VocabSkill, phrases: string[]): VocabGroup[] {
+export function groupPhrases(skill: VocabSkill, phrases: string[], themeOf: (phrase: string) => string | undefined = (p) => THEME_OF.get(p)): VocabGroup[] {
   if (phrases.length <= GROUP_MAX) return [{ name: '', phrases }];
   const groups: (VocabGroup & { topic: string })[] = [];
   skill.topics.forEach((t) => {
     const mine = t.items.map((i) => i.en).filter((p) => phrases.includes(p));
     const byTheme = new Map<string, string[]>();
-    mine.forEach((p) => { const th = THEME_OF.get(p) || t.vi; byTheme.set(th, [...(byTheme.get(th) || []), p]); });
+    mine.forEach((p) => { const th = themeOf(p) || THEME_OF.get(p) || t.vi; byTheme.set(th, [...(byTheme.get(th) || []), p]); });
     byTheme.forEach((ps, name) => {
       // Split an oversized theme evenly, e.g. 8 → 4 + 4 rather than 6 + 2.
       const n = Math.ceil(ps.length / GROUP_MAX), size = Math.ceil(ps.length / n);

@@ -31,4 +31,6 @@ interface CloudflareEnv {
   AI_BASE_URL?: string;
   /** Optional: model ID for that endpoint, e.g. a ModelScope model. Unset = claude-opus-5-5. Non-Claude models skip thinking, fallbacks and enforced JSON. */
   AI_MODEL?: string;
+  /** Optional: full URL of Model Studio's decision-model endpoint (…/compatible-mode/v1/systemone). Unset = derived from a Model Studio AI_BASE_URL. */
+  DECISION_URL?: string;
 }

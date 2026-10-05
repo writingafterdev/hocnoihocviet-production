@@ -222,8 +222,14 @@ export function VocabBuilder({ onBack }: { onBack: () => void }) {
   const go = async () => {
     const phrases = choose();
     if (!phrases.length || making) return;
-    // Grouping uses each phrase's theme (see VB_THEMES), so it is instant and needs no AI call.
-    await paragraph(groupPhrases(skill, phrases), 0, null);
+    // More than 6: the decision model classifies the phrases into themes (server); the hand-tagged themes are the fallback.
+    let groups = groupPhrases(skill, phrases);
+    if (phrases.length > 6) {
+      setMaking(true);
+      try { groups = (await postAi<{ groups: typeof groups }>('vocab-groups', { skillId, phrases })).groups; }
+      catch (e) { if (fail(e)) return; }
+    }
+    await paragraph(groups, 0, null);
   };
 
   if (practice) {
