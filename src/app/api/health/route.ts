@@ -13,7 +13,7 @@ export async function GET(request: Request) {
   } catch (e) {
     tables = 'error: ' + (e instanceof Error ? e.message : String(e));
   }
-  const need = ['user', 'session', 'account', 'verification', 'attempt', 'ai_usage'];
+  const need = ['user', 'session', 'account', 'verification', 'attempt', 'ai_usage', 'vocab_progress'];
   return Response.json({
     origin: new URL(request.url).origin,
     host: request.headers.get('host'),

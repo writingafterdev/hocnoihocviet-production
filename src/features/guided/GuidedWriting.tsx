@@ -26,6 +26,8 @@ function SegChips({ seg, small, hidden }: { seg: Segment; small?: boolean; hidde
 
 function barColor(seg: Segment) {
   if (seg.vocab) {
+    // A linking sentence in a practice paragraph may use none of the ticked phrases.
+    if (!seg.vocab.length) return '#ECECEA';
     const c = seg.vocab.map((_, k) => vStyle(seg, k).hl);
     return c.length > 1 ? 'linear-gradient(90deg,' + c.map((x, k) => x + ' ' + (k * 100 / c.length) + '%,' + x + ' ' + ((k + 1) * 100 / c.length) + '%').join(',') + ')' : c[0];
   }

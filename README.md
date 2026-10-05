@@ -40,6 +40,7 @@ D1 database, then deploys.
   - Every API route checks the session itself.
 - **Database:** D1, bound as `DB`; the schema lives in `migrations/`.
   - `attempt` rows belong to one user, and the API never reads or writes another user's rows.
+  - `vocab_progress` stores each student's saved phrases and practice counts (`/api/vocab`).
 - **Secrets:** set these in the Worker's Variables and Secrets, all as type *Secret*:
   - `BETTER_AUTH_SECRET`
   - `GOOGLE_CLIENT_ID`
@@ -130,6 +131,7 @@ distilled in `src/lib/ai/method.ts`. That text is identical in every request, so
 | --- | --- | --- | --- |
 | "Soát toàn bài" (ChainLab) | `POST /api/ai/chain-review` | `lib/ai/chain-review.ts` | Questions grouped as Mắt xích, Độ sâu, Trường hợp, Sợi dây, Lập trường, Độ phủ đề bài, Trùng ý. Logical Jumps and vague words are pinned to chain steps. |
 | "Nộp bài" (Writing Desk) | `POST /api/ai/essay-review` | `lib/ai/essay-review.ts` | Band plus TR / CC / LR / GRA. Each criterion has why it got that band and how to go higher, then detailed comments. There is also an overall assessment. |
+| "Tạo đoạn mẫu" (Vocab) | `POST /api/ai/vocab-paragraph` | `lib/ai/vocab-paragraph.ts` | A practice paragraph that uses every ticked phrase, each sentence with its Vietnamese translation. Only phrases from the app's own sets are accepted. Falls back to the pre-written paragraphs. |
 | "Dịch" (both screens) | `POST /api/ai/translate` | `lib/ai/translate.ts` | Vietnamese ↔ English translation of up to 800 characters, nothing else. |
 
 - **Score bar = navigation:** Band shows the overall assessment and one line per criterion. TR / CC / LR / GRA show
@@ -148,7 +150,7 @@ distilled in `src/lib/ai/method.ts`. That text is identical in every request, so
 - **Grounding:** `method.ts` covers Phase 0–2, the nine question types and Module 2 (coherence and cohesion). The
   essay prompt reads Task Response in fixed steps, then Coherence (whole essay → paragraph → sentence), then Cohesion
   (sentence openings → reference words → connectors).
-- **Daily limits per student:** 10 chain reviews, 5 essay scorings and 60 translations (`DAILY_LIMIT` in
+- **Daily limits per student:** 10 chain reviews, 5 essay scorings, 60 translations and 30 vocab paragraphs (`DAILY_LIMIT` in
   `lib/ai/claude.ts`). Days follow Vietnam time. Usage and token counts go in the D1 `ai_usage` table, and a failed
   call doesn't count. `GET /api/ai/usage` shows what's left today.
 - **Safety:** refusals fall back to another model on the server (`fallbacks: "default"`). Student text is treated as
@@ -162,8 +164,7 @@ distilled in `src/lib/ai/method.ts`. That text is identical in every request, so
 | --- | --- | --- |
 | Adding prompts | `content/prompts.ts` (edited by hand) | Admin import page: AI fills the metadata, you approve |
 | Chép mẫu sample essay | `features/guided/data.ts`, `GuidedFlow.tsx` | Several tagged sample essays per prompt |
-| Vocab sets + practice paragraphs | `features/vocab/data.ts` | Imported sets; paragraphs generated on demand |
-| Saved words, practice counts | component state | D1, per signed-in user |
+| Vocab sets | `features/vocab/data.ts` | Imported sets |
 
 ## Open items carried over from the design chats
 

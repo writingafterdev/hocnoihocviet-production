@@ -1,10 +1,13 @@
 'use client';
 
 import { ArrowLeft, Bookmark, Check, Circle, CircleCheck, Hash, Sparkles, Volume2, type LucideIcon } from 'lucide-react';
-import { useState, type ReactNode } from 'react';
+import { useRouter } from 'next/navigation';
+import { useEffect, useState, type ReactNode } from 'react';
 import { PageHeader } from '@/components/shell/BrandHeader';
 import { GW_VOCAB_PALETTE, type GuidedSample } from '../guided/data';
 import { GuidedWriting } from '../guided/GuidedWriting';
+import { AI_ERROR_TEXT, AiRequestError, postAi } from '../ai/request';
+import { SignedOutError } from '../attempts/store';
 import { VB_SKILLS, type VocabItem, type VocabSkill, type VocabTopic } from './data';
 
 const VB = {
@@ -130,16 +133,37 @@ function Row({ item, topicName, selected, saved, practiced, onSelect, onSave }: 
 /**
  * Vocab builder: skill cards → topic rail + phrase table → tick phrases → "Tạo đoạn mẫu"
  * → rewrite the sample paragraph from hints (Chép mẫu engine).
- * MOCK: saved phrases and practice counts live in component state; persist per user in production.
+ * Saved phrases and practice counts are stored per student (/api/vocab). Practice paragraphs are written by
+ * the AI from the ticked phrases (/api/ai/vocab-paragraph); the pre-written ones are the fallback.
  */
 export function VocabBuilder({ onBack }: { onBack: () => void }) {
   const [skillId, setSkillId] = useState<VocabSkill['id'] | null>(null);
   const [topicId, setTopicId] = useState<string | null>(null); // a topic id, or 'saved'
   const [sel, setSel] = useState<Record<string, string[]>>({});
-  const [saved, setSaved] = useState<Record<string, boolean>>({ 'bridge the gap': true, 'critical thinking': true, 'renewable energy': true, 'peak at': true, 'unwind': true });
-  const [count, setCount] = useState<Record<string, number>>({ 'equip students with': 1, 'rote learning': 2 });
-  const [practice, setPractice] = useState<{ sample: GuidedSample; topic: string } | null>(null);
+  const router = useRouter();
+  const [saved, setSavedState] = useState<Record<string, boolean>>({});
+  const [count, setCount] = useState<Record<string, number>>({});
+  const [practice, setPractice] = useState<{ sample: GuidedSample; topic: string; phrases: string[] } | null>(null);
   const [round, setRound] = useState(0);
+  const [making, setMaking] = useState(false);
+  const [note, setNote] = useState<string | null>(null);
+
+  const signedOut = () => router.replace('/login?next=/vocab');
+  const send = (body: unknown) => fetch('/api/vocab', { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'same-origin', body: JSON.stringify(body) })
+    .then((r) => { if (r.status === 401) signedOut(); }, () => {});
+  useEffect(() => {
+    fetch('/api/vocab', { credentials: 'same-origin' }).then(async (r) => {
+      if (r.status === 401) return signedOut();
+      if (!r.ok) return;
+      const d = await r.json();
+      setSavedState(d.saved || {}); setCount(d.practiced || {});
+    }, () => {});
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  const toggleSaved = (en: string) => {
+    const next = !saved[en];
+    setSavedState((s) => ({ ...s, [en]: next }));
+    send({ save: { phrase: en, saved: next } });
+  };
 
   const skill = VB_SKILLS.find((s) => s.id === skillId);
   const savedCount = (sk: VocabSkill) => sk.topics.reduce((n, t) => n + t.items.filter((it) => saved[it.en]).length, 0);
@@ -160,14 +184,32 @@ export function VocabBuilder({ onBack }: { onBack: () => void }) {
   const key = skillId + ':' + topicId;
   const picked = (sel[key] || []).filter((p) => rows.some((r) => r.it.en === p));
   const toggle = (en: string) => setSel((s) => ({ ...s, [key]: picked.includes(en) ? picked.filter((x) => x !== en) : [...picked, en] }));
-  // Stand-in for "generate on demand": the sample (in this view's topics) that uses most of the chosen phrases.
+  // Fallback when the AI is off or fails: the pre-written paragraph (in this view's topics) that uses most of the chosen phrases.
   const pool = (isSaved ? skill.topics : [topic]).flatMap((t) => t.samples.map((s) => ({ s, t })));
-  const go = (afterId: string | null) => {
-    if (!pool.length) return;
-    const score = ({ s }: { s: GuidedSample }) => s.paragraphs.flat().flatMap((g) => g.vocab).filter((v) => picked.includes(v)).length;
+  const fallback = (afterId: string | null, phrases: string[]) => {
+    if (!pool.length) return false;
+    const score = ({ s }: { s: GuidedSample }) => s.paragraphs.flat().flatMap((g) => g.vocab).filter((v) => phrases.includes(v)).length;
     const order = [...pool].sort((a, b) => score(b) - score(a));
     const k = afterId ? (order.findIndex((x) => x.s.id === afterId) + 1) % order.length : 0;
-    setPractice({ sample: order[k].s, topic: order[k].t.name }); setRound((r) => r + 1);
+    setPractice({ sample: order[k].s, topic: order[k].t.name, phrases }); setRound((r) => r + 1);
+    return true;
+  };
+  // Nothing ticked: practise up to 4 phrases from this view, least-practised first.
+  const choose = () => (picked.length ? picked : [...rows].sort((a, b) => (count[a.it.en] || 0) - (count[b.it.en] || 0)).slice(0, 4).map((r) => r.it.en)).slice(0, 6);
+  const go = async (afterId: string | null, again?: string[]) => {
+    const phrases = again || choose();
+    if (!phrases.length || making) return;
+    setMaking(true); setNote(null);
+    try {
+      const r = await postAi<{ sample: GuidedSample }>('vocab-paragraph', { skillId, topicId, phrases });
+      setPractice({ sample: r.sample, topic: isSaved ? 'Từ đã lưu' : topic.name, phrases }); setRound((x) => x + 1);
+    } catch (e) {
+      if (e instanceof SignedOutError) { signedOut(); return; }
+      const used = fallback(afterId, phrases);
+      if (!used && e instanceof AiRequestError && e.code === 'not_configured') setNote('Chủ đề này chưa có đoạn mẫu.');
+      else if (!(e instanceof AiRequestError && e.code === 'not_configured')) setNote(used ? 'Chưa tạo được đoạn mới (' + (e instanceof AiRequestError ? AI_ERROR_TEXT[e.code] : AI_ERROR_TEXT.network) + '). Đang dùng đoạn có sẵn.' : e instanceof AiRequestError ? AI_ERROR_TEXT[e.code] : AI_ERROR_TEXT.network);
+    }
+    setMaking(false);
   };
 
   if (practice) {
@@ -175,8 +217,12 @@ export function VocabBuilder({ onBack }: { onBack: () => void }) {
     const idx = (v: string) => Math.max(0, all.findIndex((it) => it.en === v));
     const base = practice.sample;
     const sample: GuidedSample = { ...base, paragraphs: base.paragraphs.map((p) => p.map((sg) => ({ ...sg, vocabVi: sg.vocab.map((v) => all[idx(v)].vi), vocabStyle: sg.vocab.map((v) => GW_VOCAB_PALETTE[idx(v) % GW_VOCAB_PALETTE.length]) }))) };
-    const markPracticed = () => setCount((c) => { const n = { ...c }; base.paragraphs.flat().flatMap((g) => g.vocab).forEach((v) => (n[v] = (n[v] || 0) + 1)); return n; });
-    return shell(<GuidedWriting key={base.id + round} sample={sample} label={'Từ vựng · ' + practice.topic} taskLabel={skill.eyebrow} textLabel="Đoạn mẫu" backLabel={skill.title} onBack={() => setPractice(null)} onFinish={markPracticed} onNext={() => go(base.id)} nextLabel="Tạo đoạn khác" />);
+    const markPracticed = () => {
+      const used = [...new Set(base.paragraphs.flat().flatMap((g) => g.vocab || []))];
+      setCount((c) => { const n = { ...c }; used.forEach((v) => (n[v] = (n[v] || 0) + 1)); return n; });
+      send({ practiced: used });
+    };
+    return shell(<GuidedWriting key={base.id + round} sample={sample} label={'Từ vựng · ' + practice.topic} taskLabel={skill.eyebrow} textLabel="Đoạn mẫu" backLabel={skill.title} onBack={() => setPractice(null)} onFinish={markPracticed} onNext={() => go(base.id, practice.phrases)} nextLabel={making ? 'Đang tạo…' : 'Tạo đoạn khác'} />);
   }
 
   const done = rows.filter((r) => count[r.it.en]).length;
@@ -216,8 +262,9 @@ export function VocabBuilder({ onBack }: { onBack: () => void }) {
               <p style={{ margin: '6px 0 0', fontFamily: VB.sans, fontSize: 13.5, color: VB.ink3 }}>{rows.length} cụm · {done} đã luyện · Bấm vào một dòng để xem đủ.</p>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              <span style={{ fontFamily: VB.sans, fontSize: 13, color: VB.ink3 }}>{picked.length ? 'Đã chọn ' + picked.length + ' cụm' : 'Chọn 3–6 cụm, hoặc để trống'}</span>
-              <button type="button" className="cl-btn cl-primary" disabled={!pool.length} onClick={() => go(null)} title={pool.length ? '' : 'Chủ đề này chưa có đoạn mẫu trong bản thử'} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, height: 42, borderRadius: 12, background: VB.ink, color: '#fff', fontFamily: VB.sans, fontSize: 13.5, fontWeight: 600, padding: '0 18px', opacity: pool.length ? 1 : 0.35 }}><Sparkles size={15} strokeWidth={2} />Tạo đoạn mẫu</button>
+              {note && <span role="alert" style={{ maxWidth: 320, fontFamily: VB.sans, fontSize: 12, color: '#8B3A35' }}>{note}</span>}
+              <span style={{ fontFamily: VB.sans, fontSize: 13, color: picked.length > 6 ? '#8B3A35' : VB.ink3 }}>{picked.length > 6 ? 'Tối đa 6 cụm; sẽ dùng 6 cụm đầu' : picked.length ? 'Đã chọn ' + picked.length + ' cụm' : 'Chọn 1–6 cụm, hoặc để trống'}</span>
+              <button type="button" className="cl-btn cl-primary" disabled={!rows.length || making} onClick={() => go(null)} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, height: 42, borderRadius: 12, background: VB.ink, color: '#fff', fontFamily: VB.sans, fontSize: 13.5, fontWeight: 600, padding: '0 18px', opacity: rows.length && !making ? 1 : 0.35 }}><Sparkles size={15} strokeWidth={2} />{making ? 'Đang tạo đoạn…' : 'Tạo đoạn mẫu'}</button>
             </div>
           </div>
           {rows.length ? (
@@ -233,7 +280,7 @@ export function VocabBuilder({ onBack }: { onBack: () => void }) {
                   </tr>
                 </thead>
                 <tbody>
-                  {rows.map(({ it, t }) => <Row key={t.id + it.en} item={it} topicName={isSaved ? t.name : null} selected={picked.includes(it.en)} saved={!!saved[it.en]} practiced={count[it.en] || 0} onSelect={() => toggle(it.en)} onSave={() => setSaved((s) => ({ ...s, [it.en]: !s[it.en] }))} />)}
+                  {rows.map(({ it, t }) => <Row key={t.id + it.en} item={it} topicName={isSaved ? t.name : null} selected={picked.includes(it.en)} saved={!!saved[it.en]} practiced={count[it.en] || 0} onSelect={() => toggle(it.en)} onSave={() => toggleSaved(it.en)} />)}
                 </tbody>
               </table>
             </div>

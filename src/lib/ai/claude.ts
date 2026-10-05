@@ -13,11 +13,11 @@ export class AiError extends Error {
 export interface Usage { input: number; output: number }
 
 /** Daily limits per student (Vietnam calendar day). */
-export const DAILY_LIMIT = { chain: 10, essay: 5, translate: 60 } as const;
+export const DAILY_LIMIT = { chain: 10, essay: 5, translate: 60, vocab: 30 } as const;
 export type AiKind = keyof typeof DAILY_LIMIT;
 
 /** Per-attempt time limit for each kind of call (ms). The browser gives up a little after two attempts. */
-const TIMEOUT_MS: Record<AiKind, number> = { chain: 120_000, essay: 150_000, translate: 30_000 };
+const TIMEOUT_MS: Record<AiKind, number> = { chain: 120_000, essay: 150_000, translate: 30_000, vocab: 45_000 };
 
 const today = () => new Date(Date.now() + 7 * 3600_000).toISOString().slice(0, 10);
 
