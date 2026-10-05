@@ -33,7 +33,7 @@ export const GW_TOOL_STYLE: Record<string, { bg: string; fg: string }> = {
   'Gắn kết & Bản sắc': { bg: '#FFEEDA', fg: '#7B4D10' },
   'Mắt xích': { bg: '#F1F1EE', fg: '#44443F' },
   'Tác động': { bg: '#DCF5EC', fg: '#17664F' },
-  'Khả thi': { bg: '#DEDEDA', fg: '#2B2B29' },
+  'Khả thi': { bg: '#EEE9FB', fg: '#5A3FB0' },
   'With/Without': { bg: '#E4F5FA', fg: '#17667A' },
   'Nối về': { bg: '#FFF6DA', fg: '#765A00' },
   // The book's sentence labels (SAMPLE essays): what the sentence does, then which Phase 2 tool it uses.
