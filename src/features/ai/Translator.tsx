@@ -6,7 +6,7 @@ import { ClIcon, ClLabel } from '../chainlab/ui/primitives';
 import { AI_ERROR_TEXT, AiRequestError, postAi } from './request';
 
 type Dir = 'vi-en' | 'en-vi';
-interface Item { id: number; dir: Dir; source: string; translation?: string; error?: string }
+interface Item { id: number; dir: Dir; source: string; translation?: string; topic?: string; error?: string }
 
 const MAX = 800;
 const VI_CHARS = /[ăâđêôơưáàảãạấầẩẫậắằẳẵặéèẻẽẹếềểễệíìỉĩịóòỏõọốồổỗộớờởỡợúùủũụứừửữựýỳỷỹỵ]/i;
@@ -14,7 +14,7 @@ const guess = (t: string): Dir => (VI_CHARS.test(t) ? 'vi-en' : 'en-vi');
 const LABEL: Record<Dir, string> = { 'vi-en': 'Việt → Anh', 'en-vi': 'Anh → Việt' };
 
 /** "Dịch" drawer: Vietnamese ↔ English, one text at a time. */
-export function Translator({ onClose }: { onClose: () => void }) {
+export function Translator({ onClose, skill = 'task2' }: { onClose: () => void; skill?: 'task2' | 'task1' | 'speaking' }) {
   const [text, setText] = useState('');
   const [dir, setDir] = useState<Dir>('vi-en');
   const [manual, setManual] = useState(false);
@@ -31,15 +31,15 @@ export function Translator({ onClose }: { onClose: () => void }) {
     setItems((xs) => [{ id, dir, source }, ...xs]);
     setText(''); setManual(false); setPending(true);
     try {
-      const r = await postAi<{ translation: string }>('translate', { text: source, dir });
-      setItems((xs) => xs.map((x) => (x.id === id ? { ...x, translation: r.translation } : x)));
+      const r = await postAi<{ translation: string; topic?: string }>('translate', { text: source, dir, skill });
+      setItems((xs) => xs.map((x) => (x.id === id ? { ...x, translation: r.translation, topic: r.topic } : x)));
     } catch (e) {
       const error = e instanceof AiRequestError ? (e.code === 'bad_output' ? 'Không dịch được đoạn này. Mục Dịch chỉ dịch qua lại Việt – Anh.' : AI_ERROR_TEXT[e.code]) : AI_ERROR_TEXT.network;
       setItems((xs) => xs.map((x) => (x.id === id ? { ...x, error } : x)));
     }
     setPending(false);
   };
-  // Saves the pair to the student's word book ("Sổ từ của tôi" on the Vocab page): English + Vietnamese.
+  // Saves the pair under "Đã lưu" of this skill's vocab (Vocab page), filed under the topic the translator chose.
   const pair = (it: Item) => (it.dir === 'vi-en' ? { en: it.translation || '', vi: it.source } : { en: it.source, vi: it.translation || '' });
   const savable = (it: Item) => { const p = pair(it); return !!p.en && !!p.vi && p.en.length <= 300 && p.vi.length <= 600; };
   const save = async (it: Item) => {
@@ -47,12 +47,12 @@ export function Translator({ onClose }: { onClose: () => void }) {
     setSaved((s) => ({ ...s, [it.id]: 'saving' }));
     let state: 'saved' | 'full' | 'error' = 'error';
     try {
-      const r = await fetch('/api/vocab/mine', { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'same-origin', body: JSON.stringify(pair(it)) });
+      const r = await fetch('/api/vocab/mine', { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'same-origin', body: JSON.stringify({ ...pair(it), skill, topic: it.topic }) });
       state = r.ok ? 'saved' : r.status === 409 ? 'full' : 'error';
     } catch { /* network: error */ }
     setSaved((s) => ({ ...s, [it.id]: state }));
   };
-  const SAVE_LABEL = { saving: 'Đang lưu…', saved: 'Đã lưu', full: 'Sổ từ đã đầy', error: 'Lưu lỗi, thử lại' };
+  const SAVE_LABEL = { saving: 'Đang lưu…', saved: 'Đã lưu', full: 'Đã lưu đầy', error: 'Lưu lỗi, thử lại' };
   const copy = (it: Item) => {
     navigator.clipboard?.writeText(it.translation || '').then(() => { setCopied(it.id); setTimeout(() => setCopied(null), 1500); }, () => {});
   };
@@ -91,7 +91,7 @@ export function Translator({ onClose }: { onClose: () => void }) {
                   {it.translation && (
                     <span style={{ flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
                       <button type="button" className="cl-btn" onClick={() => copy(it)} style={{ borderRadius: 5, border: '1px solid ' + CL.ink2, padding: '3px 8px', fontFamily: CL.sans, fontSize: 10.5, fontWeight: 600, color: copied === it.id ? CL.greenText : CL.ink6 }}>{copied === it.id ? 'Đã chép' : 'Chép'}</button>
-                      {savable(it) && <button type="button" className="cl-btn" onClick={() => save(it)} disabled={saved[it.id] === 'saving' || saved[it.id] === 'saved'} title="Lưu vào Sổ từ của tôi (trang Từ vựng)" style={{ borderRadius: 5, border: '1px solid ' + (saved[it.id] === 'saved' ? CL.mintSoft : CL.ink2), background: saved[it.id] === 'saved' ? CL.mintSoft : '#fff', padding: '3px 8px', fontFamily: CL.sans, fontSize: 10.5, fontWeight: 600, color: saved[it.id] === 'saved' ? CL.greenText : saved[it.id] === 'error' || saved[it.id] === 'full' ? CL.redText : CL.ink6, whiteSpace: 'nowrap' }}>{saved[it.id] ? SAVE_LABEL[saved[it.id]] : 'Lưu từ'}</button>}
+                      {savable(it) && <button type="button" className="cl-btn" onClick={() => save(it)} disabled={saved[it.id] === 'saving' || saved[it.id] === 'saved'} title={'Lưu vào Đã lưu (Từ vựng)' + (it.topic ? ' · ' + it.topic : '')} style={{ borderRadius: 5, border: '1px solid ' + (saved[it.id] === 'saved' ? CL.mintSoft : CL.ink2), background: saved[it.id] === 'saved' ? CL.mintSoft : '#fff', padding: '3px 8px', fontFamily: CL.sans, fontSize: 10.5, fontWeight: 600, color: saved[it.id] === 'saved' ? CL.greenText : saved[it.id] === 'error' || saved[it.id] === 'full' ? CL.redText : CL.ink6, whiteSpace: 'nowrap' }}>{saved[it.id] ? SAVE_LABEL[saved[it.id]] : 'Lưu từ'}</button>}
                     </span>
                   )}
                 </>

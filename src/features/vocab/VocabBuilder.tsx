@@ -1,6 +1,6 @@
 'use client';
 
-import { ArrowLeft, Bookmark, BookOpen, Check, Circle, CircleCheck, Hash, Sparkles, Trash2, Volume2, type LucideIcon } from 'lucide-react';
+import { ArrowLeft, BookOpen, Check, Circle, CircleCheck, Hash, Sparkles, Trash2, Volume2, type LucideIcon } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState, type ReactNode } from 'react';
 import { PageHeader } from '@/components/shell/BrandHeader';
@@ -8,6 +8,7 @@ import { GW_VOCAB_PALETTE, type GuidedSample } from '../guided/data';
 import { GuidedWriting } from '../guided/GuidedWriting';
 import { AI_ERROR_TEXT, AiRequestError, postAi } from '../ai/request';
 import { SignedOutError } from '../attempts/store';
+import { topicsFor } from '@/lib/vocab-topics';
 import { groupPhrases, VB_SKILLS, type VocabItem, type VocabSkill, type VocabTopic } from './data';
 
 const VB = {
@@ -34,7 +35,7 @@ const speak = (t: string) => {
 };
 
 /** Landing: one card per skill. */
-function Landing({ savedCount, onOpen, onBack, mineCount, onMine }: { savedCount: (sk: VocabSkill) => number; onOpen: (id: VocabSkill['id']) => void; onBack: () => void; mineCount: number; onMine: () => void }) {
+function Landing({ savedCount, onOpen, onBack }: { savedCount: (sk: VocabSkill) => number; onOpen: (id: VocabSkill['id']) => void; onBack: () => void }) {
   return (
     <main style={{ maxWidth: 1120, margin: '0 auto', padding: '8px 32px 60px', fontFamily: VB.sans, color: VB.ink }}>
       <button type="button" onClick={onBack} style={{ border: 'none', background: 'transparent', cursor: 'pointer', fontFamily: VB.sans, fontSize: 13, fontWeight: 500, color: '#857F70', padding: 0, marginBottom: 28 }}>← Trang chủ</button>
@@ -76,48 +77,49 @@ function Landing({ savedCount, onOpen, onBack, mineCount, onMine }: { savedCount
           })}
         </div>
       </section>
-      <section style={{ paddingTop: 36 }}>
-        <h2 style={{ fontSize: 15, fontWeight: 700, letterSpacing: '-0.01em', margin: '0 0 14px' }}>Của bạn</h2>
-        <button type="button" className="cl-btn vb-product" onClick={onMine} style={{ display: 'flex', alignItems: 'center', gap: 16, width: '100%', maxWidth: 560, textAlign: 'left', cursor: 'pointer', borderRadius: 18, border: '1px solid ' + VB.border, background: '#fff', padding: '18px 20px', color: VB.ink }}>
-          <span style={{ width: 48, height: 48, borderRadius: 12, background: VB.yellowSoft, display: 'grid', placeItems: 'center', flexShrink: 0 }}><BookOpen size={22} strokeWidth={2} /></span>
-          <span style={{ flex: 1, minWidth: 0 }}>
-            <span style={{ display: 'block', fontSize: 17, fontWeight: 700, letterSpacing: '-0.02em' }}>Sổ từ của tôi</span>
-            <span style={{ display: 'block', marginTop: 3, fontSize: 13, lineHeight: 1.5, color: '#716D63' }}>Những từ và cụm bạn lưu khi dùng Dịch trong lúc lập ý và viết bài.</span>
-          </span>
-          <span style={{ fontSize: 13, fontWeight: 600, whiteSpace: 'nowrap' }}>{mineCount} cụm →</span>
-        </button>
-      </section>
     </main>
   );
 }
 
-interface MinePhrase { id: string; en: string; vi: string; createdAt: number }
+interface MinePhrase { id: string; skill: string; topic: string; en: string; vi: string; createdAt: number }
 
-/** "Sổ từ của tôi": phrases saved from the translator, newest first. */
-function MyWords({ items, loaded, onDelete, onBack }: { items: MinePhrase[]; loaded: boolean; onDelete: (id: string) => void; onBack: () => void }) {
+/** "Đã lưu" of one skill: phrases saved from the translator, filed by topic. The topic can be changed here. */
+function SavedList({ skill, items, loaded, onTopic, onDelete }: { skill: VocabSkill; items: MinePhrase[]; loaded: boolean; onTopic: (id: string, topic: string) => void; onDelete: (id: string) => void }) {
+  const [topic, setTopic] = useState<string>('');
   const [q, setQ] = useState('');
-  const shown = q.trim() ? items.filter((it) => (it.en + ' ' + it.vi).toLowerCase().includes(q.trim().toLowerCase())) : items;
+  const topics = topicsFor(skill.id);
+  const counts = new Map<string, number>();
+  items.forEach((it) => counts.set(it.topic, (counts.get(it.topic) || 0) + 1));
+  const shown = items.filter((it) => (!topic || it.topic === topic) && (!q.trim() || (it.en + ' ' + it.vi).toLowerCase().includes(q.trim().toLowerCase())));
   const td: React.CSSProperties = { padding: '14px 14px', verticalAlign: 'top', borderTop: '1px solid ' + VB.line, fontFamily: VB.sans };
+  const chip = (id: string, label: string, n: number) => (
+    <button key={id} type="button" className="cl-btn" aria-pressed={topic === id} onClick={() => setTopic(id)} style={{ borderRadius: 999, border: '1px solid ' + (topic === id ? VB.ink : VB.border), background: topic === id ? VB.ink : '#fff', color: topic === id ? '#fff' : VB.ink2, padding: '5px 11px', fontFamily: VB.sans, fontSize: 12.5, fontWeight: 600, whiteSpace: 'nowrap' }}>{label} <span style={{ opacity: 0.7 }}>{n}</span></button>
+  );
   return (
-    <div style={{ maxWidth: 1120, margin: '0 auto', padding: '0 40px 24px' }}>
-      <button type="button" className="cl-btn cl-link" onClick={onBack} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, marginBottom: 16, fontFamily: VB.label, fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.14em', color: VB.ink3 }}><ArrowLeft size={15} strokeWidth={2} />Từ vựng</button>
-      <section style={{ borderRadius: 16, border: '1px solid ' + VB.border, background: '#fff', overflow: 'hidden' }}>
-        <div style={{ display: 'flex', alignItems: 'flex-end', gap: 20, flexWrap: 'wrap', padding: '22px 24px 18px' }}>
-          <div style={{ flex: 1, minWidth: 240 }}>
-            <VbLabel>Của bạn</VbLabel>
-            <h1 style={{ margin: '8px 0 0', fontFamily: VB.sans, fontSize: 28, fontWeight: 600, letterSpacing: '-0.01em', color: VB.ink }}>Sổ từ của tôi</h1>
-            <p style={{ margin: '6px 0 0', fontFamily: VB.sans, fontSize: 13.5, color: VB.ink3 }}>{items.length} cụm · Lưu thêm bằng nút "Lưu từ" trong mục Dịch.</p>
-          </div>
-          {items.length > 8 && <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Tìm trong sổ từ…" aria-label="Tìm trong sổ từ" style={{ width: 240, height: 40, borderRadius: 10, border: '1px solid ' + VB.border, padding: '0 12px', fontFamily: VB.sans, fontSize: 13.5, outline: 'none' }} />}
+    <section style={{ minWidth: 0, borderRadius: 16, border: '1px solid ' + VB.border, background: '#fff', overflow: 'hidden' }}>
+      <div style={{ display: 'flex', alignItems: 'flex-end', gap: 20, flexWrap: 'wrap', padding: '22px 24px 16px' }}>
+        <div style={{ flex: 1, minWidth: 240 }}>
+          <VbLabel>Đã lưu</VbLabel>
+          <h1 style={{ margin: '8px 0 0', fontFamily: VB.sans, fontSize: 28, fontWeight: 600, letterSpacing: '-0.01em', color: VB.ink }}>Từ đã lưu<span style={{ fontWeight: 400, color: VB.ink3 }}> · {skill.title}</span></h1>
+          <p style={{ margin: '6px 0 0', fontFamily: VB.sans, fontSize: 13.5, color: VB.ink3 }}>{items.length} cụm · Lưu thêm bằng nút "Lưu từ" trong mục Dịch. Chủ đề do AI gán, bạn đổi được.</p>
         </div>
-        {!loaded ? (
-          <div style={{ padding: '32px 24px 40px', borderTop: '1px solid ' + VB.line, fontFamily: VB.sans, fontSize: 14, color: VB.ink3 }}>Đang tải…</div>
-        ) : shown.length ? (
-          <table style={{ width: '100%', tableLayout: 'fixed', borderCollapse: 'collapse' }}>
-            <colgroup><col style={{ width: '42%' }} /><col /><col style={{ width: 120 }} /><col style={{ width: 56 }} /></colgroup>
+        {items.length > 8 && <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Tìm trong từ đã lưu…" aria-label="Tìm trong từ đã lưu" style={{ width: 240, height: 40, borderRadius: 10, border: '1px solid ' + VB.border, padding: '0 12px', fontFamily: VB.sans, fontSize: 13.5, outline: 'none' }} />}
+      </div>
+      {items.length > 0 && (
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, padding: '0 24px 16px' }}>
+          {chip('', 'Tất cả', items.length)}
+          {[...counts.keys()].sort((a, b) => topics.indexOf(a) - topics.indexOf(b)).map((t) => chip(t, t, counts.get(t)))}
+        </div>
+      )}
+      {!loaded ? (
+        <div style={{ padding: '32px 24px 40px', borderTop: '1px solid ' + VB.line, fontFamily: VB.sans, fontSize: 14, color: VB.ink3 }}>Đang tải…</div>
+      ) : shown.length ? (
+        <div className="cl-scroll" style={{ overflowX: 'auto' }}>
+          <table style={{ width: '100%', minWidth: 760, tableLayout: 'fixed', borderCollapse: 'collapse' }}>
+            <colgroup><col style={{ width: '34%' }} /><col /><col style={{ width: 190 }} /><col style={{ width: 56 }} /></colgroup>
             <thead>
               <tr style={{ background: VB.head }}>
-                {['Tiếng Anh', 'Nghĩa', 'Ngày lưu', ''].map((h, k) => <th key={k} style={{ padding: '12px 14px', textAlign: 'left', fontFamily: VB.sans, fontSize: 13, fontWeight: 600, color: VB.ink }}>{h}</th>)}
+                {['Tiếng Anh', 'Nghĩa', 'Chủ đề', ''].map((h, k) => <th key={k} style={{ padding: '12px 14px', textAlign: 'left', fontFamily: VB.sans, fontSize: 13, fontWeight: 600, color: VB.ink }}>{h}</th>)}
               </tr>
             </thead>
             <tbody>
@@ -130,17 +132,21 @@ function MyWords({ items, loaded, onDelete, onBack }: { items: MinePhrase[]; loa
                     </span>
                   </td>
                   <td style={{ ...td, fontSize: 14, lineHeight: 1.55, color: VB.ink2, overflowWrap: 'anywhere' }}>{it.vi}</td>
-                  <td style={{ ...td, fontSize: 12.5, color: VB.ink4 }}>{new Date(it.createdAt).toLocaleDateString('vi-VN')}</td>
-                  <td style={td}><button type="button" className="cl-btn vb-icon" onClick={() => onDelete(it.id)} aria-label={'Xoá ' + it.en} style={{ width: 30, height: 30, marginTop: -4, borderRadius: 999, display: 'grid', placeItems: 'center', color: VB.ink4 }}><Trash2 size={15} strokeWidth={2} /></button></td>
+                  <td style={td}>
+                    <select value={it.topic} onChange={(e) => onTopic(it.id, e.target.value)} aria-label={'Chủ đề của ' + it.en} style={{ width: '100%', height: 34, borderRadius: 8, border: '1px solid ' + VB.border, background: '#fff', padding: '0 8px', fontFamily: VB.sans, fontSize: 13, color: VB.ink2 }}>
+                      {(topics.includes(it.topic) ? topics : [...topics, it.topic]).map((t) => <option key={t} value={t}>{t}</option>)}
+                    </select>
+                  </td>
+                  <td style={td}><button type="button" className="cl-btn vb-icon" onClick={() => onDelete(it.id)} aria-label={'Xoá ' + it.en} style={{ width: 30, height: 30, marginTop: -2, borderRadius: 999, display: 'grid', placeItems: 'center', color: VB.ink4 }}><Trash2 size={15} strokeWidth={2} /></button></td>
                 </tr>
               ))}
             </tbody>
           </table>
-        ) : (
-          <div style={{ padding: '32px 24px 40px', borderTop: '1px solid ' + VB.line, fontFamily: VB.sans, fontSize: 14, lineHeight: 1.6, color: VB.ink3 }}>{items.length ? 'Không có cụm nào khớp.' : 'Chưa có từ nào. Khi lập ý hoặc viết bài, mở Dịch, dịch một từ hay cụm, rồi bấm "Lưu từ".'}</div>
-        )}
-      </section>
-    </div>
+        </div>
+      ) : (
+        <div style={{ padding: '32px 24px 40px', borderTop: '1px solid ' + VB.line, fontFamily: VB.sans, fontSize: 14, lineHeight: 1.6, color: VB.ink3 }}>{items.length ? 'Không có cụm nào khớp.' : 'Chưa có từ nào. Khi lập ý hoặc viết bài, mở Dịch, dịch một từ hay cụm, rồi bấm "Lưu từ".'}</div>
+      )}
+    </section>
   );
 }
 
@@ -153,7 +159,7 @@ function CheckBox({ on, label, onClick }: { on: boolean; label: string; onClick:
 }
 
 /** One phrase in the vocab table. Click the row to expand the clamped columns. */
-function Row({ item, topicName, selected, saved, practiced, onSelect, onSave }: { item: VocabItem; topicName: string | null; selected: boolean; saved: boolean; practiced: number; onSelect: () => void; onSave: () => void }) {
+function Row({ item, selected, practiced, onSelect }: { item: VocabItem; selected: boolean; practiced: number; onSelect: () => void }) {
   const [open, setOpen] = useState(false);
   const clamp: React.CSSProperties = open ? {} : { display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' };
   const td: React.CSSProperties = { padding: '16px 14px', verticalAlign: 'top', borderTop: '1px solid ' + VB.line };
@@ -162,16 +168,12 @@ function Row({ item, topicName, selected, saved, practiced, onSelect, onSave }: 
   return (
     <tr className="vb-row" onClick={() => setOpen(!open)} aria-expanded={open} style={{ cursor: 'pointer', background: selected ? VB.yellowSoft : 'transparent' }}>
       <td style={{ ...td, paddingRight: 4 }} onClick={stop}><CheckBox on={selected} label={'Chọn ' + item.en} onClick={onSelect} /></td>
-      <td style={{ ...td, paddingLeft: 4 }} onClick={stop}>
-        <button type="button" className="cl-btn vb-icon" onClick={onSave} aria-label={saved ? 'Bỏ lưu' : 'Lưu'} aria-pressed={saved} style={{ width: 30, height: 30, marginTop: -5, borderRadius: 999, display: 'grid', placeItems: 'center', color: saved ? VB.ink : VB.strong }}><Bookmark size={17} strokeWidth={2} fill={saved ? 'currentColor' : 'none'} /></button>
-      </td>
       <td style={td}>
         <div style={{ fontFamily: VB.sans, fontSize: 15, fontWeight: 600, color: VB.ink, lineHeight: 1.35, overflowWrap: 'anywhere' }}>{item.en}</div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 3 }}>
           <span style={{ fontFamily: VB.sans, fontSize: 12.5, color: VB.ink4 }}>{item.ipa}</span>
           <button type="button" className="cl-btn vb-icon" onClick={(e) => { stop(e); speak(item.en); }} aria-label="Nghe phát âm" style={{ width: 24, height: 24, borderRadius: 999, display: 'grid', placeItems: 'center', color: VB.ink4 }}><Volume2 size={14} strokeWidth={2} /></button>
         </div>
-        {topicName && <span style={{ display: 'inline-block', marginTop: 6, borderRadius: 999, background: VB.head, padding: '2px 8px', fontFamily: VB.sans, fontSize: 11, color: VB.ink3 }}>{topicName}</span>}
         <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 8, fontFamily: VB.sans, fontSize: 11.5, color: practiced ? VB.success : VB.ink4 }}>
           <Status size={13} strokeWidth={2} />{practiced ? 'Đã luyện ' + practiced + ' lần' : 'Chưa luyện'}
         </div>
@@ -197,7 +199,7 @@ function Row({ item, topicName, selected, saved, practiced, onSelect, onSave }: 
 /**
  * Vocab builder: skill cards → topic rail + phrase table → tick phrases → "Tạo đoạn mẫu"
  * → rewrite the sample paragraph from hints (Chép mẫu engine).
- * Saved phrases and practice counts are stored per student (/api/vocab). Practice paragraphs are written by
+ * Practice counts are stored per student (/api/vocab); phrases saved from the translator are listed under "Đã lưu" (/api/vocab/mine). Practice paragraphs are written by
  * the AI from the ticked phrases (/api/ai/vocab-paragraph); the pre-written ones are the fallback.
  */
 export function VocabBuilder({ onBack }: { onBack: () => void }) {
@@ -205,14 +207,12 @@ export function VocabBuilder({ onBack }: { onBack: () => void }) {
   const [topicId, setTopicId] = useState<string | null>(null); // a topic id, or 'saved'
   const [sel, setSel] = useState<Record<string, string[]>>({});
   const router = useRouter();
-  const [saved, setSavedState] = useState<Record<string, boolean>>({});
   const [count, setCount] = useState<Record<string, number>>({});
   /** The paragraph being practised; `groups` are the paragraph-sized groups of the ticked phrases, `at` the current one. */
   const [practice, setPractice] = useState<{ sample: GuidedSample; topic: string; phrases: string[]; groups: { name: string; phrases: string[] }[]; at: number } | null>(null);
   const [round, setRound] = useState(0);
   const [making, setMaking] = useState(false);
   const [note, setNote] = useState<string | null>(null);
-  const [mineOpen, setMineOpen] = useState(false);
   const [mine, setMine] = useState<MinePhrase[]>([]);
   const [mineLoaded, setMineLoaded] = useState(false);
 
@@ -224,7 +224,7 @@ export function VocabBuilder({ onBack }: { onBack: () => void }) {
       if (r.status === 401) return signedOut();
       if (!r.ok) return;
       const d = await r.json();
-      setSavedState(d.saved || {}); setCount(d.practiced || {});
+      setCount(d.practiced || {});
     }, () => {});
     fetch('/api/vocab/mine', { credentials: 'same-origin' }).then(async (r) => {
       if (r.ok) setMine((await r.json()).items || []);
@@ -235,14 +235,16 @@ export function VocabBuilder({ onBack }: { onBack: () => void }) {
     setMine((m) => m.filter((x) => x.id !== id));
     fetch('/api/vocab/mine?id=' + encodeURIComponent(id), { method: 'DELETE', credentials: 'same-origin' }).then((r) => { if (r.status === 401) signedOut(); }, () => {});
   };
-  const toggleSaved = (en: string) => {
-    const next = !saved[en];
-    setSavedState((s) => ({ ...s, [en]: next }));
-    send({ save: { phrase: en, saved: next } });
+  const changeTopic = (id: string, topic: string) => {
+    const it = mine.find((x) => x.id === id);
+    if (!it || it.topic === topic) return;
+    setMine((m) => m.map((x) => (x.id === id ? { ...x, topic } : x)));
+    fetch('/api/vocab/mine', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, credentials: 'same-origin', body: JSON.stringify({ id, skill: it.skill, topic }) })
+      .then((r) => { if (r.status === 401) signedOut(); else if (!r.ok) setMine((m) => m.map((x) => (x.id === id ? { ...x, topic: it.topic } : x))); }, () => setMine((m) => m.map((x) => (x.id === id ? { ...x, topic: it.topic } : x))));
   };
 
   const skill = VB_SKILLS.find((s) => s.id === skillId);
-  const savedCount = (sk: VocabSkill) => sk.topics.reduce((n, t) => n + t.items.filter((it) => saved[it.en]).length, 0);
+  const savedCount = (sk: VocabSkill) => mine.filter((m) => m.skill === sk.id).length;
   const shell = (body: ReactNode) => (
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column', background: '#fff' }}>
       <PageHeader />
@@ -250,14 +252,11 @@ export function VocabBuilder({ onBack }: { onBack: () => void }) {
     </div>
   );
 
-  if (mineOpen) return shell(<MyWords items={mine} loaded={mineLoaded} onDelete={deleteMine} onBack={() => setMineOpen(false)} />);
-  if (!skill) return shell(<Landing savedCount={savedCount} mineCount={mine.length} onMine={() => setMineOpen(true)} onBack={onBack} onOpen={(id) => { const sk = VB_SKILLS.find((s) => s.id === id); setSkillId(id); setTopicId(sk.topics[0].id); }} />);
+  if (!skill) return shell(<Landing savedCount={savedCount} onBack={onBack} onOpen={(id) => { const sk = VB_SKILLS.find((s) => s.id === id); setSkillId(id); setTopicId(sk.topics[0].id); }} />);
 
   const isSaved = topicId === 'saved';
   const topic = skill.topics.find((t) => t.id === topicId);
-  const rows: { it: VocabItem; t: VocabTopic }[] = isSaved
-    ? skill.topics.flatMap((t) => t.items.filter((it) => saved[it.en]).map((it) => ({ it, t })))
-    : topic.items.map((it) => ({ it, t: topic }));
+  const rows: { it: VocabItem; t: VocabTopic }[] = isSaved ? [] : topic.items.map((it) => ({ it, t: topic }));
   const key = skillId + ':' + topicId;
   const picked = (sel[key] || []).filter((p) => rows.some((r) => r.it.en === p));
   const toggle = (en: string) => setSel((s) => ({ ...s, [key]: picked.includes(en) ? picked.filter((x) => x !== en) : [...picked, en] }));
@@ -347,13 +346,14 @@ export function VocabBuilder({ onBack }: { onBack: () => void }) {
       <div style={{ display: 'grid', gridTemplateColumns: '280px minmax(0,1fr)', gap: 24, alignItems: 'start' }}>
         <aside style={{ position: 'sticky', top: 0, borderRadius: 16, border: '1px solid ' + VB.border, background: '#fff', padding: '20px 14px 14px' }}>
           <VbLabel style={{ padding: '0 4px' }}>{skill.eyebrow}</VbLabel>
-          <div style={{ marginTop: 14 }}>{railItem('saved', 'Đã lưu', 'Từ bạn lưu trong ' + skill.eyebrow, savedCount(skill), Bookmark)}</div>
+          <div style={{ marginTop: 14 }}>{railItem('saved', 'Đã lưu', 'Từ bạn lưu từ mục Dịch', savedCount(skill), BookOpen)}</div>
           <div style={{ height: 1, background: VB.line, margin: '14px 4px' }} />
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {skill.topics.map((t) => railItem(t.id, t.name, t.vi, t.items.length, Hash))}
           </div>
         </aside>
 
+        {isSaved ? <SavedList skill={skill} items={mine.filter((m) => m.skill === skill.id)} loaded={mineLoaded} onTopic={changeTopic} onDelete={deleteMine} /> : (
         <section style={{ minWidth: 0, borderRadius: 16, border: '1px solid ' + VB.border, background: '#fff', overflow: 'hidden' }}>
           <div style={{ display: 'flex', alignItems: 'flex-end', gap: 20, flexWrap: 'wrap', padding: '22px 24px 18px' }}>
             <div style={{ flex: 1, minWidth: 240 }}>
@@ -370,24 +370,25 @@ export function VocabBuilder({ onBack }: { onBack: () => void }) {
           {rows.length ? (
             <div className="cl-scroll" style={{ overflowX: 'auto' }}>
               <table style={{ width: '100%', minWidth: 980, tableLayout: 'fixed', borderCollapse: 'collapse' }}>
-                <colgroup><col style={{ width: 44 }} /><col style={{ width: 48 }} /><col style={{ width: '17%' }} /><col style={{ width: '9%' }} /><col style={{ width: '12%' }} /><col style={{ width: '21%' }} /><col style={{ width: '15%' }} /><col style={{ width: '26%' }} /></colgroup>
+                <colgroup><col style={{ width: 44 }} /><col style={{ width: '17%' }} /><col style={{ width: '9%' }} /><col style={{ width: '12%' }} /><col style={{ width: '21%' }} /><col style={{ width: '15%' }} /><col style={{ width: '26%' }} /></colgroup>
                 <thead>
                   <tr style={{ background: VB.head }}>
                     <th style={{ padding: '12px 4px 12px 14px', width: 44, textAlign: 'left' }}>
                       <CheckBox on={allPicked} label="Chọn tất cả" onClick={() => setSel((s) => ({ ...s, [key]: allPicked ? [] : rows.map((r) => r.it.en) }))} />
                     </th>
-                    {['Lưu', 'Từ vựng', 'Loại từ', 'Nghĩa', 'Hiểu sâu', 'Collocation', 'Ví dụ'].map((h, k) => <th key={h} style={{ padding: k ? '12px 14px' : '12px 14px 12px 4px', textAlign: 'left', fontFamily: VB.sans, fontSize: 13, fontWeight: 600, color: VB.ink }}>{h}</th>)}
+                    {['Từ vựng', 'Loại từ', 'Nghĩa', 'Hiểu sâu', 'Collocation', 'Ví dụ'].map((h, k) => <th key={h} style={{ padding: k ? '12px 14px' : '12px 14px 12px 4px', textAlign: 'left', fontFamily: VB.sans, fontSize: 13, fontWeight: 600, color: VB.ink }}>{h}</th>)}
                   </tr>
                 </thead>
                 <tbody>
-                  {rows.map(({ it, t }) => <Row key={t.id + it.en} item={it} topicName={isSaved ? t.name : null} selected={picked.includes(it.en)} saved={!!saved[it.en]} practiced={count[it.en] || 0} onSelect={() => toggle(it.en)} onSave={() => toggleSaved(it.en)} />)}
+                  {rows.map(({ it, t }) => <Row key={t.id + it.en} item={it} selected={picked.includes(it.en)} practiced={count[it.en] || 0} onSelect={() => toggle(it.en)} />)}
                 </tbody>
               </table>
             </div>
           ) : (
-            <div style={{ padding: '40px 24px 48px', borderTop: '1px solid ' + VB.line, fontFamily: VB.sans, fontSize: 14, color: VB.ink3 }}>Chưa lưu từ nào. Bấm biểu tượng lưu ở một dòng trong bất kỳ chủ đề nào, từ đó sẽ hiện ở đây.</div>
+            <div style={{ padding: '40px 24px 48px', borderTop: '1px solid ' + VB.line, fontFamily: VB.sans, fontSize: 14, color: VB.ink3 }}>Chủ đề này chưa có cụm nào.</div>
           )}
         </section>
+        )}
       </div>
     </div>
   );
