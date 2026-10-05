@@ -12,7 +12,16 @@ export function UserMenu() {
   const router = useRouter();
   const { data, isPending } = useSession();
   const [open, setOpen] = useState(false);
+  const [admin, setAdmin] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+  const signedIn = !!data;
+  // Whether to show the admin link: asked once, the first time the menu opens.
+  const asked = useRef(false);
+  useEffect(() => {
+    if (!open || !signedIn || asked.current) return;
+    asked.current = true;
+    fetch('/api/admin/me', { credentials: 'same-origin' }).then((r) => (r.ok ? r.json() : null)).then((d) => { if (d && d.admin) setAdmin(true); }, () => {});
+  }, [open, signedIn]);
 
   useEffect(() => {
     if (!open) return;
@@ -40,6 +49,7 @@ export function UserMenu() {
             <div style={{ fontFamily: 'var(--font-sans)', fontSize: 12, color: '#77776F', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user.email}</div>
           </div>
           <Link role="menuitem" href="/attempts" onClick={() => setOpen(false)} className="cl-rv" style={item}>Bài đã viết</Link>
+          {admin && <Link role="menuitem" href="/admin" onClick={() => setOpen(false)} className="cl-rv" style={item}>Quản trị</Link>}
           <button role="menuitem" type="button" className="cl-rv" style={item} onClick={() => signOut({ fetchOptions: { onSuccess: () => { router.push('/'); router.refresh(); } } })}>Đăng xuất</button>
         </div>
       )}

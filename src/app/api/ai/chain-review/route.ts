@@ -9,6 +9,6 @@ export async function POST(request: Request) {
   try {
     return Response.json(await aiChainReview(r.userId, r.prompt, r.body.chains, r.body.stance), { headers: { 'Cache-Control': 'no-store' } });
   } catch (err) {
-    return aiErrorResponse(err);
+    return aiErrorResponse(err, { route: 'chain-review', userId: r.userId });
   }
 }

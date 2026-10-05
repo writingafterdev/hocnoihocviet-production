@@ -34,6 +34,6 @@ export async function POST(request: Request) {
       throw err;
     }
   } catch (err) {
-    return aiErrorResponse(err instanceof Error ? err : new AiError('upstream'));
+    return aiErrorResponse(err instanceof Error ? err : new AiError('upstream'), { route: 'essay-review/' + String(part), userId: r.userId });
   }
 }

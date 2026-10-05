@@ -18,7 +18,9 @@ export type AiKind = keyof typeof DAILY_LIMIT;
 /** Per-attempt time limit for each kind of call (ms). The browser gives up a little after two attempts. */
 const TIMEOUT_MS: Record<AiKind, number> = { chain: 120_000, essay: 150_000, translate: 30_000, vocab: 45_000 };
 
-const today = () => new Date(Date.now() + 7 * 3600_000).toISOString().slice(0, 10);
+const today = () => vnDay(0);
+/** The Vietnam calendar day (YYYY-MM-DD), `ago` days back. */
+export const vnDay = (ago = 0) => new Date(Date.now() + 7 * 3600_000 - ago * 86_400_000).toISOString().slice(0, 10);
 
 async function env() {
   return (await getCloudflareContext({ async: true })).env;
@@ -242,10 +244,23 @@ async function callMessages(e: CloudflareEnv, kind: AiKind, body: Record<string,
 const STATUS: Record<AiErrorCode, number> = { not_configured: 503, limit: 429, refused: 422, bad_output: 502, upstream: 502, timeout: 504 };
 
 /** JSON error response for a failed AI route. */
-export function aiErrorResponse(err: unknown) {
+/** Writes a failed AI request to the admin error log (best effort; "limit" is normal use, not an error). */
+async function logAiError(code: AiErrorCode, detail: string | undefined, ctx?: { route?: string; userId?: string }) {
+  if (code === 'limit') return;
+  try {
+    const { DB } = await env();
+    await DB.batch([
+      DB.prepare('delete from ai_error where at < ?').bind(Date.now() - 30 * 86_400_000),
+      DB.prepare('insert into ai_error (at, userId, route, code, detail) values (?, ?, ?, ?, ?)').bind(Date.now(), ctx?.userId ?? null, ctx?.route ?? null, code, detail ? detail.slice(0, 120) : null),
+    ]);
+  } catch { /* logging must never break the response */ }
+}
+
+export async function aiErrorResponse(err: unknown, ctx?: { route?: string; userId?: string }) {
   const code: AiErrorCode = err instanceof AiError ? err.code : 'upstream';
   if (!(err instanceof AiError)) console.error('ai_route_failed', err);
   // `detail` (e.g. max_tokens, invalid_json) shows up in the browser's network tab, for debugging.
   const detail = err instanceof AiError && err.message !== code ? err.message : undefined;
+  await logAiError(code, detail, ctx);
   return Response.json({ error: code, ...(detail ? { detail } : {}) }, { status: STATUS[code], headers: { 'Cache-Control': 'no-store' } });
 }

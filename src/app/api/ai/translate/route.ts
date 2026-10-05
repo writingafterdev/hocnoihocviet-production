@@ -18,6 +18,6 @@ export async function POST(request: Request) {
   try {
     return Response.json(await aiTranslate(user.id, text, dir, skill), { headers: { 'Cache-Control': 'no-store' } });
   } catch (err) {
-    return aiErrorResponse(err);
+    return aiErrorResponse(err, { route: 'translate', userId: user.id });
   }
 }

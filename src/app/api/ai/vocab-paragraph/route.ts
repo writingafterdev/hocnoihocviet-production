@@ -21,6 +21,6 @@ export async function POST(request: Request) {
   try {
     return Response.json({ sample: await aiVocabParagraph(user.id, skill, topic, phrases) }, { headers: { 'Cache-Control': 'no-store' } });
   } catch (err) {
-    return aiErrorResponse(err);
+    return aiErrorResponse(err, { route: 'vocab-paragraph', userId: user.id });
   }
 }

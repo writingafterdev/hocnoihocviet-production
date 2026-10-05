@@ -53,6 +53,8 @@ D1 database, then deploys.
       no thinking, no fallbacks, and the JSON shape is requested in the prompt instead of enforced.
     - **Cloudflare AI Gateway:** `AI_BASE_URL=https://gateway.ai.cloudflare.com/v1/<account>/<gateway>/anthropic`, with
       `AI_MODEL` unset, for logs and caching.
+  - `ADMIN_EMAILS` (Cloudflare Variables and Secrets, plain text is fine): comma-separated emails that can open `/admin`.
+    Unset = nobody can. The admin APIs (`/api/admin/*`) answer 404 to everyone else.
   - optional `DECISION_URL`: the decision model's endpoint. When `AI_BASE_URL` is a Model Studio host it's derived
     automatically (`…/compatible-mode/v1/systemone`).
 - **Setup check:** `/api/health` lists the D1 tables and which secrets are present (never their values).
@@ -77,6 +79,7 @@ D1 database, then deploys.
 | `/writing/[promptId]/guided` | **Chép mẫu**: rebuild a sample essay sentence by sentence |
 | `/vocab` | Vocab cards: skill → topic table → tick phrases → rewrite a paragraph |
 | `/guidebooks`, `/guidebooks/engine` | Guidebook list and reader |
+| `/admin` | **Admin** (only the emails in `ADMIN_EMAILS`; everyone else gets a 404): students, AI use per day and feature, recent AI errors, system health, sample coverage |
 
 ## Prompts
 
@@ -174,3 +177,12 @@ distilled in `src/lib/ai/method.ts`. That text is identical in every request, so
 - The vocab card on `/home` uses mint (the Reading colour) while Reading is closed.
 - The Task 1 vocab set uses orange, which the brand rules reserve for Sources.
 - The home card titles no longer use the rhetorical-question voice that the design system readme describes.
+
+## Admin page
+
+`/admin` shows numbers that already live in D1: students (`user`, `session`, `attempt`), AI uses per day and per
+feature (`ai_usage`), saved phrases (`vocab_custom`), plus an error log (`ai_error`, kept 30 days). Emails are masked.
+
+- Essay tokens aren't counted (the essay review streams straight to the browser), so that row shows "—".
+- Errors are logged by `aiErrorResponse`. Worker CPU-limit kills happen outside our code and only show in
+  Cloudflare Logs; failures after a stream has started (browser side) aren't logged.
