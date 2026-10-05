@@ -6,7 +6,7 @@
  */
 import { postAi, AiRequestError } from '../ai/request';
 import { CL_CIRC, CL_SHAPE_LABEL } from './constants';
-import { hasVerdict, lensesFor, ropeUnits, shapeOf } from './model';
+import { hasVerdict, lensesFor, missingLevels, ropeUnits, shapeOf } from './model';
 import type { Chain, ChainCheck, PromptSpec, ReviewGroup, ReviewItem } from './types';
 
 export interface ChainReview {
@@ -57,7 +57,7 @@ export function reviewChains(spec: PromptSpec, chains: Chain[], stance: string):
     const tried = new Set(c.findings.map((f) => f.kind)); if (c.split) tried.add('Scope');
     const lensSet = lensesFor(spec, c).map((l) => l.kind);
     const miss = lensSet.filter((k) => !tried.has(k));
-    if (miss.length && miss.length >= Math.min(3, lensSet.length)) push('depth', { chainId: c.id, where, text: 'Chưa thử ' + miss.join(', ') + '. Ý này còn đứng vững khi soi từ những góc đó không?' });
+    if (shapeOf(spec, c) !== 'cause' && miss.length && miss.length >= Math.min(3, lensSet.length)) push('depth', { chainId: c.id, where, text: 'Chưa thử ' + miss.join(', ') + '. Ý này còn đứng vững khi soi từ những góc đó không?' });
     if (c.split) {
       c.split.branches.forEach((b, k) => {
         const tag = (i + 1) + String.fromCharCode(97 + k);
@@ -87,6 +87,7 @@ export function reviewChains(spec: PromptSpec, chains: Chain[], stance: string):
   spec.questions.forEach((q) => {
     if (spec.questions.length > 1 && !chains.some((c) => (c.q || 1) === q.n)) push('cover', { where: 'Câu ' + CL_CIRC[q.n - 1], text: 'Câu ' + CL_CIRC[q.n - 1] + ' (' + CL_SHAPE_LABEL[q.shape].toLowerCase() + ') chưa có mạch nào. Bài sẽ bỏ sót một phần đề.' });
   });
+  missingLevels(spec, chains).forEach(([n, level]) => push('cover', { where: 'Câu ' + CL_CIRC[n - 1], text: 'Câu ' + CL_CIRC[n - 1] + ' chưa có mạch nguyên nhân ' + level + '. Một câu nguyên nhân cần cả hai: điều người trong cuộc chọn, và điều hệ thống đứng sau.' }));
   chains.forEach((c, i) => {
     if (shapeOf(spec, c) === 'solution' && !chains.some((x) => x.id === c.fixes)) push('cover', { chainId: c.id, where: 'Mạch ' + (i + 1) + (c.title ? ' · ' + c.title : ''), text: 'Giải pháp này xử lý nguyên nhân hay vấn đề nào? Chọn ở ô "Xử lý".' });
   });

@@ -25,10 +25,12 @@ export interface StepListProps {
   /** Step indexes whose arrow to the next step is flagged as a logical jump. */
   jumps?: number[];
   vague?: { step: number; word: string; key: string }[];
+  /** A fixed last node the student does not edit, e.g. the Driver a cause chain leads to. */
+  end?: { label: string; text: string } | null;
 }
 
 /** The vertical chain of steps, with hover add/remove and Scope split picking. */
-export function StepList({ steps, onChange, firstIsDriver, splitMode, onSplitAt, idPrefix, jumps = [], vague = [] }: StepListProps) {
+export function StepList({ steps, onChange, firstIsDriver, splitMode, onSplitAt, idPrefix, jumps = [], vague = [], end = null }: StepListProps) {
   const [picker, setPicker] = useState<number | null>(null);
   const set = (i: number, v: string) => onChange(steps.map((s, j) => (j === i ? v : s)));
   const addAfter = (i: number) => { const n = [...steps]; n.splice(i + 1, 0, ''); onChange(n); };
@@ -77,6 +79,15 @@ export function StepList({ steps, onChange, firstIsDriver, splitMode, onSplitAt,
           )}
         </li>
       ))}
+      {end && (
+        <li style={{ position: 'relative', display: 'flex', gap: 18, minHeight: 50 }}>
+          <span style={{ position: 'relative', zIndex: 1, marginTop: 7, width: 17, height: 17, borderRadius: 5, border: '4px solid #fff', background: '#A8780A', flexShrink: 0 }} />
+          <div style={{ flex: 1, minWidth: 0, paddingBottom: 8 }}>
+            <div style={{ fontFamily: CL.sans, fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.12em', color: CL.ink4, marginBottom: 2 }}>{end.label}</div>
+            <div style={{ fontFamily: CL.sans, fontSize: 15, fontWeight: 700, lineHeight: 1.45, color: '#A8780A' }}>{end.text}</div>
+          </div>
+        </li>
+      )}
     </ol>
   );
 }

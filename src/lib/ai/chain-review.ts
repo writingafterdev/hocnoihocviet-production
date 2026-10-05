@@ -20,7 +20,7 @@ Nhóm (group):
 - scope · Trường hợp: mạch nói như đúng với mọi người trong khi có trường hợp làm mũi tên không xảy ra; nhánh Scope chưa được xét; nhánh cho kết luận ngược lại mà lập trường chưa tính tới.
 - rope · Sợi dây: ý xếp sai phía, ý chưa xếp phía, phát hiện của góc nhìn làm đổi phía mà học sinh chưa nhận ra. (Chỉ khi đề có câu chọn phía.)
 - stance · Lập trường: lập trường chưa trả lời đúng câu đề hỏi, không khớp sợi dây, thiếu điều kiện khi có nhánh ngược lại không hiếm, hoặc có điều kiện khi dạng đề không cho phép. Dùng kind "stance". (Chỉ khi đề có câu chọn phía.)
-- cover · Độ phủ đề bài: câu hỏi nào của đề chưa có mạch; nguyên nhân chỉ ở bậc cá nhân; giải pháp không nhắm đúng bậc của nguyên nhân hay chưa chọn nguyên nhân để xử lý; bài thiếu điều mà dạng đề bắt phải chứng minh.
+- cover · Độ phủ đề bài: câu hỏi nào của đề chưa có mạch; câu nguyên nhân thiếu một trong hai loại mạch (Cá nhân: người trong cuộc chọn gì và vì sao; Hệ thống: kinh tế, công nghệ, văn hoá đứng sau) hoặc mạch chưa chọn loại; mạch nguyên nhân không đi đúng loại của nó; giải pháp không nhắm đúng bậc của nguyên nhân hay chưa chọn nguyên nhân để xử lý; bài thiếu điều mà dạng đề bắt phải chứng minh.
 - overlap · Trùng ý: hai mạch thật ra là một lý do nói hai lần.
 
 Quy tắc:

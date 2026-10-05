@@ -2,6 +2,8 @@
 export type Shape = 'verdict' | 'cause' | 'problem' | 'planproblem' | 'effect' | 'solution';
 export type Side = 'left' | 'right' | null;
 export type Tone = 'benefit' | 'cost' | null;
+/** What a cause chain is about: what individuals do, or what the system behind them does. */
+export type Level = 'Cá nhân' | 'Hệ thống';
 
 export interface Question {
   n: number;
@@ -64,6 +66,8 @@ export interface Chain {
   tone: Tone;
   pos?: number;
   area: string;
+  /** Cause questions only: the type of this chain. Missing on chains made before types existed. */
+  level?: Level | null;
   steps: string[];
   split: Split | null;
   findings: Finding[];

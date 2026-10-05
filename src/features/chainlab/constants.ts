@@ -1,4 +1,4 @@
-import type { Lens, Shape } from './types';
+import type { Level, Lens, Shape } from './types';
 
 /** Writing-workbench palette (ink track + brand softs). */
 export const CL = {
@@ -17,12 +17,12 @@ export const CL_LENSES: Lens[] = [
   { kind: 'Quy mô', q: 'Nếu hàng triệu người cùng làm, lợi ích còn không? Có tác hại mới xuất hiện không?', ph: 'vd: ai cũng có bằng thì bằng hết giá trị…' },
 ];
 
-export const CL_LEVEL_LENSES: Lens[] = [
-  { kind: 'Cá nhân', q: 'Ở mức từng người: nhu cầu, thói quen, lựa chọn nào dẫn tới hiện tượng này?' },
-  { kind: 'Môi trường', q: 'Ở mức môi trường quanh họ: gia đình, trường, chỗ làm, khu phố góp phần thế nào?' },
-  { kind: 'Thể chế', q: 'Ở mức thể chế: luật, chính sách, quy định nào khiến điều này dễ xảy ra hơn?' },
-  { kind: 'Hệ thống', q: 'Ở mức hệ thống: kinh tế, công nghệ, văn hoá nào đứng sau tất cả?' },
+/** The two types of a cause chain. Each one's question is what the chain answers. */
+export const CL_LEVELS: { kind: Level; q: string; bg: string; fg: string }[] = [
+  { kind: 'Cá nhân', q: 'Ở mức cá nhân: người trong cuộc chọn gì, và vì sao họ thấy lựa chọn đó hợp lý?', bg: '#E4F5FA', fg: '#1F6E8C' },
+  { kind: 'Hệ thống', q: 'Ở mức hệ thống: kinh tế, công nghệ, văn hoá nào đứng sau tất cả?', bg: '#FFEEDA', fg: '#7B4D10' },
 ];
+export const CL_LEVEL_LENSES: Lens[] = CL_LEVELS.map((l) => ({ kind: l.kind, q: l.q }));
 
 export const CL_KIND_STYLE: Record<string, { bg: string; fg: string }> = {
   'With/Without': { bg: '#E4F5FA', fg: '#17667A' },
@@ -31,6 +31,7 @@ export const CL_KIND_STYLE: Record<string, { bg: string; fg: string }> = {
   'Dài hạn': { bg: CL.mintSoft, fg: CL.greenText },
   'Quy mô': { bg: '#FFEEDA', fg: '#7B4D10' },
   'Cá nhân': { bg: '#E4F5FA', fg: '#17667A' },
+  // Older saved findings may carry these two kinds; they are no longer offered.
   'Môi trường': { bg: CL.mintSoft, fg: CL.greenText },
   'Thể chế': { bg: '#FFEEDA', fg: '#7B4D10' },
   'Hệ thống': { bg: CL.yellowSoft, fg: CL.yellowText },
@@ -39,14 +40,14 @@ export const CL_KIND_STYLE: Record<string, { bg: string; fg: string }> = {
 /** Chips shown by default for each question type. Everything else sits behind "+ Thêm góc nhìn". */
 export const CL_SHAPE_LENSES: Record<Shape, string[]> = {
   verdict: ['With/Without', 'Scope', 'Khả thi', 'Dài hạn', 'Quy mô'],
-  cause: ['Cá nhân', 'Hệ thống', 'Scope'],
+  cause: ['Scope'],
   problem: ['Scope', 'Khả thi', 'Dài hạn', 'Quy mô'],
   planproblem: ['Scope', 'Khả thi', 'Dài hạn', 'Quy mô'],
   effect: ['Scope', 'Khả thi', 'Dài hạn', 'Quy mô'],
   solution: ['Khả thi', 'Dài hạn', 'Quy mô'],
 };
 
-export const CL_ALL_LENS_KINDS = ['With/Without', 'Scope', 'Khả thi', 'Dài hạn', 'Quy mô', 'Cá nhân', 'Môi trường', 'Thể chế', 'Hệ thống'];
+export const CL_ALL_LENS_KINDS = ['With/Without', 'Scope', 'Khả thi', 'Dài hạn', 'Quy mô', 'Cá nhân', 'Hệ thống'];
 
 export const CL_SHAPE_LABEL: Record<Shape, string> = { verdict: 'Chọn phía', cause: 'Nguyên nhân', problem: 'Vấn đề', planproblem: 'Vấn đề của kế hoạch', effect: 'Ảnh hưởng', solution: 'Giải pháp' };
 

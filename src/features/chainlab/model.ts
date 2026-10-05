@@ -1,5 +1,5 @@
 import { CL, CL_ABBR, CL_ALL_LENS_KINDS, CL_LENSES, CL_LENS_Q, CL_LEVEL_LENSES, CL_SHAPE_LENSES } from './constants';
-import type { Chain, Lens, PromptSpec, RopeUnit, Shape } from './types';
+import type { Chain, Level, Lens, PromptSpec, RopeUnit, Shape } from './types';
 
 export const shapeOf = (spec: PromptSpec, c: Chain): Shape =>
   (spec.questions.find((q) => q.n === (c.q || 1)) || { shape: 'verdict' as Shape }).shape;
@@ -21,6 +21,8 @@ export function lensesFor(spec: PromptSpec, chain: Chain): Lens[] {
 /** Lenses hidden behind "+ Thêm góc nhìn". */
 export function extraLensesFor(spec: PromptSpec, chain: Chain): Lens[] {
   const sh = shapeOf(spec, chain);
+  // A cause chain is already Cá nhân or Hệ thống; the only lens is the optional Scope.
+  if (sh === 'cause') return [];
   const main = CL_SHAPE_LENSES[sh] || CL_SHAPE_LENSES.verdict;
   return CL_ALL_LENS_KINDS.filter((k) => !main.includes(k)).map((k) => lensObj(sh, k));
 }
@@ -60,8 +62,15 @@ export function verdictStatus(chain: Chain): StatusChip {
   return clash ? { label: 'Phụ thuộc "nếu"', bg: CL.yellowSoft, fg: CL.yellowText } : { label: 'Giữ hướng', bg: CL.mintSoft, fg: CL.greenText };
 }
 
+export const filledSteps = (c: Chain) => c.steps.filter((s) => s.trim()).length;
+
 export function chainStatus(spec: PromptSpec, chain: Chain): StatusChip {
-  if (shapeOf(spec, chain) === 'verdict') return verdictStatus(chain);
+  const sh = shapeOf(spec, chain);
+  if (sh === 'verdict') return verdictStatus(chain);
+  if (sh === 'cause') {
+    const n = filledSteps(chain);
+    return n >= 2 ? { label: 'Đã xong', bg: CL.mintSoft, fg: CL.greenText } : n === 1 ? { label: 'Đang viết', bg: CL.yellowSoft, fg: CL.yellowText } : { label: 'Chưa viết', bg: CL.redSoft, fg: CL.redText };
+  }
   return chain.findings.length || chain.split ? { label: 'Đã thử', bg: CL.mintSoft, fg: CL.greenText } : { label: 'Chưa thử', bg: '#F1F1EE', fg: CL.ink5 };
 }
 
@@ -76,7 +85,12 @@ export function openIssues(chain: Chain) {
   };
 }
 
-export const newChain = (q = 1): Chain => ({ id: 'c' + Math.random().toString(36).slice(2, 10), q, title: '', tone: 'benefit', pos: 50, area: '', steps: [''], split: null, findings: [], fixes: null });
+export const newChain = (q = 1, level: Level | null = null): Chain => ({ id: 'c' + Math.random().toString(36).slice(2, 10), q, title: '', tone: 'benefit', pos: 50, area: '', level, steps: [''], split: null, findings: [], fixes: null });
 
 /** Starting point for a new attempt: one empty chain per question. */
-export const initialChains = (spec: PromptSpec): Chain[] => spec.questions.map((x) => newChain(x.n));
+export const initialChains = (spec: PromptSpec): Chain[] => spec.questions.flatMap((x) => (x.shape === 'cause' ? [newChain(x.n, 'Cá nhân'), newChain(x.n, 'Hệ thống')] : [newChain(x.n)]));
+
+/** Cause questions that still lack a written chain of one of the two types: [question number, type]. */
+export function missingLevels(spec: PromptSpec, chains: Chain[]): [number, Level][] {
+  return spec.questions.filter((q) => q.shape === 'cause').flatMap((q) => (['Cá nhân', 'Hệ thống'] as Level[]).filter((l) => !chains.some((c) => (c.q || 1) === q.n && c.level === l && filledSteps(c) > 0)).map((l) => [q.n, l] as [number, Level]));
+}
