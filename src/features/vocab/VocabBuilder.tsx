@@ -143,7 +143,8 @@ export function VocabBuilder({ onBack }: { onBack: () => void }) {
   const router = useRouter();
   const [saved, setSavedState] = useState<Record<string, boolean>>({});
   const [count, setCount] = useState<Record<string, number>>({});
-  const [practice, setPractice] = useState<{ sample: GuidedSample; topic: string; phrases: string[] } | null>(null);
+  /** The paragraph being practised; `groups` are the paragraph-sized groups of the ticked phrases, `at` the current one. */
+  const [practice, setPractice] = useState<{ sample: GuidedSample; topic: string; phrases: string[]; groups: { name: string; phrases: string[] }[]; at: number } | null>(null);
   const [round, setRound] = useState(0);
   const [making, setMaking] = useState(false);
   const [note, setNote] = useState<string | null>(null);
@@ -186,30 +187,51 @@ export function VocabBuilder({ onBack }: { onBack: () => void }) {
   const toggle = (en: string) => setSel((s) => ({ ...s, [key]: picked.includes(en) ? picked.filter((x) => x !== en) : [...picked, en] }));
   // Fallback when the AI is off or fails: the pre-written paragraph (in this view's topics) that uses most of the chosen phrases.
   const pool = (isSaved ? skill.topics : [topic]).flatMap((t) => t.samples.map((s) => ({ s, t })));
-  const fallback = (afterId: string | null, phrases: string[]) => {
+  const fallback = (afterId: string | null, phrases: string[], groups: { name: string; phrases: string[] }[], at: number) => {
     if (!pool.length) return false;
     const score = ({ s }: { s: GuidedSample }) => s.paragraphs.flat().flatMap((g) => g.vocab).filter((v) => phrases.includes(v)).length;
     const order = [...pool].sort((a, b) => score(b) - score(a));
     const k = afterId ? (order.findIndex((x) => x.s.id === afterId) + 1) % order.length : 0;
-    setPractice({ sample: order[k].s, topic: order[k].t.name, phrases }); setRound((r) => r + 1);
+    setPractice({ sample: order[k].s, topic: order[k].t.name, phrases, groups, at }); setRound((r) => r + 1);
     return true;
   };
+  const MAX_TICK = 30;
   // Nothing ticked: practise up to 4 phrases from this view, least-practised first.
-  const choose = () => (picked.length ? picked : [...rows].sort((a, b) => (count[a.it.en] || 0) - (count[b.it.en] || 0)).slice(0, 4).map((r) => r.it.en)).slice(0, 6);
-  const go = async (afterId: string | null, again?: string[]) => {
-    const phrases = again || choose();
-    if (!phrases.length || making) return;
+  const choose = () => (picked.length ? picked : [...rows].sort((a, b) => (count[a.it.en] || 0) - (count[b.it.en] || 0)).slice(0, 4).map((r) => r.it.en)).slice(0, MAX_TICK);
+  const fail = (e: unknown) => {
+    if (e instanceof SignedOutError) { signedOut(); return true; }
+    return false;
+  };
+  /** Writes the paragraph for group `at`; `afterId` asks for a different one than the current. */
+  const paragraph = async (groups: { name: string; phrases: string[] }[], at: number, afterId: string | null) => {
+    const phrases = groups[at].phrases;
     setMaking(true); setNote(null);
     try {
       const r = await postAi<{ sample: GuidedSample }>('vocab-paragraph', { skillId, topicId, phrases });
-      setPractice({ sample: r.sample, topic: isSaved ? 'Từ đã lưu' : topic.name, phrases }); setRound((x) => x + 1);
+      setPractice({ sample: r.sample, topic: groups[at].name || (isSaved ? 'Từ đã lưu' : topic.name), phrases, groups, at }); setRound((x) => x + 1);
     } catch (e) {
-      if (e instanceof SignedOutError) { signedOut(); return; }
-      const used = fallback(afterId, phrases);
-      if (!used && e instanceof AiRequestError && e.code === 'not_configured') setNote('Chủ đề này chưa có đoạn mẫu.');
-      else if (!(e instanceof AiRequestError && e.code === 'not_configured')) setNote(used ? 'Chưa tạo được đoạn mới (' + (e instanceof AiRequestError ? AI_ERROR_TEXT[e.code] : AI_ERROR_TEXT.network) + '). Đang dùng đoạn có sẵn.' : e instanceof AiRequestError ? AI_ERROR_TEXT[e.code] : AI_ERROR_TEXT.network);
+      if (!fail(e)) {
+        const used = fallback(afterId, phrases, groups, at);
+        if (!used && e instanceof AiRequestError && e.code === 'not_configured') setNote('Chủ đề này chưa có đoạn mẫu.');
+        else if (!(e instanceof AiRequestError && e.code === 'not_configured')) setNote(used ? 'Chưa tạo được đoạn mới (' + (e instanceof AiRequestError ? AI_ERROR_TEXT[e.code] : AI_ERROR_TEXT.network) + '). Đang dùng đoạn có sẵn.' : e instanceof AiRequestError ? AI_ERROR_TEXT[e.code] : AI_ERROR_TEXT.network);
+      }
     }
     setMaking(false);
+  };
+  // Many ticked phrases are first split into paragraph-sized groups that belong together; each group is one paragraph.
+  const go = async () => {
+    const phrases = choose();
+    if (!phrases.length || making) return;
+    setMaking(true); setNote(null);
+    let groups = [{ name: '', phrases }];
+    if (phrases.length > 6) {
+      try { groups = (await postAi<{ groups: { name: string; phrases: string[] }[] }>('vocab-groups', { skillId, phrases })).groups; }
+      catch (e) {
+        if (fail(e)) return;
+        setMaking(false); setNote(e instanceof AiRequestError ? AI_ERROR_TEXT[e.code] : AI_ERROR_TEXT.network); return;
+      }
+    }
+    await paragraph(groups, 0, null);
   };
 
   if (practice) {
@@ -222,7 +244,11 @@ export function VocabBuilder({ onBack }: { onBack: () => void }) {
       setCount((c) => { const n = { ...c }; used.forEach((v) => (n[v] = (n[v] || 0) + 1)); return n; });
       send({ practiced: used });
     };
-    return shell(<GuidedWriting key={base.id + round} sample={sample} label={'Từ vựng · ' + practice.topic} taskLabel={skill.eyebrow} textLabel="Đoạn mẫu" backLabel={skill.title} onBack={() => setPractice(null)} onFinish={markPracticed} onNext={() => go(base.id, practice.phrases)} nextLabel={making ? 'Đang tạo…' : 'Tạo đoạn khác'} />);
+    const { groups, at } = practice, more = at + 1 < groups.length;
+    const tag = groups.length > 1 ? 'Đoạn ' + (at + 1) + '/' + groups.length + ' · ' : '';
+    return shell(<GuidedWriting key={base.id + round} sample={sample} label={'Từ vựng · ' + tag + practice.topic} taskLabel={skill.eyebrow} textLabel="Đoạn mẫu" backLabel={skill.title} onBack={() => setPractice(null)} onFinish={markPracticed}
+      onNext={() => (more ? paragraph(groups, at + 1, null) : paragraph(groups, at, base.id))}
+      nextLabel={making ? 'Đang tạo…' : more ? 'Đoạn tiếp · ' + (at + 2) + '/' + groups.length : 'Tạo đoạn khác'} />);
   }
 
   const done = rows.filter((r) => count[r.it.en]).length;
@@ -263,8 +289,8 @@ export function VocabBuilder({ onBack }: { onBack: () => void }) {
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
               {note && <span role="alert" style={{ maxWidth: 320, fontFamily: VB.sans, fontSize: 12, color: '#8B3A35' }}>{note}</span>}
-              <span style={{ fontFamily: VB.sans, fontSize: 13, color: picked.length > 6 ? '#8B3A35' : VB.ink3 }}>{picked.length > 6 ? 'Tối đa 6 cụm; sẽ dùng 6 cụm đầu' : picked.length ? 'Đã chọn ' + picked.length + ' cụm' : 'Chọn 1–6 cụm, hoặc để trống'}</span>
-              <button type="button" className="cl-btn cl-primary" disabled={!rows.length || making} onClick={() => go(null)} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, height: 42, borderRadius: 12, background: VB.ink, color: '#fff', fontFamily: VB.sans, fontSize: 13.5, fontWeight: 600, padding: '0 18px', opacity: rows.length && !making ? 1 : 0.35 }}><Sparkles size={15} strokeWidth={2} />{making ? 'Đang tạo đoạn…' : 'Tạo đoạn mẫu'}</button>
+              <span style={{ fontFamily: VB.sans, fontSize: 13, color: picked.length > MAX_TICK ? '#8B3A35' : VB.ink3 }}>{picked.length > MAX_TICK ? 'Tối đa ' + MAX_TICK + ' cụm; sẽ dùng ' + MAX_TICK + ' cụm đầu' : picked.length > 6 ? 'Đã chọn ' + picked.length + ' cụm · sẽ chia thành vài đoạn' : picked.length ? 'Đã chọn ' + picked.length + ' cụm' : 'Chọn cụm muốn luyện, hoặc để trống'}</span>
+              <button type="button" className="cl-btn cl-primary" disabled={!rows.length || making} onClick={() => go()} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, height: 42, borderRadius: 12, background: VB.ink, color: '#fff', fontFamily: VB.sans, fontSize: 13.5, fontWeight: 600, padding: '0 18px', opacity: rows.length && !making ? 1 : 0.35 }}><Sparkles size={15} strokeWidth={2} />{making ? (picked.length > 6 ? 'Đang chia nhóm…' : 'Đang tạo đoạn…') : 'Tạo đoạn mẫu'}</button>
             </div>
           </div>
           {rows.length ? (

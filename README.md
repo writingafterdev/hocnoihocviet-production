@@ -131,7 +131,7 @@ distilled in `src/lib/ai/method.ts`. That text is identical in every request, so
 | --- | --- | --- | --- |
 | "Soát toàn bài" (ChainLab) | `POST /api/ai/chain-review` | `lib/ai/chain-review.ts` | Questions grouped as Mắt xích, Độ sâu, Trường hợp, Sợi dây, Lập trường, Độ phủ đề bài, Trùng ý. Logical Jumps and vague words are pinned to chain steps. |
 | "Nộp bài" (Writing Desk) | `POST /api/ai/essay-review` | `lib/ai/essay-review.ts` | Band plus TR / CC / LR / GRA. Each criterion has why it got that band and how to go higher, then detailed comments. There is also an overall assessment. |
-| "Tạo đoạn mẫu" (Vocab) | `POST /api/ai/vocab-paragraph` | `lib/ai/vocab-paragraph.ts` | A practice paragraph that uses every ticked phrase, each sentence with its Vietnamese translation. Only phrases from the app's own sets are accepted. Falls back to the pre-written paragraphs. |
+| "Tạo đoạn mẫu" (Vocab) | `POST /api/ai/vocab-paragraph` | `lib/ai/vocab-paragraph.ts` | Up to 30 ticked phrases. More than 6 are first split by the AI into paragraph-sized groups that belong together (`/api/ai/vocab-groups`, falling back to a split by topic), then each group gets its own paragraph, practised one after another. Each sentence comes with its Vietnamese translation. Only phrases from the app's own sets are accepted. Falls back to the pre-written paragraphs. |
 | "Dịch" (both screens) | `POST /api/ai/translate` | `lib/ai/translate.ts` | Vietnamese ↔ English translation of up to 800 characters, nothing else. |
 
 - **Score bar = navigation:** Band shows the overall assessment and one line per criterion. TR / CC / LR / GRA show
