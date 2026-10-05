@@ -4,7 +4,7 @@ import { METHOD } from './method';
 
 export const MODEL = 'claude-opus-5-5';
 
-export type AiErrorCode = 'not_configured' | 'limit' | 'refused' | 'bad_output' | 'upstream';
+export type AiErrorCode = 'not_configured' | 'limit' | 'refused' | 'bad_output' | 'upstream' | 'timeout';
 export class AiError extends Error {
   constructor(public code: AiErrorCode, message?: string) { super(message || code); }
 }
@@ -14,6 +14,9 @@ export interface Usage { input: number; output: number }
 /** Daily limits per student (Vietnam calendar day). */
 export const DAILY_LIMIT = { chain: 10, essay: 5, translate: 60 } as const;
 export type AiKind = keyof typeof DAILY_LIMIT;
+
+/** Per-attempt time limit for each kind of call (ms). The browser gives up a little after two attempts. */
+const TIMEOUT_MS: Record<AiKind, number> = { chain: 120_000, essay: 150_000, translate: 30_000 };
 
 const today = () => new Date(Date.now() + 7 * 3600_000).toISOString().slice(0, 10);
 
@@ -70,9 +73,11 @@ export async function ask<T = string>({ userId, kind, task, input, schema, effor
   if (!e.ANTHROPIC_API_KEY) throw new AiError('not_configured');
   const quota = await reserve(userId, kind);
   try {
-    const client = new Anthropic({ apiKey: e.ANTHROPIC_API_KEY, ...(e.AI_BASE_URL ? { baseURL: e.AI_BASE_URL } : {}), maxRetries: 2 });
     const model = e.AI_MODEL || MODEL;
     const claude = model.startsWith('claude-');
+    // Hard ceiling per attempt, one retry: a stuck provider must fail fast enough for the browser to show an error.
+    const client = new Anthropic({ apiKey: e.ANTHROPIC_API_KEY, ...(e.AI_BASE_URL ? { baseURL: e.AI_BASE_URL } : {}), maxRetries: 1, timeout: TIMEOUT_MS[kind] });
+    const started = Date.now();
     // The method text is identical for every request, so it is cached; the task text follows it.
     const system = (extra: string) => grounded
       ? [{ type: 'text' as const, text: METHOD, cache_control: { type: 'ephemeral' as const } }, { type: 'text' as const, text: task + extra }]
@@ -93,6 +98,7 @@ export async function ask<T = string>({ userId, kind, task, input, schema, effor
         model, max_tokens: Math.min(maxTokens, 8192), messages,
         system: system(schema ? '\n\nOUTPUT FORMAT: reply with ONE JSON object and nothing else (no markdown, no code fences, no text before or after). It must match this JSON Schema exactly:\n' + JSON.stringify(schema) : ''),
       }).finalMessage();
+    console.log('ai_call', kind, model, (Date.now() - started) + 'ms', 'in=' + (msg.usage.input_tokens || 0), 'out=' + (msg.usage.output_tokens || 0), msg.stop_reason);
     await quota.record({ input: (msg.usage.input_tokens || 0) + (msg.usage.cache_read_input_tokens || 0) + (msg.usage.cache_creation_input_tokens || 0), output: msg.usage.output_tokens || 0 }).catch(() => {});
     if (msg.stop_reason === 'refusal') throw new AiError('refused');
     if (msg.stop_reason === 'max_tokens') throw new AiError('bad_output', 'max_tokens');
@@ -102,6 +108,7 @@ export async function ask<T = string>({ userId, kind, task, input, schema, effor
   } catch (err) {
     await quota.refund().catch(() => {});
     if (err instanceof AiError) throw err;
+    if (err instanceof Anthropic.APIConnectionTimeoutError) { console.error('ai_call_timeout', kind); throw new AiError('timeout'); }
     console.error('ai_call_failed', kind, err instanceof Anthropic.APIError ? (err.status ?? 'network') + ' ' + err.message : err);
     throw new AiError('upstream');
   }
@@ -114,7 +121,7 @@ function jsonPart(text: string) {
   return a >= 0 && b > a ? t.slice(a, b + 1) : t;
 }
 
-const STATUS: Record<AiErrorCode, number> = { not_configured: 503, limit: 429, refused: 422, bad_output: 502, upstream: 502 };
+const STATUS: Record<AiErrorCode, number> = { not_configured: 503, limit: 429, refused: 422, bad_output: 502, upstream: 502, timeout: 504 };
 
 /** JSON error response for a failed AI route. */
 export function aiErrorResponse(err: unknown) {
