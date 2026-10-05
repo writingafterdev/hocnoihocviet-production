@@ -1,0 +1,29 @@
+{
+  "promptId": "compulsory-community-service",
+  "source": "book",
+  "note": "The Art of Nuance, Phase 2, Ví dụ 7",
+  "paragraphs": [
+    [
+      { "tool": "Đề hỏi gì", "mark": "required to do unpaid work in their community", "en": "Some people argue that all high school students should be required to do unpaid work in their community.", "vi": "Có người cho rằng mọi học sinh cấp ba đều nên bị bắt buộc làm công việc không lương cho cộng đồng." },
+      { "tool": "Lập trường", "mark": "but only if programmes are flexible enough", "en": "I agree that community service should be a compulsory part of the curriculum, but only if programmes are flexible enough to take account of students who already carry significant responsibilities at home.", "vi": "Mình đồng ý rằng công tác cộng đồng nên là một phần bắt buộc trong chương trình học, nhưng chỉ khi chương trình đủ linh hoạt để tính tới những học sinh vốn đã phải gánh nhiều trách nhiệm ở nhà." }
+    ],
+    [
+      { "tool": "Mạch", "mark": "experience they would otherwise rarely have", "en": "The main argument for making community service compulsory is that it gives students experience they would otherwise rarely have.", "vi": "Lý do chính để bắt buộc công tác cộng đồng là nó cho học sinh những trải nghiệm mà nếu không có thì các em hiếm khi có được." },
+      { "tool": "Mạch", "mark": "beyond a life centred on exams", "en": "Working for a charity or helping younger children takes teenagers beyond a life centred on exams and brings them into contact with people whose circumstances differ from their own.", "vi": "Làm việc cho một tổ chức từ thiện hay giúp đỡ các em nhỏ đưa thanh thiếu niên ra khỏi một cuộc sống chỉ xoay quanh thi cử, và cho các em tiếp xúc với những người có hoàn cảnh khác mình." },
+      { "tool": "Mạch", "mark": "develop a sense of responsibility towards others", "en": "Through this, they can develop a sense of responsibility towards others and learn to work with people outside their usual circle.", "vi": "Nhờ vậy, các em có thể hình thành ý thức trách nhiệm với người khác và học cách làm việc với những người ngoài nhóm quen thuộc của mình." },
+      { "tool": "Scope + With/Without", "mark": "depends on the requirement being compulsory", "en": "Crucially, this benefit depends on the requirement being compulsory.", "vi": "Điều quan trọng là lợi ích này phụ thuộc vào việc yêu cầu đó là bắt buộc." },
+      { "tool": "Scope + With/Without", "mark": "would probably never take part", "en": "If participation were voluntary, most students, faced with busy timetables and more appealing ways to spend their free time, would probably never take part, and only those who were already socially active would gain from it.", "vi": "Nếu chỉ là tự nguyện, thì phần lớn học sinh, vì lịch học dày và có nhiều cách tiêu thời gian rảnh hấp dẫn hơn, có lẽ sẽ không bao giờ tham gia, và chỉ những em vốn đã năng nổ hoạt động xã hội mới được lợi." }
+    ],
+    [
+      { "tool": "Phản biện + Scope", "mark": "unfair to a significant group of students", "en": "However, a rigid requirement would be unfair to a significant group of students.", "vi": "Tuy nhiên, một yêu cầu cứng nhắc sẽ không công bằng với một nhóm học sinh không hề nhỏ." },
+      { "tool": "Phản biện + Scope", "mark": "already work part-time to support their families", "en": "In many places, teenagers already work part-time to support their families or look after younger siblings while their parents are at work.", "vi": "Ở nhiều nơi, thanh thiếu niên đã phải đi làm thêm để phụ giúp gia đình, hoặc trông em khi bố mẹ đi làm." },
+      { "tool": "With/Without", "mark": "come directly out of time they use to earn money", "en": "For these students, extra hours of community service would come directly out of time they use to earn money or care for relatives, putting further strain on both their families and their studies.", "vi": "Với những học sinh này, thêm giờ công tác cộng đồng sẽ lấy thẳng vào thời gian các em dùng để kiếm tiền hay chăm sóc người thân, khiến cả gia đình lẫn việc học của các em thêm áp lực." },
+      { "tool": "Phản biện + Scope", "mark": "hardly need a lesson in responsibility", "en": "At the same time, such students hardly need a lesson in responsibility, since they already practise it every day.", "vi": "Đồng thời, những học sinh như vậy cũng chẳng cần học thêm bài học về trách nhiệm, vì ngày nào các em cũng đang sống với nó rồi." },
+      { "tool": "Nối về", "mark": "recognise the work these students do for their families", "en": "Schools should therefore recognise the work these students do for their families as a form of service, or reduce the number of hours required of them.", "vi": "Vì vậy, nhà trường nên công nhận những việc các em làm cho gia đình như một hình thức phục vụ cộng đồng, hoặc giảm số giờ yêu cầu với các em." }
+    ],
+    [
+      { "tool": "Lập trường", "mark": "should be a compulsory part of high school education", "en": "In conclusion, I believe community service should be a compulsory part of high school education, as it is often the only way many students will experience it.", "vi": "Tóm lại, mình cho rằng công tác cộng đồng nên là một phần bắt buộc ở cấp ba, vì đó thường là cách duy nhất để nhiều học sinh được trải nghiệm nó." },
+      { "tool": "Lập trường", "mark": "programmes should be designed flexibly", "en": "Nevertheless, programmes should be designed flexibly so that students who already carry heavy family responsibilities are not unfairly burdened.", "vi": "Dù vậy, chương trình nên được thiết kế linh hoạt để những học sinh vốn đã gánh nặng trách nhiệm gia đình không bị đè thêm một cách bất công." }
+    ]
+  ]
+}

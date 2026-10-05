@@ -1,0 +1,30 @@
+{
+  "promptId": "congestion-charges",
+  "source": "book",
+  "note": "The Art of Nuance, Phase 2, Ví dụ 3",
+  "paragraphs": [
+    [
+      { "tool": "Đề hỏi gì", "mark": "charge drivers for entering busy areas at peak times", "en": "Some cities now charge drivers for entering busy areas at peak times in an effort to reduce traffic.", "vi": "Một số thành phố hiện thu phí người lái xe khi đi vào khu vực đông đúc vào giờ cao điểm, nhằm giảm lượng xe trên đường." },
+      { "tool": "Lập trường", "mark": "it is a positive development overall", "en": "Although this policy creates an additional cost for some motorists, I believe it is a positive development overall.", "vi": "Dù chính sách này tạo thêm một khoản chi cho một số người lái xe, tôi cho rằng nhìn chung đây là một xu hướng tích cực." }
+    ],
+    [
+      { "tool": "Mạch", "mark": "the financial burden they place on drivers", "en": "The main drawback of congestion charges is the financial burden they place on drivers.", "vi": "Bất lợi chính của phí chống ùn tắc là gánh nặng tài chính mà nó đặt lên người lái xe." },
+      { "tool": "Scope", "mark": "no practical alternative to using a car", "en": "This is particularly true for people who have no practical alternative to using a car, such as those whose workplaces are poorly connected by public transport or whose working hours are inflexible.", "vi": "Điều này càng đúng với những người thực sự không có cách nào khác ngoài đi ô tô, chẳng hạn người làm ở nơi giao thông công cộng khó tới, hoặc có giờ làm không linh hoạt." },
+      { "tool": "Scope", "mark": "it simply increases what they pay", "en": "For these commuters, the charge does not change how they travel; it simply increases what they pay.", "vi": "Với những người này, khoản phí không làm họ đổi cách đi lại; nó chỉ khiến họ phải trả nhiều tiền hơn." },
+      { "tool": "Phản biện + With/Without", "mark": "compared with the situation without the charge", "en": "However, this cost should be compared with the situation without the charge.", "vi": "Tuy nhiên, khoản chi này cần được so với trường hợp không thu phí." },
+      { "tool": "Phản biện + With/Without", "mark": "already lose considerable time and fuel", "en": "When roads remain heavily congested, drivers already lose considerable time and fuel sitting in slow-moving traffic.", "vi": "Khi đường vẫn kẹt nặng, người lái xe vốn đã mất khá nhiều thời gian và xăng khi ngồi trong dòng xe nhích từng chút." },
+      { "tool": "Nối về", "mark": "benefit from faster and more predictable journeys", "en": "If the charge encourages even some commuters to switch to other forms of transport, the roads become less crowded, and those who still need to drive benefit from faster and more predictable journeys.", "vi": "Nếu khoản phí khiến dù chỉ một số người chuyển sang phương tiện khác, đường sẽ bớt đông, và những người vẫn phải lái xe cũng được lợi vì đi nhanh hơn và dễ đoán giờ tới hơn." }
+    ],
+    [
+      { "tool": "Mạch", "mark": "extend to the whole city", "en": "The advantages, by contrast, extend to the whole city.", "vi": "Ngược lại, các lợi ích thì lan ra cả thành phố." },
+      { "tool": "Mạch", "mark": "reduces congestion for everyone who uses it", "en": "When a proportion of commuters leave their cars at home, the number of vehicles on the road falls, which reduces congestion for everyone who uses it, including bus passengers and delivery drivers.", "vi": "Khi một phần người đi làm để xe ở nhà, số xe trên đường giảm, nên mọi người dùng đường đều bớt kẹt, kể cả hành khách đi xe buýt và tài xế giao hàng." },
+      { "tool": "Mạch", "mark": "cleaner air for residents who may never drive at all", "en": "Fewer vehicles also means less fuel being burned in the city centre, leading to cleaner air for residents who may never drive at all.", "vi": "Ít xe hơn cũng có nghĩa là ít nhiên liệu bị đốt ở trung tâm thành phố hơn, nên không khí sạch hơn cho cả những cư dân có thể chẳng bao giờ lái xe." },
+      { "tool": "Scope + Quy mô", "mark": "depend on alternatives being available", "en": "These benefits, however, depend on alternatives being available.", "vi": "Tuy vậy, những lợi ích này phụ thuộc vào việc có sẵn phương án đi lại khác hay không." },
+      { "tool": "Scope + Quy mô", "mark": "If public transport is limited or overcrowded", "en": "If public transport is limited or overcrowded, fewer people will be able to change their behaviour, and the policy will do less to reduce traffic.", "vi": "Nếu giao thông công cộng còn hạn chế hoặc quá tải, sẽ ít người đổi được cách đi lại hơn, và chính sách sẽ giảm được ít xe hơn." }
+    ],
+    [
+      { "tool": "Lập trường", "mark": "a real cost on drivers who have no other option", "en": "In conclusion, congestion charges can impose a real cost on drivers who have no other option.", "vi": "Tóm lại, phí chống ùn tắc có thể gây ra một khoản chi thật cho những người lái xe không có lựa chọn nào khác." },
+      { "tool": "Lập trường", "mark": "I believe this is a positive development", "en": "Nevertheless, because the benefits of reduced traffic and cleaner air reach far more people, and because the cost can be eased by improving public transport, I believe this is a positive development.", "vi": "Dù vậy, vì lợi ích của việc bớt kẹt xe và không khí sạch hơn tới được nhiều người hơn hẳn, và vì khoản chi kia có thể được giảm bớt bằng cách cải thiện giao thông công cộng, tôi cho rằng đây là một xu hướng tích cực." }
+    ]
+  ]
+}

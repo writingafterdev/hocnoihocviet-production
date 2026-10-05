@@ -1,0 +1,32 @@
+{
+  "promptId": "maternity-leave",
+  "source": "book",
+  "note": "The Art of Nuance, Phase 2, Ví dụ 2",
+  "paragraphs": [
+    [
+      { "tool": "Đề hỏi gì", "mark": "spend a period away from work", "en": "Maternity leave allows women to spend a period away from work after giving birth.", "vi": "Nghỉ thai sản cho phép phụ nữ tạm nghỉ làm một thời gian sau khi sinh con." },
+      { "tool": "Lập trường", "mark": "the advantages outweigh the disadvantages", "en": "While this can create additional staffing and organisational difficulties for employers, I believe the advantages outweigh the disadvantages because the main workplace disruption varies greatly depending on how easily an employee can be replaced and is largely temporary, whereas the additional time for recovery and newborn care provides a clear benefit to mothers and children.", "vi": "Dù điều này có thể gây thêm khó khăn về nhân sự và tổ chức cho người sử dụng lao động, tôi cho rằng ưu điểm lớn hơn nhược điểm, vì xáo trộn chính ở nơi làm việc khác nhau rất nhiều tuỳ vào việc có dễ tìm người thay hay không và phần lớn chỉ là tạm thời, còn thời gian thêm để hồi phục và chăm con mới sinh thì mang lại lợi ích rõ ràng cho cả mẹ và con." }
+    ],
+    [
+      { "tool": "Mạch", "mark": "the burden it may place on employers", "en": "One disadvantage of maternity leave is the burden it may place on employers.", "vi": "Một nhược điểm của nghỉ thai sản là gánh nặng nó có thể đặt lên người sử dụng lao động." },
+      { "tool": "Mạch", "mark": "redistribute tasks among existing staff or hire temporary cover", "en": "When an employee is absent, her work still has to be completed, meaning that an employer may need to redistribute tasks among existing staff or hire temporary cover.", "vi": "Khi một nhân viên vắng mặt, phần việc của cô ấy vẫn phải được làm xong, nên công ty có thể phải chia lại việc cho những người đang làm hoặc thuê người làm thay tạm thời." },
+      { "tool": "Mạch", "mark": "increase staffing and coordination costs", "en": "This can increase staffing and coordination costs.", "vi": "Điều này có thể làm tăng chi phí nhân sự và điều phối." },
+      { "tool": "Phản biện + Scope", "mark": "depends heavily on the position involved", "en": "However, the seriousness of this problem depends heavily on the position involved.", "vi": "Tuy nhiên, vấn đề này nghiêm trọng tới đâu thì phụ thuộc rất nhiều vào vị trí của người nghỉ." },
+      { "tool": "Phản biện + Scope", "mark": "the disruption may be relatively small", "en": "If the employee performs work that can easily be shared among colleagues, the disruption may be relatively small.", "vi": "Nếu công việc của người đó dễ chia ra cho đồng nghiệp, thì xáo trộn có thể khá nhỏ." },
+      { "tool": "Phản biện + Scope", "mark": "when the role requires specialised knowledge", "en": "The difficulty becomes much greater when the role requires specialised knowledge and there is no obvious replacement.", "vi": "Khó khăn sẽ lớn hơn nhiều khi vị trí đó cần kiến thức chuyên môn và không có ai rõ ràng để thay." },
+      { "tool": "Phản biện + Dài hạn", "mark": "likely to decrease once the employee returns to work", "en": "Even then, this burden is mainly associated with the period of absence and is likely to decrease once the employee returns to work.", "vi": "Ngay cả khi đó, gánh nặng này chủ yếu chỉ có trong thời gian người đó vắng mặt và nhiều khả năng sẽ giảm đi khi họ quay lại làm việc." }
+    ],
+    [
+      { "tool": "Mạch", "mark": "The advantages are more direct", "en": "The advantages are more direct.", "vi": "Còn các ưu điểm thì trực tiếp hơn." },
+      { "tool": "Mạch", "mark": "more time and energy to recover after childbirth", "en": "By temporarily stepping away from work obligations, a mother has more time and energy to recover after childbirth and care for her newborn.", "vi": "Nhờ tạm gác lại công việc, người mẹ có thêm thời gian và sức lực để hồi phục sau sinh và chăm sóc em bé." },
+      { "tool": "With/Without", "mark": "return to work while still recovering physically", "en": "Without such leave, many women would have to return to work while still recovering physically, at the very time when their child most needs close care.", "vi": "Nếu không có chế độ nghỉ này, nhiều phụ nữ sẽ phải đi làm lại khi cơ thể còn đang hồi phục, đúng vào lúc con họ cần được chăm sóc sát sao nhất." },
+      { "tool": "With/Without", "mark": "respond more easily to the child's immediate needs", "en": "With it, she can respond more easily to the child's immediate needs and spend more time providing direct care and interaction during this early period.", "vi": "Có chế độ này, người mẹ có thể đáp ứng nhu cầu trước mắt của con dễ hơn, và dành nhiều thời gian hơn để trực tiếp chăm sóc, gần gũi con trong giai đoạn đầu đời này." },
+      { "tool": "Scope", "mark": "this benefit does not depend on", "en": "Unlike the workplace disadvantage, this benefit does not depend on whether the mother's job is easy or difficult to replace.", "vi": "Khác với bất lợi ở nơi làm việc, lợi ích này không phụ thuộc vào việc công việc của người mẹ dễ hay khó tìm người thay." }
+    ],
+    [
+      { "tool": "Scope", "mark": "particularly when an employee is difficult to replace", "en": "In conclusion, maternity leave can cause genuine difficulties for employers, particularly when an employee is difficult to replace.", "vi": "Tóm lại, nghỉ thai sản có thể gây ra khó khăn thật cho người sử dụng lao động, nhất là khi nhân viên đó khó tìm người thay." },
+      { "tool": "Scope + Dài hạn", "mark": "generally limited to the period of absence", "en": "However, these difficulties vary considerably between workplaces and are generally limited to the period of absence.", "vi": "Tuy nhiên, những khó khăn này khác nhau khá nhiều giữa các nơi làm việc và thường chỉ có trong thời gian người đó vắng mặt." },
+      { "tool": "Lập trường", "mark": "outweigh the disadvantages overall", "en": "For this reason, the benefits to mothers and newborn children outweigh the disadvantages overall.", "vi": "Vì vậy, nhìn chung lợi ích cho người mẹ và em bé mới sinh lớn hơn các nhược điểm." }
+    ]
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "promptId": "punish-parents",
+  "source": "book",
+  "note": "The Art of Nuance, Phase 2, Ví dụ 5",
+  "paragraphs": [
+    [
+      { "tool": "Đề hỏi gì", "mark": "parents should face penalties", "en": "Some people argue that parents should face penalties when their children misbehave.", "vi": "Có người cho rằng phụ huynh nên bị phạt khi con họ cư xử không đúng mực." },
+      { "tool": "Lập trường", "mark": "I agree with this only in part", "en": "Personally, I agree with this only in part: holding parents responsible is justified when a child's behaviour clearly results from their neglect, but punishing parents who have made reasonable efforts is both unfair and counterproductive.", "vi": "Cá nhân tôi chỉ đồng ý một phần: bắt phụ huynh chịu trách nhiệm là hợp lý khi hành vi của đứa trẻ rõ ràng là do bố mẹ lơ là, nhưng phạt những phụ huynh đã cố gắng hợp lý thì vừa không công bằng vừa phản tác dụng." }
+    ],
+    [
+      { "tool": "Scope", "mark": "There are situations in which punishing parents is reasonable", "en": "There are situations in which punishing parents is reasonable.", "vi": "Có những trường hợp mà phạt phụ huynh là hợp lý." },
+      { "tool": "Scope", "mark": "take little interest in supervising them", "en": "Some children behave badly largely because their parents take little interest in supervising them, even though they are in a position to do so.", "vi": "Có những đứa trẻ hư phần lớn là vì bố mẹ chẳng mấy quan tâm tới việc trông chừng con, dù họ hoàn toàn có điều kiện để làm vậy." },
+      { "tool": "Mạch", "mark": "a clear reason to pay closer attention", "en": "For these families, a penalty gives parents a clear reason to pay closer attention and set firmer boundaries, which may prevent further misbehaviour.", "vi": "Với những gia đình này, hình phạt cho bố mẹ một lý do rõ ràng để để mắt tới con hơn và đặt ra giới hạn chặt hơn, nhờ đó có thể ngăn được những hành vi xấu tiếp theo." },
+      { "tool": "With/Without", "mark": "neglectful parents would have little incentive to change", "en": "Without such consequences, neglectful parents would have little incentive to change, and it would be victims and the wider community who continued to bear the cost of their children's actions.", "vi": "Nếu không có hậu quả như vậy, những phụ huynh lơ là sẽ chẳng có mấy động lực để thay đổi, và chính nạn nhân cùng cộng đồng sẽ tiếp tục phải gánh hậu quả từ hành động của con họ." }
+    ],
+    [
+      { "tool": "Phản biện + Scope", "mark": "do everything they reasonably can and still struggle", "en": "However, many parents do everything they reasonably can and still struggle to control their children's behaviour, particularly as those children grow older and spend more time away from home.", "vi": "Tuy nhiên, nhiều phụ huynh đã làm mọi điều họ có thể mà vẫn khó kiểm soát được hành vi của con, nhất là khi con lớn hơn và ở ngoài nhà nhiều hơn." },
+      { "tool": "Phản biện + Scope", "mark": "not necessarily the product of careless parenting", "en": "A teenager who is influenced by friends and misbehaves when no adult is present is not necessarily the product of careless parenting.", "vi": "Một cậu thiếu niên bị bạn bè ảnh hưởng và quậy phá khi không có người lớn ở đó không hẳn là kết quả của việc bố mẹ thiếu quan tâm." },
+      { "tool": "Phản biện + With/Without", "mark": "because they are already trying", "en": "Punishing such parents cannot make them try harder, because they are already trying.", "vi": "Phạt những phụ huynh như vậy không thể khiến họ cố gắng hơn, vì họ vốn đã đang cố gắng rồi." },
+      { "tool": "Phản biện + Mạch", "mark": "push the young person further away", "en": "Instead, it adds financial pressure and stress to the family, which may damage the relationship between parents and child and push the young person further away.", "vi": "Thay vào đó, nó chỉ thêm áp lực tiền bạc và căng thẳng cho gia đình, có thể làm xấu đi quan hệ giữa bố mẹ và con, và đẩy đứa trẻ ra xa hơn." },
+      { "tool": "Nối về", "mark": "What these families need is support", "en": "What these families need is support, such as parenting programmes for dealing with teenagers or closer cooperation with schools, rather than penalties.", "vi": "Điều những gia đình này cần là được hỗ trợ, chẳng hạn các chương trình hướng dẫn cách nuôi dạy con tuổi mới lớn hay sự phối hợp chặt hơn với nhà trường, chứ không phải bị phạt." }
+    ],
+    [
+      { "tool": "Lập trường", "mark": "only when their neglect has clearly contributed", "en": "In conclusion, I believe parents should be held accountable only when their neglect has clearly contributed to their child's behaviour.", "vi": "Tóm lại, tôi cho rằng phụ huynh chỉ nên bị quy trách nhiệm khi sự lơ là của họ rõ ràng đã góp phần gây ra hành vi của con." },
+      { "tool": "Khả thi", "mark": "each situation should be judged individually", "en": "Because this is not always the case, each situation should be judged individually, and families who are already doing their best should be helped rather than punished.", "vi": "Vì không phải lúc nào cũng như vậy, nên từng trường hợp cần được xem xét riêng, và những gia đình vốn đã cố hết sức thì nên được giúp đỡ thay vì bị phạt." }
+    ]
+  ]
+}

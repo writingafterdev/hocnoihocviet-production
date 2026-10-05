@@ -1,0 +1,30 @@
+{
+  "promptId": "older-workers-compete",
+  "source": "book",
+  "note": "The Art of Nuance, Phase 2, Ví dụ 25",
+  "paragraphs": [
+    [
+      { "tool": "Đề hỏi gì", "mark": "older workers increasingly find themselves competing", "en": "As people live and work longer, older workers increasingly find themselves competing with young people for the same positions.", "vi": "Khi con người sống lâu hơn và đi làm lâu hơn, người lao động lớn tuổi ngày càng phải cạnh tranh với người trẻ cho cùng một vị trí." },
+      { "tool": "Đề hỏi gì", "mark": "creates difficulties for both groups", "en": "This situation creates difficulties for both groups, but there are practical ways to reduce them.", "vi": "Tình trạng này gây khó khăn cho cả hai nhóm, nhưng vẫn có những cách thiết thực để giảm bớt chúng." }
+    ],
+    [
+      { "tool": "Mạch", "mark": "affects young graduates", "en": "The most serious problem affects young graduates.", "vi": "Vấn đề nghiêm trọng nhất rơi vào những người trẻ mới ra trường." },
+      { "tool": "Mạch", "mark": "many are rejected", "en": "When they apply for jobs alongside candidates with decades of experience, many are rejected simply because they have not yet had the chance to prove themselves.", "vi": "Khi nộp đơn cùng với những ứng viên có hàng chục năm kinh nghiệm, nhiều bạn bị loại chỉ vì chưa có cơ hội chứng tỏ bản thân." },
+      { "tool": "Dài hạn", "mark": "can have long-lasting consequences", "en": "Failing to find a first job can have long-lasting consequences, as young people miss out on the crucial early years in which skills and professional networks are built, and many remain financially dependent on their parents for longer.", "vi": "Không tìm được công việc đầu tiên có thể để lại hậu quả lâu dài, vì người trẻ bỏ lỡ những năm đầu quan trọng để xây dựng kỹ năng và các mối quan hệ nghề nghiệp, và nhiều người phải phụ thuộc tài chính vào bố mẹ lâu hơn." },
+      { "tool": "Mạch", "mark": "Older workers face their own difficulties", "en": "Older workers face their own difficulties.", "vi": "Người lao động lớn tuổi cũng có những khó khăn riêng." },
+      { "tool": "Mạch", "mark": "puts them under considerable pressure", "en": "Competing with younger, more technologically confident applicants puts them under considerable pressure, and some may feel forced to accept lower pay or be pushed out of their jobs earlier than they would wish.", "vi": "Phải cạnh tranh với những ứng viên trẻ hơn, rành công nghệ hơn khiến họ chịu nhiều áp lực, và một số người có thể thấy mình buộc phải nhận lương thấp hơn hoặc bị đẩy ra khỏi công việc sớm hơn mong muốn." }
+    ],
+    [
+      { "tool": "Phản biện", "mark": "neither addresses the real causes", "en": "Telling older people to retire or urging graduates to try harder would do little to solve this, because neither addresses the real causes.", "vi": "Bảo người lớn tuổi nghỉ hưu hay khuyên sinh viên mới ra trường cố gắng hơn thì sẽ chẳng giải quyết được bao nhiêu, vì cả hai cách đều không chạm tới nguyên nhân thật sự." },
+      { "tool": "Mạch", "mark": "pensions are too small to live on", "en": "Many older employees keep working not by choice but because retirement ages are rising and pensions are too small to live on, while many graduates lack experience because their university courses offered little contact with the workplace.", "vi": "Nhiều người lớn tuổi tiếp tục đi làm không phải vì họ muốn, mà vì tuổi nghỉ hưu đang tăng lên và lương hưu quá ít để sống, còn nhiều sinh viên thiếu kinh nghiệm vì chương trình đại học ít cho họ tiếp xúc với môi trường làm việc." },
+      { "tool": "Nối về", "mark": "target these institutional causes", "en": "Solutions should therefore target these institutional causes.", "vi": "Vì vậy, giải pháp phải nhắm vào chính những nguyên nhân ở bậc thể chế này." },
+      { "tool": "Mạch", "mark": "provide internships and apprenticeships", "en": "Universities and businesses could work together to provide internships and apprenticeships while students are still studying, so that graduates enter the job market with real work experience.", "vi": "Trường đại học và doanh nghiệp có thể phối hợp để tạo ra các chương trình thực tập và học việc ngay khi sinh viên còn đang học, để khi ra trường họ bước vào thị trường lao động với kinh nghiệm làm việc thật." },
+      { "tool": "Mạch", "mark": "create part-time or advisory roles for older staff", "en": "At the same time, employers could create part-time or advisory roles for older staff, supported by retraining programmes, so that the two groups no longer compete for exactly the same positions.", "vi": "Đồng thời, người sử dụng lao động có thể tạo ra các vị trí bán thời gian hoặc cố vấn cho nhân viên lớn tuổi, kèm theo các chương trình đào tạo lại, để hai nhóm không còn phải tranh nhau đúng cùng một vị trí." },
+      { "tool": "Mạch", "mark": "mentor new recruits", "en": "This would also allow experienced employees to mentor new recruits, passing on their knowledge to the very people who need it most.", "vi": "Cách này còn giúp những nhân viên nhiều kinh nghiệm kèm cặp người mới, truyền lại kiến thức cho chính những người cần nó nhất." }
+    ],
+    [
+      { "tool": "Nối về", "mark": "makes it harder for graduates to start their careers", "en": "In conclusion, competition between older and younger workers makes it harder for graduates to start their careers and places older employees under pressure.", "vi": "Tóm lại, sự cạnh tranh giữa người lao động lớn tuổi và người trẻ khiến sinh viên mới ra trường khó bắt đầu sự nghiệp hơn, và đặt người lớn tuổi vào áp lực." },
+      { "tool": "Nối về", "mark": "turn this competition into cooperation", "en": "By linking education more closely to the workplace and creating more flexible roles for older staff, societies could turn this competition into cooperation.", "vi": "Bằng cách gắn việc học chặt hơn với nơi làm việc và tạo ra những vị trí linh hoạt hơn cho nhân viên lớn tuổi, xã hội có thể biến sự cạnh tranh này thành sự hợp tác." }
+    ]
+  ]
+}

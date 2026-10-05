@@ -1,0 +1,29 @@
+{
+  "promptId": "life-without-work",
+  "source": "book",
+  "note": "The Art of Nuance, Phase 2, Ví dụ 10",
+  "paragraphs": [
+    [
+      { "tool": "Đề hỏi gì", "mark": "everyone would choose a life without work", "en": "It is sometimes claimed that, given the choice between never working and working most of the time, everyone would choose a life without work.", "vi": "Có người cho rằng nếu được chọn giữa không bao giờ phải đi làm và đi làm gần như cả ngày, thì ai cũng sẽ chọn một cuộc sống không có công việc." },
+      { "tool": "Lập trường", "mark": "I disagree with the statement", "en": "While this may be true of some people, I disagree with the statement, as for a great many people work provides something that free time alone cannot replace.", "vi": "Dù điều này có thể đúng với một số người, mình không đồng ý với nhận định trên, vì với rất nhiều người, công việc mang lại một thứ mà chỉ có thời gian rảnh thì không thay thế được." }
+    ],
+    [
+      { "tool": "Scope", "mark": "purely as a way of earning money", "en": "Admittedly, a life without work would appeal to those who see their job purely as a way of earning money.", "vi": "Phải thừa nhận rằng một cuộc sống không cần đi làm sẽ hấp dẫn những người chỉ coi công việc là cách để kiếm tiền." },
+      { "tool": "Mạch", "mark": "more time for hobbies, travel and family", "en": "For such people, being freed from deadlines, demanding managers and long commutes would mean more time for hobbies, travel and family, as well as relief from the stress that their job causes.", "vi": "Với những người như vậy, thoát khỏi hạn chót, những người sếp khó tính và những chuyến đi làm xa đồng nghĩa với có thêm thời gian cho sở thích, du lịch và gia đình, cũng như không còn áp lực mà công việc gây ra." },
+      { "tool": "Phản biện + Dài hạn", "mark": "even this appeal tends to fade over time", "en": "However, even this appeal tends to fade over time.", "vi": "Tuy nhiên, ngay cả sức hấp dẫn này cũng thường phai dần theo thời gian." },
+      { "tool": "Phản biện + Dài hạn", "mark": "feel bored and directionless", "en": "Once the novelty of unlimited free time wears off, many people begin to feel bored and directionless, particularly when their friends are still working.", "vi": "Khi cảm giác mới mẻ của việc rảnh rỗi không giới hạn qua đi, nhiều người bắt đầu thấy chán và mất phương hướng, nhất là khi bạn bè họ vẫn còn đang đi làm." },
+      { "tool": "Dài hạn", "mark": "return to some form of employment", "en": "This is evident among retirees, a considerable number of whom return to some form of employment within a few years of stopping work.", "vi": "Điều này thấy rõ ở những người về hưu, khi khá nhiều người trong số họ quay lại làm một công việc nào đó chỉ vài năm sau khi nghỉ." }
+    ],
+    [
+      { "tool": "Mạch", "mark": "a source of meaning rather than simply an obligation", "en": "More importantly, for many people work is a source of meaning rather than simply an obligation.", "vi": "Quan trọng hơn, với nhiều người, công việc là nguồn ý nghĩa chứ không chỉ là nghĩa vụ." },
+      { "tool": "Scope + With/Without", "mark": "losing a central part of their identity", "en": "Doctors, teachers and those who have turned a passion into a career often feel that their work defines who they are and allows them to contribute to others, and giving it up would mean losing a central part of their identity.", "vi": "Bác sĩ, giáo viên và những người đã biến đam mê thành sự nghiệp thường thấy công việc định nghĩa con người họ và cho họ đóng góp cho người khác, nên bỏ việc đồng nghĩa với đánh mất một phần cốt lõi của bản thân." },
+      { "tool": "Scope + With/Without", "mark": "structure and social contact", "en": "Work also provides structure and social contact.", "vi": "Công việc còn mang lại nhịp sống ổn định và các mối quan hệ xã hội." },
+      { "tool": "Scope + With/Without", "mark": "not freedom but isolation", "en": "For those who rely on their daily routine and their colleagues for a sense of belonging, a life without work would bring not freedom but isolation.", "vi": "Với những người dựa vào nếp sinh hoạt hằng ngày và đồng nghiệp để thấy mình thuộc về một nơi nào đó, cuộc sống không có công việc sẽ không mang lại tự do mà chỉ mang lại sự cô đơn." },
+      { "tool": "Nối về", "mark": "would choose to work even under the demanding conditions", "en": "It is telling that many such people would choose to work even under the demanding conditions described in the statement.", "vi": "Điều đáng nói là nhiều người như vậy vẫn sẽ chọn đi làm, kể cả với điều kiện vất vả như đề mô tả." }
+    ],
+    [
+      { "tool": "Lập trường", "mark": "it is not true that everyone would", "en": "In conclusion, although some people would happily give up work, especially in the short term, it is not true that everyone would.", "vi": "Tóm lại, dù có những người sẵn lòng bỏ việc, nhất là trong thời gian ngắn, thì không phải ai cũng sẽ làm vậy." },
+      { "tool": "Lập trường", "mark": "a large proportion would choose to keep working", "en": "Because work gives many people purpose, identity and companionship, I believe a large proportion would choose to keep working, even if it meant working most of the time.", "vi": "Vì công việc cho nhiều người mục đích sống, bản sắc và sự gắn bó với người khác, mình tin rằng một phần lớn sẽ chọn tiếp tục đi làm, kể cả khi điều đó nghĩa là làm việc gần như cả ngày." }
+    ]
+  ]
+}

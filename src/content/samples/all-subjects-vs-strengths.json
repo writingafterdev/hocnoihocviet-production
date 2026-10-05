@@ -1,0 +1,32 @@
+{
+  "promptId": "all-subjects-vs-strengths",
+  "source": "book",
+  "note": "The Art of Nuance, Phase 2, Ví dụ 15",
+  "paragraphs": [
+    [
+      { "tool": "Đề hỏi gì", "mark": "give equal attention to every school subject", "en": "There is disagreement over whether teenagers should give equal attention to every school subject or concentrate on the ones they enjoy and excel at.", "vi": "Người ta không thống nhất được là thanh thiếu niên nên học đều mọi môn ở trường, hay chỉ tập trung vào những môn mình thích và học giỏi." },
+      { "tool": "Lập trường", "mark": "depends on whether a student has yet discovered", "en": "While both views have merit, I believe the better approach depends on whether a student has yet discovered the direction they want to take.", "vi": "Dù cả hai quan điểm đều có lý, tôi cho rằng cách nào tốt hơn còn tuỳ vào việc học sinh đã tìm ra hướng đi mình muốn hay chưa." }
+    ],
+    [
+      { "tool": "Mạch", "mark": "keeps students' options open", "en": "Those who support a balanced curriculum argue that a broad education keeps students' options open.", "vi": "Những người ủng hộ việc học đều các môn cho rằng một nền giáo dục rộng giúp học sinh giữ được nhiều lựa chọn." },
+      { "tool": "Mạch", "mark": "choose almost any course at university", "en": "In their view, teenagers who study a wide range of subjects build a foundation that allows them to choose almost any course at university later on.", "vi": "Theo họ, những bạn học nhiều môn khác nhau sẽ có một nền tảng để sau này vào đại học thì chọn ngành nào cũng được." },
+      { "tool": "Mạch", "mark": "discover where their real strengths lie", "en": "They also point out that studying many subjects is how young people discover where their real strengths lie, since few teenagers know at thirteen what they will want to do at eighteen.", "vi": "Họ cũng chỉ ra rằng học nhiều môn chính là cách để người trẻ phát hiện ra mình thật sự giỏi gì, vì ít bạn nào mười ba tuổi đã biết năm mười tám tuổi mình sẽ muốn làm gì." }
+    ],
+    [
+      { "tool": "Mạch", "mark": "learn best when they are genuinely interested", "en": "Advocates of specialisation, on the other hand, contend that students learn best when they are genuinely interested.", "vi": "Ngược lại, những người ủng hộ việc tập trung cho rằng học sinh học tốt nhất khi các em thật sự hứng thú." },
+      { "tool": "Mạch", "mark": "study in greater depth and develop real expertise", "en": "From this perspective, allowing teenagers to focus on their favourite subjects encourages them to study in greater depth and develop real expertise, which can give them an advantage in university admissions and the job market.", "vi": "Theo cách nhìn này, cho thanh thiếu niên tập trung vào môn mình thích sẽ khuyến khích các em học sâu hơn và giỏi thật sự, điều có thể cho các em lợi thế khi xét tuyển đại học và khi đi xin việc." },
+      { "tool": "Mạch", "mark": "drain their motivation for learning as a whole", "en": "They also warn that forcing students to spend equal time on subjects they dislike can drain their motivation for learning as a whole.", "vi": "Họ cũng cảnh báo rằng bắt học sinh dành thời gian ngang nhau cho cả những môn các em ghét có thể làm các em mất hết động lực học nói chung." }
+    ],
+    [
+      { "tool": "Lập trường", "mark": "each approach is right at a different stage", "en": "In my view, each approach is right at a different stage.", "vi": "Theo tôi, mỗi cách đúng ở một giai đoạn khác nhau." },
+      { "tool": "Scope", "mark": "still unsure of their interests", "en": "For younger teenagers who are still unsure of their interests, a balanced curriculum is clearly preferable.", "vi": "Với những bạn nhỏ tuổi hơn, chưa chắc mình thích gì, thì học đều các môn rõ ràng là tốt hơn." },
+      { "tool": "Phản biện + Scope + With/Without", "mark": "lack the background for the path they eventually choose", "en": "Those who favour early specialisation overlook the fact that a thirteen-year-old's preferences often change, and a student who drops other subjects too soon may later find they lack the background for the path they eventually choose.", "vi": "Những người ủng hộ việc chọn môn sớm đã bỏ qua một điều là sở thích của một đứa trẻ mười ba tuổi thường thay đổi, và học sinh nào bỏ các môn khác quá sớm thì sau này có thể thấy mình thiếu nền cho con đường cuối cùng mình chọn." },
+      { "tool": "Scope", "mark": "Once students have a clear goal", "en": "Once students have a clear goal, however, the case for specialisation becomes much stronger.", "vi": "Tuy nhiên, một khi học sinh đã có mục tiêu rõ ràng, thì lý lẽ cho việc tập trung trở nên thuyết phục hơn nhiều." },
+      { "tool": "Phản biện + With/Without", "mark": "gains little from dividing their effort equally", "en": "A student who has decided to study medicine gains little from dividing their effort equally across every subject at the very moment they need to master biology and chemistry.", "vi": "Một bạn đã quyết định học y thì chẳng được lợi gì khi phải chia đều công sức cho mọi môn, đúng vào lúc bạn ấy cần nắm thật vững sinh học và hoá học." },
+      { "tool": "Nối về + Khả thi", "mark": "offering elective courses and careers guidance", "en": "For this reason, I believe schools should provide a common foundation in the early years and then gradually allow students to focus, offering elective courses and careers guidance to help them decide.", "vi": "Vì vậy, tôi cho rằng nhà trường nên dạy một nền chung ở những năm đầu, rồi dần dần cho học sinh tập trung, có thêm các môn tự chọn và tư vấn nghề nghiệp để giúp các em quyết định." }
+    ],
+    [
+      { "tool": "Lập trường", "mark": "once their goals become clear", "en": "In conclusion, I believe teenagers should study all subjects evenly while they are still discovering their strengths, but should be given increasing freedom to concentrate on their chosen subjects once their goals become clear.", "vi": "Tóm lại, tôi cho rằng thanh thiếu niên nên học đều mọi môn khi còn đang tìm xem mình giỏi gì, nhưng nên được cho ngày càng nhiều quyền tập trung vào những môn mình chọn một khi mục tiêu đã rõ ràng." }
+    ]
+  ]
+}

@@ -1,0 +1,30 @@
+{
+  "promptId": "working-hours-laws",
+  "source": "book",
+  "note": "The Art of Nuance, Phase 2, Ví dụ 26",
+  "paragraphs": [
+    [
+      { "tool": "Đề hỏi gì", "mark": "laws restricting how many hours", "en": "A number of countries have passed laws restricting how many hours employers can require their staff to work.", "vi": "Một số nước đã thông qua luật giới hạn số giờ mà người sử dụng lao động được yêu cầu nhân viên làm việc." },
+      { "tool": "Lập trường", "mark": "they represent a positive development", "en": "These laws exist largely because individual workers are unable to protect themselves from excessive hours, and I believe they represent a positive development.", "vi": "Những bộ luật này ra đời phần lớn là vì từng người lao động không tự bảo vệ được mình trước việc phải làm quá giờ, và tôi cho rằng đây là một bước tiến tích cực." }
+    ],
+    [
+      { "tool": "Mạch", "mark": "the imbalance of power", "en": "The main reason for such legislation is the imbalance of power between employers and employees.", "vi": "Nguyên nhân chính dẫn tới những bộ luật như vậy là sự chênh lệch quyền lực giữa người sử dụng lao động và người lao động." },
+      { "tool": "Mạch", "mark": "cheaper than hiring additional workers", "en": "For many companies, asking existing staff to work overtime is cheaper than hiring additional workers, so heavy workloads that can only be completed through long hours become normal.", "vi": "Với nhiều công ty, bắt nhân viên hiện có làm thêm giờ thì rẻ hơn thuê thêm người, nên khối lượng công việc nặng tới mức chỉ làm kịp nếu làm nhiều giờ dần trở thành chuyện bình thường." },
+      { "tool": "Mạch", "mark": "can easily be replaced", "en": "In labour markets where there are more job seekers than positions, employees who refuse extra hours can easily be replaced, so few are in a position to say no.", "vi": "Ở những thị trường lao động mà người tìm việc nhiều hơn số vị trí, nhân viên nào từ chối làm thêm giờ cũng dễ bị thay thế, nên rất ít người có thể nói không." },
+      { "tool": "Mạch + Quy mô", "mark": "extend beyond the workplace", "en": "The consequences, however, extend beyond the workplace.", "vi": "Tuy nhiên, hậu quả của chuyện này không chỉ dừng lại ở nơi làm việc." },
+      { "tool": "Mạch + Quy mô", "mark": "placing a burden on families and on public healthcare systems", "en": "Chronic overwork leads to exhaustion, illness and a higher risk of accidents, placing a burden on families and on public healthcare systems.", "vi": "Làm quá sức kéo dài dẫn tới kiệt sức, bệnh tật và nguy cơ tai nạn cao hơn, tạo thêm gánh nặng cho gia đình và hệ thống y tế công." },
+      { "tool": "Nối về", "mark": "governments have stepped in with legal limits", "en": "Since the problem cannot be solved by workers acting alone, governments have stepped in with legal limits.", "vi": "Vì người lao động không thể tự mình giải quyết vấn đề này, nhà nước đã phải can thiệp bằng những giới hạn trong luật." }
+    ],
+    [
+      { "tool": "Lập trường", "mark": "this trend is clearly positive", "en": "I believe this trend is clearly positive.", "vi": "Tôi cho rằng xu hướng này rõ ràng là tích cực." },
+      { "tool": "Mạch", "mark": "protect employees' health", "en": "Limits on working hours protect employees' health and give them time to rest and spend with their families.", "vi": "Giới hạn giờ làm bảo vệ sức khoẻ của người lao động và cho họ thời gian để nghỉ ngơi và ở bên gia đình." },
+      { "tool": "Mạch", "mark": "They can also benefit employers", "en": "They can also benefit employers, since well-rested staff tend to make fewer mistakes and work more productively.", "vi": "Những giới hạn này cũng có thể có lợi cho người sử dụng lao động, vì nhân viên được nghỉ ngơi đủ thường ít mắc lỗi hơn và làm việc hiệu quả hơn." },
+      { "tool": "Scope", "mark": "some low-paid workers rely on overtime", "en": "Admittedly, some low-paid workers rely on overtime to earn enough to live on, and a strict limit may reduce their income.", "vi": "Phải thừa nhận rằng một số người lao động lương thấp phải dựa vào giờ làm thêm mới đủ sống, và một giới hạn chặt có thể làm giảm thu nhập của họ." },
+      { "tool": "Phản biện + With/Without", "mark": "inadequate pay rather than a shortage of working hours", "en": "Yet the underlying problem in such cases is inadequate pay rather than a shortage of working hours, and it is better addressed through a fair minimum wage than by allowing people to work to exhaustion.", "vi": "Nhưng vấn đề gốc rễ trong những trường hợp này là lương quá thấp chứ không phải thiếu giờ làm, và nên giải quyết nó bằng một mức lương tối thiểu hợp lý thay vì để người ta làm việc tới kiệt sức." }
+    ],
+    [
+      { "tool": "Nối về", "mark": "employees cannot resist excessive demands on their own", "en": "In conclusion, working-hour laws have been introduced because employees cannot resist excessive demands on their own.", "vi": "Tóm lại, luật giới hạn giờ làm ra đời vì người lao động không thể tự mình chống lại những yêu cầu quá mức." },
+      { "tool": "Lập trường", "mark": "I consider them a positive trend", "en": "Since these laws safeguard workers' health and wellbeing, I consider them a positive trend.", "vi": "Vì những bộ luật này bảo vệ sức khoẻ và cuộc sống của người lao động, tôi cho rằng đây là một xu hướng tích cực." }
+    ]
+  ]
+}

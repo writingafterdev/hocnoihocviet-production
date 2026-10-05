@@ -1,0 +1,27 @@
+{
+  "promptId": "peer-pressure",
+  "source": "book",
+  "note": "The Art of Nuance, Phase 2, Ví dụ 17",
+  "paragraphs": [
+    [
+      { "tool": "Đề hỏi gì", "mark": "strongly influenced by the people around them", "en": "Teenagers are strongly influenced by the people around them, a phenomenon known as peer pressure.", "vi": "Thanh thiếu niên chịu ảnh hưởng mạnh từ những người xung quanh, một hiện tượng được gọi là áp lực từ bạn bè." },
+      { "tool": "Lập trường", "mark": "its disadvantages clearly outweigh its advantages", "en": "While this influence can sometimes be positive, I believe its disadvantages clearly outweigh its advantages.", "vi": "Dù ảnh hưởng này đôi khi có thể tích cực, tôi cho rằng tác hại của nó rõ ràng lớn hơn lợi ích." }
+    ],
+    [
+      { "tool": "Mạch", "mark": "push young people in a good direction", "en": "Admittedly, peer pressure can push young people in a good direction.", "vi": "Phải thừa nhận là áp lực từ bạn bè có thể đẩy người trẻ đi theo hướng tốt." },
+      { "tool": "Mạch", "mark": "a sense of belonging and confidence", "en": "A teenager whose friends study hard or play sport regularly may be motivated to do the same, and fitting in with a group can give young people a sense of belonging and confidence.", "vi": "Một bạn có bạn bè chăm học hay chơi thể thao đều đặn có thể có thêm động lực để làm theo, và việc hoà nhập được với một nhóm có thể cho người trẻ cảm giác thuộc về và sự tự tin." },
+      { "tool": "Phản biện + Scope", "mark": "depend entirely on the group", "en": "However, these benefits depend entirely on the group a young person happens to join.", "vi": "Tuy vậy, những lợi ích này hoàn toàn phụ thuộc vào việc người trẻ tình cờ chơi với nhóm nào." },
+      { "tool": "Phản biện + With/Without", "mark": "far from the only route to them", "en": "Moreover, good habits such as studying or exercising can also be encouraged by parents, teachers and personal ambition, so peer pressure is far from the only route to them.", "vi": "Hơn nữa, những thói quen tốt như học hành hay tập thể dục cũng có thể được bố mẹ, thầy cô và chính hoài bão của bản thân khuyến khích, nên áp lực từ bạn bè hoàn toàn không phải con đường duy nhất để có chúng." }
+    ],
+    [
+      { "tool": "Mạch", "mark": "both more serious and more widespread", "en": "The disadvantages, by contrast, are both more serious and more widespread.", "vi": "Ngược lại, tác hại thì vừa nghiêm trọng hơn vừa phổ biến hơn." },
+      { "tool": "Scope + Dài hạn", "mark": "the consequences may last a lifetime", "en": "When a group engages in harmful behaviour such as smoking, drinking or reckless driving, the fear of being excluded can lead a teenager to join in, and the consequences may last a lifetime, from addiction to serious injury or a criminal record.", "vi": "Khi một nhóm làm những việc có hại như hút thuốc, uống rượu hay lái xe liều lĩnh, nỗi sợ bị gạt ra ngoài có thể khiến một bạn trẻ nhập cuộc, và hậu quả có thể kéo dài cả đời, từ nghiện ngập tới chấn thương nặng hay tiền án." },
+      { "tool": "Scope", "mark": "even when the group itself is harmless", "en": "More fundamentally, peer pressure harms young people even when the group itself is harmless.", "vi": "Quan trọng hơn, áp lực từ bạn bè gây hại cho người trẻ ngay cả khi bản thân nhóm bạn đó vô hại." },
+      { "tool": "Mạch + Scope", "mark": "suppress their own opinions and preferences", "en": "Constantly following others teaches teenagers to suppress their own opinions and preferences, at the very age when they should be discovering who they are and learning to make independent decisions.", "vi": "Lúc nào cũng làm theo người khác sẽ dạy thanh thiếu niên giấu đi ý kiến và sở thích của mình, đúng vào độ tuổi mà các em lẽ ra phải đang tìm hiểu mình là ai và học cách tự quyết định." }
+    ],
+    [
+      { "tool": "Lập trường", "mark": "can be gained in other ways", "en": "In conclusion, although peer pressure can occasionally encourage positive habits, these benefits are limited and can be gained in other ways.", "vi": "Tóm lại, dù áp lực từ bạn bè đôi khi có thể khuyến khích thói quen tốt, những lợi ích này có hạn và có thể có được bằng cách khác." },
+      { "tool": "Lập trường", "mark": "more harmful than beneficial overall", "en": "Its potential to lead young people into dangerous behaviour, and its tendency to undermine their independence regardless of the group, make it more harmful than beneficial overall.", "vi": "Việc nó có thể kéo người trẻ vào những hành vi nguy hiểm, và việc nó làm yếu đi sự độc lập của các em dù nhóm bạn là ai, khiến nó nhìn chung có hại nhiều hơn có lợi." }
+    ]
+  ]
+}

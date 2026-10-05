@@ -1,0 +1,32 @@
+{
+  "promptId": "growth-poverty-environment",
+  "source": "book",
+  "note": "The Art of Nuance, Phase 2, Ví dụ 22",
+  "paragraphs": [
+    [
+      { "tool": "Đề hỏi gì", "mark": "the key to ending poverty", "en": "Economic growth is often seen as the key to ending poverty, yet it is also blamed for serious environmental damage.", "vi": "Tăng trưởng kinh tế thường được xem là chìa khoá để xoá nghèo, nhưng cũng bị đổ lỗi cho những tổn hại nghiêm trọng tới môi trường." },
+      { "tool": "Lập trường", "mark": "but it is not the only one", "en": "In my view, growth is an essential tool for reducing poverty, but it is not the only one, and whether it harms the environment depends largely on the form it takes.", "vi": "Theo tôi, tăng trưởng là một công cụ thiết yếu để giảm nghèo, nhưng không phải là công cụ duy nhất, và việc nó có hại cho môi trường hay không thì phần lớn phụ thuộc vào hình thức tăng trưởng." }
+    ],
+    [
+      { "tool": "Mạch", "mark": "a larger economy creates jobs", "en": "Those who see growth as the solution to poverty argue that a larger economy creates jobs, allowing poor families to earn a regular income and afford enough food.", "vi": "Những người coi tăng trưởng là lời giải cho nghèo đói cho rằng nền kinh tế lớn hơn sẽ tạo ra việc làm, giúp các gia đình nghèo có thu nhập đều đặn và đủ tiền mua thức ăn." },
+      { "tool": "Mạch", "mark": "growth increases tax revenue", "en": "They also point out that growth increases tax revenue, which governments can spend on schools, hospitals and welfare for those most in need.", "vi": "Họ cũng chỉ ra rằng tăng trưởng làm tăng nguồn thu thuế, và nhà nước có thể dùng khoản đó để xây trường, bệnh viện và trợ cấp cho những người khó khăn nhất." }
+    ],
+    [
+      { "tool": "Mạch", "mark": "comes at a heavy environmental cost", "en": "Others, however, warn that growth often comes at a heavy environmental cost.", "vi": "Tuy nhiên, những người khác cảnh báo rằng tăng trưởng thường phải trả một cái giá rất đắt về môi trường." },
+      { "tool": "Mạch + Dài hạn", "mark": "damage that may take generations to repair", "en": "In their view, expanding industry and exploiting natural resources lead to polluted air and water, deforestation and rising carbon emissions, damage that may take generations to repair.", "vi": "Theo họ, việc mở rộng công nghiệp và khai thác tài nguyên dẫn tới ô nhiễm không khí và nguồn nước, phá rừng và lượng khí thải carbon tăng lên, những tổn hại có thể mất nhiều thế hệ mới khắc phục được." }
+    ],
+    [
+      { "tool": "Lập trường", "mark": "the first overstates its case", "en": "I believe both views contain some truth, but the first overstates its case.", "vi": "Tôi cho rằng cả hai quan điểm đều có phần đúng, nhưng quan điểm thứ nhất đã nói quá lên." },
+      { "tool": "Scope", "mark": "vital in poor countries", "en": "Growth is indeed vital in poor countries, where there is simply too little wealth for redistribution alone to make a difference.", "vi": "Ở những nước nghèo thì tăng trưởng đúng là rất quan trọng, vì ở đó của cải quá ít, chỉ chia lại thôi thì không thay đổi được bao nhiêu." },
+      { "tool": "Phản biện + Scope", "mark": "poverty persists despite decades of growth", "en": "In wealthy nations, however, poverty persists despite decades of growth, because the gains often go mainly to those who are already well off.", "vi": "Tuy nhiên, ở những nước giàu thì nghèo đói vẫn còn dù đã tăng trưởng suốt nhiều thập kỷ, vì phần lợi thường chủ yếu rơi vào tay những người vốn đã khá giả." },
+      { "tool": "Scope", "mark": "do more to help the poor", "en": "There, fairer taxation, welfare and investment in education do more to help the poor.", "vi": "Ở đó, đánh thuế công bằng hơn, trợ cấp xã hội và đầu tư cho giáo dục giúp người nghèo được nhiều hơn." },
+      { "tool": "Phản biện + Scope", "mark": "this depends on what drives it", "en": "As for the second view, it is true that growth can harm the environment, but this depends on what drives it.", "vi": "Còn với quan điểm thứ hai, đúng là tăng trưởng có thể hại môi trường, nhưng điều đó phụ thuộc vào thứ gì đang thúc đẩy tăng trưởng." },
+      { "tool": "Phản biện + Scope", "mark": "growth based on services, technology and clean energy", "en": "Growth built on heavy industry and resource extraction is highly damaging, whereas growth based on services, technology and clean energy is far less so.", "vi": "Tăng trưởng dựa vào công nghiệp nặng và khai thác tài nguyên thì gây hại rất nhiều, còn tăng trưởng dựa vào dịch vụ, công nghệ và năng lượng sạch thì ít hại hơn hẳn." },
+      { "tool": "Dài hạn", "mark": "pushes the poorest communities further into hunger", "en": "This matters for the fight against poverty as well, since environmental damage such as droughts and failed harvests often pushes the poorest communities further into hunger.", "vi": "Điều này cũng quan trọng với cuộc chiến chống nghèo đói, vì những tổn hại môi trường như hạn hán và mất mùa thường đẩy những cộng đồng nghèo nhất vào cảnh đói hơn nữa." }
+    ],
+    [
+      { "tool": "Lập trường", "mark": "it is not the only way to do so", "en": "In conclusion, although economic growth plays a major role in reducing poverty, especially in developing countries, it is not the only way to do so.", "vi": "Tóm lại, dù tăng trưởng kinh tế đóng vai trò lớn trong việc giảm nghèo, nhất là ở các nước đang phát triển, nó không phải là cách duy nhất." },
+      { "tool": "Lập trường + Dài hạn", "mark": "undermines the very goal it is meant to achieve", "en": "Governments should pursue cleaner forms of growth, since an economy that destroys the environment ultimately undermines the very goal it is meant to achieve.", "vi": "Các chính phủ nên theo đuổi những kiểu tăng trưởng sạch hơn, vì một nền kinh tế phá huỷ môi trường thì rốt cuộc sẽ làm hỏng chính mục tiêu mà nó hướng tới." }
+    ]
+  ]
+}

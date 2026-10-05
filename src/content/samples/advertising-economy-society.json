@@ -1,0 +1,33 @@
+{
+  "promptId": "advertising-economy-society",
+  "source": "book",
+  "note": "The Art of Nuance, Phase 2, Ví dụ 23",
+  "paragraphs": [
+    [
+      { "tool": "Đề hỏi gì", "mark": "whether its influence is mainly positive or negative", "en": "Advertising is everywhere in modern life, and opinions differ on whether its influence is mainly positive or negative.", "vi": "Quảng cáo có mặt ở khắp nơi trong cuộc sống hiện đại, và người ta không cùng ý kiến về việc ảnh hưởng của nó chủ yếu là tốt hay xấu." },
+      { "tool": "Lập trường", "mark": "its economic benefits are more significant", "en": "While I accept that it can harm people's wellbeing, I believe its economic benefits are more significant, and that its social harms are best addressed through targeted regulation.", "vi": "Dù tôi thừa nhận quảng cáo có thể ảnh hưởng xấu tới đời sống tinh thần của con người, tôi cho rằng lợi ích kinh tế của nó quan trọng hơn, và tác hại xã hội thì nên được xử lý bằng những quy định nhắm đúng chỗ." }
+    ],
+    [
+      { "tool": "Mạch", "mark": "essential to a healthy economy", "en": "Supporters of advertising argue that it is essential to a healthy economy.", "vi": "Những người ủng hộ quảng cáo cho rằng nó rất cần thiết cho một nền kinh tế khoẻ mạnh." },
+      { "tool": "Mạch", "mark": "which enables them to grow and create jobs", "en": "In their view, advertising allows businesses to reach customers and sell more, which enables them to grow and create jobs.", "vi": "Theo họ, quảng cáo giúp doanh nghiệp tiếp cận khách hàng và bán được nhiều hơn, nhờ đó doanh nghiệp phát triển và tạo thêm việc làm." },
+      { "tool": "Mạch", "mark": "it encourages competition", "en": "They also point out that it encourages competition, as companies must offer better products and lower prices to attract buyers.", "vi": "Họ cũng chỉ ra rằng quảng cáo thúc đẩy cạnh tranh, vì các công ty phải đưa ra sản phẩm tốt hơn và giá rẻ hơn để thu hút người mua." }
+    ],
+    [
+      { "tool": "Mạch", "mark": "advertising damages society", "en": "Critics, on the other hand, contend that advertising damages society.", "vi": "Ngược lại, những người phản đối cho rằng quảng cáo gây hại cho xã hội." },
+      { "tool": "Mạch", "mark": "compare themselves unfavourably", "en": "From this perspective, advertisements constantly present images of beautiful people and luxurious lifestyles, leading viewers to compare themselves unfavourably and feel dissatisfied with their appearance and possessions.", "vi": "Theo cách nhìn này, quảng cáo liên tục đưa ra hình ảnh những người đẹp và lối sống xa hoa, khiến người xem tự so sánh và thấy mình thua kém, rồi không hài lòng với ngoại hình và những gì mình đang có." },
+      { "tool": "Mạch", "mark": "lower self-esteem", "en": "They warn that this can lower self-esteem and push people to spend beyond their means.", "vi": "Họ cảnh báo rằng điều này có thể làm người ta tự ti và khiến họ chi tiêu quá khả năng của mình." }
+    ],
+    [
+      { "tool": "Lập trường", "mark": "they differ greatly in scope", "en": "In my view, both arguments are valid, but they differ greatly in scope.", "vi": "Theo tôi, cả hai lập luận đều đúng, nhưng phạm vi ảnh hưởng của chúng khác nhau rất nhiều." },
+      { "tool": "Mạch + With/Without", "mark": "would have no other way of attracting customers", "en": "The economic benefits of advertising are wide-reaching and matter most to small and new businesses, which would have no other way of attracting customers if advertising were restricted, whereas large brands are already well known.", "vi": "Lợi ích kinh tế của quảng cáo rất rộng và quan trọng nhất với các doanh nghiệp nhỏ và mới, vì nếu quảng cáo bị hạn chế thì họ không còn cách nào khác để thu hút khách, trong khi các thương hiệu lớn thì vốn đã được nhiều người biết tới." },
+      { "tool": "Phản biện + Scope", "mark": "stem mainly from one type of advertising", "en": "The social harms, by contrast, stem mainly from one type of advertising: campaigns that deliberately link a product to beauty or status.", "vi": "Ngược lại, tác hại xã hội chủ yếu đến từ một loại quảng cáo, là những chiến dịch cố tình gắn sản phẩm với vẻ đẹp hoặc địa vị." },
+      { "tool": "Phản biện + Scope", "mark": "Purely informative advertisements", "en": "Purely informative advertisements about prices or features rarely make anyone feel inadequate.", "vi": "Những quảng cáo chỉ đưa thông tin về giá hay tính năng thì hiếm khi làm ai thấy mình thiếu thốn." },
+      { "tool": "Phản biện + Scope", "mark": "fall hardest on children and teenagers", "en": "These harms also fall hardest on children and teenagers, who are less able to recognise advertising for what it is and are particularly sensitive about how they compare with their peers.", "vi": "Những tác hại này cũng nặng nhất với trẻ em và thanh thiếu niên, vì các em khó nhận ra quảng cáo thật ra là gì và đặc biệt nhạy cảm khi so mình với bạn bè." },
+      { "tool": "Nối về", "mark": "regulating image-based advertising", "en": "For this reason, I believe the answer lies not in limiting advertising in general but in regulating image-based advertising, especially when it is aimed at young people.", "vi": "Vì vậy, tôi cho rằng cách giải quyết không phải là hạn chế quảng cáo nói chung, mà là quản lý loại quảng cáo dựa vào hình ảnh, nhất là khi nó nhắm tới người trẻ." }
+    ],
+    [
+      { "tool": "Lập trường", "mark": "real but concentrated", "en": "In conclusion, advertising brings important economic benefits, while its negative social effects are real but concentrated in particular types of advertisement and particular groups.", "vi": "Tóm lại, quảng cáo mang lại những lợi ích kinh tế quan trọng, còn tác hại xã hội của nó là có thật nhưng chỉ tập trung ở một số loại quảng cáo và một số nhóm người nhất định." },
+      { "tool": "Lập trường", "mark": "target those areas rather than restrict advertising", "en": "Governments should therefore target those areas rather than restrict advertising as a whole.", "vi": "Vì thế, các chính phủ nên nhắm vào đúng những chỗ đó thay vì hạn chế quảng cáo nói chung." }
+    ]
+  ]
+}

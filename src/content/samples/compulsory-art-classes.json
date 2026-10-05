@@ -1,0 +1,26 @@
+{
+  "promptId": "compulsory-art-classes",
+  "source": "book",
+  "note": "The Art of Nuance, Phase 2, Ví dụ 18",
+  "paragraphs": [
+    [
+      { "tool": "Đề hỏi gì", "mark": "because art plays an important role", "en": "It is sometimes argued that because art plays an important role in children's development, it should be a compulsory subject in high school.", "vi": "Có ý kiến cho rằng vì nghệ thuật đóng vai trò quan trọng trong sự phát triển của trẻ em nên nó phải là môn bắt buộc ở cấp ba." },
+      { "tool": "Lập trường", "mark": "I do not believe this means", "en": "While I agree that art has real value, I do not believe this means it should be required of every high school student.", "vi": "Dù tôi đồng ý rằng nghệ thuật có giá trị thật, tôi không cho rằng điều đó có nghĩa là mọi học sinh cấp ba đều phải học nó." }
+    ],
+    [
+      { "tool": "Mạch", "mark": "art benefits young people", "en": "There is little doubt that art benefits young people.", "vi": "Gần như không ai nghi ngờ việc học vẽ có lợi cho người trẻ." },
+      { "tool": "Mạch", "mark": "develop observation, creativity", "en": "Painting and drawing develop observation, creativity and the ability to express ideas and feelings, and an art lesson can also offer a welcome break from the pressure of academic subjects.", "vi": "Vẽ tranh rèn khả năng quan sát, sự sáng tạo và khả năng thể hiện suy nghĩ, cảm xúc, và một giờ học vẽ cũng có thể cho học sinh được nghỉ một chút khỏi áp lực của các môn học thuật." },
+      { "tool": "Phản biện + Scope", "mark": "most significant for young children", "en": "These benefits are most significant for young children, however, as primary school is when such basic skills are first formed.", "vi": "Tuy vậy, những lợi ích này rõ nhất ở trẻ nhỏ, vì tiểu học mới là lúc những kỹ năng cơ bản đó bắt đầu hình thành." }
+    ],
+    [
+      { "tool": "Scope", "mark": "the situation is different", "en": "By the time students reach high school, the situation is different.", "vi": "Tới khi học sinh lên cấp ba thì mọi chuyện đã khác." },
+      { "tool": "Scope", "mark": "have developed clear interests", "en": "Most teenagers have developed clear interests, and many already know which university course or career they intend to pursue.", "vi": "Phần lớn thiếu niên đã có sở thích rõ ràng, và nhiều em đã biết mình định học ngành gì ở đại học hay theo nghề gì." },
+      { "tool": "Phản biện + Scope + With/Without", "mark": "they would lose nothing if it were not compulsory", "en": "Those who enjoy art or are still exploring their options would be likely to choose it if it were offered as an elective, so they would lose nothing if it were not compulsory.", "vi": "Những em thích vẽ hoặc còn đang tìm hướng đi thì nhiều khả năng sẽ chọn học nếu đây là môn tự chọn, nên các em không mất gì nếu môn này không bắt buộc." },
+      { "tool": "Phản biện + Scope", "mark": "would gain very little from being forced to attend", "en": "Students with no interest in the subject, on the other hand, would gain very little from being forced to attend, since creativity cannot be developed in someone who is simply sitting through a lesson to fulfil a requirement.", "vi": "Còn những em không hứng thú với môn này thì bị bắt đi học cũng gần như chẳng được gì, vì không thể rèn sự sáng tạo cho một người chỉ ngồi cho hết giờ để đủ yêu cầu." },
+      { "tool": "Mạch", "mark": "take time away from the subjects they need", "en": "For these students, compulsory art would only take time away from the subjects they need for their future plans, adding to an already heavy workload.", "vi": "Với những em này, bắt buộc học vẽ chỉ lấy bớt thời gian của những môn các em cần cho dự định tương lai, làm khối lượng học vốn đã nặng lại càng nặng thêm." }
+    ],
+    [
+      { "tool": "Lập trường", "mark": "compulsory in primary school and optional in high school", "en": "In conclusion, although art is undoubtedly important for children's development, I believe it should be compulsory in primary school and optional in high school, where students are better served by the freedom to choose subjects that match their interests and goals.", "vi": "Tóm lại, dù học vẽ chắc chắn quan trọng cho sự phát triển của trẻ em, tôi cho rằng nó nên là môn bắt buộc ở tiểu học và tự chọn ở cấp ba, nơi học sinh được lợi hơn khi tự do chọn những môn hợp với sở thích và mục tiêu của mình." }
+    ]
+  ]
+}

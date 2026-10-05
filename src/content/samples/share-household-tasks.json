@@ -1,0 +1,29 @@
+{
+  "promptId": "share-household-tasks",
+  "source": "book",
+  "note": "The Art of Nuance, Phase 2, Ví dụ 9",
+  "paragraphs": [
+    [
+      { "tool": "Đề hỏi gì", "mark": "household chores should be divided equally", "en": "In many families today, both partners work full-time, which has led some people to argue that household chores should be divided equally between them.", "vi": "Ngày nay, trong nhiều gia đình cả vợ lẫn chồng đều đi làm toàn thời gian, nên có người cho rằng việc nhà phải được chia đều cho cả hai." },
+      { "tool": "Lập trường", "mark": "an equal contribution of effort", "en": "I agree that working couples should share domestic responsibilities, but I believe \"equally\" should mean an equal contribution of effort rather than a strict half-and-half division of every task.", "vi": "Mình đồng ý rằng các cặp vợ chồng cùng đi làm nên chia sẻ việc nhà, nhưng mình nghĩ \"chia đều\" nên được hiểu là công sức bỏ ra ngang nhau, chứ không phải chia đôi chính xác từng việc." }
+    ],
+    [
+      { "tool": "Mạch", "mark": "The case for sharing housework", "en": "The case for sharing housework is a strong one.", "vi": "Lý do để chia sẻ việc nhà là rất thuyết phục." },
+      { "tool": "With/Without", "mark": "the burden tends to fall largely on women", "en": "When no clear arrangement exists, the burden tends to fall largely on women, even when they spend as many hours at work as their husbands.", "vi": "Khi không có thoả thuận rõ ràng nào, gánh nặng thường dồn phần lớn lên người vợ, dù họ cũng làm việc nhiều giờ như chồng." },
+      { "tool": "Mạch", "mark": "only to begin another at home", "en": "The result is a \"double shift\", in which a woman finishes a full working day only to begin another at home.", "vi": "Kết quả là cảnh \"làm hai ca\", khi người phụ nữ vừa xong một ngày làm việc trọn vẹn thì lại bắt đầu một ca khác ở nhà." },
+      { "tool": "Dài hạn", "mark": "breed resentment within the marriage", "en": "Over time, this imbalance can breed resentment within the marriage and hold women back in their careers, as they have less time and energy to invest in their professional development.", "vi": "Lâu dần, sự mất cân bằng này có thể khiến vợ chồng ấm ức với nhau và kìm chân người phụ nữ trong sự nghiệp, vì họ còn ít thời gian và sức lực để đầu tư cho việc phát triển chuyên môn." },
+      { "tool": "Nối về", "mark": "prevents either partner from carrying this double burden", "en": "Sharing the load prevents either partner from carrying this double burden.", "vi": "Chia sẻ gánh nặng giúp không ai trong hai người phải gánh hai ca như vậy." }
+    ],
+    [
+      { "tool": "Mạch", "mark": "a rigid 50/50 split is not necessarily fair", "en": "However, a rigid 50/50 split is not necessarily fair.", "vi": "Tuy nhiên, chia đôi cứng nhắc 50/50 chưa chắc đã công bằng." },
+      { "tool": "Scope", "mark": "Full-time jobs vary enormously in their demands", "en": "Full-time jobs vary enormously in their demands: a doctor working night shifts or a lawyer putting in sixty-hour weeks has far less time and energy left at the end of the day than someone with regular office hours.", "vi": "Các công việc toàn thời gian đòi hỏi rất khác nhau: một bác sĩ trực đêm hay một luật sư làm sáu mươi tiếng một tuần thì cuối ngày còn lại ít thời gian và sức lực hơn nhiều so với người làm giờ hành chính." },
+      { "tool": "Scope", "mark": "shift the double shift from one person to the other", "en": "Requiring both partners to do exactly half of the chores would simply shift the double shift from one person to the other.", "vi": "Bắt cả hai làm đúng một nửa việc nhà thì chỉ chuyển cảnh \"làm hai ca\" từ người này sang người kia mà thôi." },
+      { "tool": "Mạch", "mark": "turning housework into a matter of calculation", "en": "What is more, dividing every chore exactly in half forces couples to keep count of who has done what, turning housework into a matter of calculation that often leads to more arguments rather than fewer.", "vi": "Hơn nữa, chia đôi chính xác từng việc buộc vợ chồng phải đếm xem ai đã làm gì, biến việc nhà thành chuyện tính toán, mà điều này thường khiến hai người cãi nhau nhiều hơn chứ không ít đi." },
+      { "tool": "Phản biện + Scope", "mark": "provided the overall effort is balanced", "en": "Partners also differ in their skills, so it often makes more sense for one to do most of the cooking while the other takes charge of cleaning and repairs, provided the overall effort is balanced.", "vi": "Mỗi người cũng có sở trường khác nhau, nên thường hợp lý hơn khi một người lo phần lớn việc nấu nướng, còn người kia lo dọn dẹp và sửa chữa, miễn là tổng công sức của hai bên cân bằng." }
+    ],
+    [
+      { "tool": "Lập trường", "mark": "should certainly share household tasks", "en": "In conclusion, couples who both work full-time should certainly share household tasks.", "vi": "Tóm lại, các cặp vợ chồng cùng đi làm toàn thời gian chắc chắn nên chia sẻ việc nhà." },
+      { "tool": "Lập trường", "mark": "a comparable amount of effort", "en": "Nevertheless, a fair arrangement is one in which each partner contributes a comparable amount of effort, taking into account the demands of their jobs and their individual strengths, rather than one that divides every chore down the middle.", "vi": "Dù vậy, một cách chia công bằng là cách mà mỗi người bỏ ra công sức tương đương nhau, có tính tới mức vất vả của công việc và sở trường của từng người, chứ không phải chia đôi từng việc một." }
+    ]
+  ]
+}

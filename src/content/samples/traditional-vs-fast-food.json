@@ -1,0 +1,30 @@
+{
+  "promptId": "traditional-vs-fast-food",
+  "source": "book",
+  "note": "The Art of Nuance, Phase 2, Ví dụ 19",
+  "paragraphs": [
+    [
+      { "tool": "Đề hỏi gì", "mark": "taking the place of traditional cuisine", "en": "In many parts of the world, fast food chains are gradually taking the place of traditional cuisine.", "vi": "Ở nhiều nơi trên thế giới, các chuỗi đồ ăn nhanh đang dần thay thế món ăn truyền thống." },
+      { "tool": "Lập trường", "mark": "I agree that this trend is harmful", "en": "I agree that this trend is harmful, both to individual families and to society as a whole.", "vi": "Tôi đồng ý rằng xu hướng này có hại, cả cho từng gia đình lẫn cho toàn xã hội." }
+    ],
+    [
+      { "tool": "Mạch", "mark": "fast food offers genuine convenience", "en": "Admittedly, fast food offers genuine convenience.", "vi": "Phải thừa nhận rằng đồ ăn nhanh tiện lợi thật." },
+      { "tool": "Scope", "mark": "both parents work long hours", "en": "For families in which both parents work long hours, a quick and inexpensive meal can save valuable time at the end of a tiring day.", "vi": "Với những gia đình mà bố mẹ đều đi làm nhiều giờ, một bữa ăn nhanh và rẻ có thể tiết kiệm được khoảng thời gian quý giá vào cuối một ngày mệt mỏi." },
+      { "tool": "Phản biện + With/Without", "mark": "a regular replacement for home cooking", "en": "However, when fast food becomes a regular replacement for home cooking rather than an occasional treat, its costs quickly outweigh this benefit.", "vi": "Tuy nhiên, khi đồ ăn nhanh thường xuyên thay cho bữa nấu ở nhà chứ không còn là món thỉnh thoảng mới ăn, thì cái giá của nó nhanh chóng lớn hơn lợi ích này." }
+    ],
+    [
+      { "tool": "Mạch", "mark": "its impact on health", "en": "At the level of the family, the most serious problem is its impact on health.", "vi": "Ở phạm vi gia đình, vấn đề nghiêm trọng nhất là tác động tới sức khoẻ." },
+      { "tool": "Mạch", "mark": "increases the risk of obesity, diabetes and heart disease", "en": "Fast food tends to be high in fat, sugar and salt, and a diet built around it increases the risk of obesity, diabetes and heart disease, a risk that is particularly worrying for children.", "vi": "Đồ ăn nhanh thường nhiều dầu mỡ, đường và muối, và một chế độ ăn xoay quanh nó làm tăng nguy cơ béo phì, tiểu đường và bệnh tim, một nguy cơ đặc biệt đáng lo với trẻ em." },
+      { "tool": "Scope", "mark": "lose one of their most important daily routines", "en": "Families that replace home-cooked meals with takeaways may also lose one of their most important daily routines, as preparing and sharing a meal together is often the main opportunity for family members to spend time with one another.", "vi": "Những gia đình thay bữa cơm nhà bằng đồ ăn mua sẵn còn có thể mất đi một trong những thói quen quan trọng nhất mỗi ngày, vì cùng nấu và cùng ngồi ăn thường là dịp chính để các thành viên ở bên nhau." }
+    ],
+    [
+      { "tool": "Mạch", "mark": "The effects on society are equally significant", "en": "The effects on society are equally significant.", "vi": "Tác động tới xã hội cũng đáng kể không kém." },
+      { "tool": "Mạch", "mark": "public healthcare systems face rising costs", "en": "As diet-related illnesses become more widespread, public healthcare systems face rising costs that are ultimately borne by all taxpayers.", "vi": "Khi các bệnh liên quan tới ăn uống ngày càng phổ biến, hệ thống y tế công phải gánh chi phí ngày càng cao, mà rốt cuộc mọi người đóng thuế đều phải trả." },
+      { "tool": "Mạch", "mark": "carry a nation's history and identity", "en": "Moreover, traditional dishes carry a nation's history and identity.", "vi": "Hơn nữa, món ăn truyền thống mang trong nó lịch sử và bản sắc của một dân tộc." },
+      { "tool": "Mạch + Dài hạn", "mark": "the knowledge of how to prepare local dishes can disappear", "en": "When a generation grows up eating mainly international fast food, the knowledge of how to prepare local dishes can disappear, and with it an important part of the country's cultural heritage.", "vi": "Khi cả một thế hệ lớn lên mà chủ yếu ăn đồ ăn nhanh nước ngoài, cách nấu các món địa phương có thể bị mất đi, kéo theo một phần quan trọng trong di sản văn hoá của đất nước." }
+    ],
+    [
+      { "tool": "Lập trường", "mark": "its growing replacement of traditional food is harmful", "en": "In conclusion, although fast food can make life easier for busy families, I believe its growing replacement of traditional food is harmful, damaging both the health and togetherness of families and the wellbeing and cultural identity of society.", "vi": "Tóm lại, dù đồ ăn nhanh có thể giúp cuộc sống của những gia đình bận rộn dễ dàng hơn, tôi cho rằng việc nó ngày càng thay thế món truyền thống là có hại, vì nó làm tổn hại cả sức khoẻ lẫn sự gắn bó của gia đình, cũng như sức khoẻ và bản sắc văn hoá của xã hội." }
+    ]
+  ]
+}

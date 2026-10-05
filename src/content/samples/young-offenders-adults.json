@@ -1,0 +1,26 @@
+{
+  "promptId": "young-offenders-adults",
+  "source": "book",
+  "note": "The Art of Nuance, Phase 2, Ví dụ 16",
+  "paragraphs": [
+    [
+      { "tool": "Đề hỏi gì", "mark": "exactly the same legal consequences as adults", "en": "Some people believe that young offenders should face exactly the same legal consequences as adults.", "vi": "Một số người cho rằng người trẻ phạm tội nên chịu hậu quả pháp lý y hệt như người lớn." },
+      { "tool": "Lập trường", "mark": "would do more harm than good", "en": "Although there are rare cases in which serious punishment is justified, I disagree with this view, as treating most young offenders like adults would do more harm than good.", "vi": "Dù có những trường hợp hiếm hoi mà hình phạt nặng là xứng đáng, tôi không đồng ý với quan điểm này, vì xử phần lớn người trẻ phạm tội như người lớn sẽ gây hại nhiều hơn là có lợi." }
+    ],
+    [
+      { "tool": "Mạch", "mark": "demands a firm response", "en": "Admittedly, there are situations in which a young person's crime demands a firm response.", "vi": "Phải thừa nhận là có những lúc tội của một người trẻ đòi hỏi phải xử lý cứng rắn." },
+      { "tool": "Scope", "mark": "carefully plans and carries out a violent attack", "en": "A seventeen-year-old who carefully plans and carries out a violent attack poses a genuine danger to the public, and in such cases keeping the offender away from the community may be necessary, regardless of their age.", "vi": "Một người mười bảy tuổi lên kế hoạch kỹ rồi thực hiện một vụ tấn công bạo lực là mối nguy thật sự cho xã hội, và trong những trường hợp như vậy thì có thể cần cách ly người đó khỏi cộng đồng, bất kể tuổi tác." }
+    ],
+    [
+      { "tool": "Phản biện + Scope", "mark": "the exception rather than the rule", "en": "However, such cases are the exception rather than the rule.", "vi": "Tuy vậy, những trường hợp như thế chỉ là ngoại lệ chứ không phải số đông." },
+      { "tool": "Scope", "mark": "first-time offenders who act on impulse", "en": "Most young people who break the law are first-time offenders who act on impulse or under pressure from friends, with little thought for the consequences.", "vi": "Phần lớn người trẻ phạm pháp là phạm lần đầu, làm theo bốc đồng hoặc vì bị bạn bè ép, mà gần như không nghĩ tới hậu quả." },
+      { "tool": "Scope", "mark": "they do not weigh it up before acting", "en": "For them, the threat of a harsh sentence has limited deterrent effect, simply because they do not weigh it up before acting.", "vi": "Với họ, nguy cơ bị án nặng không răn đe được bao nhiêu, đơn giản vì họ không cân nhắc chuyện đó trước khi hành động." },
+      { "tool": "Phản biện + With/Without", "mark": "does not mean letting them go unpunished", "en": "Rejecting adult-style punishment does not mean letting them go unpunished: juvenile justice systems can still impose penalties while combining them with education and rehabilitation.", "vi": "Không xử như người lớn không có nghĩa là để họ thoát tội: hệ thống tư pháp dành cho người chưa thành niên vẫn có thể phạt, đồng thời kết hợp với giáo dục và cải tạo." },
+      { "tool": "Mạch + Dài hạn", "mark": "for the rest of their lives", "en": "By contrast, sending teenagers to adult prisons exposes them to experienced criminals, and a criminal record acquired at fifteen can make further education and employment extremely difficult for the rest of their lives.", "vi": "Ngược lại, đưa thanh thiếu niên vào nhà tù người lớn sẽ khiến các em tiếp xúc với những tội phạm lâu năm, và một tiền án từ năm mười lăm tuổi có thể khiến việc học tiếp và đi làm trở nên cực kỳ khó khăn suốt phần đời còn lại." },
+      { "tool": "Nối về", "mark": "makes society less safe, not more", "en": "The result is often a greater likelihood of reoffending, which ultimately makes society less safe, not more.", "vi": "Kết quả thường là khả năng tái phạm cao hơn, mà rốt cuộc thì khiến xã hội kém an toàn hơn chứ không an toàn hơn." }
+    ],
+    [
+      { "tool": "Lập trường", "mark": "the vast majority of young offenders", "en": "In conclusion, while the most serious violent crimes committed by older teenagers may warrant stricter treatment, I believe the vast majority of young offenders should be dealt with through a separate system that punishes them while giving them a realistic chance to change.", "vi": "Tóm lại, dù những tội bạo lực nghiêm trọng nhất do các bạn lớn tuổi hơn gây ra có thể cần xử nghiêm hơn, tôi cho rằng tuyệt đại đa số người trẻ phạm tội nên được xử qua một hệ thống riêng, vừa phạt vừa cho họ một cơ hội thật sự để thay đổi." }
+    ]
+  ]
+}

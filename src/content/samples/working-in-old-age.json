@@ -1,0 +1,31 @@
+{
+  "promptId": "working-in-old-age",
+  "source": "book",
+  "note": "The Art of Nuance, Phase 2, Ví dụ 20",
+  "paragraphs": [
+    [
+      { "tool": "Đề hỏi gì", "mark": "whether they should keep working", "en": "Many people now remain healthy well beyond the traditional retirement age, which raises the question of whether they should keep working.", "vi": "Ngày nay nhiều người vẫn khoẻ mạnh từ lâu sau tuổi nghỉ hưu thông thường, nên đặt ra câu hỏi là họ có nên tiếp tục đi làm hay không." },
+      { "tool": "Lập trường", "mark": "for those who are able to do so", "en": "I agree that continuing to work in later life is a good idea for those who are able to do so.", "vi": "Tôi đồng ý rằng tiếp tục đi làm khi về già là một ý hay với những ai còn làm được." }
+    ],
+    [
+      { "tool": "Mạch", "mark": "The greatest benefit is to older people themselves", "en": "The greatest benefit is to older people themselves.", "vi": "Người được lợi nhiều nhất là chính người lớn tuổi." },
+      { "tool": "Mạch", "mark": "stay mentally sharp and emotionally healthy", "en": "Work provides a daily routine, regular contact with colleagues and a sense of being useful, all of which help people stay mentally sharp and emotionally healthy.", "vi": "Công việc cho họ nhịp sống mỗi ngày, được gặp đồng nghiệp thường xuyên và cảm giác mình có ích, và tất cả những điều đó giúp họ giữ đầu óc minh mẫn và tinh thần khoẻ mạnh." },
+      { "tool": "Mạch", "mark": "remain financially independent", "en": "An additional income also allows older people to remain financially independent rather than relying on a pension or on their children.", "vi": "Có thêm thu nhập cũng giúp người lớn tuổi tự chủ về tiền bạc, thay vì phải dựa vào lương hưu hay con cái." },
+      { "tool": "Dài hạn", "mark": "less attractive in practice than in theory", "en": "By contrast, full retirement is often less attractive in practice than in theory.", "vi": "Ngược lại, nghỉ hưu hẳn thường không hấp dẫn như người ta nghĩ." },
+      { "tool": "Dài hạn", "mark": "eventually return to some form of work", "en": "After the first few months of freedom, many retirees begin to feel bored and isolated, and a considerable number eventually return to some form of work.", "vi": "Sau vài tháng đầu được tự do, nhiều người về hưu bắt đầu thấy buồn chán và cô đơn, và không ít người cuối cùng lại quay về làm một công việc nào đó." }
+    ],
+    [
+      { "tool": "Mạch", "mark": "Society also gains", "en": "Society also gains when experienced workers stay on.", "vi": "Xã hội cũng được lợi khi những người lao động nhiều kinh nghiệm ở lại làm việc." },
+      { "tool": "Mạch", "mark": "they can pass it on to younger colleagues", "en": "People who have spent decades in a profession possess knowledge that cannot easily be replaced, and they can pass it on to younger colleagues.", "vi": "Những người đã làm một nghề vài chục năm có những hiểu biết khó thay thế, và họ có thể truyền lại cho đồng nghiệp trẻ." },
+      { "tool": "Quy mô", "mark": "In countries with ageing populations", "en": "In countries with ageing populations, where many industries already face labour shortages, older workers help to fill gaps that might otherwise remain empty.", "vi": "Ở những nước dân số đang già đi, nơi nhiều ngành đã thiếu người làm, người lao động lớn tuổi giúp lấp những chỗ trống mà nếu không có họ thì có thể vẫn bỏ trống." }
+    ],
+    [
+      { "tool": "Scope", "mark": "not every job suits an older person", "en": "Admittedly, not every job suits an older person, and some people may be worn out by physically demanding work.", "vi": "Phải thừa nhận rằng không phải công việc nào cũng hợp với người lớn tuổi, và có người có thể kiệt sức vì việc chân tay nặng nhọc." },
+      { "tool": "Phản biện + Dài hạn", "mark": "move into lighter or part-time roles", "en": "In such cases, however, the answer is usually to move into lighter or part-time roles rather than to stop working altogether.", "vi": "Tuy nhiên, trong những trường hợp đó, cách giải quyết thường là chuyển sang việc nhẹ hơn hoặc làm bán thời gian, chứ không phải nghỉ hẳn." },
+      { "tool": "Phản biện + With/Without", "mark": "cannot simply step into a position", "en": "It is also sometimes argued that older employees take jobs from the young, but this concern is often exaggerated, since a young graduate cannot simply step into a position that requires decades of experience.", "vi": "Cũng có ý kiến cho rằng người lao động lớn tuổi giành việc của người trẻ, nhưng nỗi lo này thường bị phóng đại, vì một người mới ra trường không thể cứ thế đảm nhận một vị trí đòi hỏi kinh nghiệm hàng chục năm." }
+    ],
+    [
+      { "tool": "Lập trường", "mark": "should be encouraged to do so", "en": "In conclusion, I believe that people who are able to keep working in old age should be encouraged to do so, as it benefits both their own wellbeing and the wider society.", "vi": "Tóm lại, tôi cho rằng những người còn có thể tiếp tục làm việc khi về già nên được khuyến khích làm vậy, vì điều đó có lợi cho cả sức khoẻ, tinh thần của chính họ lẫn cho xã hội." }
+    ]
+  ]
+}

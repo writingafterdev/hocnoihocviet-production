@@ -1,0 +1,30 @@
+{
+  "promptId": "why-imported-food",
+  "source": "book",
+  "note": "The Art of Nuance, Phase 2, Ví dụ 24",
+  "paragraphs": [
+    [
+      { "tool": "Đề hỏi gì", "mark": "a growing number of consumers prefer it", "en": "In many countries, supermarket shelves are increasingly filled with food from abroad, and a growing number of consumers prefer it to local produce.", "vi": "Ở nhiều nước, kệ siêu thị ngày càng đầy đồ ăn nhập từ nước ngoài, và ngày càng nhiều người mua chuộng chúng hơn đồ trong nước." },
+      { "tool": "Đề hỏi gì", "mark": "examine the main reasons for this trend", "en": "This essay will examine the main reasons for this trend and suggest how local food could regain its appeal.", "vi": "Bài viết này sẽ xem xét những nguyên nhân chính của xu hướng này và đề xuất cách để đồ ăn trong nước hấp dẫn người mua trở lại." }
+    ],
+    [
+      { "tool": "Mạch", "mark": "The most important reason is trust", "en": "The most important reason is trust.", "vi": "Nguyên nhân quan trọng nhất là lòng tin." },
+      { "tool": "Mạch", "mark": "may contain pesticides or unsafe preservatives", "en": "Many consumers worry that locally grown vegetables and meat may contain pesticides or unsafe preservatives, and they assume that imported food has passed stricter inspections.", "vi": "Nhiều người mua lo rằng rau và thịt trong nước có thể chứa thuốc trừ sâu hoặc chất bảo quản không an toàn, và họ nghĩ rằng đồ nhập khẩu đã qua những vòng kiểm tra chặt chẽ hơn." },
+      { "tool": "Mạch", "mark": "buyers have no way of checking it", "en": "This distrust, however, often has less to do with the actual quality of local food than with the fact that buyers have no way of checking it, since much local produce comes from small farms that sell without labels, certification or any record of its origin.", "vi": "Tuy nhiên, sự thiếu tin tưởng này thường không nằm ở chất lượng thật của đồ trong nước, mà ở chỗ người mua không có cách nào kiểm tra được, vì phần lớn nông sản trong nước đến từ các nông hộ nhỏ, bán ra mà không có nhãn mác, chứng nhận hay bất kỳ thông tin nào về nguồn gốc." },
+      { "tool": "Mạch", "mark": "price and convenience", "en": "A second reason is price and convenience.", "vi": "Nguyên nhân thứ hai là giá cả và sự tiện lợi." },
+      { "tool": "Mạch", "mark": "cheaper and available all year round", "en": "Imported food is often produced on a large scale, so it can be cheaper and available all year round.", "vi": "Đồ nhập khẩu thường được sản xuất với số lượng lớn, nên có thể rẻ hơn và có quanh năm." },
+      { "tool": "Mạch", "mark": "Supermarkets also tend to favour imports", "en": "Supermarkets also tend to favour imports, as buying in bulk from a single supplier is easier and more profitable, which means imported products are given the most prominent shelf space.", "vi": "Siêu thị cũng thường ưu tiên hàng nhập, vì nhập số lượng lớn từ một nhà cung cấp thì dễ hơn và lãi hơn, nên hàng nhập được bày ở những chỗ dễ thấy nhất." }
+    ],
+    [
+      { "tool": "Nối về", "mark": "address these causes directly", "en": "The solutions should therefore address these causes directly.", "vi": "Vì vậy, giải pháp phải nhắm thẳng vào những nguyên nhân này." },
+      { "tool": "Mạch", "mark": "food safety certification and traceability labels", "en": "To rebuild trust, governments could introduce food safety certification and traceability labels for local products, allowing shoppers to see exactly where their food comes from and how it has been tested.", "vi": "Để lấy lại lòng tin, nhà nước có thể đưa ra chứng nhận an toàn thực phẩm và tem truy xuất nguồn gốc cho hàng trong nước, để người mua thấy rõ đồ ăn của mình đến từ đâu và đã được kiểm tra thế nào." },
+      { "tool": "Khả thi", "mark": "the state should cover part of the cost", "en": "Because small farmers may struggle to afford these procedures, the state should cover part of the cost, at least initially.", "vi": "Vì nông dân nhỏ lẻ có thể khó trả nổi chi phí cho những thủ tục này, nhà nước nên hỗ trợ một phần, ít nhất là trong giai đoạn đầu." },
+      { "tool": "Mạch", "mark": "form cooperatives", "en": "At the same time, local producers could be encouraged to form cooperatives, which would allow them to package and brand their goods and supply the volumes that supermarkets require.", "vi": "Đồng thời, có thể khuyến khích người sản xuất trong nước lập hợp tác xã, để họ đóng gói, xây dựng thương hiệu cho hàng của mình và cung cấp đủ số lượng mà siêu thị cần." },
+      { "tool": "Phản biện", "mark": "would achieve little", "en": "Simply urging people to support local products, by contrast, would achieve little, as it does nothing to resolve the uncertainty that drives consumers towards imports.", "vi": "Ngược lại, chỉ kêu gọi mọi người ủng hộ hàng trong nước thì sẽ chẳng được bao nhiêu, vì cách đó không giải quyết được sự không chắc chắn đang đẩy người mua sang hàng nhập." }
+    ],
+    [
+      { "tool": "Nối về", "mark": "they trust it more", "en": "In conclusion, people buy imported food mainly because they trust it more and find it cheaper and easier to obtain.", "vi": "Tóm lại, người ta mua đồ ăn nhập khẩu chủ yếu vì họ tin nó hơn, và thấy nó rẻ hơn, dễ mua hơn." },
+      { "tool": "Nối về", "mark": "certified, traceable and properly marketed", "en": "If local food were certified, traceable and properly marketed, many consumers would be happy to choose it instead.", "vi": "Nếu đồ ăn trong nước được chứng nhận, truy xuất được nguồn gốc và được quảng bá đúng cách, nhiều người mua sẽ sẵn lòng chọn nó thay thế." }
+    ]
+  ]
+}

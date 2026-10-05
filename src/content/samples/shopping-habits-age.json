@@ -1,0 +1,32 @@
+{
+  "promptId": "shopping-habits-age",
+  "source": "book",
+  "note": "The Art of Nuance, Phase 2, Ví dụ 13",
+  "paragraphs": [
+    [
+      { "tool": "Đề hỏi gì", "mark": "shaped mainly by their age", "en": "It is often assumed that the way people shop is shaped mainly by their age.", "vi": "Người ta thường cho rằng cách một người mua sắm chủ yếu là do tuổi tác quyết định." },
+      { "tool": "Lập trường", "mark": "I disagree with this view", "en": "While age does influence certain buying patterns, I disagree with this view, as factors such as income, culture and personal values have a far greater impact on shopping habits.", "vi": "Dù tuổi tác đúng là có ảnh hưởng tới một số thói quen mua hàng, tôi không đồng ý với quan điểm này, vì những yếu tố như thu nhập, văn hoá và giá trị cá nhân tác động tới thói quen mua sắm lớn hơn nhiều." }
+    ],
+    [
+      { "tool": "Mạch", "mark": "some broad trends can be linked to age", "en": "Admittedly, some broad trends can be linked to age.", "vi": "Phải thừa nhận là có một vài xu hướng chung gắn với tuổi tác." },
+      { "tool": "Mạch", "mark": "follow fashion trends", "en": "Teenagers tend to follow fashion trends and buy the latest gadgets, whereas older people are more likely to prioritise comfort, convenience and health-related products.", "vi": "Tuổi mới lớn thường chạy theo thời trang và mua những món đồ công nghệ mới nhất, còn người lớn tuổi thì hay ưu tiên sự thoải mái, tiện lợi và các sản phẩm tốt cho sức khoẻ." },
+      { "tool": "Phản biện + Dài hạn", "mark": "becoming weaker over time", "en": "However, these are generalisations rather than rules, and they are becoming weaker over time.", "vi": "Tuy vậy, đây chỉ là những nhận định chung chứ không phải quy luật, và chúng còn đang yếu dần theo thời gian." },
+      { "tool": "Dài hạn", "mark": "now common among people of all ages", "en": "Online shopping, once associated mainly with the young, is now common among people of all ages, many of whom regularly order goods through their phones.", "vi": "Mua sắm trên mạng, từng được xem là chuyện của người trẻ, giờ đã phổ biến ở mọi lứa tuổi, và nhiều người trong số đó thường xuyên đặt hàng qua điện thoại." }
+    ],
+    [
+      { "tool": "Mạch", "mark": "A much stronger influence is income", "en": "A much stronger influence is income.", "vi": "Một yếu tố có ảnh hưởng lớn hơn nhiều là thu nhập." },
+      { "tool": "With/Without", "mark": "Two people of the same age", "en": "Two people of the same age can shop in completely different ways depending on how much they earn.", "vi": "Hai người cùng tuổi có thể mua sắm theo những cách hoàn toàn khác nhau, tuỳ vào việc họ kiếm được bao nhiêu." },
+      { "tool": "Scope", "mark": "a university student of the same age", "en": "A young professional with a high salary may buy designer clothes and the newest technology, while a university student of the same age may search for discounts and buy only what is necessary.", "vi": "Một người trẻ đi làm lương cao có thể mua quần áo hàng hiệu và đồ công nghệ mới nhất, trong khi một sinh viên cùng tuổi lại đi săn giảm giá và chỉ mua những gì thật cần." },
+      { "tool": "Scope", "mark": "The same gap can be seen among older people", "en": "The same gap can be seen among older people, where wealthy retirees spend freely on travel and high-quality goods while those on small pensions limit themselves to essentials.", "vi": "Khoảng cách đó cũng thấy ở người lớn tuổi, khi những người về hưu khá giả thoải mái chi tiền cho du lịch và hàng chất lượng cao, còn những người sống bằng lương hưu ít ỏi thì chỉ mua những thứ thiết yếu." }
+    ],
+    [
+      { "tool": "Mạch", "mark": "play a more significant role than age", "en": "Culture and personal values also play a more significant role than age.", "vi": "Văn hoá và giá trị cá nhân cũng đóng vai trò quan trọng hơn tuổi tác." },
+      { "tool": "Scope", "mark": "Among middle-aged people", "en": "Among middle-aged people, for instance, those living in societies that value thrift tend to research products carefully before buying, whereas those used to a more consumer-driven lifestyle are more prone to impulse purchases.", "vi": "Chẳng hạn, trong số những người trung niên, ai sống trong xã hội đề cao tiết kiệm thường tìm hiểu kỹ sản phẩm trước khi mua, còn ai quen với lối sống tiêu dùng hơn thì dễ mua theo cảm hứng hơn." },
+      { "tool": "Mạch + Scope", "mark": "whether twenty or sixty", "en": "Similarly, an environmentally conscious person, whether twenty or sixty, is likely to choose durable, second-hand or recycled products, while someone focused on health may buy organic food regardless of their age.", "vi": "Tương tự, một người quan tâm tới môi trường, dù hai mươi hay sáu mươi tuổi, thường sẽ chọn đồ bền, đồ cũ hoặc đồ tái chế, còn người chú trọng sức khoẻ thì có thể mua thực phẩm hữu cơ bất kể tuổi tác." }
+    ],
+    [
+      { "tool": "Lập trường", "mark": "far less decisive than income, culture and personal values", "en": "In conclusion, although age may shape a few general shopping trends, it is far less decisive than income, culture and personal values.", "vi": "Tóm lại, dù tuổi tác có thể tạo ra vài xu hướng mua sắm chung, nó kém quyết định hơn nhiều so với thu nhập, văn hoá và giá trị cá nhân." },
+      { "tool": "Lập trường", "mark": "Even within the same age group", "en": "Even within the same age group, these factors lead people to shop in very different ways.", "vi": "Ngay trong cùng một nhóm tuổi, những yếu tố này vẫn khiến người ta mua sắm theo những cách rất khác nhau." }
+    ]
+  ]
+}

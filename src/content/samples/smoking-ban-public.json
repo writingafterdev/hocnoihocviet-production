@@ -1,0 +1,29 @@
+{
+  "promptId": "smoking-ban-public",
+  "source": "book",
+  "note": "The Art of Nuance, Phase 2, Ví dụ 6",
+  "paragraphs": [
+    [
+      { "tool": "Đề hỏi gì", "mark": "sets public health against personal freedom", "en": "Whether smoking should be prohibited in public places is a question that sets public health against personal freedom.", "vi": "Có nên cấm hút thuốc ở nơi công cộng hay không là một câu hỏi đặt sức khoẻ cộng đồng lên bàn cân với tự do cá nhân." },
+      { "tool": "Lập trường", "mark": "I fully agree with such a ban", "en": "I fully agree with such a ban, because it protects people who have not chosen to smoke, while asking relatively little of those who do.", "vi": "Tôi hoàn toàn đồng ý với lệnh cấm này, vì nó bảo vệ những người không chọn hút thuốc, trong khi lại không đòi hỏi quá nhiều ở những người hút." }
+    ],
+    [
+      { "tool": "Mạch", "mark": "the protection it offers to non-smokers", "en": "The strongest reason for a ban is the protection it offers to non-smokers.", "vi": "Lý do mạnh nhất để cấm là sự bảo vệ mà lệnh cấm mang lại cho người không hút thuốc." },
+      { "tool": "Mạch", "mark": "exposed to second-hand smoke", "en": "When someone smokes in a public place, the people around them are exposed to second-hand smoke, which increases the risk of respiratory and heart disease.", "vi": "Khi ai đó hút thuốc ở nơi công cộng, những người xung quanh phải hít khói thuốc thụ động, làm tăng nguy cơ mắc bệnh hô hấp và tim mạch." },
+      { "tool": "Scope", "mark": "particularly serious in enclosed spaces", "en": "This is particularly serious in enclosed spaces such as restaurants, bus stations and hospital waiting rooms, where smoke lingers and others cannot simply move away.", "vi": "Điều này đặc biệt nghiêm trọng ở những không gian kín như nhà hàng, bến xe buýt hay phòng chờ bệnh viện, nơi khói đọng lại và người khác không thể cứ thế đi chỗ khác." },
+      { "tool": "With/Without", "mark": "have no real way of avoiding it", "en": "Children accompanying their parents, patients waiting for treatment and staff who spend entire shifts in these places have no real way of avoiding it.", "vi": "Trẻ em đi cùng bố mẹ, bệnh nhân đang chờ khám và nhân viên làm cả ca ở những nơi này gần như không có cách nào để tránh khói." },
+      { "tool": "Dài hạn", "mark": "felt long into the future", "en": "A ban removes this risk, and because illnesses linked to passive smoking often develop over many years, the benefits are likely to be felt long into the future.", "vi": "Lệnh cấm loại bỏ được nguy cơ này, và vì các bệnh liên quan tới hút thuốc thụ động thường phát triển qua nhiều năm, nên lợi ích có lẽ sẽ còn thấy được rất lâu về sau." }
+    ],
+    [
+      { "tool": "Mạch", "mark": "a ban does restrict smokers", "en": "Admittedly, a ban does restrict smokers, who may feel that they are being prevented from doing something that is perfectly legal.", "vi": "Phải thừa nhận là lệnh cấm có hạn chế người hút thuốc, và họ có thể thấy mình đang bị ngăn làm một việc hoàn toàn hợp pháp." },
+      { "tool": "Phản biện + Scope", "mark": "this restriction is limited", "en": "However, this restriction is limited.", "vi": "Tuy nhiên, sự hạn chế này có giới hạn." },
+      { "tool": "Phản biện + Scope", "mark": "remain free to smoke at home and in designated areas", "en": "Smokers remain free to smoke at home and in designated areas; what they lose is only the ability to do so in shared spaces where others would be affected.", "vi": "Người hút vẫn được tự do hút ở nhà và ở khu vực dành riêng; thứ họ mất chỉ là việc được hút ở không gian chung, nơi người khác sẽ bị ảnh hưởng." },
+      { "tool": "Phản biện + With/Without", "mark": "at the expense of other people's health", "en": "In this sense, the freedom they give up is one that was previously being exercised at the expense of other people's health.", "vi": "Hiểu theo nghĩa đó, cái tự do mà họ phải bỏ đi vốn là thứ trước đây được dùng bằng cái giá là sức khoẻ của người khác." },
+      { "tool": "Phản biện + Scope", "mark": "easier for those who wish to quit", "en": "Some smokers may even benefit, as having fewer opportunities to smoke can make it easier for those who wish to quit.", "vi": "Một số người hút thậm chí còn được lợi, vì có ít dịp hút hơn có thể giúp những người muốn bỏ thuốc bỏ dễ hơn." }
+    ],
+    [
+      { "tool": "Lập trường", "mark": "smoking should be banned in public places, especially indoors", "en": "In conclusion, I believe that smoking should be banned in public places, especially indoors.", "vi": "Tóm lại, tôi cho rằng nên cấm hút thuốc ở nơi công cộng, nhất là ở trong nhà." },
+      { "tool": "Lập trường", "mark": "clearly outweighs the modest inconvenience", "en": "The protection this gives to non-smokers clearly outweighs the modest inconvenience it causes smokers.", "vi": "Sự bảo vệ mà điều này mang lại cho người không hút rõ ràng lớn hơn chút bất tiện nó gây ra cho người hút." }
+    ]
+  ]
+}

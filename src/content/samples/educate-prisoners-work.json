@@ -1,0 +1,29 @@
+{
+  "promptId": "educate-prisoners-work",
+  "source": "book",
+  "note": "The Art of Nuance, Phase 2, Ví dụ 11",
+  "paragraphs": [
+    [
+      { "tool": "Đề hỏi gì", "mark": "the most effective way to cut crime", "en": "It is sometimes argued that educating prisoners so that they can find employment after release is the most effective way to cut crime.", "vi": "Có người cho rằng dạy nghề cho tù nhân để họ tìm được việc làm sau khi ra tù là cách hiệu quả nhất để giảm tội phạm." },
+      { "tool": "Lập trường", "mark": "the best approach for preventing reoffending", "en": "I agree that this is the best approach for preventing reoffending, but I do not believe it is the best way to reduce crime as a whole.", "vi": "Mình đồng ý rằng đây là cách tốt nhất để ngăn tái phạm, nhưng mình không cho rằng đó là cách tốt nhất để giảm tội phạm nói chung." }
+    ],
+    [
+      { "tool": "Scope", "mark": "more effective than any alternative", "en": "For people who have already served a prison sentence, education and vocational training are more effective than any alternative.", "vi": "Với những người đã từng ngồi tù, giáo dục và dạy nghề hiệu quả hơn bất kỳ cách nào khác." },
+      { "tool": "Mạch", "mark": "no other way to support themselves", "en": "Many former prisoners return to crime simply because they have no other way to support themselves, as their lack of skills and their criminal records make legitimate work hard to find.", "vi": "Nhiều người từng ở tù quay lại con đường phạm tội chỉ vì họ không còn cách nào khác để tự nuôi sống mình, khi việc thiếu kỹ năng và có tiền án khiến họ khó tìm được một công việc hợp pháp." },
+      { "tool": "Mạch", "mark": "no longer needs to steal to survive", "en": "Training addresses this directly: a former prisoner who can work as a mechanic or an electrician no longer needs to steal to survive.", "vi": "Dạy nghề giải quyết thẳng vấn đề này: một người từng ở tù mà làm được thợ máy hay thợ điện thì không còn phải trộm cắp để sống." },
+      { "tool": "Phản biện + Dài hạn", "mark": "only delays the problem", "en": "By contrast, the popular alternative of imposing longer sentences only delays the problem.", "vi": "Ngược lại, cách phổ biến là tăng án tù chỉ trì hoãn vấn đề mà thôi." },
+      { "tool": "Phản biện + Dài hạn", "mark": "more, not less, likely to reoffend", "en": "Prisoners released after many years are older, still unskilled and often more connected to criminal networks than before, which makes them more, not less, likely to reoffend.", "vi": "Những tù nhân ra tù sau nhiều năm thì đã lớn tuổi hơn, vẫn không có nghề, và thường còn dính líu tới các đường dây tội phạm nhiều hơn trước, nên họ lại càng dễ tái phạm chứ không phải ít đi." },
+      { "tool": "Khả thi", "mark": "encourage employers to hire former offenders", "en": "That said, training works best when it is combined with programmes that encourage employers to hire former offenders, since many businesses are reluctant to do so.", "vi": "Dù vậy, dạy nghề sẽ hiệu quả nhất khi đi kèm với các chương trình khuyến khích chủ doanh nghiệp tuyển người có tiền án, vì nhiều doanh nghiệp còn ngại làm vậy." }
+    ],
+    [
+      { "tool": "Phản biện + Scope", "mark": "only reach people who are already in prison", "en": "However, education in prison can only reach people who are already in prison.", "vi": "Tuy nhiên, giáo dục trong tù chỉ đến được với những người đã ở trong tù." },
+      { "tool": "Scope", "mark": "people with no previous convictions", "en": "It does nothing to stop someone from committing a crime for the first time, and a considerable proportion of crime is committed by people with no previous convictions.", "vi": "Nó không giúp gì trong việc ngăn một người phạm tội lần đầu, trong khi một phần đáng kể các vụ phạm tội là do những người chưa từng có tiền án gây ra." },
+      { "tool": "Mạch", "mark": "a visible police presence is far more effective", "en": "For this group, a visible police presence is far more effective, because it raises the risk of being caught before an offence takes place.", "vi": "Với nhóm này, việc có cảnh sát hiện diện rõ ràng hiệu quả hơn nhiều, vì nó làm tăng nguy cơ bị bắt ngay trước khi hành vi phạm tội xảy ra." },
+      { "tool": "With/Without", "mark": "the overall crime rate might not fall at all", "en": "If funding were shifted from policing to prison education, first-time offenders would face fewer obstacles, and the overall crime rate might not fall at all.", "vi": "Nếu chuyển tiền từ lực lượng cảnh sát sang giáo dục trong tù, những người phạm tội lần đầu sẽ gặp ít trở ngại hơn, và tỷ lệ tội phạm nói chung có thể chẳng giảm chút nào." }
+    ],
+    [
+      { "tool": "Lập trường", "mark": "the most effective way to prevent reoffending", "en": "In conclusion, educating prisoners is the most effective way to prevent reoffending and is clearly superior to longer prison sentences.", "vi": "Tóm lại, dạy nghề cho tù nhân là cách hiệu quả nhất để ngăn tái phạm và rõ ràng tốt hơn việc tăng án tù." },
+      { "tool": "Lập trường", "mark": "cannot be considered the best way to reduce crime overall", "en": "However, it cannot be considered the best way to reduce crime overall, since preventing first-time offences requires other measures, most notably effective policing.", "vi": "Tuy nhiên, đó không thể được coi là cách tốt nhất để giảm tội phạm nói chung, vì muốn ngăn những vụ phạm tội lần đầu thì cần những biện pháp khác, mà nổi bật nhất là lực lượng cảnh sát hoạt động hiệu quả." }
+    ]
+  ]
+}

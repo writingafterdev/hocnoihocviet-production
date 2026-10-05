@@ -1,0 +1,30 @@
+{
+  "promptId": "students-pay-full-fees",
+  "source": "book",
+  "note": "The Art of Nuance, Phase 2, Ví dụ 21",
+  "paragraphs": [
+    [
+      { "tool": "Đề hỏi gì", "mark": "students should cover the entire cost", "en": "Some people argue that, since graduates are the main beneficiaries of higher education, students should cover the entire cost of their degrees.", "vi": "Có người cho rằng vì người tốt nghiệp là người được lợi chính từ giáo dục đại học nên sinh viên phải tự trả toàn bộ chi phí học tập của mình." },
+      { "tool": "Lập trường", "mark": "extend well beyond the individual", "en": "I disagree with this view, as the benefits of university education extend well beyond the individual.", "vi": "Tôi phản đối quan điểm này, vì lợi ích của giáo dục đại học vượt xa phạm vi một cá nhân." }
+    ],
+    [
+      { "tool": "Mạch", "mark": "graduates gain personally from their studies", "en": "It is true that graduates gain personally from their studies.", "vi": "Đúng là người tốt nghiệp được lợi riêng từ việc học của mình." },
+      { "tool": "Mạch", "mark": "make some contribution to the cost", "en": "A degree generally leads to better job opportunities and higher earnings over a lifetime, so it is reasonable to expect students to make some contribution to the cost of their education.", "vi": "Tấm bằng thường mang lại cơ hội việc làm tốt hơn và thu nhập cao hơn suốt cả đời, nên việc yêu cầu sinh viên đóng góp một phần chi phí học tập là hợp lý." }
+    ],
+    [
+      { "tool": "Phản biện", "mark": "is simply mistaken", "en": "However, the claim that society does not benefit is simply mistaken.", "vi": "Tuy nhiên, cho rằng xã hội không được lợi gì là sai hoàn toàn." },
+      { "tool": "Mạch", "mark": "Universities train the doctors", "en": "Universities train the doctors who treat patients, the teachers who educate the next generation and the engineers who design the infrastructure everyone relies on.", "vi": "Các trường đại học đào tạo ra những bác sĩ chữa bệnh, những giáo viên dạy dỗ thế hệ sau và những kỹ sư thiết kế hạ tầng mà ai cũng cần tới." },
+      { "tool": "Phản biện + Scope", "mark": "contribute to society through the higher taxes", "en": "Even graduates in fields such as business or finance, who may gain most personally, contribute to society through the higher taxes they pay and the jobs they help to create.", "vi": "Ngay cả người học những ngành như kinh doanh hay tài chính, những người có thể được lợi riêng nhiều nhất, cũng đóng góp cho xã hội qua phần thuế cao hơn họ đóng và những việc làm họ giúp tạo ra." },
+      { "tool": "Dài hạn", "mark": "continue throughout a graduate's working life", "en": "These contributions continue throughout a graduate's working life, making higher education one of the most valuable investments a society can make.", "vi": "Những đóng góp này kéo dài suốt cả đời làm việc của người tốt nghiệp, khiến giáo dục đại học trở thành một trong những khoản đầu tư giá trị nhất mà một xã hội có thể làm." }
+    ],
+    [
+      { "tool": "Mạch", "mark": "would also be deeply unfair", "en": "Requiring students to pay the full cost would also be deeply unfair.", "vi": "Bắt sinh viên trả toàn bộ chi phí còn rất bất công." },
+      { "tool": "Scope", "mark": "from low-income families simply could not afford it", "en": "Many talented young people from low-income families simply could not afford it, meaning that access to university would depend on wealth rather than ability.", "vi": "Nhiều người trẻ có năng lực ở các gia đình thu nhập thấp sẽ không thể trả nổi, nghĩa là việc vào được đại học sẽ phụ thuộc vào tiền bạc chứ không phải năng lực." },
+      { "tool": "Mạch", "mark": "the gap between rich and poor would widen", "en": "Society would then lose the potential of these students, and the gap between rich and poor would widen.", "vi": "Khi đó xã hội sẽ mất đi tiềm năng của những sinh viên này, và khoảng cách giàu nghèo sẽ rộng thêm." },
+      { "tool": "Phản biện + With/Without", "mark": "Sharing the cost between students and the state", "en": "Sharing the cost between students and the state avoids this problem while still giving students a financial stake in their studies, particularly if scholarships and loans are available to those in need.", "vi": "Chia sẻ chi phí giữa sinh viên và nhà nước sẽ tránh được vấn đề này mà vẫn khiến sinh viên có trách nhiệm về tiền bạc với việc học của mình, nhất là khi có học bổng và khoản vay cho những ai khó khăn." }
+    ],
+    [
+      { "tool": "Lập trường", "mark": "its cost should be shared", "en": "In conclusion, because university education benefits both individuals and society, I believe its cost should be shared, rather than placed entirely on students.", "vi": "Tóm lại, vì giáo dục đại học có lợi cho cả cá nhân lẫn xã hội, tôi cho rằng chi phí của nó nên được chia sẻ, thay vì đặt hết lên vai sinh viên." }
+    ]
+  ]
+}
