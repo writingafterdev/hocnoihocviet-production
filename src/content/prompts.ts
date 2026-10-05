@@ -47,6 +47,8 @@ const SOLUTION_REQ = 'Câu ②: mỗi giải pháp phải xử lý một nguyên
 
 const YP = 'YouPass';
 const SAMPLE = 'hocnoihocviet · đề mẫu';
+/** Prompts worked through in The Art of Nuance (Phase 2 examples); their Chép mẫu sample is the book's own essay. */
+const BOOK = 'The Art of Nuance · ví dụ trong sách';
 
 type Entry = Omit<Prompt, 'task'>;
 
