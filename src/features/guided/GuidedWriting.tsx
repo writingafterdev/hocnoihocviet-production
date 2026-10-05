@@ -47,10 +47,13 @@ function Revealed({ seg }: { seg: Segment }) {
     parts.push([rest.slice(best.i, best.i + best.m.length), best.m]);
     rest = rest.slice(best.i + best.m.length);
   }
+  // Essay labels go before the sentence they describe, as in the book's SAMPLE essays; vocab chips follow it.
+  const chip = <SegChips seg={seg} small />;
   return (
     <span>
+      {!seg.vocab && <>{chip}{' '}</>}
       {parts.map(([t, on], k) => on ? <span key={k} style={{ background: hlFor(on), borderRadius: 3, padding: '0 2px', boxDecorationBreak: 'clone', WebkitBoxDecorationBreak: 'clone' }}>{t}</span> : <Fragment key={k}>{t}</Fragment>)}
-      {' '}<SegChips seg={seg} small />{' '}
+      {' '}{seg.vocab && <>{chip}{' '}</>}
     </span>
   );
 }
@@ -123,8 +126,9 @@ export function GuidedWriting({ sample = GW_SAMPLES.charity, onBack, backLabel =
                   const w = Math.max(30, Math.min(100, s.en.length / 2.2));
                   return (
                     <span key={si} title={k === cur ? 'Câu đang viết' : ''} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, width: w + '%', margin: '0 8px 6px 0', verticalAlign: 'middle' }}>
+                      {!s.vocab && <SegChips seg={s} small hidden />}
                       <span style={{ flex: 1, minWidth: 24, height: 10, borderRadius: 999, background: barColor(s), boxShadow: k === cur ? '0 0 0 2px ' + CL.ink : 'none' }} />
-                      <SegChips seg={s} small hidden />
+                      {s.vocab && <SegChips seg={s} small hidden />}
                     </span>
                   );
                 })}
