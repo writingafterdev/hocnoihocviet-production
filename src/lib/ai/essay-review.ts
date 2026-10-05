@@ -1,8 +1,7 @@
 /** "Nộp bài": the AI scores the essay on TR / CC / LR / GRA, and every comment quotes the essay. */
 import type { Prompt } from '@/content/prompts';
-import type { Chain, ReviewItem } from '@/features/chainlab/types';
-import { bandOf, CRITERIA, type EssayReview } from '@/features/desk/scoring';
-import { ask } from './claude';
+import type { Chain } from '@/features/chainlab/types';
+import { CRITERIA } from '@/features/desk/scoring';
 import { describeChains, describePrompt } from './describe';
 
 export interface SectionIn { id: string; label: string; text: string }
@@ -163,87 +162,20 @@ const COMMENTS_SCHEMA = (criterion: string) => ({
 const ONLY_SCORES = '\n\n# LẦN GỌI NÀY\nChỉ làm bước 1 và bước 7: trả về criteria và summary. KHÔNG viết comments; các nhận xét chi tiết do những lần gọi khác viết. Vẫn đọc kỹ cả bài và soát theo các bước bên dưới để chấm cho đúng.';
 const ONLY_COMMENTS = (id: string, name: string) => `\n\n# LẦN GỌI NÀY\nChỉ viết nhận xét chi tiết (comments) cho MỘT tiêu chí: ${name} (criterion = "${id}"). Không chấm điểm, không viết summary, không nhận xét tiêu chí khác (các lần gọi khác làm phần đó). Soát đầy đủ theo các bước của tiêu chí này, đọc hết cả bài, và nêu mọi chỗ làm bài mất điểm ở tiêu chí này.`;
 
-interface Comment { criterion: string; sectionId: string; quote: string; label?: string; text: string; fix: string; chainId: string }
-
-const norm = (s: string) => s.replace(/[‘’]/g, "'").replace(/[“”]/g, '"').replace(/\s+/g, ' ').toLowerCase();
-
-/** Finds the quote in the essay (ignoring case, curly quotes and spacing) and returns the exact text there. */
-function locate(sections: SectionIn[], prefer: string, quote: string): { id: string; text: string } | null {
-  const q = norm(quote.trim().replace(/^["“]|["”]$/g, ''));
-  if (!q) return null;
-  const order = [...sections.filter((s) => s.id === prefer), ...sections.filter((s) => s.id !== prefer)];
-  for (const s of order) {
-    // Map positions in the normalised text back to the original.
-    const map: number[] = [];
-    let flat = '';
-    for (let i = 0; i < s.text.length; i++) {
-      const ch = s.text[i];
-      if (/\s/.test(ch)) { if (flat.endsWith(' ')) continue; flat += ' '; } else flat += norm(ch);
-      map.push(i);
-    }
-    const at = flat.indexOf(q);
-    if (at < 0) continue;
-    const start = map[at], end = map[at + q.length - 1] + 1;
-    return { id: s.id, text: s.text.slice(start, end) };
-  }
-  return null;
-}
-
-const clampBand = (x: number) => Math.max(1, Math.min(9, Math.round((Number(x) || 0) * 2) / 2));
-
 const essayInput = (prompt: Prompt, sections: SectionIn[], chains: Chain[], stance: string) => {
   const words = sections.reduce((n, s) => n + (s.text.trim() ? s.text.trim().split(/\s+/).length : 0), 0);
   const essay = sections.map((s) => `<section id="${s.id}" label="${s.label}">\n${s.text.trim() || '(trống)'}\n</section>`).join('\n');
   return describePrompt(prompt) + '\n\n' + describeChains(prompt, chains, stance) + `\n\nBÀI VIẾT (${words} từ)\n` + essay;
 };
 
-export interface EssayScores { scores: EssayReview['scores']; summary: string; criteria: EssayReview['criteria'] }
-
 /**
- * An essay review is five AI calls: the scores (this) and one per criterion (essayComments). The browser
- * sends them as separate requests under one ticket, so each runs in its own Worker request.
+ * An essay review is five AI calls: "scores" (bands, why/gap/next, summary) and one per criterion (its
+ * detailed comments). Each is its own request, streamed straight to the browser, which parses the reply
+ * (features/desk/essay-parse.ts).
  */
-export async function essayScores(userId: string, prompt: Prompt, sections: SectionIn[], chains: Chain[], stance: string): Promise<EssayScores> {
-  const out = await ask<{ criteria: Record<'tr' | 'cc' | 'lr' | 'gra', { score: number; why: string; gap?: string; next: string }>; summary: string }>({
-    userId, kind: 'essay', counted: false, effort: 'high', task: TASK + ONLY_SCORES, schema: SCORE_SCHEMA, input: essayInput(prompt, sections, chains, stance),
-  });
-  const cr = out.criteria || ({} as typeof out.criteria);
-  const tr = clampBand(cr.tr?.score), cc = clampBand(cr.cc?.score), lr = clampBand(cr.lr?.score), gra = clampBand(cr.gra?.score);
-  return {
-    summary: (out.summary || '').trim(),
-    criteria: Object.fromEntries(CRITERIA.map(([id]) => [id, { why: (cr[id as 'tr']?.why || '').trim(), gap: (cr[id as 'tr']?.gap || '').trim(), next: (cr[id as 'tr']?.next || '').trim() }])),
-    scores: { tr, cc, lr, gra, band: bandOf(tr, cc, lr, gra) },
-  };
-}
-
-/** One criterion's detailed comments, each pointing at the exact words in the essay. */
-export async function essayComments(userId: string, criterion: string, prompt: Prompt, sections: SectionIn[], chains: Chain[], stance: string): Promise<ReviewItem[]> {
-  const name = CRITERIA.find(([id]) => id === criterion)[1];
-  const out = await ask<{ comments: Comment[] }>({
-    userId, kind: 'essay', counted: false, effort: 'high', task: TASK + ONLY_COMMENTS(criterion, name), schema: COMMENTS_SCHEMA(criterion), input: essayInput(prompt, sections, chains, stance),
-  });
-  const items: ReviewItem[] = [];
-  const taken = new Set<string>();
-  for (const c of out.comments || []) {
-    const text = (c.text || '').trim();
-    const hit = text && locate(sections, c.sectionId, c.quote || '');
-    if (!hit) continue; // every comment must point at the essay
-    if (taken.has(hit.id + '|' + hit.text)) continue;
-    taken.add(hit.id + '|' + hit.text);
-    const s = sections.find((x) => x.id === hit.id);
-    const k = chains.findIndex((x) => x.id === c.chainId);
-    items.push({
-      key: criterion + items.length,
-      sectionId: hit.id,
-      where: s.label + (k >= 0 ? ' · Mạch ' + (k + 1) : ''),
-      ...(k >= 0 ? { chainId: chains[k].id } : {}),
-      word: hit.text,
-      quote: hit.text,
-      ...(c.label && c.label.trim() ? { label: c.label.trim().slice(0, 60) } : {}),
-      ...(c.fix && c.fix.trim() && c.fix.trim() !== hit.text ? { fix: c.fix.trim() } : {}),
-      snap: s.text,
-      text,
-    });
-  }
-  return items;
+export function essayCall(part: string, prompt: Prompt, sections: SectionIn[], chains: Chain[], stance: string) {
+  const input = essayInput(prompt, sections, chains, stance);
+  if (part === 'scores') return { kind: 'essay' as const, effort: 'high' as const, task: TASK + ONLY_SCORES, schema: SCORE_SCHEMA, input };
+  const name = CRITERIA.find(([id]) => id === part)[1];
+  return { kind: 'essay' as const, effort: 'high' as const, task: TASK + ONLY_COMMENTS(part, name), schema: COMMENTS_SCHEMA(part), input };
 }

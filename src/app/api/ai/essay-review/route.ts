@@ -1,5 +1,5 @@
-import { aiErrorResponse, AiError, claimTicket, refundTicket, startTicket } from '@/lib/ai/claude';
-import { essayComments, essayScores, type SectionIn } from '@/lib/ai/essay-review';
+import { aiErrorResponse, AiError, askStream, claimTicket, refundTicket, startTicket } from '@/lib/ai/claude';
+import { essayCall, type SectionIn } from '@/lib/ai/essay-review';
 import { readAiRequest } from '@/lib/ai/http';
 import { CRITERIA } from '@/features/desk/scoring';
 import type { Chain } from '@/features/chainlab/types';
@@ -13,7 +13,7 @@ const json = (body: unknown, status = 200) => Response.json(body, { status, head
 /**
  * "Nộp bài", in parts: part "start" takes one use of the allowance and returns a ticket; then "scores" and
  * one part per criterion ("tr", "cc", "lr", "gra") are sent in parallel with that ticket, each claimable once.
- * Separate requests keep each one inside the Worker's CPU limit.
+ * Each part returns the AI's raw event stream; the browser assembles the review.
  */
 export async function POST(request: Request) {
   const r = await readAiRequest<{ promptId: string; chains: Chain[]; stance: string; sections: SectionIn[]; part?: string; ticket?: string }>(request);
@@ -24,12 +24,13 @@ export async function POST(request: Request) {
     if (part === 'start') return json({ ticket: await startTicket(r.userId, 'essay') });
     if (!PARTS.includes(part) || typeof ticket !== 'string') return json({ error: 'invalid' }, 400);
     if (!(await claimTicket(r.userId, ticket, part))) return json({ error: 'invalid' }, 403);
-    if (part !== 'scores') return json({ items: await essayComments(r.userId, part, r.prompt, sections, chains, stance) });
+    // The reply is streamed to the browser as it is written (a long reply must stream, or the provider's
+    // gateway drops it after about 100 s); the browser parses it.
     try {
-      return json(await essayScores(r.userId, r.prompt, sections, chains, stance));
+      return await askStream(essayCall(part, r.prompt, sections, chains, stance));
     } catch (err) {
-      // Without scores there is no review: give the use back.
-      await refundTicket(r.userId, ticket).catch(() => {});
+      // Without scores there is no review: give the use back. (A stream that breaks later can't be seen here.)
+      if (part === 'scores') await refundTicket(r.userId, ticket).catch(() => {});
       throw err;
     }
   } catch (err) {

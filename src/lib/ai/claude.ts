@@ -1,4 +1,4 @@
-import { jsonrepair } from 'jsonrepair';
+import { parseReply } from './json';
 import { getCloudflareContext } from '@opennextjs/cloudflare';
 import { METHOD } from './method';
 
@@ -88,11 +88,15 @@ export async function startTicket(userId: string, kind: AiKind) {
   return id;
 }
 
-/** Claims one part of a ticket; false if the ticket is unknown, someone else's, expired, or the part was already claimed. */
+/**
+ * Claims one part of a ticket; false if the ticket is unknown, someone else's, expired, or the part was
+ * already claimed twice (a part may be retried once, e.g. after a failed criterion).
+ */
 export async function claimTicket(userId: string, ticket: string, part: string) {
   const { DB } = await env();
-  const res = await DB.prepare("update ai_ticket set used = used || ? where id = ? and userId = ? and created > ? and instr(used, ?) = 0")
-    .bind('|' + part, ticket, userId, Date.now() - TICKET_MS, '|' + part).run();
+  const tag = '|' + part + ';';
+  const res = await DB.prepare("update ai_ticket set used = used || ?1 where id = ?2 and userId = ?3 and created > ?4 and (length(used) - length(replace(used, ?1, ''))) < 2 * length(?1)")
+    .bind(tag, ticket, userId, Date.now() - TICKET_MS).run();
   return !!res.meta.changes;
 }
 
@@ -117,49 +121,92 @@ export async function ask<T = string>({ userId, kind, task, input, schema, effor
     const model = e.AI_MODEL || MODEL;
     const claude = model.startsWith('claude-');
     const started = Date.now();
-    // The method text is identical for every request, so it is cached; the task text follows it.
-    const system = (extra: string) => grounded
-      ? [{ type: 'text', text: METHOD, cache_control: { type: 'ephemeral' } }, { type: 'text', text: task + extra }]
-      : [{ type: 'text', text: task + extra }];
-    const messages = [{ role: 'user', content: input }];
     // One plain request, no streaming: the reply arrives as one JSON document, which costs the Worker far less
     // CPU than parsing hundreds of stream events (Workers Free allows 10 ms of CPU per request; waiting is free).
-    const msg = await callMessages(e, kind, claude
-      ? {
-        model, max_tokens: maxTokens, messages, system: system(''),
-        fallbacks: 'default',
-        thinking: { type: 'adaptive' },
-        output_config: { effort, ...(schema ? { format: { type: 'json_schema', schema } } : {}) },
-      }
-      // Other models behind an Anthropic-compatible API (e.g. Model Studio for testing): plain Messages API only,
-      // so the JSON shape is asked for in the prompt instead of enforced.
-      : {
-        model, max_tokens: Math.min(maxTokens, 8192), messages,
-        system: system(schema ? '\n\nOUTPUT FORMAT: reply with ONE JSON object and nothing else (no markdown, no code fences, no text before or after). Inside string values never use the straight double quote character; write quotations with “ ” instead. It must match this JSON Schema exactly:\n' + JSON.stringify(schema) : ''),
-      }, claude ? 'server-side-fallback-2026-07-01' : '');
+    const msg = await callMessages(e, kind, messagesBody(model, { task, input, schema, effort, maxTokens, grounded }), claude ? BETA : '');
     console.log('ai_call', kind, model, (Date.now() - started) + 'ms', 'in=' + (msg.usage.input_tokens || 0), 'out=' + (msg.usage.output_tokens || 0), msg.stop_reason);
     const used = { input: (msg.usage.input_tokens || 0) + (msg.usage.cache_read_input_tokens || 0) + (msg.usage.cache_creation_input_tokens || 0), output: msg.usage.output_tokens || 0 };
     await (quota ? quota.record(used) : recordTokens(DB, userId, kind, used)).catch(() => {});
     if (msg.stop_reason === 'refusal') throw new AiError('refused');
     const text = (msg.content as { type: string; text?: string }[]).map((b) => (b.type === 'text' ? b.text : '')).join('');
     const bad = (why: string) => { console.error('ai_bad_output', kind, model, why, msg.stop_reason, 'out=' + (msg.usage.output_tokens || 0), JSON.stringify(text.slice(0, 300))); return new AiError('bad_output', why); };
-    if (msg.stop_reason === 'max_tokens') {
-      // Non-Claude models cap output lower; a long review can run out near the end. Close the JSON and keep
-      // what arrived if every top-level field is there (only the last few comments are lost).
-      const kept = !claude && schema ? salvage(text, schema) : null;
-      if (!kept) throw bad('max_tokens');
-      console.warn('ai_truncated_kept', kind, model, 'out=' + (msg.usage.output_tokens || 0));
-      return kept as T;
+    if (!schema) {
+      if (msg.stop_reason === 'max_tokens') throw bad('max_tokens');
+      return text.trim() as T;
     }
-    if (!schema) return text.trim() as T;
-    try { return JSON.parse(claude ? text : jsonPart(text)) as T; } catch { /* try a repair below */ }
-    // Models without enforced JSON (e.g. Qwen) sometimes leave quotes unescaped or add trailing commas.
-    try { return JSON.parse(jsonrepair(jsonPart(text))) as T; } catch { throw bad('invalid_json'); }
+    if (msg.stop_reason === 'max_tokens' && claude) throw bad('max_tokens');
+    try {
+      const out = parseReply<T>(text, msg.stop_reason, (schema.required as string[]) || []);
+      // Non-Claude models cap output lower; a long reply can run out near the end and is kept if complete enough.
+      if (msg.stop_reason === 'max_tokens') console.warn('ai_truncated_kept', kind, model, 'out=' + (msg.usage.output_tokens || 0));
+      return out;
+    } catch (err) { throw bad(err instanceof Error ? err.message : 'invalid_json'); }
   } catch (err) {
     if (quota) await quota.refund().catch(() => {});
     if (err instanceof AiError) throw err;
     console.error('ai_call_failed', kind, err);
     throw new AiError('upstream');
+  }
+}
+
+const BETA = 'server-side-fallback-2026-07-01';
+
+/** The Messages API request: the book's method (cached) + the task as system prompt, the student's work as input. */
+function messagesBody(model: string, { task, input, schema, effort = 'medium', maxTokens = 16000, grounded = true }: Pick<Ask, 'task' | 'input' | 'schema' | 'effort' | 'maxTokens' | 'grounded'>): Record<string, unknown> {
+  const system = (extra: string) => grounded
+    ? [{ type: 'text', text: METHOD, cache_control: { type: 'ephemeral' } }, { type: 'text', text: task + extra }]
+    : [{ type: 'text', text: task + extra }];
+  const messages = [{ role: 'user', content: input }];
+  return model.startsWith('claude-')
+    ? {
+      model, max_tokens: maxTokens, messages, system: system(''),
+      fallbacks: 'default',
+      thinking: { type: 'adaptive' },
+      output_config: { effort, ...(schema ? { format: { type: 'json_schema', schema } } : {}) },
+    }
+    // Other models behind an Anthropic-compatible API (e.g. Model Studio for testing): plain Messages API only,
+    // so the JSON shape is asked for in the prompt instead of enforced.
+    : {
+      model, max_tokens: Math.min(maxTokens, 8192), messages,
+      system: system(schema ? '\n\nOUTPUT FORMAT: reply with ONE JSON object and nothing else (no markdown, no code fences, no text before or after). Inside string values never use the straight double quote character; write quotations with “ ” instead. It must match this JSON Schema exactly:\n' + JSON.stringify(schema) : ''),
+    };
+}
+
+/**
+ * A streamed call whose stream goes to the browser untouched: the Worker only waits for the response to
+ * start (no CPU while it streams), and the browser reads the events and parses the JSON. Used for long
+ * replies, which must stream: without bytes for about 100 s the provider's gateway drops the request (524).
+ * The allowance is taken by the caller (ticket). Token counts aren't recorded: the Worker never reads the reply.
+ */
+export async function askStream({ kind, task, input, schema, effort = 'medium', maxTokens = 16000, grounded = true }: Omit<Ask, 'userId' | 'counted'>): Promise<Response> {
+  const e = await env();
+  if (!e.ANTHROPIC_API_KEY) throw new AiError('not_configured');
+  const model = e.AI_MODEL || MODEL;
+  const url = (e.AI_BASE_URL || 'https://api.anthropic.com').replace(/\/+$/, '') + '/v1/messages';
+  const headers: Record<string, string> = { 'content-type': 'application/json', 'x-api-key': e.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01', ...(model.startsWith('claude-') ? { 'anthropic-beta': BETA } : {}) };
+  const payload = JSON.stringify({ ...messagesBody(model, { task, input, schema, effort, maxTokens, grounded }), stream: true });
+  for (let attempt = 0; ; attempt++) {
+    // The time limit covers the start of the response only; once it streams, the browser decides how long to wait.
+    const ctl = new AbortController();
+    const timer = setTimeout(() => ctl.abort(), 60_000);
+    let res: Response;
+    try {
+      res = await fetch(url, { method: 'POST', headers, body: payload, signal: ctl.signal });
+    } catch (err) {
+      if (attempt < 1 && !ctl.signal.aborted) continue;
+      console.error(ctl.signal.aborted ? 'ai_stream_timeout' : 'ai_stream_failed', kind, err instanceof Error ? err.message : err);
+      throw new AiError(ctl.signal.aborted ? 'timeout' : 'upstream');
+    } finally {
+      clearTimeout(timer);
+    }
+    if (res.ok && res.body) {
+      console.log('ai_stream', kind, model);
+      return new Response(res.body, { headers: { 'content-type': 'text/event-stream', 'cache-control': 'no-store' } });
+    }
+    const detail = (await res.text().catch(() => '')).slice(0, 300);
+    if (attempt < 1 && (res.status === 429 || res.status >= 500)) { await new Promise((r) => setTimeout(r, 1000)); continue; }
+    console.error('ai_stream_failed', kind, res.status, detail);
+    throw new AiError('upstream', 'http_' + res.status);
   }
 }
 
@@ -190,28 +237,6 @@ async function callMessages(e: CloudflareEnv, kind: AiKind, body: Record<string,
     console.error('ai_call_failed', kind, res.status, detail);
     throw new AiError('upstream', 'http_' + res.status);
   }
-}
-
-/** Repairs a reply cut off mid-JSON; null unless every required top-level field survived. */
-function salvage(text: string, schema: Record<string, unknown>): unknown {
-  const a = text.indexOf('{');
-  if (a < 0) return null;
-  try {
-    const out = JSON.parse(jsonrepair(text.slice(a).replace(/```\s*$/, '')));
-    const req = (schema.required as string[]) || [];
-    if (!out || typeof out !== 'object' || !req.every((k) => k in out)) return null;
-    // The item that was being written when the reply stopped is incomplete: drop it.
-    const last = Object.keys(out).pop();
-    if (Array.isArray(out[last])) out[last].pop();
-    return out;
-  } catch { return null; }
-}
-
-/** The JSON object inside a reply that may carry code fences or stray text (non-Claude models). */
-function jsonPart(text: string) {
-  const t = text.replace(/```(?:json)?/gi, '');
-  const a = t.indexOf('{'), b = t.lastIndexOf('}');
-  return a >= 0 && b > a ? t.slice(a, b + 1) : t;
 }
 
 const STATUS: Record<AiErrorCode, number> = { not_configured: 503, limit: 429, refused: 422, bad_output: 502, upstream: 502, timeout: 504 };

@@ -13,7 +13,7 @@ import { ReviewPanel, Rich } from '../chainlab/ui/ReviewPanel';
 import { Rope } from '../chainlab/ui/Rope';
 import { useThreePanels, WorkspaceGrid } from '../chainlab/ui/WorkspaceGrid';
 import type { EssayState } from '../attempts/store';
-import { CRITERIA, CRITERION_STYLE, draftsKey, requestEssayReview, wordCount, type EssayReview, type EssaySection } from './scoring';
+import { CRITERIA, CRITERION_STYLE, draftsKey, requestEssayReview, retryEssayCriterion, wordCount, type EssayReview, type EssaySection } from './scoring';
 
 /** A chain in the Desk's plan rail: title + status, expandable to steps, cases and findings. */
 function OutlineItem({ chain, index, open, onToggle, chains }: { chain: Chain; index: number; open: boolean; onToggle: () => void; chains: Chain[] }) {
@@ -130,7 +130,7 @@ const CRITERION_NAME: Record<string, string> = Object.fromEntries(CRITERIA);
  * Score bar that doubles as navigation: Band = overview of the four criteria, TR / CC / LR / GRA = that
  * criterion's assessment (why this band, how to go higher) followed by its detailed comments.
  */
-function DeskScores({ review, prev, tab, setTab, counts, onClose, onFix }: { review: EssayReview; prev?: EssayReview['scores'] | null; tab: Tab; setTab: (t: Tab) => void; counts: Record<string, number>; onClose: () => void; onFix: () => void }) {
+function DeskScores({ review, prev, tab, setTab, counts, onClose, onFix, onRetry, retrying }: { review: EssayReview; prev?: EssayReview['scores'] | null; tab: Tab; setTab: (t: Tab) => void; counts: Record<string, number>; onClose: () => void; onFix: () => void; onRetry: (id: string) => void; retrying: string | null }) {
   const s = review.scores;
   const left = CRITERIA.reduce((n, [id]) => n + (counts[id] || 0), 0);
   // Just the tiles: the selected one is mint, the rest have no fill and no outline.
@@ -141,7 +141,7 @@ function DeskScores({ review, prev, tab, setTab, counts, onClose, onFix }: { rev
         <span style={{ fontFamily: CL.sans, fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', color: on ? CL.greenText : CL.ink5 }}>{label}</span>
         <span style={{ fontFamily: CL.sans, fontSize: main ? 24 : 20, fontWeight: 700, color: on ? CL.greenText : CL.ink, fontVariantNumeric: 'tabular-nums' }}>{v.toFixed(1)}</span>
         {prev && prev[id] !== v && <span title={'Lần trước: ' + prev[id].toFixed(1)} style={{ fontFamily: CL.sans, fontSize: 10, fontWeight: 700, color: v > prev[id] ? CL.green : CL.red, fontVariantNumeric: 'tabular-nums' }}>{(v > prev[id] ? '+' : '−') + Math.abs(v - prev[id]).toFixed(1)}</span>}
-        <span style={{ fontFamily: CL.sans, fontSize: 10, fontWeight: 600, color: on ? CL.greenText : CL.ink4 }}>{main ? 'Tổng quan' : counts[id] ? counts[id] + ' lỗi' : 'Ổn'}</span>
+        <span style={{ fontFamily: CL.sans, fontSize: 10, fontWeight: 600, color: on ? CL.greenText : CL.ink4 }}>{main ? 'Tổng quan' : counts[id] ? counts[id] + ' lỗi' : review.failed?.includes(id) ? 'Chưa có' : 'Ổn'}</span>
       </button>
     );
   };
@@ -169,7 +169,7 @@ function DeskScores({ review, prev, tab, setTab, counts, onClose, onFix }: { rev
         </section>
       )}
       {(tab === 'band' ? CRITERIA.map(([id]) => id) : [tab]).map((id) => (
-        <CriterionCard key={id + (tab === 'band' ? '-all' : '-one')} id={id} review={review} count={counts[id] || 0} startOpen={tab !== 'band'} onOpen={tab === 'band' ? () => setTab(id as Tab) : undefined} />
+        <CriterionCard key={id + (tab === 'band' ? '-all' : '-one')} id={id} review={review} count={counts[id] || 0} startOpen={tab !== 'band'} onOpen={tab === 'band' ? () => setTab(id as Tab) : undefined} onRetry={onRetry} retrying={retrying === id} />
       ))}
     </>
   );
@@ -210,7 +210,8 @@ const CRITERION_SUB: Record<string, string> = { tr: 'Trả lời đúng yêu c�
  * One criterion's assessment: title, Vietnamese subtitle, "n lỗi", and the explanation
  * (1/ why this band · 2/ why not higher or lower · 3/ how to improve), collapsed behind "Xem thêm…".
  */
-function CriterionCard({ id, review, count, startOpen, onOpen }: { id: string; review: EssayReview; count: number; startOpen: boolean; onOpen?: () => void }) {
+function CriterionCard({ id, review, count, startOpen, onOpen, onRetry, retrying }: { id: string; review: EssayReview; count: number; startOpen: boolean; onOpen?: () => void; onRetry: (id: string) => void; retrying: boolean }) {
+  const failed = !!review.failed?.includes(id);
   const [open, setOpen] = useState(startOpen);
   const st = CRITERION_STYLE[id], c = review.criteria && review.criteria[id];
   const score = review.scores[id as 'tr'];
@@ -226,8 +227,14 @@ function CriterionCard({ id, review, count, startOpen, onOpen }: { id: string; r
           <span style={{ display: 'block', fontFamily: CL.sans, fontSize: 15, fontWeight: 600, color: CL.ink }}>{CRITERION_NAME[id]} <span style={{ fontWeight: 500, color: CL.ink4, fontVariantNumeric: 'tabular-nums' }}>· {score.toFixed(1)}</span></span>
           <span style={{ display: 'block', marginTop: 3, fontFamily: CL.sans, fontSize: 12.5, color: CL.ink5 }}>{CRITERION_SUB[id]}</span>
         </span>
-        <span style={{ flexShrink: 0, borderRadius: 999, background: count ? st.soft : CL.mintSoft, color: count ? st.line : CL.greenText, padding: '3px 10px', fontFamily: CL.sans, fontSize: 12, fontWeight: 600 }}>{count ? count + ' lỗi' : 'Ổn'}</span>
+        <span style={{ flexShrink: 0, borderRadius: 999, background: count ? st.soft : failed ? CL.ink1 : CL.mintSoft, color: count ? st.line : failed ? CL.ink5 : CL.greenText, padding: '3px 10px', fontFamily: CL.sans, fontSize: 12, fontWeight: 600 }}>{count ? count + ' lỗi' : failed ? 'Chưa có' : 'Ổn'}</span>
       </div>
+      {failed && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 10, borderRadius: 12, background: CL.redSoft, padding: '10px 12px' }}>
+          <span style={{ flex: 1, fontFamily: CL.sans, fontSize: 12.5, lineHeight: 1.5, color: CL.redText }}>Chưa lấy được nhận xét chi tiết cho tiêu chí này (AI quá tải).</span>
+          <button type="button" className="cl-btn" onClick={() => onRetry(id)} disabled={retrying} style={{ flexShrink: 0, borderRadius: 8, border: '1px solid ' + CL.ink2, background: '#fff', padding: '5px 10px', fontFamily: CL.sans, fontSize: 12, fontWeight: 600, color: CL.ink, opacity: retrying ? 0.5 : 1 }}>{retrying ? 'Đang lấy…' : 'Thử lại'}</button>
+        </div>
+      )}
       <div style={{ marginTop: 12, borderRadius: 12, background: '#F3F3F1', padding: '12px 14px 14px' }}>
         <span style={{ display: 'block', fontFamily: CL.sans, fontSize: 13, fontWeight: 700, color: CL.ink }}>Giải thích:</span>
         {c && c.why ? (
@@ -255,6 +262,18 @@ export function ChainDesk({ chains, stance, essay, setEssay, onBack }: { chains:
   const setBodies = (b: string[]) => setEssay((e) => ({ ...e, bodies: b }));
   const setReview = (r: EssayReview | null) => setEssay((e) => ({ ...e, review: r }));
   const fixing = !!(essay.fixing && essay.review);
+  const [retrying, setRetrying] = useState<string | null>(null);
+  const retry = async (id: string) => {
+    if (!review || retrying) return;
+    setRetrying(id); setError(null);
+    try {
+      const items = await retryEssayCriterion(review, spec, sections, drafts, chains, stance, id);
+      setEssay((e) => e.review ? { ...e, review: { ...e.review, groups: e.review.groups.map((g) => (g.id === id ? { ...g, items } : g)), failed: (e.review.failed || []).filter((x) => x !== id) } } : e);
+    } catch (err) {
+      setError(err instanceof AiRequestError ? AI_ERROR_TEXT[err.code] : AI_ERROR_TEXT.network);
+    }
+    setRetrying(null);
+  };
   const setFixing = (on: boolean) => { setEssay((e) => ({ ...e, fixing: on })); setTab('band'); setActive(null); };
   const [help, setHelp] = useState(false);
   const [activeId, setActiveId] = useState('intro');
@@ -440,7 +459,7 @@ export function ChainDesk({ chains, stance, essay, setEssay, onBack }: { chains:
         railOpen={railOpen}
         reviewOpen={!!review}
         main={main}
-        panel={review && <ReviewPanel title="Kết quả" review={shown} list={fixing || tab !== 'band'} hideFix={fixing} showOk={false} emptyText="Không có nhận xét chi tiết cho tiêu chí này." stale={stale} running={running} onRerun={submit} rerunLabel="Nộp lại" onClose={closeReview} onGo={go} seen={seen} fixedFn={fixedFn} header={false} top={fixing ? <FixBar tab={tab} setTab={(t) => { setTab(t); setActive(null); }} counts={counts} totals={totals} onExit={() => setFixing(false)} /> : <DeskScores review={review} prev={essay.prevScores} tab={tab} setTab={(t) => { setTab(t); setActive(null); }} counts={counts} onClose={closeReview} onFix={() => setFixing(true)} />} active={active} accents={CRITERION_STYLE} cards />}
+        panel={review && <ReviewPanel title="Kết quả" review={shown} list={fixing || tab !== 'band'} hideFix={fixing} showOk={false} emptyText="Không có nhận xét chi tiết cho tiêu chí này." stale={stale} running={running} onRerun={submit} rerunLabel="Nộp lại" onClose={closeReview} onGo={go} seen={seen} fixedFn={fixedFn} header={false} top={fixing ? <FixBar tab={tab} setTab={(t) => { setTab(t); setActive(null); }} counts={counts} totals={totals} onExit={() => setFixing(false)} /> : <DeskScores review={review} prev={essay.prevScores} tab={tab} setTab={(t) => { setTab(t); setActive(null); }} counts={counts} onClose={closeReview} onFix={() => setFixing(true)} onRetry={retry} retrying={retrying} />} active={active} accents={CRITERION_STYLE} cards />}
         side={<Translator onClose={() => setHelp(false)} />}
         sideOpen={help}
       />

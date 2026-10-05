@@ -38,3 +38,57 @@ export async function postAi<T>(path: string, body: unknown): Promise<T> {
   if (!res.ok) throw new AiRequestError((data && data.error) || 'upstream');
   return data as T;
 }
+
+/**
+ * A route that streams the AI's reply (Messages API events) straight through. Returns the reply text and
+ * why it stopped; a stream that ends early counts as cut off ("max_tokens"), so a mostly complete reply
+ * can still be used.
+ */
+export async function postAiStream(path: string, body: unknown): Promise<{ text: string; stop: string }> {
+  const ctl = new AbortController();
+  const timer = setTimeout(() => ctl.abort(), WAIT_MS[path] || 120_000);
+  try {
+    let res: Response;
+    try {
+      res = await fetch('/api/ai/' + path, { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'same-origin', body: JSON.stringify(body), signal: ctl.signal });
+    } catch {
+      throw new AiRequestError(ctl.signal.aborted ? 'timeout' : 'network');
+    }
+    if (res.status === 401) throw new SignedOutError();
+    if (!res.ok || !res.body) {
+      const data = await res.json().catch(() => null);
+      throw new AiRequestError((data && data.error) || 'upstream');
+    }
+    const reader = res.body.getReader();
+    const dec = new TextDecoder();
+    let buf = '', text = '', stop = '';
+    const handle = (block: string) => {
+      const data = block.split('\n').filter((l) => l.startsWith('data:')).map((l) => l.slice(5).trim()).join('');
+      if (!data) return;
+      let ev: { type?: string; delta?: { type?: string; text?: string; stop_reason?: string } };
+      try { ev = JSON.parse(data); } catch { return; }
+      if (ev.type === 'content_block_delta' && ev.delta?.type === 'text_delta') text += ev.delta.text || '';
+      else if (ev.type === 'message_delta' && ev.delta?.stop_reason) stop = ev.delta.stop_reason;
+      else if (ev.type === 'error') throw new AiRequestError('upstream');
+    };
+    try {
+      for (;;) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buf += dec.decode(value, { stream: true });
+        let i: number;
+        while ((i = buf.indexOf('\n\n')) >= 0) { handle(buf.slice(0, i)); buf = buf.slice(i + 2); }
+      }
+      if (buf.trim()) handle(buf);
+    } catch (e) {
+      if (e instanceof AiRequestError) throw e;
+      if (!text) throw new AiRequestError(ctl.signal.aborted ? 'timeout' : 'network');
+      stop = 'max_tokens'; // broke off mid-reply: keep what arrived if it is complete enough
+    }
+    if (!text) throw new AiRequestError('upstream');
+    if (stop === 'refusal') throw new AiRequestError('refused');
+    return { text, stop: stop || 'max_tokens' };
+  } finally {
+    clearTimeout(timer);
+  }
+}

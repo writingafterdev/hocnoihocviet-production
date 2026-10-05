@@ -5,7 +5,9 @@
  * Nuance; see src/lib/ai): band + TR / CC / LR / GRA, comments grouped by criterion, each quoting
  * the essay. `reviewEssay` holds the prototype's rule-based checks, used only when the AI is not configured.
  */
-import { AiRequestError, postAi } from '../ai/request';
+import { parseReply } from '@/lib/ai/json';
+import { AiRequestError, postAi, postAiStream } from '../ai/request';
+import { toItems, toScores } from './essay-parse';
 import { hasVerdict } from '../chainlab/model';
 import type { Chain, PromptSpec, ReviewGroup, ReviewItem } from '../chainlab/types';
 
@@ -30,6 +32,9 @@ export interface EssayReview {
   summary?: string;
   /** Per criterion: why it got this band, why not higher or lower, and what would raise it (AI only). May contain **bold**. */
   criteria?: Record<string, { why: string; gap?: string; next: string }>;
+  /** Criteria whose detailed comments failed to load (AI only); they can be retried once with `ticket`. */
+  failed?: string[];
+  ticket?: string;
 }
 
 /** Feedback groups, one per IELTS criterion. */
@@ -123,12 +128,14 @@ export async function requestEssayReview(spec: PromptSpec, sections: EssaySectio
     if (e instanceof AiRequestError && e.code === 'not_configured') return reviewEssay(spec, sections, drafts, chains, stance);
     throw e;
   }
-  // Scores and each criterion's comments are separate requests (each stays within the server's CPU limit),
-  // sent together under one ticket = one use of the daily allowance.
-  type Scores = Pick<EssayReview, 'scores' | 'summary' | 'criteria'>;
+  // Scores and each criterion's comments are separate requests, sent together under one ticket = one use of
+  // the daily allowance. Each reply streams through the server and is parsed here.
+  const call = (part: string) => postAiStream('essay-review', { ...body, part, ticket }).then(({ text, stop }) => {
+    try { return parseReply<Record<string, unknown>>(text, stop, part === 'scores' ? ['criteria', 'summary'] : ['comments']); } catch { throw new AiRequestError('bad_output'); }
+  });
   const [scored, ...parts] = await Promise.allSettled([
-    postAi<Scores>('essay-review', { ...body, part: 'scores', ticket }),
-    ...CRITERIA.map(([id]) => postAi<{ items: ReviewItem[] }>('essay-review', { ...body, part: id, ticket })),
+    call('scores').then((out) => toScores(out)),
+    ...CRITERIA.map(([id]) => call(id).then((out) => ({ items: toItems(id, out, body.sections, body.chains) }))),
   ]);
   if (scored.status === 'rejected') throw scored.reason;
   // Two criteria can quote the same words; keep the first (TR, CC, LR, GRA order) so highlights don't stack.
@@ -143,5 +150,16 @@ export async function requestEssayReview(spec: PromptSpec, sections: EssaySectio
     }) : [];
     return { id, title, items };
   });
-  return { ...scored.value, key: draftsKey(drafts), source: 'ai', groups };
+  const failed = CRITERIA.filter((_, k) => parts[k].status === 'rejected').map(([id]) => id);
+  return { ...scored.value, key: draftsKey(drafts), source: 'ai', groups, ...(failed.length ? { failed, ticket } : {}) };
+}
+
+/** Asks again for one criterion whose comments failed, under the review's ticket. Returns its comments. */
+export async function retryEssayCriterion(review: EssayReview, spec: PromptSpec, sections: EssaySection[], drafts: Record<string, string>, chains: Chain[], stance: string, id: string): Promise<ReviewItem[]> {
+  const body = { promptId: spec.id, sections: sections.map((s) => ({ id: s.id, label: s.label, text: drafts[s.id] || '' })), chains: chains.map(({ check, ...c }) => c), stance };
+  const { text, stop } = await postAiStream('essay-review', { ...body, part: id, ticket: review.ticket });
+  let out: Record<string, unknown>;
+  try { out = parseReply<Record<string, unknown>>(text, stop, ['comments']); } catch { throw new AiRequestError('bad_output'); }
+  const taken = new Set(review.groups.flatMap((g) => g.items.map((it) => it.sectionId + '|' + it.quote)));
+  return toItems(id, out, body.sections, body.chains).filter((it) => !taken.has(it.sectionId + '|' + it.quote));
 }
