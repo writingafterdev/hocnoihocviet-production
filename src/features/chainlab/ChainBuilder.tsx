@@ -99,9 +99,9 @@ export function ChainBuilder({ chains, setChains, extras, setExtras, stance, set
     focusTimer.current = setTimeout(() => setFocusId(null), 2200);
   };
   const add = (q = 1) => setChains([...chains, newChain(q)]);
-  // The idea map of a question is open until it has a chain; "Thu gọn" / "Mở bản đồ" override that.
+  // Idea maps start open; writing a whole chain from a cell folds its map, and the header toggles it.
   const [mapOpen, setMapOpen] = useState<Record<number, boolean>>({});
-  const isOpen = (n: number) => mapOpen[n] ?? !chains.some((c) => (c.q || 1) === n);
+  const isOpen = (n: number) => mapOpen[n] ?? true;
   const reveal = (id: string) => {
     setFocusId(id);
     clearTimeout(focusTimer.current);
@@ -111,22 +111,33 @@ export function ChainBuilder({ chains, setChains, extras, setExtras, stance, set
       if (el && m) m.scrollTo({ top: el.getBoundingClientRect().top - m.getBoundingClientRect().top + m.scrollTop - 90, behavior: 'smooth' });
     }));
   };
-  /** A cell of the idea map becomes a chain: the driver first (where there is one), then the student's own steps. */
-  const fromCell = (q: Question, row: MapRow, col: string, question: string) => {
+  /** A cell of the idea map as a chain: the driver first (where there is one), then the student's own steps. */
+  const chainFor = (q: Question, row: MapRow, col: string, question: string, title = ''): Chain => {
     const cause = q.shape === 'cause', solution = q.shape === 'solution';
-    const chain: Chain = {
+    return {
       ...newChain(q.n, cause && (row.key === 'Cá nhân' || row.key === 'Hệ thống') ? row.key : null),
+      title,
       area: solution ? '' : col,
       steps: cause || solution ? [''] : [spec.driver || '', ''],
       fixes: solution ? row.key : null,
       cell: { r: cause || solution ? row.key : row.label, c: col, q: question, ...(solution ? { label: row.label } : {}) },
     };
+  };
+  const inCell = (q: Question, row: MapRow, col: string) => chains.find((c) => (c.q || 1) === q.n && c.cell && c.cell.r === (q.shape === 'cause' || q.shape === 'solution' ? row.key : row.label) && c.cell.c === col);
+  const fromCell = (q: Question, row: MapRow, col: string, question: string) => {
+    const chain = chainFor(q, row, col, question);
     setChains([...chains, chain]);
     setMapOpen((m) => ({ ...m, [q.n]: false }));
     reveal(chain.id);
   };
+  /** A rough idea typed straight into a cell: it becomes the title of the cell's chain (made on the spot if there is none). */
+  const noteCell = (q: Question, row: MapRow, col: string, question: string, text: string) => {
+    const mine = inCell(q, row, col), t = text.replace(/\s+/g, ' ').trim().slice(0, 120);
+    if (mine) setChains((cs) => cs.map((c) => (c.id === mine.id ? { ...c, title: t } : c)));
+    else if (t) setChains((cs) => [...cs, chainFor(q, row, col, question, t)]);
+  };
   const mapOf = (q: Question, bare = false) => (
-    <IdeaMap bare={bare} q={q} chains={chains} extras={extras?.[q.n]} setExtras={(e) => setExtras({ ...(extras || {}), [q.n]: e })} open={isOpen(q.n)} setOpen={(v) => setMapOpen((m) => ({ ...m, [q.n]: v }))} onCreate={(r, c, qu) => fromCell(q, r, c, qu)} onGoto={reveal} />
+    <IdeaMap bare={bare} q={q} chains={chains} extras={extras?.[q.n]} setExtras={(e) => setExtras({ ...(extras || {}), [q.n]: e })} open={isOpen(q.n)} setOpen={(v) => setMapOpen((m) => ({ ...m, [q.n]: v }))} onCreate={(r, c, qu) => fromCell(q, r, c, qu)} onNote={(r, c, qu, t) => noteCell(q, r, c, qu, t)} onGoto={reveal} />
   );
   const fixTargets = chains.map((c, i) => ({ c, i })).filter(({ c }) => CL_FIXABLE.includes(shapeOf(spec, c))).map(({ c, i }) => ({ id: c.id, label: 'Mạch ' + (i + 1) + (c.title ? ' · ' + c.title : '') }));
 
@@ -134,7 +145,6 @@ export function ChainBuilder({ chains, setChains, extras, setExtras, stance, set
     // One box for the map and the rope. It sticks to the top only while the map is folded, so an open map never covers the chains.
     <div ref={ropeRef} style={{ position: isOpen(verdictQ.n) ? 'relative' : 'sticky', top: -2, zIndex: 5, margin: '-2px 0 16px', paddingTop: 2, background: '#fff' }}>
       <div style={{ borderRadius: 18, border: '1px solid ' + CL.border, background: '#fff', padding: '16px 22px 18px' }}>
-        {(spec.stakeholders || []).length > 0 && <>{mapOf(verdictQ, true)}<div style={{ height: 1, background: CL.ink1, margin: isOpen(verdictQ.n) ? '18px 0 16px' : '14px 0 14px' }} /></>}
         <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 12, marginBottom: 14 }}>
           <ClLabel color={CL.ink}>Lập trường</ClLabel>
           <span style={{ fontFamily: CL.sans, fontSize: 11, color: CL.ink4 }}>Kéo từng ý về phía nó ủng hộ</span>
@@ -142,6 +152,7 @@ export function ChainBuilder({ chains, setChains, extras, setExtras, stance, set
         <Rope units={units} onSide={moveUnit} selected={sel} onSelect={(u) => setSel(u.key)} />
         <div style={{ height: 1, background: CL.ink1, margin: '16px 0 12px' }} />
         <textarea ref={stanceRef} className="cl-ta" value={stance} onChange={(e) => setStance(e.target.value)} rows={1} aria-label="Lập trường" placeholder="Sau khi thử các mạch, bạn nghiêng về phía nào, và với điều kiện gì?" style={{ display: 'block', width: '100%', minHeight: 30, resize: 'none', border: 'none', outline: 'none', background: 'transparent', fontFamily: CL.serif, fontSize: 17, lineHeight: 1.55, color: CL.ink, padding: 0, fieldSizing: 'content' } as React.CSSProperties} />
+        {(spec.stakeholders || []).length > 0 && <><div style={{ height: 1, background: CL.ink1, margin: '16px 0 14px' }} />{mapOf(verdictQ, true)}</>}
       </div>
     </div>
   );

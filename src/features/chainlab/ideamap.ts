@@ -3,7 +3,7 @@ import { CL_FIXABLE, CL_IMPACT_AREAS } from './constants';
 import { filledSteps, shapeOf } from './model';
 import type { Chain, PromptSpec, Question } from './types';
 
-export interface MapExtras { rows: string[]; cols: string[] }
+export interface MapExtras { rows: string[]; cols: string[]; /** Prompt stakeholders the student removed from the map. */ hiddenRows?: string[] }
 
 export interface MapRow { key: string; label: string; tag?: string }
 
@@ -45,7 +45,8 @@ export function gridFor(spec: PromptSpec, q: Question, chains: Chain[], extras?:
   if (q.shape === 'cause') {
     return { rows: [{ key: 'Cá nhân', label: 'Cá nhân', tag: 'Cá nhân' }, { key: 'Hệ thống', label: 'Hệ thống', tag: 'Hệ thống' }], cols: areas, hint, rowsAddable: false, colsAddable: true, colWord: 'vùng khác', rowWord: '' };
   }
-  return { rows: [...(spec.stakeholders || []), ...ex.rows].map((s) => ({ key: s, label: s })), cols: areas, hint, rowsAddable: true, colsAddable: true, colWord: 'vùng khác', rowWord: 'bên liên quan' };
+  const hidden = ex.hiddenRows || [];
+  return { rows: [...(spec.stakeholders || []), ...ex.rows].filter((s) => !hidden.includes(s)).map((s) => ({ key: s, label: s })), cols: areas, hint, rowsAddable: true, colsAddable: true, colWord: 'vùng khác', rowWord: 'bên liên quan' };
 }
 
 /** The question a cell asks. */
