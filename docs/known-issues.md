@@ -48,3 +48,27 @@ Five of these start at the same moment in one isolate, so they also compete for 
    and forwards; prebuild constant strings (method + task + schema text) at module load.
 3. Send the parts one after another instead of all five at once (slower).
 4. Workers Paid ($5/month).
+
+
+## Discussion prompts still on the single-driver map (set aside 2026-10-06) · OPEN
+
+**What happens.** 14 "Discuss both views" prompts have one driver and no rival, so their idea map explores
+only one side of the debate (what the driver does to each stakeholder). The other view has no cells, and the
+comparison flow (A/B chains in one cell, verdict, claim check) is not available to them. They work; they just
+don't help the student compare.
+
+**Why they were left alone.** Each needs a judgment call: is it really two options, or one option judged from
+two angles? Two-driver prompts (21 Discussion prompts, `driver2`) and best/only prompts (9, `claim`) are done.
+
+**To decide later, prompt by prompt** (sides written left / right of the rope):
+- Probably real comparisons, need a `driver2`: `taxes-enough` (taxes are enough / other responsibilities),
+  `art-talent` (everyone can / only the talented), `dependent-vs-independent`, `technology-isolation`.
+- Probably one option with two verdicts (yes / no on the same thing), may stay single-driver:
+  `international-news-subject`, `signals-to-aliens`, `minerals-in-space`, `single-global-language`,
+  `criticising-teachers`, `free-libraries`.
+- One thing judged from two angles, stays single-driver: `remote-work-who-benefits`,
+  `climate-change-business`, `elderly-life-now`, `advertising-economy-society`.
+
+**How to fix one.** Add `driver2: '…'` (a real second option, written like `driver`) to the prompt in
+`src/content/prompts.ts`; add `claim: 'best' | 'only'` as well if the text says "the best" or "the only".
+No code change is needed.
