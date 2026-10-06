@@ -50,7 +50,9 @@ Five of these start at the same moment in one isolate, so they also compete for 
 4. Workers Paid ($5/month).
 
 
-## Discussion prompts still on the single-driver map (set aside 2026-10-06) · OPEN
+## Discussion prompts still on the single-driver map (2026-10-06) · OPEN, low priority
+
+_Logged by mistake as the "set aside" list; the owner meant the four prompts under "Best / only prompts with drafted rivals" below. Kept as a minor note: the rope ends of these prompts were checked and are fine._
 
 **What happens.** 14 "Discuss both views" prompts have one driver and no rival, so their idea map explores
 only one side of the debate (what the driver does to each stakeholder). The other view has no cells, and the
@@ -72,3 +74,44 @@ two angles? Two-driver prompts (21 Discussion prompts, `driver2`) and best/only 
 **How to fix one.** Add `driver2: '…'` (a real second option, written like `driver`) to the prompt in
 `src/content/prompts.ts`; add `claim: 'best' | 'only'` as well if the text says "the best" or "the only".
 No code change is needed.
+
+
+## Final position: no step turns the small comparisons into a decision (2026-10-06) · OPEN, set aside
+
+**What happens.** Every prompt, one driver or two, ends with the student deciding a position. Today the pieces
+get a side on the rope (drag), cells get a verdict (two-driver prompts) and a tally counts wins; then the stance
+is a free textarea. Counting wins is not a decision: five small wins do not outweigh one big loss, and nothing
+makes the student weigh them.
+
+**Proposal (no mockup yet).** A "Cân" step before the stance: (1) collect every piece that has a side, once;
+(2) the student picks the 2–3 decisive pieces and says why, on the grounds already in the app (mức độ, số người,
+kéo dài, khó đảo ngược, qua được Scope), using "nếu ý này sai thì tôi có đổi phía không?"; (3) the stance becomes a
+sentence with slots: side · decisive piece · strongest opposing piece as the concession · the Scope branch that
+flips it as the condition. The app shows the evidence; the student writes the stance. Open choice: should the app
+also suggest the side from the weights? Leaning no.
+
+## Best / only mixed with another question type (2026-10-06) · OPEN
+
+**What happens.** The claim mode (`claim: 'best' | 'only'`) is set on the verdict question only. When the prompt
+has more than one question or a second view, the other part does not know about it:
+- `road-safety-legal-system`: "only" verdict + an effect question about the legal system. The effect map is
+  single-driver and ignores the rival B.
+- `bicycle-investment`: a cause question + a "best" verdict. The cause map does not use the rival.
+- `growth-poverty-environment`: a Discussion prompt with "only" inside the first view; the second view (harm to
+  the environment) is only reachable through the Môi trường row of A's chains.
+
+## Rope ends vs A / B on best / only prompts (2026-10-06) · OPEN, to check
+
+**What happens.** Discussion prompts' rope ends are the two views (checked, fine). On best / only prompts the
+ends are Phản đối / Đồng ý but the chains are A and B, so the student has to work out which end an A chain or a B
+chain belongs to (A chains mostly support Đồng ý, B chains Phản đối). Nothing says so. Decide whether the app
+should pre-place chips, label the ends with A / B, or leave it.
+
+## Best / only prompts with drafted rivals, unconfirmed (2026-10-06) · OPEN
+
+**What happens.** Four prompts were given a drafted second option (`driver2`, plus `claim` where noted) that the
+owner has not approved, and which may be taken back out: `school-purpose-citizens` ("rather than", no claim),
+`work-and-meaning` (best), `work-only-for-money` (only), `growth-poverty-environment` (only). The hard part is
+that the claim is about "the most important", "the only reason" or "rather than", and the rival is not obvious.
+Either approve each drafted B in `src/content/prompts.ts`, or delete its `driver2` / `claim` to return it to the
+single-driver map.
