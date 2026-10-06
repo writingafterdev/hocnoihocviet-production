@@ -1,6 +1,6 @@
 'use client';
 
-import { ArrowLeft, BookOpen, Check, Circle, CircleCheck, Hash, Sparkles, Trash2, Volume2, type LucideIcon } from 'lucide-react';
+import { ArrowLeft, Check, Trash2, Volume2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState, type ReactNode } from 'react';
 import { PageHeader } from '@/components/shell/BrandHeader';
@@ -201,7 +201,6 @@ function Row({ item, selected, practiced, onSelect }: { item: VocabItem; selecte
   const clamp: React.CSSProperties = open ? {} : { display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' };
   const td: React.CSSProperties = { padding: '16px 14px', verticalAlign: 'top', borderTop: '1px solid ' + VB.line };
   const stop = (e: React.MouseEvent) => e.stopPropagation();
-  const Status: LucideIcon = practiced ? CircleCheck : Circle;
   return (
     <tr className="vb-row" onClick={() => setOpen(!open)} aria-expanded={open} style={{ cursor: 'pointer', background: selected ? VB.yellowSoft : 'transparent' }}>
       <td style={{ ...td, paddingRight: 4 }} onClick={stop}><CheckBox on={selected} label={'Chọn ' + item.en} onClick={onSelect} /></td>
@@ -212,7 +211,7 @@ function Row({ item, selected, practiced, onSelect }: { item: VocabItem; selecte
           <button type="button" className="cl-btn vb-icon" onClick={(e) => { stop(e); speak(item.en); }} aria-label="Nghe phát âm" style={{ width: 24, height: 24, borderRadius: 999, display: 'grid', placeItems: 'center', color: VB.ink4 }}><Volume2 size={14} strokeWidth={2} /></button>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 8, fontFamily: VB.sans, fontSize: 11.5, color: practiced ? VB.success : VB.ink4 }}>
-          <Status size={13} strokeWidth={2} />{practiced ? 'Đã luyện ' + practiced + ' lần' : 'Chưa luyện'}
+          <span style={{ width: 7, height: 7, borderRadius: 999, background: practiced ? VB.success : VB.strong }} />{practiced ? 'Đã luyện ' + practiced + ' lần' : 'Chưa luyện'}
         </div>
       </td>
       <td style={{ ...td, fontFamily: VB.sans, fontSize: 13.5, color: VB.ink2 }}>{item.pos}</td>
@@ -234,7 +233,7 @@ function Row({ item, selected, practiced, onSelect }: { item: VocabItem; selecte
 }
 
 /**
- * Vocab builder: skill cards → topic rail + phrase table → tick phrases → "Tạo đoạn mẫu"
+ * Vocab builder: skill cards → topic rail + phrase table → tick phrases → "Ôn từ"
  * → rewrite the sample paragraph from hints (Chép mẫu engine).
  * Practice counts are stored per student (/api/vocab); phrases saved from the translator are listed under "Đã lưu" (/api/vocab/mine). Practice paragraphs are written by
  * the AI from the ticked phrases (/api/ai/vocab-paragraph); the pre-written ones are the fallback.
@@ -372,11 +371,11 @@ export function VocabBuilder({ onBack }: { onBack: () => void }) {
   }
 
   const done = rows.filter((r) => count[r.it.en]).length;
-  const railItem = (id: string, name: string, sub: string, n: number, Icon: LucideIcon) => {
+  const railItem = (id: string, name: string, sub: string, n: number, ill?: string) => {
     const on = topicId === id;
     return (
-      <button key={id} type="button" className="cl-btn vb-topic" onClick={() => setTopicId(id)} aria-current={on} style={{ display: 'flex', alignItems: 'center', gap: 12, width: '100%', textAlign: 'left', borderRadius: 12, border: '1px solid ' + (on ? VB.ink : VB.border), background: '#fff', padding: '14px 14px' }}>
-        <span style={{ width: 38, height: 38, borderRadius: 10, background: on ? skill.pillar : skill.soft, display: 'grid', placeItems: 'center', color: VB.ink, flexShrink: 0 }}><Icon size={18} strokeWidth={2} /></span>
+      <button key={id} type="button" className="cl-btn vb-topic" onClick={() => setTopicId(id)} aria-current={on} style={{ display: 'flex', alignItems: 'center', gap: 12, width: '100%', textAlign: 'left', borderRadius: 12, border: '1px solid ' + (on ? VB.ink : VB.border), background: '#fff', padding: ill ? '10px 14px 10px 10px' : '14px 14px' }}>
+        {ill && <img src={'/assets/illustrations/' + ill + '.svg'} alt="" style={{ width: 44, height: 44, objectFit: 'contain', flexShrink: 0 }} />}
         <span style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 2 }}>
           <span style={{ fontFamily: VB.sans, fontSize: 14.5, fontWeight: 600, color: VB.ink }}>{name}</span>
           <span style={{ fontFamily: VB.sans, fontSize: 12.5, color: VB.ink3 }}>{sub}</span>
@@ -393,10 +392,10 @@ export function VocabBuilder({ onBack }: { onBack: () => void }) {
       <div style={{ display: 'grid', gridTemplateColumns: '280px minmax(0,1fr)', gap: 24, alignItems: 'start' }}>
         <aside style={{ position: 'sticky', top: 0, borderRadius: 16, border: '1px solid ' + VB.border, background: '#fff', padding: '20px 14px 14px' }}>
           <VbLabel style={{ padding: '0 4px' }}>{skill.eyebrow}</VbLabel>
-          <div style={{ marginTop: 14 }}>{railItem('saved', 'Đã lưu', 'Từ bạn lưu từ mục Dịch', savedCount(skill), BookOpen)}</div>
+          <div style={{ marginTop: 14 }}>{railItem('saved', 'Đã lưu', 'Từ bạn lưu từ mục Dịch', savedCount(skill))}</div>
           <div style={{ height: 1, background: VB.line, margin: '14px 4px' }} />
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {skill.topics.map((t) => railItem(t.id, t.name, t.vi, t.items.length, Hash))}
+            {skill.topics.map((t) => railItem(t.id, t.name, t.vi, t.items.length, t.ill))}
           </div>
         </aside>
 
@@ -411,7 +410,7 @@ export function VocabBuilder({ onBack }: { onBack: () => void }) {
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
               {note && <span role="alert" style={{ maxWidth: 320, fontFamily: VB.sans, fontSize: 12, color: '#8B3A35' }}>{note}</span>}
               <span style={{ fontFamily: VB.sans, fontSize: 13, color: picked.length > MAX_TICK ? '#8B3A35' : VB.ink3 }}>{picked.length > MAX_TICK ? 'Tối đa ' + MAX_TICK + ' cụm; sẽ dùng ' + MAX_TICK + ' cụm đầu' : picked.length > 6 ? 'Đã chọn ' + picked.length + ' cụm · sẽ chia thành vài đoạn' : picked.length ? 'Đã chọn ' + picked.length + ' cụm' : 'Chọn cụm muốn luyện, hoặc để trống'}</span>
-              <button type="button" className="cl-btn cl-primary" disabled={!rows.length || making} onClick={() => go()} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, height: 42, borderRadius: 12, background: VB.ink, color: '#fff', fontFamily: VB.sans, fontSize: 13.5, fontWeight: 600, padding: '0 18px', opacity: rows.length && !making ? 1 : 0.35 }}><Sparkles size={15} strokeWidth={2} />{making ? 'Đang tạo đoạn…' : 'Tạo đoạn mẫu'}</button>
+              <button type="button" className="cl-btn cl-primary" disabled={!rows.length || making} onClick={() => go()} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, height: 42, borderRadius: 12, background: VB.ink, color: '#fff', fontFamily: VB.sans, fontSize: 13.5, fontWeight: 600, padding: '0 18px', opacity: rows.length && !making ? 1 : 0.35 }}>{making ? 'Đang tạo đoạn…' : 'Ôn từ'}</button>
             </div>
           </div>
           {rows.length ? (
