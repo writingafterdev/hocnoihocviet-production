@@ -17,7 +17,7 @@ type SaveState = 'saved' | 'saving' | 'failed';
 const SAVE_DELAY = 1500;
 
 /** What counts as an edit worth saving: everything except the running timer and timestamps. */
-const contentKey = (a: Attempt) => JSON.stringify([a.chains, a.stance, a.chainReview, a.essay.bodies, a.essay.drafts, a.essay.review]);
+const contentKey = (a: Attempt) => JSON.stringify([a.chains, a.mapExtras, a.stance, a.chainReview, a.essay.bodies, a.essay.drafts, a.essay.review]);
 
 const SAVE_LABEL: Record<SaveState, string> = { saved: 'Đã lưu', saving: 'Đang lưu…', failed: 'Chưa lưu được · thử lại' };
 
@@ -113,6 +113,8 @@ export function AttemptWorkspace({ attemptId }: { attemptId: string }) {
             <ChainBuilder
               chains={attempt.chains}
               setChains={setChains}
+              extras={attempt.mapExtras}
+              setExtras={(mapExtras) => touch({ mapExtras })}
               stance={attempt.stance}
               setStance={(stance) => touch({ stance })}
               review={attempt.chainReview}

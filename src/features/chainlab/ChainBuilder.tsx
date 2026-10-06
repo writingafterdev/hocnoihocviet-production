@@ -3,14 +3,15 @@
 import { Fragment, useEffect, useRef, useState } from 'react';
 import { AI_ERROR_TEXT, AiRequestError } from '../ai/request';
 import { Translator } from '../ai/Translator';
-import { CL, CL_CIRC, CL_FIXABLE, CL_LEVELS, CL_SHAPE_LABEL } from './constants';
-import { filledSteps, newChain, ropeUnits, shapeOf } from './model';
-import type { Level } from './types';
+import { CL, CL_CIRC, CL_FIXABLE, CL_SHAPE_LABEL } from './constants';
+import type { MapExtras, MapRow } from './ideamap';
+import { newChain, ropeUnits, shapeOf } from './model';
 import { requestChainReview, reviewChains, reviewKey, type ChainReview } from './review';
 import { useSpec } from './SpecContext';
 import type { Chain, Question, ReviewItem, RopeUnit, Side } from './types';
 import { ChainCard } from './ui/ChainCard';
 import { ContextRail } from './ui/ContextRail';
+import { IdeaMap } from './ui/IdeaMap';
 import { backLinkStyle, ClIcon, ClLabel, toolbarBtn } from './ui/primitives';
 import { ReviewPanel, ReviewSummary } from './ui/ReviewPanel';
 import { Rope } from './ui/Rope';
@@ -20,6 +21,9 @@ import { useThreePanels, WorkspaceGrid } from './ui/WorkspaceGrid';
 export interface ChainBuilderProps {
   chains: Chain[];
   setChains: (fn: Chain[] | ((cs: Chain[]) => Chain[])) => void;
+  /** Rows and columns the student added to the idea maps, by question number. */
+  extras?: Record<string, MapExtras>;
+  setExtras: (e: Record<string, MapExtras>) => void;
   stance: string;
   setStance: (s: string) => void;
   /** Last "Soát toàn bài" result, kept on the attempt so it survives reloads. */
@@ -30,7 +34,7 @@ export interface ChainBuilderProps {
 }
 
 /** Screen 1 of "Viết tự do": build chains per question, test them with lenses, sort them on the rope, write a stance. */
-export function ChainBuilder({ chains, setChains, stance, setStance, review, setReview, onBack, onWrite }: ChainBuilderProps) {
+export function ChainBuilder({ chains, setChains, extras, setExtras, stance, setStance, review, setReview, onBack, onWrite }: ChainBuilderProps) {
   const spec = useSpec();
   const bind = useReorder(chains, (n) => setChains(n));
   const [help, setHelp] = useState(false);
@@ -94,7 +98,36 @@ export function ChainBuilder({ chains, setChains, stance, setStance, review, set
     clearTimeout(focusTimer.current);
     focusTimer.current = setTimeout(() => setFocusId(null), 2200);
   };
-  const add = (q = 1, level: Level | null = null) => setChains([...chains, newChain(q, level)]);
+  const add = (q = 1) => setChains([...chains, newChain(q)]);
+  // The idea map of a question is open until it has a chain; "Thu gọn" / "Mở bản đồ" override that.
+  const [mapOpen, setMapOpen] = useState<Record<number, boolean>>({});
+  const isOpen = (n: number) => mapOpen[n] ?? !chains.some((c) => (c.q || 1) === n);
+  const reveal = (id: string) => {
+    setFocusId(id);
+    clearTimeout(focusTimer.current);
+    focusTimer.current = setTimeout(() => setFocusId(null), 2200);
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      const el = document.getElementById('cl-chain-' + id), m = mainRef.current;
+      if (el && m) m.scrollTo({ top: el.getBoundingClientRect().top - m.getBoundingClientRect().top + m.scrollTop - 90, behavior: 'smooth' });
+    }));
+  };
+  /** A cell of the idea map becomes a chain: the driver first (where there is one), then the student's own steps. */
+  const fromCell = (q: Question, row: MapRow, col: string, question: string) => {
+    const cause = q.shape === 'cause', solution = q.shape === 'solution';
+    const chain: Chain = {
+      ...newChain(q.n, cause && (row.key === 'Cá nhân' || row.key === 'Hệ thống') ? row.key : null),
+      area: solution ? '' : col,
+      steps: cause || solution ? [''] : [spec.driver || '', ''],
+      fixes: solution ? row.key : null,
+      cell: { r: cause || solution ? row.key : row.label, c: col, q: question, ...(solution ? { label: row.label } : {}) },
+    };
+    setChains([...chains, chain]);
+    setMapOpen((m) => ({ ...m, [q.n]: false }));
+    reveal(chain.id);
+  };
+  const mapOf = (q: Question) => (
+    <IdeaMap q={q} chains={chains} extras={extras?.[q.n]} setExtras={(e) => setExtras({ ...(extras || {}), [q.n]: e })} open={isOpen(q.n)} setOpen={(v) => setMapOpen((m) => ({ ...m, [q.n]: v }))} onCreate={(r, c, qu) => fromCell(q, r, c, qu)} onGoto={reveal} />
+  );
   const fixTargets = chains.map((c, i) => ({ c, i })).filter(({ c }) => CL_FIXABLE.includes(shapeOf(spec, c))).map(({ c, i }) => ({ id: c.id, label: 'Mạch ' + (i + 1) + (c.title ? ' · ' + c.title : '') }));
 
   const ropeBox = verdictQ && (
@@ -118,42 +151,12 @@ export function ChainBuilder({ chains, setChains, stance, setStance, review, set
     <button key={q.n} type="button" className="cl-btn cl-add" onClick={() => add(q.n)} style={{ flex: 1, minWidth: 0, minHeight: 58, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, borderRadius: 18, border: '1px dashed ' + CL.ink3, fontFamily: CL.sans, fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.13em', color: CL.ink5 }}><ClIcon name="plus" size={16} />{label}</button>
   );
 
-  /** Cause questions: the chain's type is chosen when it is added, and each type is needed at least once. */
-  const levelPicker = (q: Question) => (
-    <div style={{ flex: 1, minWidth: 0, borderRadius: 18, border: '1.5px dashed ' + CL.ink3, padding: '18px 18px 18px' }}>
-      <ClLabel style={{ display: 'block', marginBottom: 12 }}>Thêm mạch · chọn loại nguyên nhân</ClLabel>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 12 }}>
-        {CL_LEVELS.map((l) => {
-          const n = chains.filter((c) => (c.q || 1) === q.n && c.level === l.kind && filledSteps(c) > 0).length;
-          return (
-            <button key={l.kind} type="button" className="cl-btn cl-add" onClick={() => add(q.n, l.kind)} style={{ textAlign: 'left', display: 'flex', flexDirection: 'column', gap: 6, borderRadius: 14, border: '1px solid ' + (n ? CL.border : CL.ink), background: '#fff', padding: '14px 16px' }}>
-              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-                <span style={{ borderRadius: 6, background: l.bg, color: l.fg, padding: '4px 10px', fontFamily: CL.sans, fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em' }}>{l.kind}</span>
-                <span style={{ fontFamily: CL.sans, fontSize: 12, fontWeight: n ? 400 : 600, color: n ? CL.ink5 : CL.redText }}>{n ? 'đã có ' + n + ' mạch' : 'chưa có · cần ít nhất 1'}</span>
-              </span>
-              <span style={{ fontFamily: CL.sans, fontSize: 13, lineHeight: 1.5, color: CL.ink7 }}>{l.q.replace(/^Ở mức [^:]+: /, '').replace(/^./, (c) => c.toUpperCase())}</span>
-            </button>
-          );
-        })}
-      </div>
-    </div>
-  );
-  /** Pills in a cause question's heading: which of the two types have a chain. */
-  const levelPills = (q: Question) => (
-    <span style={{ marginLeft: 'auto', flexShrink: 0, display: 'inline-flex', gap: 8 }}>
-      {CL_LEVELS.map((l) => {
-        const n = chains.filter((c) => (c.q || 1) === q.n && c.level === l.kind && filledSteps(c) > 0).length;
-        return <span key={l.kind} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, borderRadius: 999, background: n ? CL.mintSoft : CL.redSoft, color: n ? CL.greenText : CL.redText, padding: '4px 11px 4px 9px', fontFamily: CL.sans, fontSize: 11.5, fontWeight: 600 }}><ClIcon name={n ? 'check' : 'x'} size={11} color={n ? CL.green : CL.red} />{l.kind}{n ? ' · ' + n + ' mạch' : ' · còn thiếu'}</span>;
-      })}
-    </span>
-  );
-  const addArea = (q: Question, label: string) => (q.shape === 'cause' ? levelPicker(q) : addBtn(q, label));
-
   const body = !multiQ ? (
     <Fragment>
       {ropeBox}
+      {mapOf(spec.questions[0])}
       <ol style={{ margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: 16 }}>{chains.map(card)}</ol>
-      <div style={{ display: 'flex', gap: 12, marginTop: 16 }}>{addArea(spec.questions[0], 'Thêm mạch')}</div>
+      <div style={{ display: 'flex', gap: 12, marginTop: 16 }}>{addBtn(spec.questions[0], 'Thêm mạch trống')}</div>
     </Fragment>
   ) : spec.questions.map((q, k) => {
     const mine = chains.filter((c) => (c.q || 1) === q.n);
@@ -163,11 +166,12 @@ export function ChainBuilder({ chains, setChains, stance, setStance, review, set
           <span style={{ fontFamily: CL.sans, fontSize: 18, lineHeight: 1, color: CL.ink }}>{CL_CIRC[q.n - 1]}</span>
           <ClLabel color={CL.ink}>{CL_SHAPE_LABEL[q.shape]}</ClLabel>
           {q.q && <span style={{ minWidth: 0, fontFamily: CL.sans, fontSize: 12.5, color: CL.ink6, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{q.q}</span>}
-          {q.shape === 'cause' ? levelPills(q) : <span style={{ marginLeft: 'auto', flexShrink: 0, fontFamily: CL.sans, fontSize: 11, color: CL.ink4 }}>{mine.length} mạch</span>}
+          <span style={{ marginLeft: 'auto', flexShrink: 0, fontFamily: CL.sans, fontSize: 11, color: CL.ink4 }}>{mine.length} mạch</span>
         </div>
         {q.shape === 'verdict' && ropeBox}
+        {mapOf(q)}
         {mine.length > 0 && <ol style={{ margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: 16 }}>{mine.map(card)}</ol>}
-        <div style={{ display: 'flex', gap: 12, marginTop: mine.length ? 16 : 0 }}>{addArea(q, 'Thêm mạch · câu ' + CL_CIRC[q.n - 1])}</div>
+        <div style={{ display: 'flex', gap: 12, marginTop: mine.length ? 16 : 0 }}>{addBtn(q, 'Thêm mạch trống · câu ' + CL_CIRC[q.n - 1])}</div>
       </section>
     );
   });

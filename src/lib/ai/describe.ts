@@ -21,7 +21,7 @@ export function describeChains(p: Prompt, chains: Chain[], stance: string) {
   const out: string[] = ['CÁC MẠCH CỦA HỌC SINH'];
   chains.forEach((c, i) => {
     const sh = shapeOf(p, c);
-    out.push('', `[Mạch ${i + 1}] id=${c.id} · câu ${c.q || 1} (${CL_SHAPE_LABEL[sh]}) · tên: ${c.title || '(chưa đặt)'}${sh === 'verdict' ? ` · tông: ${c.tone === 'cost' ? 'tác hại' : 'lợi ích'}` : ''}${sh === 'cause' && (c.level === 'Cá nhân' || c.level === 'Hệ thống') ? ' · loại nguyên nhân: ' + c.level : sh === 'cause' ? ' · loại nguyên nhân: (chưa chọn)' : ''}${c.area ? ' · vùng: ' + c.area : ''}`);
+    out.push('', `[Mạch ${i + 1}] id=${c.id} · câu ${c.q || 1} (${CL_SHAPE_LABEL[sh]}) · tên: ${c.title || '(chưa đặt)'}${sh === 'verdict' ? ` · tông: ${c.tone === 'cost' ? 'tác hại' : 'lợi ích'}` : ''}${sh === 'cause' && (c.level === 'Cá nhân' || c.level === 'Hệ thống') ? ' · loại nguyên nhân: ' + c.level : sh === 'cause' ? ' · loại nguyên nhân: (chưa chọn)' : ''}${c.area ? ' · vùng: ' + c.area : ''}${c.cell ? ' · ô bản đồ: ' + String(c.cell.r).slice(0, 60) + ' × ' + String(c.cell.c).slice(0, 60) : ''}`);
     c.steps.forEach((s, k) => out.push(`  bước ${k + 1}: ${s.trim() || '(trống)'}`));
     if (c.split) {
       out.push(`  Scope: tách theo "${c.split.noun}" sau bước ${c.split.at + 1}`);

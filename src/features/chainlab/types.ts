@@ -68,6 +68,8 @@ export interface Chain {
   area: string;
   /** Cause questions only: the type of this chain. Missing on chains made before types existed. */
   level?: Level | null;
+  /** Idea map: the cell this chain started from (row × column), the question it asked and, for solutions, the cause it addresses. */
+  cell?: { r: string; c: string; q: string; label?: string } | null;
   steps: string[];
   split: Split | null;
   findings: Finding[];

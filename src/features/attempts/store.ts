@@ -29,6 +29,8 @@ export interface Attempt {
   createdAt: number;
   updatedAt: number;
   chains: Chain[];
+  /** Rows and columns the student added to a question's idea map, by question number. */
+  mapExtras?: Record<string, { rows: string[]; cols: string[] }>;
   stance: string;
   chainReview: ChainReview | null;
   essay: EssayState;

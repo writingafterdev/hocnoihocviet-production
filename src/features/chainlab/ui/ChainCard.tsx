@@ -41,6 +41,13 @@ export function ChainCard({ chain, num, onChange, onDelete, drag, focused, targe
   const nIssues = issues.flags.length + issues.vague.length;
   const stale = chain.check && chain.check.snapshot !== chain.steps.join('||');
   const toneOn = chain.tone === 'benefit';
+  /** The fixed last line of the chain: where it has to arrive. */
+  const endOf = () => {
+    if (cause && spec.driver) return { label: 'Driver', text: spec.driver };
+    if (!chain.cell) return null;
+    if (shape === 'solution') return chain.cell.label ? { label: 'Nguyên nhân cần xử lý', text: chain.cell.label } : null;
+    return { label: 'Kết quả với', text: chain.cell.r + ' · ' + chain.cell.c };
+  };
 
   const cycleQ = () => {
     const ns = spec.questions.map((q) => q.n);
@@ -78,6 +85,7 @@ export function ChainCard({ chain, num, onChange, onDelete, drag, focused, targe
               <span style={{ width: 8, height: 8, borderRadius: 999, background: toneOn ? CL.mint : CL.red }} />{toneOn ? 'Lợi ích' : 'Tác hại'}
             </button>
           )}
+          {chain.cell && <span title={chain.cell.label || undefined} style={{ flexShrink: 0, maxWidth: 220, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', borderRadius: 999, background: '#F1F1EE', color: CL.ink7, padding: '4px 12px', fontFamily: CL.sans, fontSize: 11.5, fontWeight: 600 }}>{shape === 'cause' || shape === 'solution' ? chain.cell.c : chain.cell.r + ' · ' + chain.cell.c}</span>}
           <input value={chain.title} onChange={(e) => onChange({ ...chain, title: e.target.value })} placeholder={cause ? 'Đặt tên cho mạch này…' : 'Mạch chưa đặt tên'} aria-label="Tên mạch" style={{ flex: 1, minWidth: 60, border: 'none', outline: 'none', background: 'transparent', fontFamily: CL.sans, fontSize: 13.5, fontWeight: 600, color: CL.ink, cursor: 'text' }} />
           {nIssues > 0 && !stale && <span style={{ flexShrink: 0, borderRadius: 5, padding: '4px 8px', background: CL.redSoft, color: CL.redText, fontFamily: CL.sans, fontSize: 10.5, fontWeight: 600, whiteSpace: 'nowrap' }}>{nIssues} chỗ cần xem</span>}
           <span style={{ flexShrink: 0, borderRadius: 5, padding: '4px 8px', background: status.bg, color: status.fg, fontFamily: CL.sans, fontSize: 10.5, fontWeight: 600, whiteSpace: 'nowrap' }}>{status.label}</span>
@@ -85,8 +93,8 @@ export function ChainCard({ chain, num, onChange, onDelete, drag, focused, targe
         </div>
         {open && (
           <Fragment>
-            {level && <p style={{ margin: 0, padding: '18px 32px 0 35px', fontFamily: CL.sans, fontSize: 14, lineHeight: 1.55, color: CL.ink7 }}>{level.q}</p>}
-            <div style={{ padding: level ? '18px 32px 22px 35px' : '24px 32px 22px 35px' }}>
+            {(chain.cell?.q || level) && <p style={{ margin: 0, padding: '18px 32px 0 35px', fontFamily: CL.sans, fontSize: 14, lineHeight: 1.55, color: CL.ink7 }}>{chain.cell?.q || level.q}</p>}
+            <div style={{ padding: chain.cell?.q || level ? '18px 32px 22px 35px' : '24px 32px 22px 35px' }}>
               <AreaPicker value={chain.area} onChange={(area) => onChange({ ...chain, area })} />
               {shape === 'solution' && (
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14, fontFamily: CL.sans, fontSize: 12, color: CL.ink6 }}>
@@ -100,7 +108,7 @@ export function ChainCard({ chain, num, onChange, onDelete, drag, focused, targe
                 </div>
               )}
               {splitMode && <p style={{ margin: '0 0 14px', fontFamily: CL.sans, fontSize: 12, color: CL.yellowText, background: CL.yellowSoft, borderRadius: 5, padding: '8px 12px' }}>Chọn bước chứa danh từ bạn muốn đổi điều kiện. Mạch sẽ tách ngay sau bước đó.</p>}
-              <StepList steps={chain.steps} onChange={(steps) => onChange({ ...chain, steps })} firstIsDriver end={cause && spec.driver ? { label: 'Driver', text: spec.driver } : null} splitMode={splitMode} onSplitAt={splitAt} idPrefix={chain.id} jumps={splitMode ? [] : issues.flags.map((f) => f.at)} vague={splitMode ? [] : issues.vague} />
+              <StepList steps={chain.steps} onChange={(steps) => onChange({ ...chain, steps })} firstIsDriver end={endOf()} splitMode={splitMode} onSplitAt={splitAt} idPrefix={chain.id} jumps={splitMode ? [] : issues.flags.map((f) => f.at)} vague={splitMode ? [] : issues.vague} />
               {chain.split && <Branches verdict={verdict} num={num} split={chain.split} onChange={(split) => onChange({ ...chain, split })} onMerge={merge} />}
             </div>
             <div style={{ borderTop: '1px solid ' + CL.ink1, background: CL.panel, padding: '13px 22px 16px' }}>

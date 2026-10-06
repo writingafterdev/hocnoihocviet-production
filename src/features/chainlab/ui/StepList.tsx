@@ -27,10 +27,12 @@ export interface StepListProps {
   vague?: { step: number; word: string; key: string }[];
   /** A fixed last node the student does not edit, e.g. the Driver a cause chain leads to. */
   end?: { label: string; text: string } | null;
+  /** Placeholder of the steps after the first (default: "Điều gì xảy ra tiếp theo?"). */
+  placeholder?: string;
 }
 
 /** The vertical chain of steps, with hover add/remove and Scope split picking. */
-export function StepList({ steps, onChange, firstIsDriver, splitMode, onSplitAt, idPrefix, jumps = [], vague = [], end = null }: StepListProps) {
+export function StepList({ steps, onChange, firstIsDriver, splitMode, onSplitAt, idPrefix, jumps = [], vague = [], end = null, placeholder }: StepListProps) {
   const [picker, setPicker] = useState<number | null>(null);
   const set = (i: number, v: string) => onChange(steps.map((s, j) => (j === i ? v : s)));
   const addAfter = (i: number) => { const n = [...steps]; n.splice(i + 1, 0, ''); onChange(n); };
@@ -49,7 +51,7 @@ export function StepList({ steps, onChange, firstIsDriver, splitMode, onSplitAt,
               value={s}
               rows={1}
               onChange={(e) => set(i, e.target.value)}
-              placeholder={i === 0 && firstIsDriver ? 'Điểm bắt đầu…' : 'Điều gì xảy ra tiếp theo?'}
+              placeholder={i === 0 && firstIsDriver ? 'Điểm bắt đầu…' : placeholder || 'Điều gì xảy ra tiếp theo?'}
               aria-label={'Bước ' + (i + 1)}
               style={{ display: 'block', width: '100%', minHeight: 32, resize: 'none', border: 'none', outline: 'none', background: 'transparent', fontFamily: CL.serif, fontSize: 15, lineHeight: 1.55, color: CL.ink8, padding: 0, fieldSizing: 'content' } as React.CSSProperties}
             />

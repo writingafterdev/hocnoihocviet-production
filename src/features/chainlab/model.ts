@@ -87,8 +87,8 @@ export function openIssues(chain: Chain) {
 
 export const newChain = (q = 1, level: Level | null = null): Chain => ({ id: 'c' + Math.random().toString(36).slice(2, 10), q, title: '', tone: 'benefit', pos: 50, area: '', level, steps: [''], split: null, findings: [], fixes: null });
 
-/** Starting point for a new attempt: one empty chain per question. */
-export const initialChains = (spec: PromptSpec): Chain[] => spec.questions.flatMap((x) => (x.shape === 'cause' ? [newChain(x.n, 'Cá nhân'), newChain(x.n, 'Hệ thống')] : [newChain(x.n)]));
+/** Starting point for a new attempt: no chains; each question's idea map is where they start. */
+export const initialChains = (_spec: PromptSpec): Chain[] => [];
 
 /** Cause questions that still lack a written chain of one of the two types: [question number, type]. */
 export function missingLevels(spec: PromptSpec, chains: Chain[]): [number, Level][] {
