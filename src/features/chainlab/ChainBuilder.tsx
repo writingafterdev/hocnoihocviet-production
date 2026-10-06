@@ -125,14 +125,16 @@ export function ChainBuilder({ chains, setChains, extras, setExtras, stance, set
     setMapOpen((m) => ({ ...m, [q.n]: false }));
     reveal(chain.id);
   };
-  const mapOf = (q: Question) => (
-    <IdeaMap q={q} chains={chains} extras={extras?.[q.n]} setExtras={(e) => setExtras({ ...(extras || {}), [q.n]: e })} open={isOpen(q.n)} setOpen={(v) => setMapOpen((m) => ({ ...m, [q.n]: v }))} onCreate={(r, c, qu) => fromCell(q, r, c, qu)} onGoto={reveal} />
+  const mapOf = (q: Question, bare = false) => (
+    <IdeaMap bare={bare} q={q} chains={chains} extras={extras?.[q.n]} setExtras={(e) => setExtras({ ...(extras || {}), [q.n]: e })} open={isOpen(q.n)} setOpen={(v) => setMapOpen((m) => ({ ...m, [q.n]: v }))} onCreate={(r, c, qu) => fromCell(q, r, c, qu)} onGoto={reveal} />
   );
   const fixTargets = chains.map((c, i) => ({ c, i })).filter(({ c }) => CL_FIXABLE.includes(shapeOf(spec, c))).map(({ c, i }) => ({ id: c.id, label: 'Mạch ' + (i + 1) + (c.title ? ' · ' + c.title : '') }));
 
   const ropeBox = verdictQ && (
-    <div ref={ropeRef} style={{ position: 'sticky', top: -2, zIndex: 5, margin: '-2px 0 16px', paddingTop: 2, background: '#fff' }}>
+    // One box for the map and the rope. It sticks to the top only while the map is folded, so an open map never covers the chains.
+    <div ref={ropeRef} style={{ position: isOpen(verdictQ.n) ? 'relative' : 'sticky', top: -2, zIndex: 5, margin: '-2px 0 16px', paddingTop: 2, background: '#fff' }}>
       <div style={{ borderRadius: 18, border: '1px solid ' + CL.border, background: '#fff', padding: '16px 22px 18px' }}>
+        {(spec.stakeholders || []).length > 0 && <>{mapOf(verdictQ, true)}<div style={{ height: 1, background: CL.ink1, margin: isOpen(verdictQ.n) ? '18px 0 16px' : '14px 0 14px' }} /></>}
         <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 12, marginBottom: 14 }}>
           <ClLabel color={CL.ink}>Lập trường</ClLabel>
           <span style={{ fontFamily: CL.sans, fontSize: 11, color: CL.ink4 }}>Kéo từng ý về phía nó ủng hộ</span>
@@ -154,7 +156,7 @@ export function ChainBuilder({ chains, setChains, extras, setExtras, stance, set
   const body = !multiQ ? (
     <Fragment>
       {ropeBox}
-      {mapOf(spec.questions[0])}
+      {spec.questions[0] !== verdictQ && mapOf(spec.questions[0])}
       <ol style={{ margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: 16 }}>{chains.map(card)}</ol>
       <div style={{ display: 'flex', gap: 12, marginTop: 16 }}>{addBtn(spec.questions[0], 'Thêm mạch trống')}</div>
     </Fragment>
@@ -169,7 +171,7 @@ export function ChainBuilder({ chains, setChains, extras, setExtras, stance, set
           <span style={{ marginLeft: 'auto', flexShrink: 0, fontFamily: CL.sans, fontSize: 11, color: CL.ink4 }}>{mine.length} mạch</span>
         </div>
         {q.shape === 'verdict' && ropeBox}
-        {mapOf(q)}
+        {q !== verdictQ && mapOf(q)}
         {mine.length > 0 && <ol style={{ margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: 16 }}>{mine.map(card)}</ol>}
         <div style={{ display: 'flex', gap: 12, marginTop: mine.length ? 16 : 0 }}>{addBtn(q, 'Thêm mạch trống · câu ' + CL_CIRC[q.n - 1])}</div>
       </section>

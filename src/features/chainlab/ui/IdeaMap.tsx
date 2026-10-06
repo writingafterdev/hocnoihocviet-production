@@ -19,13 +19,15 @@ interface IdeaMapProps {
   /** The student wrote a chain from this cell. */
   onCreate: (row: MapRow, col: string, question: string) => void;
   onGoto: (chainId: string) => void;
+  /** Inside another box (the rope's): no border or margin of its own. */
+  bare?: boolean;
 }
 
 /**
  * The idea map of one question: rows × columns of small cells, each a question to answer with a chain.
  * Folds into one line once a chain is open, so the map and the chains are never both full on screen.
  */
-export function IdeaMap({ q, chains, extras, setExtras, open, setOpen, onCreate, onGoto }: IdeaMapProps) {
+export function IdeaMap({ q, chains, extras, setExtras, open, setOpen, onCreate, onGoto, bare }: IdeaMapProps) {
   const spec = useSpec();
   const [sel, setSel] = useState<{ r: string; c: string } | null>(null);
   const [adding, setAdding] = useState<'row' | 'col' | null>(null);
@@ -53,7 +55,7 @@ export function IdeaMap({ q, chains, extras, setExtras, open, setOpen, onCreate,
 
   if (!open) {
     return (
-      <button type="button" className="cl-btn cl-add" onClick={() => setOpen(true)} aria-expanded="false" style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, textAlign: 'left', borderRadius: 14, border: '1px solid ' + CL.border, background: '#fff', padding: '12px 18px', marginBottom: 16 }}>
+      <button type="button" className="cl-btn cl-add" onClick={() => setOpen(true)} aria-expanded="false" style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, textAlign: 'left', borderRadius: 14, border: bare ? 'none' : '1px solid ' + CL.border, background: '#fff', padding: bare ? '0' : '12px 18px', marginBottom: bare ? 0 : 16 }}>
         <ClLabel color={CL.ink}>Bản đồ ý</ClLabel>
         <span style={{ fontFamily: CL.sans, fontSize: 12.5, color: CL.ink6 }}>{filled} / {total} ô{untouched.length && untouched.length < g.cols.length ? ' · chưa chạm: ' + untouched.join(', ') : ''}</span>
         <span style={{ marginLeft: 'auto', fontFamily: CL.sans, fontSize: 12, fontWeight: 600, color: CL.ink5 }}>Mở bản đồ</span>
@@ -70,7 +72,7 @@ export function IdeaMap({ q, chains, extras, setExtras, open, setOpen, onCreate,
   ) : <button type="button" className="cl-btn cl-link" onClick={() => { setAdding(kind); setDraft(''); }} style={link}>+ {word[0].toUpperCase() + word.slice(1)}</button>);
 
   return (
-    <section aria-label="Bản đồ ý" style={{ borderRadius: 18, border: '1px solid ' + CL.border, background: '#fff', padding: '18px 22px 18px', marginBottom: 16 }}>
+    <section aria-label="Bản đồ ý" style={bare ? undefined : { borderRadius: 18, border: '1px solid ' + CL.border, background: '#fff', padding: '18px 22px 18px', marginBottom: 16 }}>
       <div style={{ display: 'flex', alignItems: 'baseline', gap: 12, flexWrap: 'wrap', marginBottom: 14 }}>
         <ClLabel color={CL.ink}>Bản đồ ý</ClLabel>
         <span style={{ fontFamily: CL.sans, fontSize: 12, color: CL.ink4 }}>Bấm một ô để bắt đầu mạch từ câu hỏi của nó</span>
