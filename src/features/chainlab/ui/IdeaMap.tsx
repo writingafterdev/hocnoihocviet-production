@@ -23,15 +23,17 @@ interface IdeaMapProps {
   onGoto: (chainId: string) => void;
   /** Inside another box (the rope's): no border or margin of its own. */
   bare?: boolean;
+  /** The selected cell, kept by the screen so the chain panel and the review can move it. */
+  sel: { r: string; c: string } | null;
+  onSel: (s: { r: string; c: string } | null) => void;
 }
 
 /**
  * The idea map of one question: rows × columns of cells. Type a rough idea straight into a cell, or select it
  * to see its question and write the whole chain. The body folds smoothly; the header line stays.
  */
-export function IdeaMap({ q, chains, extras, setExtras, open, setOpen, onCreate, onNote, onGoto, bare }: IdeaMapProps) {
+export function IdeaMap({ q, chains, extras, setExtras, open, setOpen, onCreate, onNote, onGoto, bare, sel, onSel: setSel }: IdeaMapProps) {
   const spec = useSpec();
-  const [sel, setSel] = useState<{ r: string; c: string } | null>(null);
   const [adding, setAdding] = useState<'row' | 'col' | null>(null);
   const [draft, setDraft] = useState('');
   const g = gridFor(spec, q, chains, extras);
@@ -109,7 +111,7 @@ export function IdeaMap({ q, chains, extras, setExtras, open, setOpen, onCreate,
           </div>
 
           {sel && selRow && (
-            <div style={{ marginTop: 12, borderRadius: 14, background: CL.panel, border: '1px solid ' + CL.ink1, padding: '14px 18px', display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
+            <div style={{ position: 'sticky', bottom: 0, zIndex: 3, marginTop: 12, borderRadius: 14, background: CL.panel, border: '1px solid ' + CL.ink2, boxShadow: '0 -10px 18px #fff', padding: '14px 18px', display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
               <div style={{ flex: '1 1 340px', minWidth: 0 }}>
                 <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 6, marginBottom: 6, fontFamily: CL.sans, fontSize: 12 }}>
                   <span style={{ borderRadius: 999, background: CL.ink, color: '#fff', padding: '2px 10px', fontWeight: 600 }}>{selRow.label}</span>

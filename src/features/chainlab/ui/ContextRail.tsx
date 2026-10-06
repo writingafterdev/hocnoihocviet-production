@@ -38,12 +38,12 @@ export function RailTop() {
 }
 
 /** Left rail in ChainLab: prompt, requirements, driver, stakeholders. (The 5 impact areas are picked on each chain card.) */
-export function ContextRail() {
+export function ContextRail({ bare = false }: { bare?: boolean }) {
   const [hints, setHints] = useState(true);
   const spec = useSpec();
   return (
-    <aside style={{ display: 'flex', flexDirection: 'column', minHeight: 0, overflow: 'hidden', borderRadius: 18, border: '1px solid ' + CL.border, background: '#fff' }}>
-      <div className="cl-scroll" style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: '26px 26px 30px' }}>
+    <aside style={{ display: 'flex', flexDirection: 'column', minHeight: 0, overflow: 'hidden', ...(bare ? {} : { borderRadius: 18, border: '1px solid ' + CL.border }), background: '#fff' }}>
+      <div className="cl-scroll" style={{ flex: 1, minHeight: 0, overflowY: bare ? 'visible' : 'auto', padding: bare ? '8px 4px 6px' : '26px 26px 30px' }}>
         <RailTop />
         <PromptBlock />
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: 28 }}>

@@ -20,14 +20,17 @@ export interface ChainCardProps {
   onDelete: () => void;
   drag: ReorderBinding;
   focused: boolean;
+  /** The only chain shown in its panel: always open, no drag handle or collapse. */
+  single?: boolean;
   /** Cause/problem chains a solution chain can link to. */
   targets?: FixTarget[];
 }
 
 /** One argument chain: header chips, steps, Scope split, and the "Thử mạch" lens row with findings. */
-export function ChainCard({ chain, num, onChange, onDelete, drag, focused, targets = [] }: ChainCardProps) {
+export function ChainCard({ chain, num, onChange, onDelete, drag, focused, single = false, targets = [] }: ChainCardProps) {
   const spec = useSpec();
-  const [open, setOpen] = useState(true);
+  const [openState, setOpen] = useState(true);
+  const open = single || openState;
   const [composing, setComposing] = useState<Lens | null>(null);
   const [splitMode, setSplitMode] = useState(false);
   const [more, setMore] = useState(false);
@@ -73,8 +76,8 @@ export function ChainCard({ chain, num, onChange, onDelete, drag, focused, targe
   return (
     <li id={'cl-chain-' + chain.id} {...drag.itemProps} style={{ listStyle: 'none', opacity: drag.isDragging ? 0.45 : 1, transition: 'opacity .15s' }}>
       <div style={{ overflow: 'hidden', borderRadius: 18, border: '1px solid ' + (drag.isOver ? CL.ink5 : focused ? CL.ink : CL.border), boxShadow: focused ? '0 0 0 4px ' + CL.ink1 : 'none', transition: 'border-color .3s, box-shadow .3s', background: '#fff' }}>
-        <div onClick={(e) => { if (!(e.target as HTMLElement).closest('button,input,textarea,select')) setOpen(!open); }} style={{ display: 'flex', alignItems: 'center', gap: 10, minHeight: 58, padding: '0 14px', borderBottom: open ? '1px solid ' + CL.ink1 : 'none', cursor: 'pointer' }}>
-          <button type="button" className="cl-btn cl-grip" {...drag.handleProps} aria-label="Kéo để sắp xếp" style={{ flexShrink: 0, width: 32, height: 40, display: 'flex', alignItems: 'center', justifyContent: 'center', color: CL.ink3, cursor: 'grab' }}><ClIcon name="grip" size={16} /></button>
+        <div onClick={(e) => { if (!single && !(e.target as HTMLElement).closest('button,input,textarea,select')) setOpen(!open); }} style={{ display: 'flex', alignItems: 'center', gap: 10, minHeight: 58, padding: '0 14px', borderBottom: open ? '1px solid ' + CL.ink1 : 'none', cursor: 'pointer' }}>
+          {!single && <button type="button" className="cl-btn cl-grip" {...drag.handleProps} aria-label="Kéo để sắp xếp" style={{ flexShrink: 0, width: 32, height: 40, display: 'flex', alignItems: 'center', justifyContent: 'center', color: CL.ink3, cursor: 'grab' }}><ClIcon name="grip" size={16} /></button>}
           {multiQ && <button type="button" className="cl-btn cl-link" title="Đổi câu hỏi mạch này trả lời" onClick={cycleQ} style={{ display: 'inline-flex', alignItems: 'center', gap: 3, fontFamily: CL.sans, fontSize: 10.5, fontWeight: 600, color: CL.ink5, whiteSpace: 'nowrap', flexShrink: 0 }}>câu <span style={{ fontSize: 14, lineHeight: 1 }}>{CL_CIRC[(chain.q || 1) - 1]}</span></button>}
           {cause && (level
             ? <button type="button" className="cl-btn" title="Đổi loại nguyên nhân" onClick={() => onChange({ ...chain, level: CL_LEVELS.find((l) => l.kind !== level.kind).kind })} style={{ flexShrink: 0, borderRadius: 6, background: level.bg, color: level.fg, padding: '5px 11px', fontFamily: CL.sans, fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', whiteSpace: 'nowrap' }}>{level.kind}</button>
@@ -89,7 +92,7 @@ export function ChainCard({ chain, num, onChange, onDelete, drag, focused, targe
           <input value={chain.title} onChange={(e) => onChange({ ...chain, title: e.target.value })} placeholder={cause ? 'Đặt tên cho mạch này…' : 'Mạch chưa đặt tên'} aria-label="Tên mạch" style={{ flex: 1, minWidth: 60, border: 'none', outline: 'none', background: 'transparent', fontFamily: CL.sans, fontSize: 13.5, fontWeight: 600, color: CL.ink, cursor: 'text' }} />
           {nIssues > 0 && !stale && <span style={{ flexShrink: 0, borderRadius: 5, padding: '4px 8px', background: CL.redSoft, color: CL.redText, fontFamily: CL.sans, fontSize: 10.5, fontWeight: 600, whiteSpace: 'nowrap' }}>{nIssues} chỗ cần xem</span>}
           <span style={{ flexShrink: 0, borderRadius: 5, padding: '4px 8px', background: status.bg, color: status.fg, fontFamily: CL.sans, fontSize: 10.5, fontWeight: 600, whiteSpace: 'nowrap' }}>{status.label}</span>
-          <button type="button" className="cl-btn" onClick={() => setOpen(!open)} aria-label={open ? 'Thu gọn' : 'Mở rộng'} aria-expanded={open} style={{ flexShrink: 0, width: 36, height: 40, display: 'flex', alignItems: 'center', justifyContent: 'center', color: CL.ink5, transform: open ? 'rotate(180deg)' : 'none', transition: 'transform .2s' }}><ClIcon name="chev" size={16} /></button>
+          {!single && <button type="button" className="cl-btn" onClick={() => setOpen(!open)} aria-label={open ? 'Thu gọn' : 'Mở rộng'} aria-expanded={open} style={{ flexShrink: 0, width: 36, height: 40, display: 'flex', alignItems: 'center', justifyContent: 'center', color: CL.ink5, transform: open ? 'rotate(180deg)' : 'none', transition: 'transform .2s' }}><ClIcon name="chev" size={16} /></button>}
         </div>
         {open && (
           <Fragment>
