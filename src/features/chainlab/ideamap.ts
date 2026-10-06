@@ -50,13 +50,16 @@ export function gridFor(spec: PromptSpec, q: Question, chains: Chain[], extras?:
 }
 
 /** The question a cell asks. */
-export function cellQuestion(q: Question, row: MapRow, col: string): string {
+/** `driver` is named in the question, so the student always knows what is being asked about. */
+export function cellQuestion(q: Question, row: MapRow, col: string, driver?: string): string {
+  const d = (driver || '').trim();
   if (q.shape === 'solution') return col + ' có thể làm gì để xử lý «' + row.label + '»?';
   if (q.shape === 'cause') {
     const h = AREA_HINT[col] ? AREA_HINT[col].replace(/ · /g, ', ') : col;
+    if (d) return row.key === 'Cá nhân' ? 'Người trong cuộc cần gì về ' + h + ', khiến "' + d + '" xảy ra?' : 'Cơ chế nào về ' + h + ' đứng sau "' + d + '"?';
     return row.key === 'Cá nhân' ? 'Người trong cuộc cần gì về ' + h + ', khiến họ làm vậy?' : 'Cơ chế nào về ' + h + ' đứng sau tất cả?';
   }
-  return 'Với ' + row.label + ', điều này ' + (AREA_STEM[col] || 'ảnh hưởng thế nào đến «' + col + '»?');
+  return 'Với ' + row.label + ', ' + (d ? 'việc "' + d + '"' : 'điều này') + ' ' + (AREA_STEM[col] || 'ảnh hưởng thế nào đến «' + col + '»?');
 }
 
 /** Chains started from this cell. */

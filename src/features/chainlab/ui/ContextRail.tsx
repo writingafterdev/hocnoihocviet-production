@@ -66,6 +66,8 @@ export function ContextRail({ bare = false }: { bare?: boolean }) {
                 ))}
               </ol>
             )}
+            {/* In the chains screen (bare) the driver is named in every cell's question and the stakeholders are the map's rows. */}
+            {!bare && (<>
             {spec.driver && (
               <section style={{ padding: '24px 0', borderBottom: '1px solid ' + CL.ink1 }}>
                 <ClLabel color={CL.ink}>Driver</ClLabel>
@@ -79,6 +81,7 @@ export function ContextRail({ bare = false }: { bare?: boolean }) {
                 {(spec.stakeholders || []).map((s) => <span key={s} style={{ borderRadius: 7, border: '1px solid ' + CL.ink2, background: '#fff', padding: '6px 11px', fontFamily: CL.sans, fontSize: 12, fontWeight: 600, color: CL.ink8 }}>{s}</span>)}
               </div>
             </section>
+            </>)}
           </div>
         )}
       </div>

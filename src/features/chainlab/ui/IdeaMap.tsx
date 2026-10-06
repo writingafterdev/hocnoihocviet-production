@@ -119,11 +119,11 @@ export function IdeaMap({ q, chains, extras, setExtras, open, setOpen, onCreate,
                   <span style={{ borderRadius: 999, background: CL.ink, color: '#fff', padding: '2px 10px', fontWeight: 600 }}>{sel.c}</span>
                   {g.hint(sel.c) && <span style={{ color: CL.ink4 }}>{g.hint(sel.c)}</span>}
                 </div>
-                <div style={{ fontFamily: CL.serif, fontSize: 16.5, lineHeight: 1.5, color: CL.ink }}>{cellQuestion(q, selRow, sel.c)}</div>
+                <div style={{ fontFamily: CL.serif, fontSize: 16.5, lineHeight: 1.5, color: CL.ink }}>{cellQuestion(q, selRow, sel.c, spec.driver)}</div>
               </div>
               {selChains.length > 0
                 ? <button type="button" className="cl-btn" onClick={() => onGoto(selChains[0].id)} style={{ height: 40, padding: '0 18px', borderRadius: 12, border: '1px solid ' + CL.ink2, background: '#fff', color: CL.ink, fontFamily: CL.sans, fontSize: 13, fontWeight: 600 }}>Đến mạch này</button>
-                : <button type="button" className="cl-btn cl-primary" onClick={() => onCreate(selRow, sel.c, cellQuestion(q, selRow, sel.c))} style={{ height: 40, padding: '0 20px', borderRadius: 12, background: CL.ink, color: '#fff', fontFamily: CL.sans, fontSize: 13, fontWeight: 600 }}>{q.shape === 'solution' ? 'Viết giải pháp từ ô này' : 'Viết mạch từ ô này'}</button>}
+                : <button type="button" className="cl-btn cl-primary" onClick={() => onCreate(selRow, sel.c, cellQuestion(q, selRow, sel.c, spec.driver))} style={{ height: 40, padding: '0 20px', borderRadius: 12, background: CL.ink, color: '#fff', fontFamily: CL.sans, fontSize: 13, fontWeight: 600 }}>{q.shape === 'solution' ? 'Viết giải pháp từ ô này' : 'Viết mạch từ ô này'}</button>}
             </div>
           )}
         </div>
@@ -146,11 +146,12 @@ function RowCells({ q, row, cols, made, sel, onSel, onNote, onRemove }: { q: Que
 
 /** One cell: a small note field. Selecting it shows its question below the map. */
 function Cell({ q, row, col, chain, on, onSel, onNote }: { q: Question; row: MapRow; col: string; chain?: Chain; on: boolean; onSel: (s: { r: string; c: string } | null) => void; onNote: IdeaMapProps['onNote'] }) {
+  const spec = useSpec();
   const title = chain ? chain.title : '';
   const [text, setText] = useState(title);
   useEffect(() => { setText(title); }, [title]);
   const has = !!chain;
-  const commit = () => { if (text.trim() !== title.trim()) onNote(row, col, cellQuestion(q, row, col), text); };
+  const commit = () => { if (text.trim() !== title.trim()) onNote(row, col, cellQuestion(q, row, col, spec.driver), text); };
   return (
     <div style={{ position: 'relative' }}>
       <textarea value={text} rows={2} aria-label={row.label + ', ' + col + (has ? ' (đã có mạch)' : '')} onFocus={() => onSel({ r: row.key, c: col })} onChange={(e) => setText(e.target.value)} onBlur={commit}

@@ -18,6 +18,9 @@ import { ReviewPanel, ReviewSummary } from './ui/ReviewPanel';
 import { Rope } from './ui/Rope';
 import { useReorder } from './ui/useReorder';
 
+/** The one easing of this screen's slides: the same gentle ease-in-out as the map, with no sudden start. */
+const SMOOTH = '.35s cubic-bezier(.4, 0, .2, 1)';
+
 export interface ChainBuilderProps {
   chains: Chain[];
   setChains: (fn: Chain[] | ((cs: Chain[]) => Chain[])) => void;
@@ -41,7 +44,7 @@ export function ChainBuilder({ chains, setChains, extras, setExtras, stance, set
   const spec = useSpec();
   const bind = useReorder(chains, (n) => setChains(n));
   const [help, setHelp] = useState(false);
-  const [ctxOpen, setCtxOpen] = useState(false);
+  const [ctxOpen, setCtxOpen] = useState(true);
   const [sel, setSel] = useState<string | null>(null);
   const [running, setRunning] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -173,11 +176,11 @@ export function ChainBuilder({ chains, setChains, extras, setExtras, stance, set
       <div>
         <button type="button" className="cl-btn" onClick={() => setCtxOpen(!ctxOpen)} aria-expanded={ctxOpen} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, textAlign: 'left', borderRadius: 10, background: CL.panel, padding: '10px 14px' }}>
           <ClLabel color={CL.ink}>Đề bài</ClLabel>
-          <span aria-hidden="true" style={{ display: 'inline-flex', color: CL.ink4, transform: ctxOpen ? 'none' : 'rotate(-90deg)', transition: 'transform .35s cubic-bezier(.16,1,.3,1)' }}><ClIcon name="chev" size={13} /></span>
-          <span style={{ minWidth: 0, flex: 1, fontFamily: CL.sans, fontSize: 12, color: CL.ink6, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', opacity: ctxOpen ? 0 : 1, transition: 'opacity .25s ease' }}>{spec.text}</span>
+          <span aria-hidden="true" style={{ display: 'inline-flex', color: CL.ink4, transform: ctxOpen ? 'none' : 'rotate(-90deg)', transition: 'transform ' + SMOOTH }}><ClIcon name="chev" size={13} /></span>
+          <span style={{ minWidth: 0, flex: 1, fontFamily: CL.sans, fontSize: 12, color: CL.ink6, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', opacity: ctxOpen ? 0 : 1, transition: 'opacity ' + SMOOTH }}>{spec.text}</span>
         </button>
         {/* Always mounted, so opening and closing it is one smooth slide instead of a jump. */}
-        <div style={{ display: 'grid', gridTemplateRows: ctxOpen ? '1fr' : '0fr', opacity: ctxOpen ? 1 : 0, visibility: ctxOpen ? 'visible' : 'hidden', transition: 'grid-template-rows .4s cubic-bezier(.16,1,.3,1), opacity .3s ease, visibility 0s linear ' + (ctxOpen ? '0s' : '.4s') }}>
+        <div style={{ display: 'grid', gridTemplateRows: ctxOpen ? '1fr' : '0fr', opacity: ctxOpen ? 1 : 0, visibility: ctxOpen ? 'visible' : 'hidden', transition: 'grid-template-rows ' + SMOOTH + ', opacity ' + SMOOTH + ', visibility 0s linear ' + (ctxOpen ? '0s' : '.35s') }}>
           <div style={{ minHeight: 0, overflow: 'hidden' }}><div style={{ paddingTop: 10 }}><ContextRail bare /></div></div>
         </div>
       </div>
