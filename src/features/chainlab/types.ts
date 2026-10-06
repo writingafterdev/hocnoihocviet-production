@@ -22,6 +22,8 @@ export interface PromptSpec {
   driver?: string;
   /** Comparison prompts (two real options): the second option's driver. `driver` is option A, `driver2` is B. */
   driver2?: string;
+  /** The prompt claims one option is "the best" or "the only" way: B is a rival the student can rename. */
+  claim?: 'best' | 'only';
   stakeholders?: string[];
   chains?: Chain[];
 }

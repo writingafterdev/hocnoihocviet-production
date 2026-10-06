@@ -1,13 +1,13 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { AI_ERROR_TEXT, AiRequestError } from '../ai/request';
 import { Translator } from '../ai/Translator';
 import { CL, CL_CIRC, CL_FIXABLE, CL_SHAPE_LABEL } from './constants';
-import { cellQuestion, driverOf, gridFor, isCompare, type CellCmp, type MapExtras, type MapRow } from './ideamap';
+import { cellQuestion, claimTally, driverOf, gridFor, isCompare, type CellCmp, type MapExtras, type MapRow } from './ideamap';
 import { newChain, ropeUnits, shapeOf } from './model';
 import { requestChainReview, reviewChains, reviewKey, type ChainReview } from './review';
-import { useSpec } from './SpecContext';
+import { SpecProvider, useSpec } from './SpecContext';
 import type { Chain, Question, ReviewItem, RopeUnit, Side } from './types';
 import { CellCompare } from './ui/CellCompare';
 import { CellSlot } from './ui/CellSlot';
@@ -43,7 +43,10 @@ export interface ChainBuilderProps {
  * · the review. Picking a cell, a rope chip or a review comment selects its chain, so nothing needs scrolling to.
  */
 export function ChainBuilder({ chains, setChains, extras, setExtras, stance, setStance, review, setReview, onBack, onWrite }: ChainBuilderProps) {
-  const spec = useSpec();
+  const base = useSpec();
+  /** "Best" / "only" prompts: the rival the student chose replaces the suggested second driver everywhere below. */
+  const rival = (extras && base.questions.map((x) => extras[x.n]?.rival).find(Boolean)) || '';
+  const spec = useMemo(() => (rival && base.claim ? { ...base, driver2: rival } : base), [base, rival]);
   const bind = useReorder(chains, (n) => setChains(n));
   const [help, setHelp] = useState(false);
   const [ctxOpen, setCtxOpen] = useState(true);
@@ -141,8 +144,18 @@ export function ChainBuilder({ chains, setChains, extras, setExtras, stance, set
   const slotChain = slotQ && slotRow ? inCell(slotQ, slotRow, cellSel.c) : null;
   const slot = slotQ && slotRow && !slotChain ? { q: slotQ, row: slotRow, col: cellSel.c } : null;
   const shown = slotChain || active;
+  const onRival = (v: string) => {
+    const vq = spec.questions.find((x) => isCompare(spec, x));
+    if (!vq) return;
+    const next = v.replace(/\s+/g, ' ').trim().slice(0, 120);
+    const old = driverOf(spec, 'B'), neu = next || base.driver2 || '';
+    const ex = (extras && extras[vq.n]) || { rows: [], cols: [] };
+    setExtras({ ...(extras || {}), [vq.n]: { ...ex, rival: next || undefined } });
+    if (neu !== old) setChains((cs) => cs.map((c) => (c.drv === 'B' && (c.q || 1) === vq.n && c.steps[0] === old ? { ...c, steps: [neu, ...c.steps.slice(1)], cell: c.cell ? { ...c.cell, q: c.cell.q.split(old).join(neu) } : c.cell } : c)));
+  };
+  const tallyOf = (q: Question) => { const g = gridFor(spec, q, chains, extras?.[q.n]); return claimTally(g.rows, g.cols, extras?.[q.n]?.cmp); };
   const mapOf = (q: Question) => (
-    <IdeaMap bare q={q} chains={chains} extras={extras?.[q.n]} setExtras={(e) => setExtras({ ...(extras || {}), [q.n]: e })} open={isOpen(q.n)} setOpen={(v) => setMapOpen((m) => ({ ...m, [q.n]: v }))}
+    <IdeaMap bare q={q} chains={chains} extras={extras?.[q.n]} onRival={spec.claim ? onRival : undefined} setExtras={(e) => setExtras({ ...(extras || {}), [q.n]: e })} open={isOpen(q.n)} setOpen={(v) => setMapOpen((m) => ({ ...m, [q.n]: v }))}
       sel={cellSel && cellSel.q === q.n ? { r: cellSel.r, c: cellSel.c } : null} onSel={onCell(q)} />
   );
   const fixTargets = chains.map((c, i) => ({ c, i })).filter(({ c }) => CL_FIXABLE.includes(shapeOf(spec, c))).map(({ c, i }) => ({ id: c.id, label: 'Mạch ' + (i + 1) + (c.title ? ' · ' + c.title : '') }));
@@ -213,7 +226,7 @@ export function ChainBuilder({ chains, setChains, extras, setExtras, stance, set
           onCmp={(v) => setCmp(compareCell.q, compareCell.r, compareCell.c, v)}
           onCreate={(drv) => fromCell(compareCell.q, { key: compareCell.r, label: compareCell.r }, compareCell.c, cellQuestion(compareCell.q, { key: compareCell.r, label: compareCell.r }, compareCell.c, driverOf(spec, drv)), drv)}
           onChange={update} onDelete={(c) => { setChains(chains.filter((x) => x.id !== c.id)); setActiveId(null); }}
-          bind={bind} numOf={(c) => chains.indexOf(c) + 1} targets={fixTargets} />
+          bind={bind} numOf={(c) => chains.indexOf(c) + 1} targets={fixTargets} tally={tallyOf(compareCell.q)} />
       ) : slot ? (
         <CellSlot key={slot.row.key + '|' + slot.col} row={slot.row.label} col={slot.col} hint={gridFor(spec, slot.q, chains, extras?.[slot.q.n]).hint(slot.col)} solution={slot.q.shape === 'solution'} question={cellQuestion(slot.q, slot.row, slot.col, spec.driver)} onCreate={() => fromCell(slot.q, slot.row, slot.col, cellQuestion(slot.q, slot.row, slot.col, spec.driver))} />
       ) : shown ? (
@@ -236,6 +249,7 @@ export function ChainBuilder({ chains, setChains, extras, setExtras, stance, set
   );
 
   return (
+    <SpecProvider value={spec}>
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column', maxWidth: 1710, margin: '0 auto', padding: '12px 40px 16px' }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', minHeight: 42, paddingBottom: 12 }}>
         <button type="button" className="cl-btn cl-link" onClick={onBack} style={backLinkStyle}><ClIcon name="left" size={14} />Thư viện đề</button>
@@ -249,5 +263,6 @@ export function ChainBuilder({ chains, setChains, extras, setExtras, stance, set
       </div>
       <ChainsLayout left={left} middle={middle} bottom={<Translator onClose={() => setHelp(false)} />} bottomOpen={help} right={right} rightOpen={!!review} />
     </div>
+    </SpecProvider>
   );
 }

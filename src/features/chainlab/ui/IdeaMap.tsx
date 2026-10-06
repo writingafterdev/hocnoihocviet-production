@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { CL } from '../constants';
-import { cellChains, cellPair, type CellCmp, cmpKey, DRV, driverOf, gridFor, isCompare, isWritten, type MapExtras, type MapRow } from '../ideamap';
+import { cellChains, cellPair, type CellCmp, cmpKey, DRV, driverOf, gridFor, isCompare, isWritten, type MapExtras, type MapRow, VERDICT_WORDS, verdictKind } from '../ideamap';
 import { useSpec } from '../SpecContext';
 import type { Chain, Question } from '../types';
 import { ClIcon, ClLabel } from './primitives';
@@ -14,6 +14,8 @@ interface IdeaMapProps {
   chains: Chain[];
   extras?: MapExtras;
   setExtras: (e: MapExtras) => void;
+  /** "Best" / "only" prompts: the student renamed the rival B (empty puts the suggestion back). */
+  onRival?: (v: string) => void;
   open: boolean;
   setOpen: (v: boolean) => void;
   /** Inside another box (the rope's): no border or margin of its own. */
@@ -27,10 +29,11 @@ interface IdeaMapProps {
  * The idea map of one question: rows × columns of cells. A cell only selects; its question and chain live in the
  * middle panel. The body folds smoothly; the header line stays.
  */
-export function IdeaMap({ q, chains, extras, setExtras, open, setOpen, bare, sel, onSel: setSel }: IdeaMapProps) {
+export function IdeaMap({ q, chains, extras, setExtras, onRival, open, setOpen, bare, sel, onSel: setSel }: IdeaMapProps) {
   const spec = useSpec();
   const [adding, setAdding] = useState<'row' | 'col' | null>(null);
   const [draft, setDraft] = useState('');
+  const [rivalDraft, setRivalDraft] = useState<string | null>(null);
   const g = gridFor(spec, q, chains, extras);
   const ex = extras || { rows: [], cols: [] };
   const hiddenRows = (ex.hiddenRows || []).filter((h) => (spec.stakeholders || []).includes(h));
@@ -85,12 +88,31 @@ export function IdeaMap({ q, chains, extras, setExtras, open, setOpen, bare, sel
       {head}
       <div style={{ display: 'grid', gridTemplateRows: open ? '1fr' : '0fr', opacity: open ? 1 : 0, visibility: open ? 'visible' : 'hidden', transition: 'grid-template-rows ' + MS + ' ease, opacity ' + MS + ' ease, visibility 0s linear ' + (open ? '0s' : MS) }}>
         <div style={{ minHeight: 0, overflow: open ? 'visible' : 'hidden' }}>
+          {cmpMode && spec.claim && (
+            <div style={{ borderRadius: 14, background: CL.panel, border: '1px solid ' + CL.ink1, padding: '12px 14px', margin: '0 0 12px', fontFamily: CL.sans, fontSize: 12.5, lineHeight: 1.5, color: CL.ink6 }}>
+              <span style={{ borderRadius: 6, background: CL.ink, color: '#fff', padding: '3px 9px', marginRight: 8, fontSize: 10.5, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase' }}>{spec.claim === 'only' ? 'The only way' : 'The best way'}</span>
+              {spec.claim === 'only'
+                ? <>Đề nói A là cách <b>duy nhất</b>. Chỉ cần một cách khác hiệu quả là đề không còn đúng: tìm một cách B thật sự hiệu quả và chứng minh nó ở một ô là đủ.</>
+                : <>Đề nói A là cách <b>tốt nhất</b>, nên A phải hơn các cách khác. Chọn đối thủ mạnh nhất của A; đề chỉ đúng nếu A thắng B ở phần lớn ô, nhất là những ô quan trọng nhất.</>}
+            </div>
+          )}
           {cmpMode && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6, margin: '0 0 12px' }}>
               {(['A', 'B'] as const).map((k) => (
-                <div key={k} style={{ display: 'flex', alignItems: 'baseline', gap: 8, fontFamily: CL.sans, fontSize: 12.5, lineHeight: 1.4 }}>
-                  <span style={{ flexShrink: 0, width: 20, height: 20, borderRadius: 6, background: DRV[k].solid, color: '#fff', display: 'grid', placeItems: 'center', fontSize: 11, fontWeight: 700, alignSelf: 'center' }}>{k}</span>
-                  <span style={{ minWidth: 0, fontWeight: 700, color: DRV[k].text }}>{driverOf(spec, k)}</span>
+                <div key={k} style={{ display: 'flex', alignItems: 'center', gap: 8, fontFamily: CL.sans, fontSize: 12.5, lineHeight: 1.4 }}>
+                  <span style={{ flexShrink: 0, width: 20, height: 20, borderRadius: 6, background: DRV[k].solid, color: '#fff', display: 'grid', placeItems: 'center', fontSize: 11, fontWeight: 700 }}>{k}</span>
+                  {k === 'B' && spec.claim && onRival ? (
+                    rivalDraft === null ? (
+                      <button type="button" className="cl-btn" onClick={() => setRivalDraft(driverOf(spec, 'B'))} title="Đổi sang đối thủ bạn thấy mạnh nhất" style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: 8, textAlign: 'left', borderRadius: 10, border: '1.5px dashed #D9BE66', background: '#FFFCF0', padding: '6px 10px', fontFamily: CL.sans, fontSize: 12.5, fontWeight: 700, lineHeight: 1.4, color: DRV.B.text }}>
+                        <span style={{ flex: 1, minWidth: 0 }}>{driverOf(spec, 'B')}</span><ClIcon name="edit" size={13} color={DRV.B.text} />
+                      </button>
+                    ) : (
+                      <input autoFocus value={rivalDraft} maxLength={120} onChange={(e) => setRivalDraft(e.target.value)} aria-label="Đối thủ B" placeholder="Cách khác bạn thấy mạnh nhất…"
+                        onBlur={() => { onRival(rivalDraft); setRivalDraft(null); }} onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); if (e.key === 'Escape') setRivalDraft(null); }}
+                        style={{ flex: 1, minWidth: 0, height: 32, borderRadius: 10, border: '1.5px solid ' + DRV.B.solid, padding: '0 10px', fontFamily: CL.sans, fontSize: 12.5, fontWeight: 700, color: DRV.B.text, outline: 'none' }} />
+                    )
+                  ) : <span style={{ minWidth: 0, fontWeight: 700, color: DRV[k].text }}>{driverOf(spec, k)}</span>}
+                  {spec.claim && <span style={{ flexShrink: 0, fontSize: 11, color: CL.ink4 }}>{k === 'A' ? 'cách đề nêu' : (ex.rival ? 'bạn chọn' : 'gợi ý, bấm để đổi')}</span>}
                 </div>
               ))}
             </div>
@@ -121,7 +143,7 @@ export function IdeaMap({ q, chains, extras, setExtras, open, setOpen, bare, sel
                           {w['='] > 0 && <span style={{ flex: w['='], background: CL.ink4 }} />}
                           {w.B > 0 && <span style={{ flex: w.B, background: DRV.B.solid }} />}
                         </div>
-                        <div style={{ marginTop: 4, textAlign: 'center', fontFamily: CL.sans, fontSize: 10.5, color: n ? CL.ink6 : CL.ink4 }}>{n ? [w.A && 'A ' + w.A, w['='] && 'ngang ' + w['='], w.B && 'B ' + w.B].filter(Boolean).join(' · ') : 'chưa có'}</div>
+                        <div style={{ marginTop: 4, textAlign: 'center', fontFamily: CL.sans, fontSize: 10.5, color: n ? CL.ink6 : CL.ink4 }}>{n ? (verdictKind(spec) === 'only' ? [w.A && 'chỉ A ' + w.A, w['='] && 'một phần ' + w['='], w.B && 'B ' + w.B] : [w.A && 'A ' + w.A, w['='] && 'ngang ' + w['='], w.B && 'B ' + w.B]).filter(Boolean).join(' · ') : 'chưa có'}</div>
                       </div>
                     );
                   })}
@@ -168,15 +190,16 @@ function Cell({ row, col, chain, on, onSel }: { row: MapRow; col: string; chain?
   );
 }
 
-const VERDICT_WORD = { A: 'A hơn', B: 'B hơn', '=': 'Ngang nhau' } as const;
 
 /** One cell of a two-driver map: a square for each driver (filled once its chain is written) and the verdict. */
 function PairCell({ q, row, col, chains, cmp, on, onSel }: { q: Question; row: MapRow; col: string; chains: Chain[]; cmp?: CellCmp; on: boolean; onSel: (s: { r: string; c: string } | null) => void }) {
+  const spec = useSpec();
   const pair = cellPair(chains, q.n, row.key, col);
   const both = isWritten(pair.A) && isWritten(pair.B);
   const win = cmp && cmp.win;
-  const word = win ? VERDICT_WORD[win] : both ? 'Chưa so sánh' : '';
-  const color = win === 'A' ? DRV.A.text : win === 'B' ? DRV.B.text : win ? CL.ink6 : '#B4483D';
+  const only = verdictKind(spec) === 'only';
+  const word = win ? VERDICT_WORDS[only ? 'only' : 'cmp'][win] : both ? 'Chưa so sánh' : '';
+  const color = only ? (win === 'B' ? CL.greenText : win === '=' ? CL.yellowText : win ? CL.ink6 : '#B4483D') : (win === 'A' ? DRV.A.text : win === 'B' ? DRV.B.text : win ? CL.ink6 : '#B4483D');
   const sq = (k: 'A' | 'B') => {
     const c = pair[k];
     return <span style={{ width: 22, height: 22, boxSizing: 'border-box', borderRadius: 7, display: 'grid', placeItems: 'center', fontFamily: CL.sans, fontSize: 10.5, fontWeight: 700, background: c ? DRV[k].solid : '#fff', color: c ? '#fff' : CL.ink4, border: c ? 'none' : '1.5px dashed ' + CL.ink2, opacity: c && !isWritten(c) ? 0.55 : 1 }}>{k}</span>;

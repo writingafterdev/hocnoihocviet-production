@@ -13,10 +13,35 @@ export interface MapExtras {
   hiddenRows?: string[];
   /** Two-driver maps: comparison per cell, keyed `row|column`. */
   cmp?: Record<string, CellCmp>;
+  /** "Best" / "only" prompts: the rival the student chose in place of the suggested one. */
+  rival?: string;
 }
 
 /** What a student can say makes one side stronger in a cell. */
 export const CMP_CRITERIA = ['Mức độ', 'Số người', 'Kéo dài bao lâu', 'Qua được Scope', 'Khó đảo ngược'];
+
+/** For "the only" prompts the grounds are about whether B stands without A. */
+export const CMP_CRITERIA_ONLY = ['Không cần A đi kèm', 'Chạm tới người A không chạm', 'Qua được Scope'];
+
+/** What each verdict is called: two options compared, or a "best" / "only" claim (where `win` B = B stands alone, = partly, A = only A works). */
+export const VERDICT_WORDS = {
+  cmp: { A: 'A hơn', '=': 'Ngang nhau', B: 'B hơn' },
+  only: { A: 'Chỉ A xử lý', '=': 'Một phần', B: 'B đứng vững' },
+} as const;
+export const verdictKind = (spec: PromptSpec) => (spec.claim === 'only' ? 'only' : 'cmp');
+
+export interface ClaimTally { a: number; eq: number; b: number; done: number; aCells: string[]; bCells: string[] }
+/** Wins per side over a map's cells, with the cells each side won. */
+export function claimTally(rows: MapRow[], cols: string[], cmp?: Record<string, CellCmp>): ClaimTally {
+  const t: ClaimTally = { a: 0, eq: 0, b: 0, done: 0, aCells: [], bCells: [] };
+  rows.forEach((r) => cols.forEach((c) => {
+    const v = cmp && cmp[r.key + '|' + c];
+    if (!v || !v.win) return;
+    t.done += 1;
+    if (v.win === 'A') { t.a += 1; t.aCells.push(r.label + ' · ' + c); } else if (v.win === 'B') { t.b += 1; t.bCells.push(r.label + ' · ' + c); } else t.eq += 1;
+  }));
+  return t;
+}
 
 /** A question with two real drivers to compare (A = `driver`, B = `driver2`). */
 export const isCompare = (spec: PromptSpec, q: Question) => q.shape === 'verdict' && !!spec.driver && !!spec.driver2;

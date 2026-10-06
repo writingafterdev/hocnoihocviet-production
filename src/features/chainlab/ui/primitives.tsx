@@ -10,6 +10,7 @@ const ICON_PATHS: Record<string, ReactNode> = {
   fork: <path d="M6 3v6a6 6 0 006 6h0a6 6 0 006-6V3M12 15v6" />,
   check: <path d="M5 12l5 5 9-10" />,
   x: <path d="M6 6l12 12M18 6L6 18" />,
+  edit: <path d="M12 20h9M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z" />,
 };
 
 export type IconName = 'grip' | keyof typeof ICON_PATHS;
