@@ -2,6 +2,7 @@
  * Attempts: one student's work on one prompt (chains, stance, essay, feedback).
  * Saved per signed-in user in D1 through /api/attempts; the screens only talk to `AttemptStore`.
  */
+import type { MapExtras } from '../chainlab/ideamap';
 import type { ChainReview } from '../chainlab/review';
 import type { Chain } from '../chainlab/types';
 import type { EssayReview } from '../desk/scoring';
@@ -30,7 +31,7 @@ export interface Attempt {
   updatedAt: number;
   chains: Chain[];
   /** Rows and columns the student added to a question's idea map, by question number. */
-  mapExtras?: Record<string, { rows: string[]; cols: string[] }>;
+  mapExtras?: Record<string, MapExtras>;
   stance: string;
   chainReview: ChainReview | null;
   essay: EssayState;

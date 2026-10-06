@@ -3,7 +3,30 @@ import { CL_FIXABLE, CL_IMPACT_AREAS } from './constants';
 import { filledSteps, shapeOf } from './model';
 import type { Chain, PromptSpec, Question } from './types';
 
-export interface MapExtras { rows: string[]; cols: string[]; /** Prompt stakeholders the student removed from the map. */ hiddenRows?: string[] }
+/** The student's comparison of one cell of a two-driver map: who is stronger there, on what grounds, and why. */
+export interface CellCmp { win: 'A' | 'B' | '=' | null; crit: string[]; why: string }
+
+export interface MapExtras {
+  rows: string[];
+  cols: string[];
+  /** Prompt stakeholders the student removed from the map. */
+  hiddenRows?: string[];
+  /** Two-driver maps: comparison per cell, keyed `row|column`. */
+  cmp?: Record<string, CellCmp>;
+}
+
+/** What a student can say makes one side stronger in a cell. */
+export const CMP_CRITERIA = ['Mức độ', 'Số người', 'Kéo dài bao lâu', 'Qua được Scope', 'Khó đảo ngược'];
+
+/** A question with two real drivers to compare (A = `driver`, B = `driver2`). */
+export const isCompare = (spec: PromptSpec, q: Question) => q.shape === 'verdict' && !!spec.driver && !!spec.driver2;
+export const driverOf = (spec: PromptSpec, drv?: 'A' | 'B' | null) => (drv === 'B' ? spec.driver2 : spec.driver) || '';
+/** Colours of the two drivers of a comparison prompt: told apart by lightness as well as hue. */
+export const DRV = {
+  A: { solid: '#3B4FA0', soft: '#E8EBFA', text: '#2C3C86' },
+  B: { solid: '#8A5A00', soft: '#FFF1D6', text: '#7A4E00' },
+} as const;
+export const cmpKey = (r: string, c: string) => r + '|' + c;
 
 export interface MapRow { key: string; label: string; tag?: string }
 
@@ -61,6 +84,14 @@ export function cellQuestion(q: Question, row: MapRow, col: string, driver?: str
   }
   return 'Với ' + row.label + ', ' + (d ? 'việc "' + d + '"' : 'điều này') + ' ' + (AREA_STEM[col] || 'ảnh hưởng thế nào đến «' + col + '»?');
 }
+
+/** Chains made in one cell of a two-driver map: A first, then B. A chain without a side counts as A. */
+export const cellPair = (chains: Chain[], q: number, row: string, col: string): { A?: Chain; B?: Chain } => {
+  const mine = cellChains(chains, q, row, col);
+  return { A: mine.find((c) => (c.drv || 'A') === 'A'), B: mine.find((c) => c.drv === 'B') };
+};
+/** A chain is written once it has the driver and at least one step of its own. */
+export const isWritten = (c?: Chain) => !!c && filledSteps(c) >= 2;
 
 /** Chains started from this cell. */
 export const cellChains = (chains: Chain[], q: number, row: string, col: string) => chains.filter((c) => (c.q || 1) === q && c.cell && c.cell.r === row && c.cell.c === col);

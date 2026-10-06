@@ -4,11 +4,12 @@ import { useEffect, useRef, useState } from 'react';
 import { AI_ERROR_TEXT, AiRequestError } from '../ai/request';
 import { Translator } from '../ai/Translator';
 import { CL, CL_CIRC, CL_FIXABLE, CL_SHAPE_LABEL } from './constants';
-import type { MapExtras, MapRow } from './ideamap';
+import { cellPair, cellQuestion, driverOf, isCompare, type CellCmp, type MapExtras, type MapRow } from './ideamap';
 import { newChain, ropeUnits, shapeOf } from './model';
 import { requestChainReview, reviewChains, reviewKey, type ChainReview } from './review';
 import { useSpec } from './SpecContext';
 import type { Chain, Question, ReviewItem, RopeUnit, Side } from './types';
+import { CellCompare } from './ui/CellCompare';
 import { ChainCard } from './ui/ChainCard';
 import { ChainsLayout } from './ui/ChainsLayout';
 import { ContextRail } from './ui/ContextRail';
@@ -103,20 +104,21 @@ export function ChainBuilder({ chains, setChains, extras, setExtras, stance, set
 
   const add = (q = 1) => { const c = newChain(q); setChains([...chains, c]); setActiveId(c.id); setCellSel(null); };
   /** A cell of the idea map as a chain: the driver first (where there is one), then the student's own steps. */
-  const chainFor = (q: Question, row: MapRow, col: string, question: string, title = ''): Chain => {
+  const chainFor = (q: Question, row: MapRow, col: string, question: string, title = '', drv: 'A' | 'B' | null = null): Chain => {
     const cause = q.shape === 'cause', solution = q.shape === 'solution';
     return {
       ...newChain(q.n, cause && (row.key === 'Cá nhân' || row.key === 'Hệ thống') ? row.key : null),
       title,
       area: solution ? '' : col,
-      steps: cause || solution ? [''] : [spec.driver || '', ''],
+      steps: cause || solution ? [''] : [(drv ? driverOf(spec, drv) : spec.driver) || '', ''],
+      drv,
       fixes: solution ? row.key : null,
       cell: { r: cause || solution ? row.key : row.label, c: col, q: question, ...(solution ? { label: row.label } : {}) },
     };
   };
   const inCell = (q: Question, row: MapRow, col: string) => chains.find((c) => (c.q || 1) === q.n && c.cell && c.cell.r === (q.shape === 'cause' || q.shape === 'solution' ? row.key : row.label) && c.cell.c === col);
-  const fromCell = (q: Question, row: MapRow, col: string, question: string) => {
-    const chain = chainFor(q, row, col, question);
+  const fromCell = (q: Question, row: MapRow, col: string, question: string, drv: 'A' | 'B' | null = null) => {
+    const chain = chainFor(q, row, col, question, '', drv);
     setChains([...chains, chain]);
     setActiveId(chain.id);
   };
@@ -131,6 +133,13 @@ export function ChainBuilder({ chains, setChains, extras, setExtras, stance, set
     const ch = s && chains.find((c) => (c.q || 1) === q.n && c.cell && c.cell.r === s.r && c.cell.c === s.c);
     if (ch) setActiveId(ch.id);
   };
+  /** The comparison of one cell of a two-driver map lives with the map's other extras. */
+  const setCmp = (q: Question, r: string, c: string, v: CellCmp) => {
+    const ex = (extras && extras[q.n]) || { rows: [], cols: [] };
+    setExtras({ ...(extras || {}), [q.n]: { ...ex, cmp: { ...(ex.cmp || {}), [r + '|' + c]: v } } });
+  };
+  const cmpQ = cellSel ? spec.questions.find((x) => x.n === cellSel.q) : null;
+  const compareCell = cellSel && cmpQ && isCompare(spec, cmpQ) ? { ...cellSel, q: cmpQ } : null;
   const mapOf = (q: Question) => (
     <IdeaMap bare q={q} chains={chains} extras={extras?.[q.n]} setExtras={(e) => setExtras({ ...(extras || {}), [q.n]: e })} open={isOpen(q.n)} setOpen={(v) => setMapOpen((m) => ({ ...m, [q.n]: v }))}
       sel={cellSel && cellSel.q === q.n ? { r: cellSel.r, c: cellSel.c } : null} onSel={onCell(q)}
@@ -152,7 +161,7 @@ export function ChainBuilder({ chains, setChains, extras, setExtras, stance, set
     </div>
   );
 
-  const label = (c: Chain, i: number) => (c.cell ? (c.title.trim() || (shapeOf(spec, c) === 'cause' || shapeOf(spec, c) === 'solution' ? c.cell.c : c.cell.r + ' · ' + c.cell.c)) : c.title.trim() || 'Mạch ' + (i + 1));
+  const label = (c: Chain, i: number) => (c.drv ? c.drv + ' · ' : '') + (c.cell ? (c.title.trim() || (shapeOf(spec, c) === 'cause' || shapeOf(spec, c) === 'solution' ? c.cell.c : c.cell.r + ' · ' + c.cell.c)) : c.title.trim() || 'Mạch ' + (i + 1));
 
   const leftBody = !multiQ ? (
     spec.questions[0] === verdictQ ? ropeBlock : mapOf(spec.questions[0])
@@ -199,7 +208,13 @@ export function ChainBuilder({ chains, setChains, extras, setExtras, stance, set
         ))}
         <button type="button" className="cl-btn cl-link" onClick={() => add(active ? active.q || 1 : spec.questions[0].n)} style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontFamily: CL.sans, fontSize: 12, fontWeight: 600, color: CL.ink5, padding: '5px 6px' }}><ClIcon name="plus" size={12} />Mạch trống</button>
       </div>
-      {active ? (
+      {compareCell ? (
+        <CellCompare key={compareCell.r + '|' + compareCell.c} q={compareCell.q} row={compareCell.r} col={compareCell.c} chains={chains} cmp={((extras && extras[compareCell.q.n]) || { cmp: {} }).cmp?.[compareCell.r + '|' + compareCell.c]}
+          onCmp={(v) => setCmp(compareCell.q, compareCell.r, compareCell.c, v)}
+          onCreate={(drv) => fromCell(compareCell.q, { key: compareCell.r, label: compareCell.r }, compareCell.c, cellQuestion(compareCell.q, { key: compareCell.r, label: compareCell.r }, compareCell.c, driverOf(spec, drv)), drv)}
+          onChange={update} onDelete={(c) => { setChains(chains.filter((x) => x.id !== c.id)); setActiveId(null); }}
+          bind={bind} numOf={(c) => chains.indexOf(c) + 1} targets={fixTargets} />
+      ) : active ? (
         <ol key={active.id} className="cl-rise" style={{ margin: 0, padding: 0 }}>
           <ChainCard single num={chains.indexOf(active) + 1} chain={active} onChange={update} onDelete={() => { setChains(chains.filter((x) => x.id !== active.id)); setActiveId(null); setCellSel(null); }} drag={bind(active.id)} focused={false} targets={fixTargets} />
         </ol>

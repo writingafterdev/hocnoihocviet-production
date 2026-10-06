@@ -9,7 +9,9 @@ const SHAPE_EN: Record<string, string> = { verdict: 'verdict (chọn phía)', ca
 export function describePrompt(p: Prompt) {
   const lines = ['ĐỀ BÀI', p.text, '', 'Các câu hỏi trong đề:'];
   p.questions.forEach((q) => lines.push(`  Câu ${q.n} · ${SHAPE_EN[q.shape]} · ${q.q}${q.sides ? ` · hai đầu sợi dây: [trái] ${q.sides[0]} ↔ [phải] ${q.sides[1]}` : ''}`));
-  if (p.driver) lines.push('Driver gợi ý: ' + p.driver);
+  if (p.driver2) {
+    lines.push('Đề so sánh hai lựa chọn. Driver A: ' + p.driver + ' · Driver B: ' + p.driver2 + '. Mỗi mạch xuất phát từ A hoặc B; so sánh hai bên theo cùng bên liên quan và cùng vùng tác động.');
+  } else if (p.driver) lines.push('Driver gợi ý: ' + p.driver);
   if (p.stakeholders && p.stakeholders.length) lines.push('Stakeholder gợi ý: ' + p.stakeholders.join(', '));
   if (p.reqs && p.reqs.length) lines.push('Bài phải: ' + p.reqs.join(' · '));
   return lines.join('\n');
@@ -21,7 +23,7 @@ export function describeChains(p: Prompt, chains: Chain[], stance: string) {
   const out: string[] = ['CÁC MẠCH CỦA HỌC SINH'];
   chains.forEach((c, i) => {
     const sh = shapeOf(p, c);
-    out.push('', `[Mạch ${i + 1}] id=${c.id} · câu ${c.q || 1} (${CL_SHAPE_LABEL[sh]}) · tên: ${c.title || '(chưa đặt)'}${sh === 'verdict' ? ` · tông: ${c.tone === 'cost' ? 'tác hại' : 'lợi ích'}` : ''}${sh === 'cause' && (c.level === 'Cá nhân' || c.level === 'Hệ thống') ? ' · loại nguyên nhân: ' + c.level : sh === 'cause' ? ' · loại nguyên nhân: (chưa chọn)' : ''}${c.area ? ' · vùng: ' + c.area : ''}${c.cell ? ' · ô bản đồ: ' + String(c.cell.r).slice(0, 60) + ' × ' + String(c.cell.c).slice(0, 60) : ''}`);
+    out.push('', `[Mạch ${i + 1}] id=${c.id} · câu ${c.q || 1} (${CL_SHAPE_LABEL[sh]}) · tên: ${c.title || '(chưa đặt)'}${c.drv ? ' · xuất phát từ driver ' + c.drv : ''}${sh === 'verdict' ? ` · tông: ${c.tone === 'cost' ? 'tác hại' : 'lợi ích'}` : ''}${sh === 'cause' && (c.level === 'Cá nhân' || c.level === 'Hệ thống') ? ' · loại nguyên nhân: ' + c.level : sh === 'cause' ? ' · loại nguyên nhân: (chưa chọn)' : ''}${c.area ? ' · vùng: ' + c.area : ''}${c.cell ? ' · ô bản đồ: ' + String(c.cell.r).slice(0, 60) + ' × ' + String(c.cell.c).slice(0, 60) : ''}`);
     c.steps.forEach((s, k) => out.push(`  bước ${k + 1}: ${s.trim() || '(trống)'}`));
     if (c.split) {
       out.push(`  Scope: tách theo "${c.split.noun}" sau bước ${c.split.at + 1}`);

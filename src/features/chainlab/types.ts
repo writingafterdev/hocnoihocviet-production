@@ -20,6 +20,8 @@ export interface PromptSpec {
   questions: Question[];
   reqs?: string[];
   driver?: string;
+  /** Comparison prompts (two real options): the second option's driver. `driver` is option A, `driver2` is B. */
+  driver2?: string;
   stakeholders?: string[];
   chains?: Chain[];
 }
@@ -74,6 +76,8 @@ export interface Chain {
   split: Split | null;
   findings: Finding[];
   side?: Side;
+  /** Comparison prompts: which of the two drivers this chain starts from. Missing means A. */
+  drv?: 'A' | 'B' | null;
   /** Solution chains: id of the cause/problem chain this solution addresses. */
   fixes?: string | null;
   check?: ChainCheck;

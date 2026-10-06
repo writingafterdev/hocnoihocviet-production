@@ -38,7 +38,7 @@ export function ropeUnits(spec: PromptSpec, chains: Chain[]): RopeUnit[] {
   const u: RopeUnit[] = [];
   chains.forEach((c, i) => {
     if (shapeOf(spec, c) !== 'verdict') return;
-    const n = i + 1, name = c.title || ('Mạch ' + n);
+    const n = i + 1, name = (c.drv ? c.drv + ' · ' : '') + (c.title || ('Mạch ' + n));
     const fsFor = (k: number | null) => c.findings.filter((f) => !f.empty && (k == null || f.target === 'all' || f.target === k));
     if (c.split) c.split.branches.forEach((b, k) => u.push({ findings: fsFor(k), sub: b.label, key: c.id + '-' + k, label: n + String.fromCharCode(97 + k), kind: 'unit', chainId: c.id, ref: { type: 'branch', k }, side: b.side || null, tone: c.tone, title: name + (b.label ? ' · ' + b.label : '') }));
     else u.push({ findings: fsFor(null), key: c.id, label: String(n), kind: 'unit', chainId: c.id, ref: { type: 'chain' }, side: c.side || null, tone: c.tone, title: name });

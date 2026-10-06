@@ -2,6 +2,7 @@
 
 import { Fragment, useState } from 'react';
 import { CL, CL_CIRC, CL_IMPACT_AREAS, CL_LEVELS, CL_SHAPE_LABEL } from '../constants';
+import { DRV } from '../ideamap';
 import { chainStatus, extraLensesFor, filledSteps, lensesFor, openIssues, shapeOf } from '../model';
 import { useSpec } from '../SpecContext';
 import type { Chain, Lens } from '../types';
@@ -88,6 +89,7 @@ export function ChainCard({ chain, num, onChange, onDelete, drag, focused, singl
               <span style={{ width: 8, height: 8, borderRadius: 999, background: toneOn ? CL.mint : CL.red }} />{toneOn ? 'Lợi ích' : 'Tác hại'}
             </button>
           )}
+          {chain.drv && <span title={'Driver ' + chain.drv + ': ' + (chain.drv === 'B' ? spec.driver2 : spec.driver)} style={{ flexShrink: 0, width: 22, height: 22, borderRadius: 7, background: DRV[chain.drv].solid, color: '#fff', display: 'grid', placeItems: 'center', fontFamily: CL.sans, fontSize: 11, fontWeight: 700 }}>{chain.drv}</span>}
           {chain.cell && <span title={chain.cell.label || undefined} style={{ flexShrink: 0, maxWidth: 220, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', borderRadius: 999, background: '#F1F1EE', color: CL.ink7, padding: '4px 12px', fontFamily: CL.sans, fontSize: 11.5, fontWeight: 600 }}>{shape === 'cause' || shape === 'solution' ? chain.cell.c : chain.cell.r + ' · ' + chain.cell.c}</span>}
           <input value={chain.title} onChange={(e) => onChange({ ...chain, title: e.target.value })} placeholder={cause ? 'Đặt tên cho mạch này…' : 'Mạch chưa đặt tên'} aria-label="Tên mạch" style={{ flex: 1, minWidth: 60, border: 'none', outline: 'none', background: 'transparent', fontFamily: CL.sans, fontSize: 13.5, fontWeight: 600, color: CL.ink, cursor: 'text' }} />
           {nIssues > 0 && !stale && <span style={{ flexShrink: 0, borderRadius: 5, padding: '4px 8px', background: CL.redSoft, color: CL.redText, fontFamily: CL.sans, fontSize: 10.5, fontWeight: 600, whiteSpace: 'nowrap' }}>{nIssues} chỗ cần xem</span>}
