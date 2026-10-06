@@ -1,6 +1,6 @@
 /** Idea map: the grid of cells (row × column) a question offers as starting points for chains. Pure helpers. */
 import { CL_FIXABLE, CL_IMPACT_AREAS } from './constants';
-import { filledSteps, shapeOf } from './model';
+import { filledSteps, levelOf, shapeOf } from './model';
 import type { Chain, PromptSpec, Question } from './types';
 
 /** The student's comparison of one cell of a two-driver map: who is stronger there, on what grounds, and why. */
@@ -79,7 +79,7 @@ const short = (s: string, n = 48) => (s.length > n ? s.slice(0, n - 1).trimEnd()
 
 /** What a solution chain is aimed at: a written cause or problem chain. */
 export const causeRows = (spec: PromptSpec, chains: Chain[]): MapRow[] =>
-  chains.filter((c) => CL_FIXABLE.includes(shapeOf(spec, c)) && filledSteps(c) > 0).map((c) => ({ key: c.id, label: causeLabel(c), tag: c.level || undefined }));
+  chains.filter((c) => CL_FIXABLE.includes(shapeOf(spec, c)) && filledSteps(c) > 0).map((c) => ({ key: c.id, label: causeLabel(c), tag: levelOf(c) || undefined }));
 
 export const causeLabel = (c: Chain) => short(c.title.trim() || c.steps.find((s) => s.trim())?.trim() || 'Mạch chưa đặt tên');
 
@@ -90,9 +90,6 @@ export function gridFor(spec: PromptSpec, q: Question, chains: Chain[], extras?:
   }
   const areas = [...CL_IMPACT_AREAS.map(([l]) => l), ...ex.cols];
   const hint = (c: string) => AREA_HINT[c] || '';
-  if (q.shape === 'cause') {
-    return { rows: [{ key: 'Cá nhân', label: 'Cá nhân', tag: 'Cá nhân' }, { key: 'Hệ thống', label: 'Hệ thống', tag: 'Hệ thống' }], cols: areas, hint, rowsAddable: false, colsAddable: true, colWord: 'vùng khác', rowWord: '' };
-  }
   const hidden = ex.hiddenRows || [];
   return { rows: [...(spec.stakeholders || []), ...ex.rows].filter((s) => !hidden.includes(s)).map((s) => ({ key: s, label: s })), cols: areas, hint, rowsAddable: true, colsAddable: true, colWord: 'vùng khác', rowWord: 'bên liên quan' };
 }
@@ -104,8 +101,7 @@ export function cellQuestion(q: Question, row: MapRow, col: string, driver?: str
   if (q.shape === 'solution') return col + ' có thể làm gì để xử lý «' + row.label + '»?';
   if (q.shape === 'cause') {
     const h = AREA_HINT[col] ? AREA_HINT[col].replace(/ · /g, ', ') : col;
-    if (d) return row.key === 'Cá nhân' ? 'Người trong cuộc cần gì về ' + h + ', khiến "' + d + '" xảy ra?' : 'Cơ chế nào về ' + h + ' đứng sau "' + d + '"?';
-    return row.key === 'Cá nhân' ? 'Người trong cuộc cần gì về ' + h + ', khiến họ làm vậy?' : 'Cơ chế nào về ' + h + ' đứng sau tất cả?';
+    return 'Về ' + h + ', điều gì khiến ' + row.label + ' góp phần tạo ra ' + (d ? '"' + d + '"' : 'điều này') + '?';
   }
   return 'Với ' + row.label + ', ' + (d ? 'việc "' + d + '"' : 'điều này') + ' ' + (AREA_STEM[col] || 'ảnh hưởng thế nào đến «' + col + '»?');
 }

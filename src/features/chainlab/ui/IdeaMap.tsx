@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { CL } from '../constants';
 import { cellChains, cellPair, type CellCmp, cmpKey, DRV, driverOf, gridFor, isCompare, isWritten, type MapExtras, type MapRow, VERDICT_WORDS, verdictKind } from '../ideamap';
+import { filledSteps, levelOf, upstreamSteps } from '../model';
 import { useSpec } from '../SpecContext';
 import type { Chain, Question } from '../types';
 import { ClIcon, ClLabel } from './primitives';
@@ -152,6 +153,18 @@ export function IdeaMap({ q, chains, extras, setExtras, onRival, open, setOpen, 
             </div>
           </div>
 
+          {q.shape === 'cause' && (() => {
+            const written = chains.filter((c) => (c.q || 1) === q.n && filledSteps(c) > 0);
+            if (!written.length) return null;
+            const deep = written.filter((c) => levelOf(c) === 'Hệ thống').length;
+            return (
+              <div style={{ marginTop: 10, borderRadius: 12, padding: '10px 14px', fontFamily: CL.sans, fontSize: 12.5, lineHeight: 1.5, background: deep ? '#F2FBF7' : '#FDF3F1', border: '1px solid ' + (deep ? '#BFE6D7' : '#F1D3CF'), color: deep ? '#17664F' : '#5E2B27' }}>
+                {deep
+                  ? <><b>{deep} mạch chạm tới hệ thống</b>{written.length - deep > 0 ? ', ' + (written.length - deep) + ' mạch mới dừng ở cá nhân' : ''}. Đề cần cả hai, vậy là đủ.</>
+                  : <><b style={{ color: '#8B3A35' }}>Chưa có mạch nào chạm tới hệ thống.</b> Đề cần cả nguyên nhân ở phía cá nhân lẫn phía hệ thống đứng sau họ.</>}
+              </div>
+            );
+          })()}
           <div style={{ display: 'flex', gap: 14, marginTop: 6, minHeight: 30, alignItems: 'center', flexWrap: 'wrap' }}>
             {g.rowsAddable && adder('row', g.rowWord)}
             {g.colsAddable && adder('col', g.colWord)}
@@ -173,23 +186,25 @@ function RowCells({ q, row, cols, made, sel, onSel, onRemove, compare, chains, c
       </div>
       {cols.map((c) => compare
         ? <PairCell key={c} q={q} row={row} col={c} chains={chains} cmp={cmpOf(row.key, c)} on={!!sel && sel.r === row.key && sel.c === c} onSel={onSel} />
-        : <Cell key={c} row={row} col={c} chain={made(row.key, c)[0]} on={!!sel && sel.r === row.key && sel.c === c} onSel={onSel} />)}
+        : <Cell key={c} cause={q.shape === 'cause'} row={row} col={c} chain={made(row.key, c)[0]} on={!!sel && sel.r === row.key && sel.c === c} onSel={onSel} />)}
     </>
   );
 }
 
-/** One cell: it only selects. Once a chain is written there it shows the chain's name on mint. */
-function Cell({ row, col, chain, on, onSel }: { row: MapRow; col: string; chain?: Chain; on: boolean; onSel: (s: { r: string; c: string } | null) => void }) {
-  const name = chain ? chain.title.trim() || chain.steps.filter((x) => x.trim())[1] || '' : '';
+/** One cell: it only selects. Once a chain is written there it shows the chain's name on mint; cause cells say how deep the chain goes. */
+function Cell({ cause, row, col, chain, on, onSel }: { cause?: boolean; row: MapRow; col: string; chain?: Chain; on: boolean; onSel: (s: { r: string; c: string } | null) => void }) {
+  const mine = chain ? chain.steps.slice(cause ? upstreamSteps(chain).length : 1).filter((x) => x.trim()) : [];
+  const name = chain ? chain.title.trim() || (cause ? mine[0] : chain.steps.filter((x) => x.trim())[1]) || '' : '';
+  const lv = cause && chain ? levelOf(chain) : null;
   return (
-    <button type="button" className="cl-btn" onClick={() => onSel({ r: row.key, c: col })} aria-pressed={on} aria-label={row.label + ', ' + col + (chain ? ' (đã có mạch)' : '')}
+    <button type="button" className="cl-btn" onClick={() => onSel({ r: row.key, c: col })} aria-pressed={on} aria-label={row.label + ', ' + col + (chain ? ' (đã có mạch' + (lv ? ', ' + lv : '') + ')' : '')}
       style={{ position: 'relative', display: 'block', width: '100%', height: '100%', minHeight: 58, boxSizing: 'border-box', textAlign: 'left', borderRadius: 10, border: on ? '1.5px solid ' + CL.ink : '1px solid ' + (chain ? '#BFE6D7' : CL.ink2), background: chain ? CL.mintSoft : '#fff', padding: '8px 22px 8px 10px', fontFamily: CL.sans, fontSize: 12.5, lineHeight: 1.4, color: CL.greenText, fontWeight: 600, transition: 'border-color .15s, background-color .2s' }}>
       <span style={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{name}</span>
       {chain && <span style={{ position: 'absolute', top: 7, right: 7, pointerEvents: 'none' }}><ClIcon name="check" size={12} color={CL.green} /></span>}
+      {lv && <span style={{ position: 'absolute', right: 5, bottom: 5, borderRadius: 5, padding: '2px 5px', background: lv === 'Hệ thống' ? '#7B4D10' : '#1F6E8C', color: '#fff', fontSize: 9.5, fontWeight: 700, letterSpacing: '0.04em' }}>{lv === 'Hệ thống' ? 'HT' : 'CN'}</span>}
     </button>
   );
 }
-
 
 /** One cell of a two-driver map: a square for each driver (filled once its chain is written) and the verdict. */
 function PairCell({ q, row, col, chains, cmp, on, onSel }: { q: Question; row: MapRow; col: string; chains: Chain[]; cmp?: CellCmp; on: boolean; onSel: (s: { r: string; c: string } | null) => void }) {

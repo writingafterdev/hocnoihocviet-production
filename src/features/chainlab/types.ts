@@ -70,8 +70,10 @@ export interface Chain {
   tone: Tone;
   pos?: number;
   area: string;
-  /** Cause questions only: the type of this chain. Missing on chains made before types existed. */
+  /** Cause questions only, kept for chains made before the type was derived from the steps. See `levelOf`. */
   level?: Level | null;
+  /** Cause questions: how many of the first steps are upstream (system) causes. The rest are the individual's. */
+  sys?: number;
   /** Idea map: the cell this chain started from (row × column), the question it asked and, for solutions, the cause it addresses. */
   cell?: { r: string; c: string; q: string; label?: string } | null;
   steps: string[];

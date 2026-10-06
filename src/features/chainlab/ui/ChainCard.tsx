@@ -3,7 +3,7 @@
 import { Fragment, useState } from 'react';
 import { CL, CL_CIRC, CL_IMPACT_AREAS, CL_LEVELS, CL_SHAPE_LABEL } from '../constants';
 import { DRV } from '../ideamap';
-import { chainStatus, extraLensesFor, filledSteps, lensesFor, openIssues, shapeOf } from '../model';
+import { chainStatus, extraLensesFor, filledSteps, lensesFor, levelOf, openIssues, shapeOf } from '../model';
 import { useSpec } from '../SpecContext';
 import type { Chain, Lens } from '../types';
 import { Branches } from './Branches';
@@ -36,7 +36,8 @@ export function ChainCard({ chain, num, onChange, onDelete, drag, focused, singl
   const [splitMode, setSplitMode] = useState(false);
   const [more, setMore] = useState(false);
   const shape = shapeOf(spec, chain), verdict = shape === 'verdict', cause = shape === 'cause', multiQ = spec.questions.length > 1;
-  const level = cause ? CL_LEVELS.find((l) => l.kind === chain.level) : null;
+  /** A cause chain's type comes from its steps: Hệ thống once it has an upstream step. */
+  const level = cause ? CL_LEVELS.find((l) => l.kind === levelOf(chain)) : null;
   const written = filledSteps(chain) > 0;
   const lenses = lensesFor(spec, chain);
   const extras = extraLensesFor(spec, chain);
@@ -80,9 +81,7 @@ export function ChainCard({ chain, num, onChange, onDelete, drag, focused, singl
         <div onClick={(e) => { if (!single && !(e.target as HTMLElement).closest('button,input,textarea,select')) setOpen(!open); }} style={{ display: 'flex', alignItems: 'center', gap: 10, minHeight: 58, padding: '0 14px', borderBottom: open ? '1px solid ' + CL.ink1 : 'none', cursor: 'pointer' }}>
           {!single && <button type="button" className="cl-btn cl-grip" {...drag.handleProps} aria-label="Kéo để sắp xếp" style={{ flexShrink: 0, width: 32, height: 40, display: 'flex', alignItems: 'center', justifyContent: 'center', color: CL.ink3, cursor: 'grab' }}><ClIcon name="grip" size={16} /></button>}
           {multiQ && <button type="button" className="cl-btn cl-link" title="Đổi câu hỏi mạch này trả lời" onClick={cycleQ} style={{ display: 'inline-flex', alignItems: 'center', gap: 3, fontFamily: CL.sans, fontSize: 10.5, fontWeight: 600, color: CL.ink5, whiteSpace: 'nowrap', flexShrink: 0 }}>câu <span style={{ fontSize: 14, lineHeight: 1 }}>{CL_CIRC[(chain.q || 1) - 1]}</span></button>}
-          {cause && (level
-            ? <button type="button" className="cl-btn" title="Đổi loại nguyên nhân" onClick={() => onChange({ ...chain, level: CL_LEVELS.find((l) => l.kind !== level.kind).kind })} style={{ flexShrink: 0, borderRadius: 6, background: level.bg, color: level.fg, padding: '5px 11px', fontFamily: CL.sans, fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', whiteSpace: 'nowrap' }}>{level.kind}</button>
-            : <span style={{ flexShrink: 0, display: 'inline-flex', alignItems: 'center', gap: 6 }}><span style={{ fontFamily: CL.sans, fontSize: 11, color: CL.ink5 }}>Chọn loại:</span>{CL_LEVELS.map((l) => <button key={l.kind} type="button" className="cl-btn" onClick={() => onChange({ ...chain, level: l.kind })} style={{ borderRadius: 6, background: l.bg, color: l.fg, padding: '5px 10px', fontFamily: CL.sans, fontSize: 10.5, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', whiteSpace: 'nowrap' }}>{l.kind}</button>)}</span>)}
+          {level && <span title="Tự tính từ các bước của mạch" style={{ flexShrink: 0, borderRadius: 6, background: level.bg, color: level.fg, padding: '5px 11px', fontFamily: CL.sans, fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', whiteSpace: 'nowrap' }}>{level.kind}</span>}
           {!verdict && !cause && <span style={{ flexShrink: 0, display: 'inline-flex', alignItems: 'center', gap: 6, borderRadius: 5, border: '1px solid ' + CL.ink2, padding: '4px 8px', fontFamily: CL.sans, fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: CL.ink7, whiteSpace: 'nowrap' }}><span style={{ width: 8, height: 8, borderRadius: 2, background: CL.ink5 }} />{CL_SHAPE_LABEL[shape]}</span>}
           {verdict && (
             <button type="button" className="cl-btn" title="Đổi phía" onClick={() => onChange({ ...chain, tone: toneOn ? 'cost' : 'benefit' })} style={{ flexShrink: 0, display: 'inline-flex', alignItems: 'center', gap: 6, borderRadius: 5, border: '1px solid ' + CL.ink2, padding: '4px 8px', fontFamily: CL.sans, fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: toneOn ? CL.greenText : CL.redText }}>
@@ -90,7 +89,7 @@ export function ChainCard({ chain, num, onChange, onDelete, drag, focused, singl
             </button>
           )}
           {chain.drv && <span title={'Driver ' + chain.drv + ': ' + (chain.drv === 'B' ? spec.driver2 : spec.driver)} style={{ flexShrink: 0, width: 22, height: 22, borderRadius: 7, background: DRV[chain.drv].solid, color: '#fff', display: 'grid', placeItems: 'center', fontFamily: CL.sans, fontSize: 11, fontWeight: 700 }}>{chain.drv}</span>}
-          {chain.cell && <span title={chain.cell.label || undefined} style={{ flexShrink: 0, maxWidth: 220, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', borderRadius: 999, background: '#F1F1EE', color: CL.ink7, padding: '4px 12px', fontFamily: CL.sans, fontSize: 11.5, fontWeight: 600 }}>{shape === 'cause' || shape === 'solution' ? chain.cell.c : chain.cell.r + ' · ' + chain.cell.c}</span>}
+          {chain.cell && <span title={chain.cell.label || undefined} style={{ flexShrink: 0, maxWidth: 220, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', borderRadius: 999, background: '#F1F1EE', color: CL.ink7, padding: '4px 12px', fontFamily: CL.sans, fontSize: 11.5, fontWeight: 600 }}>{shape === 'solution' ? chain.cell.c : chain.cell.r + ' · ' + chain.cell.c}</span>}
           <input value={chain.title} onChange={(e) => onChange({ ...chain, title: e.target.value })} placeholder={cause ? 'Đặt tên cho mạch này…' : 'Mạch chưa đặt tên'} aria-label="Tên mạch" style={{ flex: 1, minWidth: 60, border: 'none', outline: 'none', background: 'transparent', fontFamily: CL.sans, fontSize: 13.5, fontWeight: 600, color: CL.ink, cursor: 'text' }} />
           {nIssues > 0 && !stale && <span style={{ flexShrink: 0, borderRadius: 5, padding: '4px 8px', background: CL.redSoft, color: CL.redText, fontFamily: CL.sans, fontSize: 10.5, fontWeight: 600, whiteSpace: 'nowrap' }}>{nIssues} chỗ cần xem</span>}
           <span style={{ flexShrink: 0, borderRadius: 5, padding: '4px 8px', background: status.bg, color: status.fg, fontFamily: CL.sans, fontSize: 10.5, fontWeight: 600, whiteSpace: 'nowrap' }}>{status.label}</span>
@@ -98,8 +97,8 @@ export function ChainCard({ chain, num, onChange, onDelete, drag, focused, singl
         </div>
         {open && (
           <Fragment>
-            {(chain.cell?.q || level) && <p style={{ margin: 0, padding: '18px 32px 0 35px', fontFamily: CL.sans, fontSize: 14, lineHeight: 1.55, color: CL.ink7 }}>{chain.cell?.q || level.q}</p>}
-            <div style={{ padding: chain.cell?.q || level ? '18px 32px 22px 35px' : '24px 32px 22px 35px' }}>
+            {chain.cell?.q && <p style={{ margin: 0, padding: '18px 32px 0 35px', fontFamily: CL.sans, fontSize: 14, lineHeight: 1.55, color: CL.ink7 }}>{chain.cell.q}</p>}
+            <div style={{ padding: chain.cell?.q ? '18px 32px 22px 35px' : '24px 32px 22px 35px' }}>
               <AreaPicker value={chain.area} onChange={(area) => onChange({ ...chain, area })} />
               {shape === 'solution' && (
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14, fontFamily: CL.sans, fontSize: 12, color: CL.ink6 }}>
@@ -113,7 +112,7 @@ export function ChainCard({ chain, num, onChange, onDelete, drag, focused, singl
                 </div>
               )}
               {splitMode && <p style={{ margin: '0 0 14px', fontFamily: CL.sans, fontSize: 12, color: CL.yellowText, background: CL.yellowSoft, borderRadius: 5, padding: '8px 12px' }}>Chọn bước chứa danh từ bạn muốn đổi điều kiện. Mạch sẽ tách ngay sau bước đó.</p>}
-              <StepList steps={chain.steps} onChange={(steps) => onChange({ ...chain, steps })} firstIsDriver end={endOf()} splitMode={splitMode} onSplitAt={splitAt} idPrefix={chain.id} jumps={splitMode ? [] : issues.flags.map((f) => f.at)} vague={splitMode ? [] : issues.vague} />
+              <StepList steps={chain.steps} onChange={(steps, sys) => onChange(cause ? { ...chain, steps, sys } : { ...chain, steps })} upstream={cause} sys={chain.sys || 0} firstIsDriver end={endOf()} splitMode={splitMode} onSplitAt={splitAt} idPrefix={chain.id} jumps={splitMode ? [] : issues.flags.map((f) => f.at)} vague={splitMode ? [] : issues.vague} />
               {chain.split && <Branches verdict={verdict} num={num} split={chain.split} onChange={(split) => onChange({ ...chain, split })} onMerge={merge} />}
             </div>
             <div style={{ borderTop: '1px solid ' + CL.ink1, background: CL.panel, padding: '13px 22px 16px' }}>

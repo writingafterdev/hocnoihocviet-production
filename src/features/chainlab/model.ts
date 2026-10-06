@@ -64,6 +64,16 @@ export function verdictStatus(chain: Chain): StatusChip {
 
 export const filledSteps = (c: Chain) => c.steps.filter((s) => s.trim()).length;
 
+/** The upstream (system) steps of a cause chain; the last step is always the individual's. */
+export const upstreamSteps = (c: Chain) => c.steps.slice(0, Math.min(c.sys || 0, Math.max(0, c.steps.length - 1)));
+
+/** A cause chain is Hệ thống once it has a written upstream step, Cá nhân while it stops at the individual. */
+export function levelOf(c: Chain): Level | null {
+  if (filledSteps(c) === 0) return null;
+  if (upstreamSteps(c).some((s) => s.trim())) return 'Hệ thống';
+  return c.sys === undefined && c.level === 'Hệ thống' ? 'Hệ thống' : 'Cá nhân';
+}
+
 export function chainStatus(spec: PromptSpec, chain: Chain): StatusChip {
   const sh = shapeOf(spec, chain);
   if (sh === 'verdict') return verdictStatus(chain);
@@ -90,7 +100,11 @@ export const newChain = (q = 1, level: Level | null = null): Chain => ({ id: 'c'
 /** Starting point for a new attempt: no chains; each question's idea map is where they start. */
 export const initialChains = (_spec: PromptSpec): Chain[] => [];
 
-/** Cause questions that still lack a written chain of one of the two types: [question number, type]. */
+/** Cause questions that still lack depth: no written chain at all, or none that reaches the system: [question number, type]. */
 export function missingLevels(spec: PromptSpec, chains: Chain[]): [number, Level][] {
-  return spec.questions.filter((q) => q.shape === 'cause').flatMap((q) => (['Cá nhân', 'Hệ thống'] as Level[]).filter((l) => !chains.some((c) => (c.q || 1) === q.n && c.level === l && filledSteps(c) > 0)).map((l) => [q.n, l] as [number, Level]));
+  return spec.questions.filter((q) => q.shape === 'cause').flatMap((q) => {
+    const written = chains.filter((c) => (c.q || 1) === q.n && filledSteps(c) > 0);
+    if (!written.length) return [[q.n, 'Cá nhân'], [q.n, 'Hệ thống']] as [number, Level][];
+    return written.some((c) => levelOf(c) === 'Hệ thống') ? [] : ([[q.n, 'Hệ thống']] as [number, Level][]);
+  });
 }

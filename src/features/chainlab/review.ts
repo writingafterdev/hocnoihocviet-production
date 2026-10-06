@@ -87,7 +87,7 @@ export function reviewChains(spec: PromptSpec, chains: Chain[], stance: string):
   spec.questions.forEach((q) => {
     if (spec.questions.length > 1 && !chains.some((c) => (c.q || 1) === q.n)) push('cover', { where: 'Câu ' + CL_CIRC[q.n - 1], text: 'Câu ' + CL_CIRC[q.n - 1] + ' (' + CL_SHAPE_LABEL[q.shape].toLowerCase() + ') chưa có mạch nào. Bài sẽ bỏ sót một phần đề.' });
   });
-  missingLevels(spec, chains).forEach(([n, level]) => push('cover', { where: 'Câu ' + CL_CIRC[n - 1], text: 'Câu ' + CL_CIRC[n - 1] + ' chưa có mạch nguyên nhân ' + level + '. Một câu nguyên nhân cần cả hai: điều người trong cuộc chọn, và điều hệ thống đứng sau.' }));
+  missingLevels(spec, chains).forEach(([n, level]) => push('cover', { where: 'Câu ' + CL_CIRC[n - 1], text: level === 'Cá nhân' ? 'Câu ' + CL_CIRC[n - 1] + ' chưa có mạch nguyên nhân nào.' : 'Câu ' + CL_CIRC[n - 1] + ' chưa có mạch nào chạm tới hệ thống. Thêm một nguyên nhân thượng nguồn: điều gì ở phía hệ thống khiến người trong cuộc làm vậy?' }));
   chains.forEach((c, i) => {
     if (shapeOf(spec, c) === 'solution' && !chains.some((x) => x.id === c.fixes)) push('cover', { chainId: c.id, where: 'Mạch ' + (i + 1) + (c.title ? ' · ' + c.title : ''), text: 'Giải pháp này xử lý nguyên nhân hay vấn đề nào? Chọn ở ô "Xử lý".' });
   });

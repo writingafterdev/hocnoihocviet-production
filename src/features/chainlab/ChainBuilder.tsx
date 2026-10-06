@@ -111,7 +111,7 @@ export function ChainBuilder({ chains, setChains, extras, setExtras, stance, set
   const chainFor = (q: Question, row: MapRow, col: string, question: string, title = '', drv: 'A' | 'B' | null = null): Chain => {
     const cause = q.shape === 'cause', solution = q.shape === 'solution';
     return {
-      ...newChain(q.n, cause && (row.key === 'Cá nhân' || row.key === 'Hệ thống') ? row.key : null),
+      ...newChain(q.n),
       title,
       area: solution ? '' : col,
       steps: cause || solution ? [''] : [(drv ? driverOf(spec, drv) : spec.driver) || '', ''],
@@ -174,7 +174,7 @@ export function ChainBuilder({ chains, setChains, extras, setExtras, stance, set
     </div>
   );
 
-  const label = (c: Chain, i: number) => (c.drv ? c.drv + ' · ' : '') + (c.cell ? (c.title.trim() || (shapeOf(spec, c) === 'cause' || shapeOf(spec, c) === 'solution' ? c.cell.c : c.cell.r + ' · ' + c.cell.c)) : c.title.trim() || 'Mạch ' + (i + 1));
+  const label = (c: Chain, i: number) => (c.drv ? c.drv + ' · ' : '') + (c.cell ? (c.title.trim() || (shapeOf(spec, c) === 'solution' ? c.cell.c : c.cell.r + ' · ' + c.cell.c)) : c.title.trim() || 'Mạch ' + (i + 1));
 
   const leftBody = !multiQ ? (
     spec.questions[0] === verdictQ ? ropeBlock : mapOf(spec.questions[0])

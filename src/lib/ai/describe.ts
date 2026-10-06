@@ -1,7 +1,7 @@
 /** Plain-text views of the student's work, as the AI reviewers read it. */
 import type { Prompt } from '@/content/prompts';
 import { CL_SHAPE_LABEL } from '@/features/chainlab/constants';
-import { shapeOf, sidesOf } from '@/features/chainlab/model';
+import { levelOf, shapeOf, sidesOf, upstreamSteps } from '@/features/chainlab/model';
 import type { Chain, Side } from '@/features/chainlab/types';
 
 const SHAPE_EN: Record<string, string> = { verdict: 'verdict (chọn phía)', cause: 'cause (nguyên nhân)', problem: 'problem (vấn đề)', planproblem: 'problem of a plan (vấn đề của kế hoạch)', effect: 'effect (ảnh hưởng)', solution: 'solution (giải pháp)' };
@@ -23,7 +23,7 @@ export function describeChains(p: Prompt, chains: Chain[], stance: string) {
   const out: string[] = ['CÁC MẠCH CỦA HỌC SINH'];
   chains.forEach((c, i) => {
     const sh = shapeOf(p, c);
-    out.push('', `[Mạch ${i + 1}] id=${c.id} · câu ${c.q || 1} (${CL_SHAPE_LABEL[sh]}) · tên: ${c.title || '(chưa đặt)'}${c.drv ? ' · xuất phát từ driver ' + c.drv : ''}${sh === 'verdict' ? ` · tông: ${c.tone === 'cost' ? 'tác hại' : 'lợi ích'}` : ''}${sh === 'cause' && (c.level === 'Cá nhân' || c.level === 'Hệ thống') ? ' · loại nguyên nhân: ' + c.level : sh === 'cause' ? ' · loại nguyên nhân: (chưa chọn)' : ''}${c.area ? ' · vùng: ' + c.area : ''}${c.cell ? ' · ô bản đồ: ' + String(c.cell.r).slice(0, 60) + ' × ' + String(c.cell.c).slice(0, 60) : ''}`);
+    out.push('', `[Mạch ${i + 1}] id=${c.id} · câu ${c.q || 1} (${CL_SHAPE_LABEL[sh]}) · tên: ${c.title || '(chưa đặt)'}${c.drv ? ' · xuất phát từ driver ' + c.drv : ''}${sh === 'verdict' ? ` · tông: ${c.tone === 'cost' ? 'tác hại' : 'lợi ích'}` : ''}${sh === 'cause' ? ' · loại nguyên nhân: ' + (levelOf(c) || '(chưa viết)') + (upstreamSteps(c).length ? ' (bước 1–' + upstreamSteps(c).length + ' là nguyên nhân thượng nguồn thuộc hệ thống, các bước sau là của người trong cuộc)' : '') : ''}${c.area ? ' · vùng: ' + c.area : ''}${c.cell ? ' · ô bản đồ: ' + String(c.cell.r).slice(0, 60) + ' × ' + String(c.cell.c).slice(0, 60) : ''}`);
     c.steps.forEach((s, k) => out.push(`  bước ${k + 1}: ${s.trim() || '(trống)'}`));
     if (c.split) {
       out.push(`  Scope: tách theo "${c.split.noun}" sau bước ${c.split.at + 1}`);
