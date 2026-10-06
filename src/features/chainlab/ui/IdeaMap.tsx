@@ -1,8 +1,8 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { CL } from '../constants';
-import { cellChains, cellPair, type CellCmp, cellQuestion, cmpKey, DRV, driverOf, gridFor, isCompare, isWritten, type MapExtras, type MapRow } from '../ideamap';
+import { cellChains, cellPair, type CellCmp, cmpKey, DRV, driverOf, gridFor, isCompare, isWritten, type MapExtras, type MapRow } from '../ideamap';
 import { useSpec } from '../SpecContext';
 import type { Chain, Question } from '../types';
 import { ClIcon, ClLabel } from './primitives';
@@ -16,11 +16,6 @@ interface IdeaMapProps {
   setExtras: (e: MapExtras) => void;
   open: boolean;
   setOpen: (v: boolean) => void;
-  /** The student wrote a chain from this cell (opens it). */
-  onCreate: (row: MapRow, col: string, question: string) => void;
-  /** The student typed a rough idea straight into a cell. */
-  onNote: (row: MapRow, col: string, question: string, text: string) => void;
-  onGoto: (chainId: string) => void;
   /** Inside another box (the rope's): no border or margin of its own. */
   bare?: boolean;
   /** The selected cell, kept by the screen so the chain panel and the review can move it. */
@@ -29,10 +24,10 @@ interface IdeaMapProps {
 }
 
 /**
- * The idea map of one question: rows × columns of cells. Type a rough idea straight into a cell, or select it
- * to see its question and write the whole chain. The body folds smoothly; the header line stays.
+ * The idea map of one question: rows × columns of cells. A cell only selects; its question and chain live in the
+ * middle panel. The body folds smoothly; the header line stays.
  */
-export function IdeaMap({ q, chains, extras, setExtras, open, setOpen, onCreate, onNote, onGoto, bare, sel, onSel: setSel }: IdeaMapProps) {
+export function IdeaMap({ q, chains, extras, setExtras, open, setOpen, bare, sel, onSel: setSel }: IdeaMapProps) {
   const spec = useSpec();
   const [adding, setAdding] = useState<'row' | 'col' | null>(null);
   const [draft, setDraft] = useState('');
@@ -68,8 +63,6 @@ export function IdeaMap({ q, chains, extras, setExtras, open, setOpen, onCreate,
     return <p style={{ margin: '0 4px 14px', fontFamily: CL.sans, fontSize: 12.5, lineHeight: 1.5, color: CL.ink5 }}>Viết trước một mạch nguyên nhân hoặc vấn đề, rồi nó sẽ hiện thành một hàng ở đây để bạn tìm giải pháp.</p>;
   }
 
-  const selRow = sel && g.rows.find((r) => r.key === sel.r);
-  const selChains = sel ? made(sel.r, sel.c) : [];
   const gridCols = cmpMode ? 'minmax(96px, 150px) repeat(' + g.cols.length + ', minmax(66px, 1fr))' : 'minmax(110px, 170px) repeat(' + g.cols.length + ', minmax(96px, 1fr))';
   const link: React.CSSProperties = { background: 'none', border: 'none', padding: '6px 2px', fontFamily: CL.sans, fontSize: 12, fontWeight: 600, color: CL.ink5, cursor: 'pointer' };
   const adder = (kind: 'row' | 'col', word: string) => (adding === kind ? (
@@ -80,7 +73,7 @@ export function IdeaMap({ q, chains, extras, setExtras, open, setOpen, onCreate,
     <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap', marginBottom: open ? 14 : 0, transition: 'margin ' + MS + ' ease' }}>
       <ClLabel color={CL.ink}>Bản đồ ý</ClLabel>
       <span style={{ fontFamily: CL.sans, fontSize: 12, color: CL.ink4 }}>
-        {open ? (cmpMode ? 'Mỗi ô có mạch A và mạch B, rồi so sánh ngay trong ô' : 'Gõ ý thô vào ô, hoặc chọn ô để viết cả mạch') : filled + ' / ' + total + ' ô' + (cmpMode ? ' · ' + compared + ' đã so sánh' : '') + (untouched.length && untouched.length < g.cols.length ? ' · chưa chạm: ' + untouched.join(', ') : '')}
+        {open ? (cmpMode ? 'Mỗi ô có mạch A và mạch B, rồi so sánh ngay trong ô' : 'Chọn một ô, rồi viết mạch cho ô đó') : filled + ' / ' + total + ' ô' + (cmpMode ? ' · ' + compared + ' đã so sánh' : '') + (untouched.length && untouched.length < g.cols.length ? ' · chưa chạm: ' + untouched.join(', ') : '')}
       </span>
       {open && <span style={{ marginLeft: 'auto', fontFamily: CL.sans, fontSize: 12, color: CL.ink6 }}><b style={{ fontWeight: 700, color: CL.ink }}>{filled}</b> / {total} ô{cmpMode && <> · <b style={{ fontWeight: 700, color: CL.ink }}>{compared}</b> đã so sánh</>}</span>}
       <button type="button" className="cl-btn cl-link" onClick={() => setOpen(!open)} aria-expanded={open} style={{ ...link, marginLeft: open ? 0 : 'auto' }}>{open ? 'Thu gọn' : 'Mở bản đồ'}</button>
@@ -112,7 +105,7 @@ export function IdeaMap({ q, chains, extras, setExtras, open, setOpen, onCreate,
                 </div>
               ))}
               {g.rows.map((r) => (
-                <RowCells key={r.key} q={q} row={r} cols={g.cols} made={made} sel={sel} onSel={setSel} onNote={onNote} onRemove={g.rowsAddable ? () => removeRow(r) : undefined} compare={cmpMode} chains={chains} cmpOf={cmpOf} />
+                <RowCells key={r.key} q={q} row={r} cols={g.cols} made={made} sel={sel} onSel={setSel} onRemove={g.rowsAddable ? () => removeRow(r) : undefined} compare={cmpMode} chains={chains} cmpOf={cmpOf} />
               ))}
               {cmpMode && (
                 <>
@@ -143,29 +136,13 @@ export function IdeaMap({ q, chains, extras, setExtras, open, setOpen, onCreate,
             {g.rowsAddable && hiddenRows.length > 0 && <button type="button" className="cl-btn cl-link" onClick={() => setExtras({ ...ex, hiddenRows: [] })} style={{ ...link, color: CL.ink4 }}>Hiện lại {hiddenRows.length} bên đã xoá</button>}
           </div>
 
-          {sel && selRow && !cmpMode && (
-            <div key={sel.r + '|' + sel.c} className="cl-rise" style={{ position: 'sticky', bottom: 0, zIndex: 3, marginTop: 12, borderRadius: 14, background: CL.panel, border: '1px solid ' + CL.ink2, boxShadow: '0 -10px 18px #fff', padding: '14px 18px', display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
-              <div style={{ flex: '1 1 340px', minWidth: 0 }}>
-                <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 6, marginBottom: 6, fontFamily: CL.sans, fontSize: 12 }}>
-                  <span style={{ borderRadius: 999, background: CL.ink, color: '#fff', padding: '2px 10px', fontWeight: 600 }}>{selRow.label}</span>
-                  <span style={{ color: CL.ink5 }}>{q.shape === 'solution' ? 'nhờ' : '×'}</span>
-                  <span style={{ borderRadius: 999, background: CL.ink, color: '#fff', padding: '2px 10px', fontWeight: 600 }}>{sel.c}</span>
-                  {g.hint(sel.c) && <span style={{ color: CL.ink4 }}>{g.hint(sel.c)}</span>}
-                </div>
-                <div style={{ fontFamily: CL.serif, fontSize: 16.5, lineHeight: 1.5, color: CL.ink }}>{cellQuestion(q, selRow, sel.c, spec.driver)}</div>
-              </div>
-              {selChains.length > 0
-                ? <button type="button" className="cl-btn" onClick={() => onGoto(selChains[0].id)} style={{ height: 40, padding: '0 18px', borderRadius: 12, border: '1px solid ' + CL.ink2, background: '#fff', color: CL.ink, fontFamily: CL.sans, fontSize: 13, fontWeight: 600 }}>Đến mạch này</button>
-                : <button type="button" className="cl-btn cl-primary" onClick={() => onCreate(selRow, sel.c, cellQuestion(q, selRow, sel.c, spec.driver))} style={{ height: 40, padding: '0 20px', borderRadius: 12, background: CL.ink, color: '#fff', fontFamily: CL.sans, fontSize: 13, fontWeight: 600 }}>{q.shape === 'solution' ? 'Viết giải pháp từ ô này' : 'Viết mạch từ ô này'}</button>}
-            </div>
-          )}
         </div>
       </div>
     </section>
   );
 }
 
-function RowCells({ q, row, cols, made, sel, onSel, onNote, onRemove, compare, chains, cmpOf }: { q: Question; row: MapRow; cols: string[]; made: (r: string, c: string) => Chain[]; sel: { r: string; c: string } | null; onSel: (s: { r: string; c: string } | null) => void; onNote: IdeaMapProps['onNote']; onRemove?: () => void; compare?: boolean; chains: Chain[]; cmpOf: (r: string, c: string) => CellCmp | undefined }) {
+function RowCells({ q, row, cols, made, sel, onSel, onRemove, compare, chains, cmpOf }: { q: Question; row: MapRow; cols: string[]; made: (r: string, c: string) => Chain[]; sel: { r: string; c: string } | null; onSel: (s: { r: string; c: string } | null) => void; onRemove?: () => void; compare?: boolean; chains: Chain[]; cmpOf: (r: string, c: string) => CellCmp | undefined }) {
   return (
     <>
       <div style={{ display: 'flex', alignItems: 'flex-start', gap: 4, fontFamily: CL.sans, fontSize: 13, fontWeight: 600, lineHeight: 1.3, color: CL.ink, padding: '8px 6px 0 0' }}>
@@ -174,26 +151,20 @@ function RowCells({ q, row, cols, made, sel, onSel, onNote, onRemove, compare, c
       </div>
       {cols.map((c) => compare
         ? <PairCell key={c} q={q} row={row} col={c} chains={chains} cmp={cmpOf(row.key, c)} on={!!sel && sel.r === row.key && sel.c === c} onSel={onSel} />
-        : <Cell key={c} q={q} row={row} col={c} chain={made(row.key, c)[0]} on={!!sel && sel.r === row.key && sel.c === c} onSel={onSel} onNote={onNote} />)}
+        : <Cell key={c} row={row} col={c} chain={made(row.key, c)[0]} on={!!sel && sel.r === row.key && sel.c === c} onSel={onSel} />)}
     </>
   );
 }
 
-/** One cell: a small note field. Selecting it shows its question below the map. */
-function Cell({ q, row, col, chain, on, onSel, onNote }: { q: Question; row: MapRow; col: string; chain?: Chain; on: boolean; onSel: (s: { r: string; c: string } | null) => void; onNote: IdeaMapProps['onNote'] }) {
-  const spec = useSpec();
-  const title = chain ? chain.title : '';
-  const [text, setText] = useState(title);
-  useEffect(() => { setText(title); }, [title]);
-  const has = !!chain;
-  const commit = () => { if (text.trim() !== title.trim()) onNote(row, col, cellQuestion(q, row, col, spec.driver), text); };
+/** One cell: it only selects. Once a chain is written there it shows the chain's name on mint. */
+function Cell({ row, col, chain, on, onSel }: { row: MapRow; col: string; chain?: Chain; on: boolean; onSel: (s: { r: string; c: string } | null) => void }) {
+  const name = chain ? chain.title.trim() || chain.steps.filter((x) => x.trim())[1] || '' : '';
   return (
-    <div style={{ position: 'relative' }}>
-      <textarea value={text} rows={2} aria-label={row.label + ', ' + col + (has ? ' (đã có mạch)' : '')} onFocus={() => onSel({ r: row.key, c: col })} onChange={(e) => setText(e.target.value)} onBlur={commit}
-        onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); (e.target as HTMLTextAreaElement).blur(); } }}
-        style={{ display: 'block', width: '100%', height: '100%', minHeight: 58, boxSizing: 'border-box', resize: 'none', borderRadius: 10, border: on ? '1.5px solid ' + CL.ink : '1px solid ' + (has ? '#BFE6D7' : CL.ink2), background: has ? CL.mintSoft : '#fff', padding: '8px 22px 8px 10px', fontFamily: CL.sans, fontSize: 12.5, lineHeight: 1.4, color: has ? CL.greenText : CL.ink, fontWeight: has ? 600 : 400, outline: 'none', transition: 'border-color .15s, background-color .2s' }} />
-      {has && <span style={{ position: 'absolute', top: 7, right: 7, pointerEvents: 'none' }}><ClIcon name="check" size={12} color={CL.green} /></span>}
-    </div>
+    <button type="button" className="cl-btn" onClick={() => onSel({ r: row.key, c: col })} aria-pressed={on} aria-label={row.label + ', ' + col + (chain ? ' (đã có mạch)' : '')}
+      style={{ position: 'relative', display: 'block', width: '100%', height: '100%', minHeight: 58, boxSizing: 'border-box', textAlign: 'left', borderRadius: 10, border: on ? '1.5px solid ' + CL.ink : '1px solid ' + (chain ? '#BFE6D7' : CL.ink2), background: chain ? CL.mintSoft : '#fff', padding: '8px 22px 8px 10px', fontFamily: CL.sans, fontSize: 12.5, lineHeight: 1.4, color: CL.greenText, fontWeight: 600, transition: 'border-color .15s, background-color .2s' }}>
+      <span style={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{name}</span>
+      {chain && <span style={{ position: 'absolute', top: 7, right: 7, pointerEvents: 'none' }}><ClIcon name="check" size={12} color={CL.green} /></span>}
+    </button>
   );
 }
 

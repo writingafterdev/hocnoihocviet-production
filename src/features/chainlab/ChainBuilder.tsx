@@ -4,12 +4,13 @@ import { useEffect, useRef, useState } from 'react';
 import { AI_ERROR_TEXT, AiRequestError } from '../ai/request';
 import { Translator } from '../ai/Translator';
 import { CL, CL_CIRC, CL_FIXABLE, CL_SHAPE_LABEL } from './constants';
-import { cellPair, cellQuestion, driverOf, isCompare, type CellCmp, type MapExtras, type MapRow } from './ideamap';
+import { cellQuestion, driverOf, gridFor, isCompare, type CellCmp, type MapExtras, type MapRow } from './ideamap';
 import { newChain, ropeUnits, shapeOf } from './model';
 import { requestChainReview, reviewChains, reviewKey, type ChainReview } from './review';
 import { useSpec } from './SpecContext';
 import type { Chain, Question, ReviewItem, RopeUnit, Side } from './types';
 import { CellCompare } from './ui/CellCompare';
+import { CellSlot } from './ui/CellSlot';
 import { ChainCard } from './ui/ChainCard';
 import { ChainsLayout } from './ui/ChainsLayout';
 import { ContextRail } from './ui/ContextRail';
@@ -122,12 +123,6 @@ export function ChainBuilder({ chains, setChains, extras, setExtras, stance, set
     setChains([...chains, chain]);
     setActiveId(chain.id);
   };
-  /** A rough idea typed straight into a cell: it becomes the title of the cell's chain (made on the spot if there is none). */
-  const noteCell = (q: Question, row: MapRow, col: string, question: string, text: string) => {
-    const mine = inCell(q, row, col), t = text.replace(/\s+/g, ' ').trim().slice(0, 120);
-    if (mine) { setChains((cs) => cs.map((c) => (c.id === mine.id ? { ...c, title: t } : c))); setActiveId(mine.id); }
-    else if (t) { const ch = chainFor(q, row, col, question, t); setChains((cs) => [...cs, ch]); setActiveId(ch.id); }
-  };
   const onCell = (q: Question) => (s: { r: string; c: string } | null) => {
     setCellSel(s ? { q: q.n, ...s } : null);
     const ch = s && chains.find((c) => (c.q || 1) === q.n && c.cell && c.cell.r === s.r && c.cell.c === s.c);
@@ -140,10 +135,15 @@ export function ChainBuilder({ chains, setChains, extras, setExtras, stance, set
   };
   const cmpQ = cellSel ? spec.questions.find((x) => x.n === cellSel.q) : null;
   const compareCell = cellSel && cmpQ && isCompare(spec, cmpQ) ? { ...cellSel, q: cmpQ } : null;
+  /** A selected cell of a single-driver map: the row it stands for, so its question can be asked before any chain exists. */
+  const slotQ = cellSel && !compareCell ? spec.questions.find((x) => x.n === cellSel.q) : null;
+  const slotRow = slotQ ? gridFor(spec, slotQ, chains, extras?.[slotQ.n]).rows.find((r) => r.key === cellSel.r) : null;
+  const slotChain = slotQ && slotRow ? inCell(slotQ, slotRow, cellSel.c) : null;
+  const slot = slotQ && slotRow && !slotChain ? { q: slotQ, row: slotRow, col: cellSel.c } : null;
+  const shown = slotChain || active;
   const mapOf = (q: Question) => (
     <IdeaMap bare q={q} chains={chains} extras={extras?.[q.n]} setExtras={(e) => setExtras({ ...(extras || {}), [q.n]: e })} open={isOpen(q.n)} setOpen={(v) => setMapOpen((m) => ({ ...m, [q.n]: v }))}
-      sel={cellSel && cellSel.q === q.n ? { r: cellSel.r, c: cellSel.c } : null} onSel={onCell(q)}
-      onCreate={(r, c, qu) => fromCell(q, r, c, qu)} onNote={(r, c, qu, t) => noteCell(q, r, c, qu, t)} onGoto={selectChain} />
+      sel={cellSel && cellSel.q === q.n ? { r: cellSel.r, c: cellSel.c } : null} onSel={onCell(q)} />
   );
   const fixTargets = chains.map((c, i) => ({ c, i })).filter(({ c }) => CL_FIXABLE.includes(shapeOf(spec, c))).map(({ c, i }) => ({ id: c.id, label: 'Mạch ' + (i + 1) + (c.title ? ' · ' + c.title : '') }));
 
@@ -214,14 +214,16 @@ export function ChainBuilder({ chains, setChains, extras, setExtras, stance, set
           onCreate={(drv) => fromCell(compareCell.q, { key: compareCell.r, label: compareCell.r }, compareCell.c, cellQuestion(compareCell.q, { key: compareCell.r, label: compareCell.r }, compareCell.c, driverOf(spec, drv)), drv)}
           onChange={update} onDelete={(c) => { setChains(chains.filter((x) => x.id !== c.id)); setActiveId(null); }}
           bind={bind} numOf={(c) => chains.indexOf(c) + 1} targets={fixTargets} />
-      ) : active ? (
-        <ol key={active.id} className="cl-rise" style={{ margin: 0, padding: 0 }}>
-          <ChainCard single num={chains.indexOf(active) + 1} chain={active} onChange={update} onDelete={() => { setChains(chains.filter((x) => x.id !== active.id)); setActiveId(null); setCellSel(null); }} drag={bind(active.id)} focused={false} targets={fixTargets} />
+      ) : slot ? (
+        <CellSlot key={slot.row.key + '|' + slot.col} row={slot.row.label} col={slot.col} hint={gridFor(spec, slot.q, chains, extras?.[slot.q.n]).hint(slot.col)} solution={slot.q.shape === 'solution'} question={cellQuestion(slot.q, slot.row, slot.col, spec.driver)} onCreate={() => fromCell(slot.q, slot.row, slot.col, cellQuestion(slot.q, slot.row, slot.col, spec.driver))} />
+      ) : shown ? (
+        <ol key={shown.id} className="cl-rise" style={{ margin: 0, padding: 0 }}>
+          <ChainCard single num={chains.indexOf(shown) + 1} chain={shown} onChange={update} onDelete={() => { setChains(chains.filter((x) => x.id !== shown.id)); setActiveId(null); if (!shown.cell) setCellSel(null); }} drag={bind(shown.id)} focused={false} targets={fixTargets} />
         </ol>
       ) : (
         <div className="cl-rise" style={{ borderRadius: 18, border: '1px dashed ' + CL.ink3, padding: '48px 28px', textAlign: 'center' }}>
           <p style={{ margin: '0 0 6px', fontFamily: CL.sans, fontSize: 15, fontWeight: 600, color: CL.ink }}>Chưa có mạch nào</p>
-          <p style={{ margin: 0, fontFamily: CL.sans, fontSize: 13, lineHeight: 1.6, color: CL.ink5 }}>Gõ một ý vào ô trên bản đồ, hoặc chọn ô rồi bấm "Viết mạch từ ô này". Mạch hiện ở đây.</p>
+          <p style={{ margin: 0, fontFamily: CL.sans, fontSize: 13, lineHeight: 1.6, color: CL.ink5 }}>Chọn một ô trên bản đồ, rồi bấm "Viết mạch từ ô này". Mạch hiện ở đây.</p>
         </div>
       )}
     </section>
