@@ -25,6 +25,10 @@ a:hover { color: #44443F; }
 .cl-word:hover { border-color: #141413 !important; background: #FFF6DA !important; }
 .cl-add:hover { border-color: #141413 !important; background: #FAF9F5 !important; color: #141413 !important; }
 .cl-primary:hover { opacity: .82; }
+/* Things that appear (a chain switched to, a cell's question, a panel) rise in softly. */
+@keyframes cl-rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+.cl-rise { animation: cl-rise .32s cubic-bezier(.16,1,.3,1) both; }
+@media (prefers-reduced-motion: reduce) { .cl-rise { animation: none; } }
 .cl-ta:focus { background: #FAF9F5; }
 .cl-field:focus { background: #fff !important; border-color: #77776F !important; }
 .cl-askbox:focus-within { border-color: #77776F !important; }

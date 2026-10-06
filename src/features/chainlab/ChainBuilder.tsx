@@ -172,10 +172,14 @@ export function ChainBuilder({ chains, setChains, extras, setExtras, stance, set
     <section ref={leftRef} className="cl-scroll" style={{ flex: 1, minHeight: 0, overflowY: 'auto', borderRadius: 18, border: '1px solid ' + CL.border, background: '#fff', padding: '16px 22px 22px', display: 'flex', flexDirection: 'column', gap: 16 }}>
       <div>
         <button type="button" className="cl-btn" onClick={() => setCtxOpen(!ctxOpen)} aria-expanded={ctxOpen} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, textAlign: 'left', borderRadius: 10, background: CL.panel, padding: '10px 14px' }}>
-          <ClLabel color={CL.ink}>Đề bài {ctxOpen ? '▾' : '▸'}</ClLabel>
-          {!ctxOpen && <span style={{ minWidth: 0, flex: 1, fontFamily: CL.sans, fontSize: 12, color: CL.ink6, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{spec.text}</span>}
+          <ClLabel color={CL.ink}>Đề bài</ClLabel>
+          <span aria-hidden="true" style={{ display: 'inline-flex', color: CL.ink4, transform: ctxOpen ? 'none' : 'rotate(-90deg)', transition: 'transform .35s cubic-bezier(.16,1,.3,1)' }}><ClIcon name="chev" size={13} /></span>
+          <span style={{ minWidth: 0, flex: 1, fontFamily: CL.sans, fontSize: 12, color: CL.ink6, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', opacity: ctxOpen ? 0 : 1, transition: 'opacity .25s ease' }}>{spec.text}</span>
         </button>
-        {ctxOpen && <div style={{ marginTop: 10 }}><ContextRail bare /></div>}
+        {/* Always mounted, so opening and closing it is one smooth slide instead of a jump. */}
+        <div style={{ display: 'grid', gridTemplateRows: ctxOpen ? '1fr' : '0fr', opacity: ctxOpen ? 1 : 0, visibility: ctxOpen ? 'visible' : 'hidden', transition: 'grid-template-rows .4s cubic-bezier(.16,1,.3,1), opacity .3s ease, visibility 0s linear ' + (ctxOpen ? '0s' : '.4s') }}>
+          <div style={{ minHeight: 0, overflow: 'hidden' }}><div style={{ paddingTop: 10 }}><ContextRail bare /></div></div>
+        </div>
       </div>
       <div>{leftBody}</div>
     </section>
@@ -186,18 +190,18 @@ export function ChainBuilder({ chains, setChains, extras, setExtras, stance, set
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, alignItems: 'center' }}>
         {chains.map((c, i) => (
           <button key={c.id} type="button" className="cl-btn" onClick={() => selectChain(c.id)} aria-pressed={active ? active.id === c.id : false} title={c.title || undefined}
-            style={{ maxWidth: 220, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', borderRadius: 999, border: '1px solid ' + (active && active.id === c.id ? CL.ink : CL.ink2), background: active && active.id === c.id ? CL.ink : '#fff', color: active && active.id === c.id ? '#fff' : CL.ink6, padding: '5px 12px', fontFamily: CL.sans, fontSize: 12, fontWeight: 600 }}>
+            style={{ maxWidth: 220, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', borderRadius: 999, border: '1px solid ' + (active && active.id === c.id ? CL.ink : CL.ink2), background: active && active.id === c.id ? CL.ink : '#fff', color: active && active.id === c.id ? '#fff' : CL.ink6, padding: '5px 12px', fontFamily: CL.sans, fontSize: 12, fontWeight: 600, transition: 'background-color .22s ease, color .22s ease, border-color .22s ease' }}>
             {multiQ && <span style={{ marginRight: 5 }}>{CL_CIRC[(c.q || 1) - 1]}</span>}{label(c, i)}
           </button>
         ))}
         <button type="button" className="cl-btn cl-link" onClick={() => add(active ? active.q || 1 : spec.questions[0].n)} style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontFamily: CL.sans, fontSize: 12, fontWeight: 600, color: CL.ink5, padding: '5px 6px' }}><ClIcon name="plus" size={12} />Mạch trống</button>
       </div>
       {active ? (
-        <ol style={{ margin: 0, padding: 0 }}>
-          <ChainCard key={active.id} single num={chains.indexOf(active) + 1} chain={active} onChange={update} onDelete={() => { setChains(chains.filter((x) => x.id !== active.id)); setActiveId(null); setCellSel(null); }} drag={bind(active.id)} focused={false} targets={fixTargets} />
+        <ol key={active.id} className="cl-rise" style={{ margin: 0, padding: 0 }}>
+          <ChainCard single num={chains.indexOf(active) + 1} chain={active} onChange={update} onDelete={() => { setChains(chains.filter((x) => x.id !== active.id)); setActiveId(null); setCellSel(null); }} drag={bind(active.id)} focused={false} targets={fixTargets} />
         </ol>
       ) : (
-        <div style={{ borderRadius: 18, border: '1px dashed ' + CL.ink3, padding: '48px 28px', textAlign: 'center' }}>
+        <div className="cl-rise" style={{ borderRadius: 18, border: '1px dashed ' + CL.ink3, padding: '48px 28px', textAlign: 'center' }}>
           <p style={{ margin: '0 0 6px', fontFamily: CL.sans, fontSize: 15, fontWeight: 600, color: CL.ink }}>Chưa có mạch nào</p>
           <p style={{ margin: 0, fontFamily: CL.sans, fontSize: 13, lineHeight: 1.6, color: CL.ink5 }}>Gõ một ý vào ô trên bản đồ, hoặc chọn ô rồi bấm "Viết mạch từ ô này". Mạch hiện ở đây.</p>
         </div>

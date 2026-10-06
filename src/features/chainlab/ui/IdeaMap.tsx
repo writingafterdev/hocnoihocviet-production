@@ -111,7 +111,7 @@ export function IdeaMap({ q, chains, extras, setExtras, open, setOpen, onCreate,
           </div>
 
           {sel && selRow && (
-            <div style={{ position: 'sticky', bottom: 0, zIndex: 3, marginTop: 12, borderRadius: 14, background: CL.panel, border: '1px solid ' + CL.ink2, boxShadow: '0 -10px 18px #fff', padding: '14px 18px', display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
+            <div key={sel.r + '|' + sel.c} className="cl-rise" style={{ position: 'sticky', bottom: 0, zIndex: 3, marginTop: 12, borderRadius: 14, background: CL.panel, border: '1px solid ' + CL.ink2, boxShadow: '0 -10px 18px #fff', padding: '14px 18px', display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
               <div style={{ flex: '1 1 340px', minWidth: 0 }}>
                 <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 6, marginBottom: 6, fontFamily: CL.sans, fontSize: 12 }}>
                   <span style={{ borderRadius: 999, background: CL.ink, color: '#fff', padding: '2px 10px', fontWeight: 600 }}>{selRow.label}</span>
