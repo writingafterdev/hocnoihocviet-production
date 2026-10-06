@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
-import { Check } from 'lucide-react';
+import { Check, ChevronLeft, ChevronRight } from 'lucide-react';
 import { PageHeader } from '@/components/shell/BrandHeader';
 import { ModePickerModal } from './ModePickerModal';
 import { CATEGORIES_TASK1, CATEGORIES_TASK2, PROMPTS, TOPIC_ILLUSTRATION, TOPICS_TASK2, type Prompt, type Task } from '@/content/prompts';
@@ -12,6 +12,34 @@ import { startFreeAttempt } from '../attempts/start';
 
 const EASE = 'cubic-bezier(.16,1,.3,1)';
 const PAGE = 20;
+
+/** Page numbers with the first, the last and the neighbours of the current page; "…" fills the gaps. */
+function pageList(page: number, pages: number): (number | '…')[] {
+  if (pages <= 7) return Array.from({ length: pages }, (_, i) => i);
+  if (page < 4) return [0, 1, 2, 3, 4, 5, '…', pages - 1];
+  if (page > pages - 5) return [0, '…', ...Array.from({ length: 6 }, (_, i) => pages - 6 + i)];
+  return [0, '…', page - 1, page, page + 1, '…', pages - 1];
+}
+
+function Pager({ page, pages, onPage }: { page: number; pages: number; onPage: (n: number) => void }) {
+  const edge = (label: string, to: number, ok: boolean, left: boolean) => (
+    <button type="button" disabled={!ok} onClick={() => onPage(to)} style={{ display: 'inline-flex', alignItems: 'center', gap: 12, background: 'none', border: 'none', padding: '8px 4px', cursor: ok ? 'pointer' : 'default', fontFamily: 'var(--font-sans)', fontSize: 16, fontWeight: 700, color: ok ? '#8A8A85' : '#D4D4D0' }}>
+      {left && <ChevronLeft size={18} strokeWidth={2} />}{label}{!left && <ChevronRight size={18} strokeWidth={2} />}
+    </button>
+  );
+  return (
+    <nav aria-label="Chọn trang" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', marginTop: 20, padding: '0 8px' }}>
+      {edge('Trang trước', page - 1, page > 0, true)}
+      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, flexWrap: 'wrap', justifyContent: 'center' }}>
+        {pageList(page, pages).map((n, k) => n === '…'
+          ? <span key={'e' + k} aria-hidden="true" style={{ padding: '0 4px', fontFamily: 'var(--font-sans)', fontSize: 16, color: '#141413' }}>…</span>
+          : <button key={n} type="button" aria-current={n === page ? 'page' : undefined} aria-label={'Trang ' + (n + 1)} onClick={() => onPage(n)} style={{ minWidth: 40, height: 40, background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'var(--font-sans)', fontSize: 17, fontWeight: 700, color: n === page ? '#1AA83A' : '#8A8A85' }}>{n + 1}</button>)}
+      </span>
+      {edge('Trang sau', page + 1, page < pages - 1, false)}
+    </nav>
+  );
+}
+
 
 /** "① Nguyên nhân · ② Giải pháp" */
 const questionTypes = (p: Prompt) => p.questions.map((x) => (p.questions.length > 1 ? CL_CIRC[x.n - 1] + ' ' : '') + CL_SHAPE_LABEL[x.shape]).join(' · ');
@@ -77,8 +105,8 @@ export function PromptLibrary() {
   const [cats, setCats] = useState<string[]>([]);
   const [topics, setTopics] = useState<string[]>([]);
   const [modalPrompt, setModalPrompt] = useState<Prompt | null>(null);
-  const [shown, setShown] = useState(PAGE);
-  const toggle = (arr: string[], setArr: (a: string[]) => void, v: string) => { setArr(arr.includes(v) ? arr.filter((x) => x !== v) : [...arr, v]); setShown(PAGE); };
+  const [page, setPage] = useState(0);
+  const toggle = (arr: string[], setArr: (a: string[]) => void, v: string) => { setArr(arr.includes(v) ? arr.filter((x) => x !== v) : [...arr, v]); setPage(0); };
   const filtered = PROMPTS.filter((p) => p.task === task && (cats.length === 0 || cats.includes(p.category)) && (topics.length === 0 || topics.includes(p.topic)));
 
   return (
@@ -112,7 +140,7 @@ export function PromptLibrary() {
                   // Task 1 has no prompts or writing flow yet.
                   const soon = id === 'task1';
                   return (
-                    <button key={id} type="button" role="tab" aria-selected={task === id} aria-disabled={soon} disabled={soon} title={soon ? 'Task 1 sắp ra mắt' : undefined} onClick={() => { setTask(id); setCats([]); setTopics([]); setShown(PAGE); }} style={{ height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, borderRadius: 7, border: 'none', cursor: soon ? 'not-allowed' : 'pointer', background: task === id ? '#fff' : 'transparent', boxShadow: task === id ? '0 1px 3px rgba(0,0,0,0.08)' : 'none', fontFamily: 'var(--font-sans)', fontSize: 14, fontWeight: 600, color: task === id ? '#141413' : soon ? '#B5B2A8' : '#857F70' }}>
+                    <button key={id} type="button" role="tab" aria-selected={task === id} aria-disabled={soon} disabled={soon} title={soon ? 'Task 1 sắp ra mắt' : undefined} onClick={() => { setTask(id); setCats([]); setTopics([]); setPage(0); }} style={{ height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, borderRadius: 7, border: 'none', cursor: soon ? 'not-allowed' : 'pointer', background: task === id ? '#fff' : 'transparent', boxShadow: task === id ? '0 1px 3px rgba(0,0,0,0.08)' : 'none', fontFamily: 'var(--font-sans)', fontSize: 14, fontWeight: 600, color: task === id ? '#141413' : soon ? '#B5B2A8' : '#857F70' }}>
                       {label}
                       {soon && <span style={{ borderRadius: 4, background: '#ECEAE4', padding: '1px 5px', fontSize: 9.5, fontWeight: 700, letterSpacing: '0.04em', color: '#857F70' }}>SẮP CÓ</span>}
                     </button>
@@ -127,10 +155,8 @@ export function PromptLibrary() {
           </aside>
           <div style={{ flex: 1, minWidth: 0, width: '100%', display: 'flex', flexDirection: 'column', gap: 12 }}>
             {filtered.length > 0 && <p style={{ fontFamily: 'var(--font-sans)', fontSize: 13, color: '#857F70', margin: '0 0 4px' }}>{filtered.length} đề</p>}
-            {filtered.slice(0, shown).map((p) => <PromptCard key={p.id} prompt={p} onWrite={() => setModalPrompt(p)} />)}
-            {filtered.length > shown && (
-              <button type="button" onClick={() => setShown(shown + PAGE)} className="pl-card" style={{ alignSelf: 'center', marginTop: 12, height: 42, padding: '0 20px', borderRadius: 10, border: '1px solid #E6E4DE', background: '#fff', cursor: 'pointer', fontFamily: 'var(--font-sans)', fontSize: 13, fontWeight: 600, color: '#141413' }}>Xem thêm {Math.min(PAGE, filtered.length - shown)} đề</button>
-            )}
+            {filtered.slice(page * PAGE, (page + 1) * PAGE).map((p) => <PromptCard key={p.id} prompt={p} onWrite={() => setModalPrompt(p)} />)}
+            {filtered.length > PAGE && <Pager page={page} pages={Math.ceil(filtered.length / PAGE)} onPage={(n) => { setPage(n); window.scrollTo({ top: 0 }); document.querySelector('main')?.scrollTo({ top: 0 }); }} />}
             {filtered.length === 0 && (
               <div style={{ borderRadius: 14, border: '1px dashed #DAD8D2', padding: '48px 24px', textAlign: 'center' }}>
                 <p style={{ fontFamily: 'var(--font-sans)', fontSize: 15, fontWeight: 600, color: '#141413', margin: '0 0 6px' }}>{task === 'task1' ? 'Đề Task 1 đang được soạn' : 'Không có đề nào khớp bộ lọc'}</p>
