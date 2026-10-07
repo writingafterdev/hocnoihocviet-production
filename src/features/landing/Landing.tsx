@@ -98,7 +98,7 @@ export function Landing() {
           <div className={s['close-ill']}><img src="/assets/illustrations/il-writing.svg" alt="" /></div>
         </section>
 
-        <footer className={s.foot}><span>hocnoihocviet © 2026</span><span>Beta</span></footer>
+        <footer className={s.foot}><span>hocnoihocviet © 2026</span><span><a href="/privacy">Quyền riêng tư</a> · <a href="/terms">Điều khoản</a> · Beta</span></footer>
       </div>
     </div>
   );

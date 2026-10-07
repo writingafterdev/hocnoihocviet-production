@@ -92,6 +92,7 @@ export function Login() {
             Tiếp tục với Google
           </button>
           <p style={{ margin: '20px 0 0', fontSize: 12.5, lineHeight: 1.6, color: soft }}>Lần đầu? Đăng nhập cũng là tạo tài khoản. Miễn phí khi đang beta.</p>
+          <p style={{ margin: '12px 0 0', fontSize: 12.5, lineHeight: 1.6, color: soft }}>Khi tiếp tục, bạn đồng ý với <Link href="/terms" style={{ color: mute, textDecoration: 'underline' }}>Điều khoản</Link> và <Link href="/privacy" style={{ color: mute, textDecoration: 'underline' }}>Chính sách quyền riêng tư</Link>.</p>
         </div>
       </div>
       <style>{'@media (max-width: 880px){.login-grid{grid-template-columns:minmax(0,1fr)!important}.login-brand{border-right:none!important;border-bottom:1px solid ' + line + '}}'}</style>
