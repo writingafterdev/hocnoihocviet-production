@@ -4,11 +4,12 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { AI_ERROR_TEXT, AiRequestError } from '../ai/request';
 import { Translator } from '../ai/Translator';
 import { CL, CL_CIRC, CL_FIXABLE, CL_SHAPE_LABEL } from './constants';
-import { cellQuestion, claimTally, driverOf, gridFor, isCompare, type CellCmp, type MapExtras, type MapRow } from './ideamap';
-import { newChain, ropeUnits, shapeOf } from './model';
+import { causeLabel, cellQuestion, claimTally, driverOf, gridFor, isCompare, type CellCmp, type MapExtras, type MapRow } from './ideamap';
+import { filledSteps, newChain, shapeOf } from './model';
 import { requestChainReview, reviewChains, reviewKey, type ChainReview } from './review';
 import { SpecProvider, useSpec } from './SpecContext';
-import type { Chain, Question, ReviewItem, RopeUnit, Side } from './types';
+import type { Chain, Question, ReviewItem } from './types';
+import { CausePair } from './ui/CausePair';
 import { CellCompare } from './ui/CellCompare';
 import { CellSlot } from './ui/CellSlot';
 import { ChainCard } from './ui/ChainCard';
@@ -17,7 +18,6 @@ import { ContextRail } from './ui/ContextRail';
 import { IdeaMap } from './ui/IdeaMap';
 import { backLinkStyle, ClIcon, ClLabel, toolbarBtn } from './ui/primitives';
 import { ReviewPanel, ReviewSummary } from './ui/ReviewPanel';
-import { Rope } from './ui/Rope';
 import { useReorder } from './ui/useReorder';
 
 /** The one easing of this screen's slides: the same gentle ease-in-out as the map, with no sudden start. */
@@ -29,20 +29,24 @@ export interface ChainBuilderProps {
   /** Rows and columns the student added to the idea maps, by question number. */
   extras?: Record<string, MapExtras>;
   setExtras: (e: Record<string, MapExtras>) => void;
+  /** The position, written on screen ②; the review still reads it. */
   stance: string;
-  setStance: (s: string) => void;
   /** Last "Soát toàn bài" result, kept on the attempt so it survives reloads. */
   review: ChainReview | null;
   setReview: (r: ChainReview | null) => void;
   onBack: () => void;
-  onWrite: () => void;
+  /** Go on to screen ② "Cân". */
+  onNext: () => void;
+  /** The ① ② ③ step bar, shown in the toolbar. */
+  nav?: React.ReactNode;
 }
 
 /**
- * Screen 1 of "Viết tự do", in three panels: the rope and idea map · the selected chain (with the translator under it)
- * · the review. Picking a cell, a rope chip or a review comment selects its chain, so nothing needs scrolling to.
+ * Screen ① of "Viết tự do", in three panels: the idea maps · the selected chain (with the translator under it)
+ * · the review. Picking a cell or a review comment selects its chain, so nothing needs scrolling to. The rope and the
+ * position live on screen ② "Cân".
  */
-export function ChainBuilder({ chains, setChains, extras, setExtras, stance, setStance, review, setReview, onBack, onWrite }: ChainBuilderProps) {
+export function ChainBuilder({ chains, setChains, extras, setExtras, stance, review, setReview, onBack, onNext, nav }: ChainBuilderProps) {
   const base = useSpec();
   /** "Best" / "only" prompts: the rival the student chose replaces the suggested second driver everywhere below. */
   const rival = (extras && base.questions.map((x) => extras[x.n]?.rival).find(Boolean)) || '';
@@ -50,7 +54,6 @@ export function ChainBuilder({ chains, setChains, extras, setExtras, stance, set
   const bind = useReorder(chains, (n) => setChains(n));
   const [help, setHelp] = useState(false);
   const [ctxOpen, setCtxOpen] = useState(true);
-  const [sel, setSel] = useState<string | null>(null);
   const [running, setRunning] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [seen, setSeen] = useState<string[]>([]);
@@ -58,26 +61,21 @@ export function ChainBuilder({ chains, setChains, extras, setExtras, stance, set
   const [cellSel, setCellSel] = useState<{ q: number; r: string; c: string } | null>(null);
   const [mapOpen, setMapOpen] = useState<Record<number, boolean>>({});
   const leftRef = useRef<HTMLElement>(null);
-  const stanceRef = useRef<HTMLTextAreaElement>(null);
 
   const verdictQ = spec.questions.find((q) => q.shape === 'verdict');
   const multiQ = spec.questions.length > 1;
   const active = chains.find((c) => c.id === activeId) || chains[0] || null;
   const update = (c: Chain) => setChains((cs) => cs.map((x) => (x.id === c.id ? c : x)));
-  const patch = (id: string, fn: (c: Chain) => Chain) => setChains((cs) => cs.map((x) => (x.id === id ? fn(x) : x)));
-  const moveUnit = (u: RopeUnit, side: Side) => patch(u.chainId, (c) => {
-    const r = u.ref;
-    if (r.type === 'finding') return { ...c, findings: c.findings.map((f) => (f.id === r.id ? { ...f, side } : f)) };
-    if (r.type === 'branch') return { ...c, split: { ...c.split, branches: c.split.branches.map((b, j) => (j === r.k ? { ...b, side } : b)) } };
-    return { ...c, side };
-  });
-  const units = ropeUnits(spec, chains);
   const stale = review && review.key !== reviewKey(chains, stance);
 
-  /** Shows a chain in the middle panel and its cell on the map. */
+  /** Cause + solution prompts: solutions are written under their cause, in the cause map's panel. */
+  const causeQ = spec.questions.find((x) => x.shape === 'cause');
+  const solQ = causeQ ? spec.questions.find((x) => x.shape === 'solution') : null;
+  /** Shows a chain in the middle panel and its cell on the map (a solution shows its cause's cell). */
   const selectChain = (id: string) => {
-    const c = chains.find((x) => x.id === id);
+    let c = chains.find((x) => x.id === id);
     setActiveId(id);
+    if (c && solQ && (c.q || 1) === solQ.n && c.fixes) c = chains.find((x) => x.id === c.fixes) || c;
     setCellSel(c && c.cell ? { q: c.q || 1, r: c.cell.r, c: c.cell.c } : null);
   };
   const isOpen = (n: number) => mapOpen[n] ?? true;
@@ -97,12 +95,8 @@ export function ChainBuilder({ chains, setChains, extras, setExtras, stance, set
   const closeReview = () => setReview(null);
   const go = (it: ReviewItem) => {
     setSeen((s) => (s.includes(it.key) ? s : [...s, it.key]));
-    if (it.target === 'stance' || !it.chainId) {
-      const m = leftRef.current;
-      if (m) m.scrollTo({ top: it.target === 'stance' && stanceRef.current ? Math.max(0, stanceRef.current.offsetTop - 120) : 0, behavior: 'smooth' });
-      if (it.target === 'stance' && stanceRef.current) stanceRef.current.focus({ preventScroll: true });
-      return;
-    }
+    if (it.target === 'stance') { onNext(); return; }
+    if (!it.chainId) { leftRef.current?.scrollTo({ top: 0, behavior: 'smooth' }); return; }
     selectChain(it.chainId);
   };
 
@@ -138,8 +132,13 @@ export function ChainBuilder({ chains, setChains, extras, setExtras, stance, set
   };
   const cmpQ = cellSel ? spec.questions.find((x) => x.n === cellSel.q) : null;
   const compareCell = cellSel && cmpQ && isCompare(spec, cmpQ) ? { ...cellSel, q: cmpQ } : null;
+  /** A selected cell of a cause map whose prompt also asks for solutions: cause on top, its solutions under it. */
+  const pairCell = cellSel && solQ && !compareCell && cellSel.q === causeQ.n ? (() => {
+    const row = gridFor(spec, causeQ, chains, extras?.[causeQ.n]).rows.find((r) => r.key === cellSel.r);
+    return row ? { row, col: cellSel.c, cause: inCell(causeQ, row, cellSel.c) } : null;
+  })() : null;
   /** A selected cell of a single-driver map: the row it stands for, so its question can be asked before any chain exists. */
-  const slotQ = cellSel && !compareCell ? spec.questions.find((x) => x.n === cellSel.q) : null;
+  const slotQ = cellSel && !compareCell && !pairCell ? spec.questions.find((x) => x.n === cellSel.q) : null;
   const slotRow = slotQ ? gridFor(spec, slotQ, chains, extras?.[slotQ.n]).rows.find((r) => r.key === cellSel.r) : null;
   const slotChain = slotQ && slotRow ? inCell(slotQ, slotRow, cellSel.c) : null;
   const slot = slotQ && slotRow && !slotChain ? { q: slotQ, row: slotRow, col: cellSel.c } : null;
@@ -156,28 +155,47 @@ export function ChainBuilder({ chains, setChains, extras, setExtras, stance, set
   const tallyOf = (q: Question) => { const g = gridFor(spec, q, chains, extras?.[q.n]); return claimTally(g.rows, g.cols, extras?.[q.n]?.cmp); };
   const mapOf = (q: Question) => (
     <IdeaMap bare q={q} chains={chains} extras={extras?.[q.n]} onRival={spec.claim ? onRival : undefined} setExtras={(e) => setExtras({ ...(extras || {}), [q.n]: e })} open={isOpen(q.n)} setOpen={(v) => setMapOpen((m) => ({ ...m, [q.n]: v }))}
-      sel={cellSel && cellSel.q === q.n ? { r: cellSel.r, c: cellSel.c } : null} onSel={onCell(q)} />
+      sel={cellSel && cellSel.q === q.n ? { r: cellSel.r, c: cellSel.c } : null} onSel={onCell(q)}
+      fixCount={solQ && q === causeQ ? (id) => chains.filter((x) => (x.q || 1) === solQ.n && x.fixes === id).length : undefined} />
   );
+  /** Cause + solution prompts: the solution question lists each cause and its solutions instead of a second map. */
+  const solutionList = (q: Question) => {
+    const causes = chains.filter((c) => (c.q || 1) === causeQ.n && filledSteps(c) > 0);
+    const orphans = chains.filter((c) => (c.q || 1) === q.n && !causes.some((x) => x.id === c.fixes));
+    const row: React.CSSProperties = { width: '100%', display: 'flex', alignItems: 'center', gap: 10, textAlign: 'left', borderRadius: 10, border: '1px solid ' + CL.ink2, background: '#fff', padding: '9px 12px', fontFamily: CL.sans, fontSize: 12.5 };
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        <p style={{ margin: '0 2px 4px', fontFamily: CL.sans, fontSize: 12.5, lineHeight: 1.5, color: CL.ink5 }}>Giải pháp được viết ngay dưới nguyên nhân của nó: chọn một ô ở bản đồ {CL_CIRC[causeQ.n - 1]}, hoặc một nguyên nhân dưới đây.</p>
+        {causes.map((c) => {
+          const n = chains.filter((x) => (x.q || 1) === q.n && x.fixes === c.id).length;
+          return (
+            <button key={c.id} type="button" className="cl-btn" onClick={() => selectChain(c.id)} style={row}>
+              <span style={{ flex: 1, minWidth: 0, fontWeight: 600, color: CL.ink }}>{causeLabel(c)}</span>
+              <span style={{ flexShrink: 0, borderRadius: 6, padding: '2px 8px', fontSize: 11, fontWeight: 700, background: n ? CL.mintSoft : '#F1F1EE', color: n ? CL.greenText : CL.ink5 }}>{n ? n + ' giải pháp' : 'Chưa có giải pháp'}</span>
+            </button>
+          );
+        })}
+        {orphans.map((c) => (
+          <button key={c.id} type="button" className="cl-btn" onClick={() => selectChain(c.id)} style={{ ...row, borderStyle: 'dashed' }}>
+            <span style={{ flex: 1, minWidth: 0, fontWeight: 600, color: CL.ink7 }}>{c.title.trim() || 'Giải pháp chưa đặt tên'}</span>
+            <span style={{ flexShrink: 0, fontSize: 11, color: CL.ink5 }}>chưa gắn nguyên nhân</span>
+          </button>
+        ))}
+        {!causes.length && !orphans.length && <span style={{ fontFamily: CL.sans, fontSize: 12, color: CL.ink4 }}>Chưa có nguyên nhân nào.</span>}
+      </div>
+    );
+  };
+  const actors = solQ ? gridFor(spec, solQ, chains, extras?.[solQ.n]).cols : [];
+
   const fixTargets = chains.map((c, i) => ({ c, i })).filter(({ c }) => CL_FIXABLE.includes(shapeOf(spec, c))).map(({ c, i }) => ({ id: c.id, label: 'Mạch ' + (i + 1) + (c.title ? ' · ' + c.title : '') }));
 
-  /** The rope, the stance and (below them) the verdict question's map. */
-  const ropeBlock = verdictQ && (
-    <div>
-      <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 12, marginBottom: 12 }}>
-        <ClLabel color={CL.ink}>Lập trường</ClLabel>
-        <span style={{ fontFamily: CL.sans, fontSize: 11, color: CL.ink4 }}>Kéo từng ý về phía nó ủng hộ</span>
-      </div>
-      <Rope units={units} onSide={moveUnit} selected={sel} onSelect={(u) => { setSel(u.key); selectChain(u.chainId); }} />
-      <div style={{ height: 1, background: CL.ink1, margin: '16px 0 12px' }} />
-      <textarea ref={stanceRef} className="cl-ta" value={stance} onChange={(e) => setStance(e.target.value)} rows={1} aria-label="Lập trường" placeholder="Sau khi thử các mạch, bạn nghiêng về phía nào, và với điều kiện gì?" style={{ display: 'block', width: '100%', minHeight: 30, resize: 'none', border: 'none', outline: 'none', background: 'transparent', fontFamily: CL.serif, fontSize: 17, lineHeight: 1.55, color: CL.ink, padding: 0, fieldSizing: 'content' } as React.CSSProperties} />
-      {(spec.stakeholders || []).length > 0 && <><div style={{ height: 1, background: CL.ink1, margin: '16px 0 14px' }} />{mapOf(verdictQ)}</>}
-    </div>
-  );
+  /** The body of one question's section: its map, or for solutions under causes, the list of causes. */
+  const bodyOf = (q: Question) => (solQ && q === solQ ? solutionList(q) : mapOf(q));
 
   const label = (c: Chain, i: number) => (c.drv ? c.drv + ' · ' : '') + (c.cell ? (c.title.trim() || (shapeOf(spec, c) === 'solution' ? c.cell.c : c.cell.r + ' · ' + c.cell.c)) : c.title.trim() || 'Mạch ' + (i + 1));
 
   const leftBody = !multiQ ? (
-    spec.questions[0] === verdictQ ? ropeBlock : mapOf(spec.questions[0])
+    bodyOf(spec.questions[0])
   ) : spec.questions.map((q, k) => {
     const n = chains.filter((c) => (c.q || 1) === q.n).length;
     return (
@@ -188,7 +206,7 @@ export function ChainBuilder({ chains, setChains, extras, setExtras, stance, set
           {q.q && <span style={{ minWidth: 0, fontFamily: CL.sans, fontSize: 12.5, color: CL.ink6 }}>{q.q}</span>}
           <span style={{ marginLeft: 'auto', flexShrink: 0, fontFamily: CL.sans, fontSize: 11, color: CL.ink4 }}>{n} mạch</span>
         </div>
-        {q === verdictQ ? ropeBlock : mapOf(q)}
+        {bodyOf(q)}
       </section>
     );
   });
@@ -227,6 +245,12 @@ export function ChainBuilder({ chains, setChains, extras, setExtras, stance, set
           onCreate={(drv) => fromCell(compareCell.q, { key: compareCell.r, label: compareCell.r }, compareCell.c, cellQuestion(compareCell.q, { key: compareCell.r, label: compareCell.r }, compareCell.c, driverOf(spec, drv)), drv)}
           onChange={update} onDelete={(c) => { setChains(chains.filter((x) => x.id !== c.id)); setActiveId(null); }}
           bind={bind} numOf={(c) => chains.indexOf(c) + 1} targets={fixTargets} tally={tallyOf(compareCell.q)} />
+      ) : pairCell ? (
+        <CausePair key={pairCell.row.key + '|' + pairCell.col} causeQ={causeQ} solQ={solQ} row={pairCell.row} col={pairCell.col} hint={gridFor(spec, causeQ, chains, extras?.[causeQ.n]).hint(pairCell.col)} cause={pairCell.cause} chains={chains} actors={actors} driver={spec.driver}
+          onCreateCause={() => fromCell(causeQ, pairCell.row, pairCell.col, cellQuestion(causeQ, pairCell.row, pairCell.col, spec.driver))}
+          onCreateSolution={(cause, who) => { const r = { key: cause.id, label: causeLabel(cause) }; fromCell(solQ, r, who, cellQuestion(solQ, r, who)); }}
+          onChange={update} onDelete={(c) => { setChains(chains.filter((x) => x.id !== c.id)); setActiveId(null); }}
+          bind={bind} numOf={(c) => chains.indexOf(c) + 1} targets={fixTargets} />
       ) : slot ? (
         <CellSlot key={slot.row.key + '|' + slot.col} row={slot.row.label} col={slot.col} hint={gridFor(spec, slot.q, chains, extras?.[slot.q.n]).hint(slot.col)} solution={slot.q.shape === 'solution'} question={cellQuestion(slot.q, slot.row, slot.col, spec.driver)} onCreate={() => fromCell(slot.q, slot.row, slot.col, cellQuestion(slot.q, slot.row, slot.col, spec.driver))} />
       ) : shown ? (
@@ -252,13 +276,16 @@ export function ChainBuilder({ chains, setChains, extras, setExtras, stance, set
     <SpecProvider value={spec}>
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column', maxWidth: 1710, margin: '0 auto', padding: '12px 40px 16px' }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', minHeight: 42, paddingBottom: 12 }}>
-        <button type="button" className="cl-btn cl-link" onClick={onBack} style={backLinkStyle}><ClIcon name="left" size={14} />Thư viện đề</button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 18 }}>
+          <button type="button" className="cl-btn cl-link" onClick={onBack} style={backLinkStyle}><ClIcon name="left" size={14} />Thư viện đề</button>
+          {nav}
+        </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           {error && <span role="alert" style={{ fontFamily: CL.sans, fontSize: 12, color: '#8B3A35', marginRight: 4 }}>{error}</span>}
           <button type="button" className="cl-btn" onClick={() => { setCtxOpen(!ctxOpen); leftRef.current?.scrollTo({ top: 0, behavior: 'smooth' }); }} aria-pressed={ctxOpen} style={toolbarBtn(ctxOpen)}>Đề bài</button>
           <button type="button" className="cl-btn" onClick={runAudit} disabled={running} style={{ ...toolbarBtn(false), color: CL.ink, padding: '8px 14px', opacity: running ? 0.6 : 1 }}>{running ? 'Đang soát…' : review ? 'Soát lại' : 'Soát toàn bài'}</button>
           <button type="button" className="cl-btn" onClick={() => setHelp(!help)} aria-pressed={help} style={toolbarBtn(help)}>Dịch</button>
-          <button type="button" className="cl-btn cl-primary" onClick={onWrite} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, borderRadius: 5, background: CL.ink, color: '#fff', fontFamily: CL.sans, fontSize: 10.5, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', padding: '8px 14px' }}>Viết bài<ClIcon name="right" size={13} /></button>
+          <button type="button" className="cl-btn cl-primary" onClick={onNext} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, borderRadius: 5, background: CL.ink, color: '#fff', fontFamily: CL.sans, fontSize: 10.5, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', padding: '8px 14px' }}>{verdictQ ? 'Cân' : 'Dàn bài'}<ClIcon name="right" size={13} /></button>
         </div>
       </div>
       <ChainsLayout left={left} middle={middle} bottom={<Translator onClose={() => setHelp(false)} />} bottomOpen={help} right={right} rightOpen={!!review} />

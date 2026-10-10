@@ -24,13 +24,15 @@ interface IdeaMapProps {
   /** The selected cell, kept by the screen so the chain panel and the review can move it. */
   sel: { r: string; c: string } | null;
   onSel: (s: { r: string; c: string } | null) => void;
+  /** Cause + solution prompts: how many solutions a cause chain has, shown on its cell. */
+  fixCount?: (chainId: string) => number;
 }
 
 /**
  * The idea map of one question: rows × columns of cells. A cell only selects; its question and chain live in the
  * middle panel. The body folds smoothly; the header line stays.
  */
-export function IdeaMap({ q, chains, extras, setExtras, onRival, open, setOpen, bare, sel, onSel: setSel }: IdeaMapProps) {
+export function IdeaMap({ q, chains, extras, setExtras, onRival, open, setOpen, bare, sel, onSel: setSel, fixCount }: IdeaMapProps) {
   const spec = useSpec();
   const [adding, setAdding] = useState<'row' | 'col' | null>(null);
   const [draft, setDraft] = useState('');
@@ -128,7 +130,7 @@ export function IdeaMap({ q, chains, extras, setExtras, onRival, open, setOpen, 
                 </div>
               ))}
               {g.rows.map((r) => (
-                <RowCells key={r.key} q={q} row={r} cols={g.cols} made={made} sel={sel} onSel={setSel} onRemove={g.rowsAddable ? () => removeRow(r) : undefined} compare={cmpMode} chains={chains} cmpOf={cmpOf} />
+                <RowCells key={r.key} q={q} row={r} cols={g.cols} made={made} sel={sel} onSel={setSel} onRemove={g.rowsAddable ? () => removeRow(r) : undefined} compare={cmpMode} chains={chains} cmpOf={cmpOf} fixCount={fixCount} />
               ))}
               {cmpMode && (
                 <>
@@ -177,7 +179,7 @@ export function IdeaMap({ q, chains, extras, setExtras, onRival, open, setOpen, 
   );
 }
 
-function RowCells({ q, row, cols, made, sel, onSel, onRemove, compare, chains, cmpOf }: { q: Question; row: MapRow; cols: string[]; made: (r: string, c: string) => Chain[]; sel: { r: string; c: string } | null; onSel: (s: { r: string; c: string } | null) => void; onRemove?: () => void; compare?: boolean; chains: Chain[]; cmpOf: (r: string, c: string) => CellCmp | undefined }) {
+function RowCells({ q, row, cols, made, sel, onSel, onRemove, compare, chains, cmpOf, fixCount }: { q: Question; row: MapRow; cols: string[]; made: (r: string, c: string) => Chain[]; sel: { r: string; c: string } | null; onSel: (s: { r: string; c: string } | null) => void; onRemove?: () => void; compare?: boolean; chains: Chain[]; cmpOf: (r: string, c: string) => CellCmp | undefined; fixCount?: (chainId: string) => number }) {
   return (
     <>
       <div style={{ display: 'flex', alignItems: 'flex-start', gap: 4, fontFamily: CL.sans, fontSize: 13, fontWeight: 600, lineHeight: 1.3, color: CL.ink, padding: '8px 6px 0 0' }}>
@@ -186,21 +188,23 @@ function RowCells({ q, row, cols, made, sel, onSel, onRemove, compare, chains, c
       </div>
       {cols.map((c) => compare
         ? <PairCell key={c} q={q} row={row} col={c} chains={chains} cmp={cmpOf(row.key, c)} on={!!sel && sel.r === row.key && sel.c === c} onSel={onSel} />
-        : <Cell key={c} cause={q.shape === 'cause'} row={row} col={c} chain={made(row.key, c)[0]} on={!!sel && sel.r === row.key && sel.c === c} onSel={onSel} />)}
+        : <Cell key={c} cause={q.shape === 'cause'} row={row} col={c} chain={made(row.key, c)[0]} on={!!sel && sel.r === row.key && sel.c === c} onSel={onSel} fixCount={fixCount} />)}
     </>
   );
 }
 
 /** One cell: it only selects. Once a chain is written there it shows the chain's name on mint; cause cells say how deep the chain goes. */
-function Cell({ cause, row, col, chain, on, onSel }: { cause?: boolean; row: MapRow; col: string; chain?: Chain; on: boolean; onSel: (s: { r: string; c: string } | null) => void }) {
+function Cell({ cause, row, col, chain, on, onSel, fixCount }: { cause?: boolean; row: MapRow; col: string; chain?: Chain; on: boolean; onSel: (s: { r: string; c: string } | null) => void; fixCount?: (chainId: string) => number }) {
   const mine = chain ? chain.steps.slice(cause ? upstreamSteps(chain).length : 1).filter((x) => x.trim()) : [];
   const name = chain ? chain.title.trim() || (cause ? mine[0] : chain.steps.filter((x) => x.trim())[1]) || '' : '';
   const lv = cause && chain ? levelOf(chain) : null;
+  const fx = chain && fixCount ? fixCount(chain.id) : 0;
   return (
-    <button type="button" className="cl-btn" onClick={() => onSel({ r: row.key, c: col })} aria-pressed={on} aria-label={row.label + ', ' + col + (chain ? ' (đã có mạch' + (lv ? ', ' + lv : '') + ')' : '')}
-      style={{ position: 'relative', display: 'block', width: '100%', height: '100%', minHeight: 58, boxSizing: 'border-box', textAlign: 'left', borderRadius: 10, border: on ? '1.5px solid ' + CL.ink : '1px solid ' + (chain ? '#BFE6D7' : CL.ink2), background: chain ? CL.mintSoft : '#fff', padding: '8px 22px 8px 10px', fontFamily: CL.sans, fontSize: 12.5, lineHeight: 1.4, color: CL.greenText, fontWeight: 600, transition: 'border-color .15s, background-color .2s' }}>
+    <button type="button" className="cl-btn" onClick={() => onSel({ r: row.key, c: col })} aria-pressed={on} aria-label={row.label + ', ' + col + (chain ? ' (đã có mạch' + (lv ? ', ' + lv : '') + (fixCount ? ', ' + fx + ' giải pháp' : '') + ')' : '')}
+      style={{ position: 'relative', display: 'block', width: '100%', height: '100%', minHeight: 58, boxSizing: 'border-box', textAlign: 'left', borderRadius: 10, border: on ? '1.5px solid ' + CL.ink : '1px solid ' + (chain ? '#BFE6D7' : CL.ink2), background: chain ? CL.mintSoft : '#fff', padding: chain && fixCount ? '8px 22px 24px 10px' : '8px 22px 8px 10px', fontFamily: CL.sans, fontSize: 12.5, lineHeight: 1.4, color: CL.greenText, fontWeight: 600, transition: 'border-color .15s, background-color .2s' }}>
       <span style={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{name}</span>
       {chain && <span style={{ position: 'absolute', top: 7, right: 7, pointerEvents: 'none' }}><ClIcon name="check" size={12} color={CL.green} /></span>}
+      {chain && fixCount && <span title={fx ? fx + ' giải pháp' : 'Chưa có giải pháp'} style={{ position: 'absolute', left: 8, bottom: 5, borderRadius: 5, padding: '2px 5px', background: fx ? CL.ink : '#fff', border: fx ? 'none' : '1px dashed ' + CL.ink3, color: fx ? '#fff' : CL.ink5, fontSize: 9.5, fontWeight: 700, letterSpacing: '0.04em' }}>GP{fx > 1 ? ' ' + fx : ''}</span>}
       {lv && <span style={{ position: 'absolute', right: 5, bottom: 5, borderRadius: 5, padding: '2px 5px', background: lv === 'Hệ thống' ? '#7B4D10' : '#1F6E8C', color: '#fff', fontSize: 9.5, fontWeight: 700, letterSpacing: '0.04em' }}>{lv === 'Hệ thống' ? 'HT' : 'CN'}</span>}
     </button>
   );

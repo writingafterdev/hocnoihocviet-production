@@ -13,6 +13,7 @@ import { ReviewPanel, Rich } from '../chainlab/ui/ReviewPanel';
 import { Rope } from '../chainlab/ui/Rope';
 import { useThreePanels, WorkspaceGrid } from '../chainlab/ui/WorkspaceGrid';
 import type { EssayState } from '../attempts/store';
+import { chainName, type Plan } from '../chainlab/plan';
 import { CRITERIA, CRITERION_STYLE, draftsKey, requestEssayReview, retryEssayCriterion, wordCount, type EssayReview, type EssaySection } from './scoring';
 
 /** A chain in the Desk's plan rail: title + status, expandable to steps, cases and findings. */
@@ -261,7 +262,7 @@ function CriterionCard({ id, review, count, startOpen, onOpen, onRetry, retrying
 }
 
 /** Screen 2 of "Viết tự do": write the essay beside the plan, then submit for TR / CC / LR / GRA feedback. */
-export function ChainDesk({ chains, stance, essay, setEssay, onBack }: { chains: Chain[]; stance: string; essay: EssayState; setEssay: (fn: (e: EssayState) => EssayState) => void; onBack: () => void }) {
+export function ChainDesk({ chains, stance, essay, setEssay, plan, onBack, nav }: { chains: Chain[]; stance: string; essay: EssayState; setEssay: (fn: (e: EssayState) => EssayState) => void; plan?: Plan; onBack: () => void; nav?: React.ReactNode }) {
   const spec = useSpec();
   const verdictQ = spec.questions.find((q) => q.shape === 'verdict'), multiQ = spec.questions.length > 1;
   const [openIds, setOpenIds] = useState<string[]>(chains[0] ? [chains[0].id] : []);
@@ -306,10 +307,12 @@ export function ChainDesk({ chains, stance, essay, setEssay, onBack }: { chains:
     setOpenIds((o) => (o.includes(id) ? o : [...o, id]));
     setTimeout(() => { const el = document.getElementById('desk-chain-' + id); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }, 30);
   };
+  /** The outline from screen ②: each body paragraph's job and chains. */
+  const paraOf = (id: string) => (plan?.paras || []).find((p) => p.id === id) || null;
   const words = Object.values(drafts).reduce((n, t) => n + wordCount(t), 0);
   const sections: EssaySection[] = [
     { id: 'intro', label: 'Mở bài', guide: '40–55 từ', placeholder: verdictQ ? 'Giới thiệu vấn đề và nêu lập trường.' : 'Giới thiệu vấn đề và nói bài sẽ bàn những gì.' },
-    ...bodies.map((id, i) => ({ id, label: 'Thân bài ' + (i + 1), guide: '85–100 từ', placeholder: multiQ ? 'Phát triển các mạch của một câu hỏi' + (spec.questions[i] ? ', vd: câu ' + CL_CIRC[spec.questions[i].n - 1] + ' (' + CL_SHAPE_LABEL[spec.questions[i].shape].toLowerCase() + ').' : '.') : 'Phát triển một hoặc vài mạch theo thứ tự bên trái.' })),
+    ...bodies.map((id, i) => paraOf(id) ? { id, label: 'Thân bài ' + (i + 1) + ' · ' + paraOf(id).job, guide: '85–100 từ', placeholder: paraOf(id).chains.length ? 'Viết theo ' + paraOf(id).chains.filter((x) => chains.some((c) => c.id === x)).map((x) => '«' + chainName(chains.find((c) => c.id === x)) + '»').join(' và ') + '. Mạch nằm ở cột bên trái.' : 'Đoạn này chưa có mạch nào ở bước ②.' } : ({ id, label: 'Thân bài ' + (i + 1), guide: '85–100 từ', placeholder: multiQ ? 'Phát triển các mạch của một câu hỏi' + (spec.questions[i] ? ', vd: câu ' + CL_CIRC[spec.questions[i].n - 1] + ' (' + CL_SHAPE_LABEL[spec.questions[i].shape].toLowerCase() + ').' : '.') : 'Phát triển một hoặc vài mạch theo thứ tự bên trái.' })),
     { id: 'conclusion', label: 'Kết bài', guide: '30–45 từ', placeholder: verdictQ ? 'Quay lại lập trường, không thêm ý mới.' : 'Tóm lại các ý chính, không thêm ý mới.' },
   ];
   const activeLabel = (sections.find((x) => x.id === activeId) || sections[0]).label;
@@ -458,7 +461,8 @@ export function ChainDesk({ chains, stance, essay, setEssay, onBack }: { chains:
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column', maxWidth: 1710, margin: '0 auto', padding: '12px 40px 16px' }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', minHeight: 42, paddingBottom: 12 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 18 }}>
-          <button type="button" className="cl-btn cl-link" onClick={onBack} style={backLinkStyle}><ClIcon name="left" size={14} />Quay lại các mạch</button>
+          <button type="button" className="cl-btn cl-link" onClick={onBack} style={backLinkStyle}><ClIcon name="left" size={14} />Dàn bài</button>
+          {nav}
           <span aria-label="Thời gian" title="Thời gian" style={{ display: 'inline-flex', alignItems: 'baseline', gap: 8, paddingLeft: 18, borderLeft: '1px solid ' + CL.ink2 }}>
             <span style={{ fontFamily: CL.sans, fontSize: 12, color: CL.ink5 }}>Thời gian</span>
             <span style={{ fontFamily: CL.sans, fontSize: 15, fontWeight: 600, color: CL.ink, fontVariantNumeric: 'tabular-nums' }}>{clock}</span>

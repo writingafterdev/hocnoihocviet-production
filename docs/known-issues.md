@@ -76,7 +76,14 @@ two angles? Two-driver prompts (21 Discussion prompts, `driver2`) and best/only 
 No code change is needed.
 
 
-## Final position: no step turns the small comparisons into a decision (2026-10-06) · OPEN, set aside
+## Final position: no step turns the small comparisons into a decision (2026-10-06) · FIXED 2026-10-10
+
+**Fix.** Screen ② "Cân" (`/write/[id]/weigh`, `WeighScreen.tsx`, `plan.ts`): the rope moved there; chains are
+weighed area by area (one-sided areas decide themselves, contested ones are weighed on the same five grounds, A/B
+prompts read the map's cell verdicts); the student keeps or overrides the total; the position is picked from
+suggestions (lean, main reason, concession, Scope from the findings); then an outline puts chains into paragraphs,
+and the paragraphs become the essay's body sections on ③. The app does suggest a side from the weighing (the
+student can override it).
 
 **What happens.** Every prompt, one driver or two, ends with the student deciding a position. Today the pieces
 get a side on the rope (drag), cells get a verdict (two-driver prompts) and a tally counts wins; then the stance
@@ -90,15 +97,6 @@ sentence with slots: side · decisive piece · strongest opposing piece as the c
 flips it as the condition. The app shows the evidence; the student writes the stance. Open choice: should the app
 also suggest the side from the weights? Leaning no.
 
-## Best / only mixed with another question type (2026-10-06) · OPEN
-
-**What happens.** The claim mode (`claim: 'best' | 'only'`) is set on the verdict question only. When the prompt
-has more than one question or a second view, the other part does not know about it:
-- `road-safety-legal-system`: "only" verdict + an effect question about the legal system. The effect map is
-  single-driver and ignores the rival B.
-- `bicycle-investment`: a cause question + a "best" verdict. The cause map does not use the rival.
-- `growth-poverty-environment`: a Discussion prompt with "only" inside the first view; the second view (harm to
-  the environment) is only reachable through the Môi trường row of A's chains.
 
 ## Rope ends vs A / B on best / only prompts (2026-10-06) · OPEN, to check
 

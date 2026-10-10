@@ -6,6 +6,9 @@ import { useEffect, useRef, useState } from 'react';
 import { WorkspaceHeader } from '@/components/shell/BrandHeader';
 import { findPrompt } from '@/content/prompts';
 import { ChainBuilder } from '../chainlab/ChainBuilder';
+import type { OutlinePara } from '../chainlab/plan';
+import { StepNav } from '../chainlab/ui/StepNav';
+import { WeighScreen } from '../chainlab/WeighScreen';
 import { SpecProvider } from '../chainlab/SpecContext';
 import type { Chain } from '../chainlab/types';
 import { ChainDesk } from '../desk/ChainDesk';
@@ -17,14 +20,15 @@ type SaveState = 'saved' | 'saving' | 'failed';
 const SAVE_DELAY = 1500;
 
 /** What counts as an edit worth saving: everything except the running timer and timestamps. */
-const contentKey = (a: Attempt) => JSON.stringify([a.chains, a.mapExtras, a.stance, a.chainReview, a.essay.bodies, a.essay.drafts, a.essay.review]);
+const contentKey = (a: Attempt) => JSON.stringify([a.chains, a.mapExtras, a.stance, a.plan, a.chainReview, a.essay.bodies, a.essay.drafts, a.essay.review]);
 
 const SAVE_LABEL: Record<SaveState, string> = { saved: 'Đã lưu', saving: 'Đang lưu…', failed: 'Chưa lưu được · thử lại' };
 
-/** One "Viết tự do" attempt: ChainLab at /write/[id]/chains, Writing Desk at /write/[id]/essay. Autosaves. */
+/** One "Viết tự do" attempt: ① chains at /write/[id]/chains, ② Cân at /weigh, ③ Writing Desk at /essay. Autosaves. */
 export function AttemptWorkspace({ attemptId }: { attemptId: string }) {
   const router = useRouter();
-  const view = usePathname().endsWith('/essay') ? 'essay' : 'chains';
+  const path = usePathname();
+  const view = path.endsWith('/essay') ? 'essay' : path.endsWith('/weigh') ? 'weigh' : 'chains';
   const [attempt, setAttempt] = useState<Attempt | null>(null);
   const [status, setStatus] = useState<Status>('loading');
   const [save, setSave] = useState<SaveState>('saved');
@@ -101,6 +105,18 @@ export function AttemptWorkspace({ attemptId }: { attemptId: string }) {
     setAttempt((a) => ({ ...a, chains: typeof fn === 'function' ? fn(a.chains) : fn, updatedAt: Date.now() }));
   const setEssay = (fn: (e: EssayState) => EssayState) => setAttempt((a) => ({ ...a, essay: fn(a.essay), updatedAt: Date.now() }));
   const base = '/write/' + attempt.id;
+  const verdict = prompt.questions.some((q) => q.shape === 'verdict');
+  const steps = [{ label: '① Ý', href: base + '/chains' }, { label: verdict ? '② Cân' : '② Dàn bài', href: base + '/weigh' }, { label: '③ Viết', href: base + '/essay' }];
+  const nav = (k: number) => <StepNav steps={steps} current={k} />;
+  /** Leaving ② for ③: the outline becomes the essay's body paragraphs; drafts of other paragraphs are kept. */
+  const toEssay = (paras: OutlinePara[]) => {
+    setAttempt((a) => {
+      const ids = paras.map((p) => p.id);
+      const kept = a.essay.bodies.filter((b) => !ids.includes(b) && (a.essay.drafts[b] || '').trim());
+      return { ...a, plan: { ...(a.plan || {}), paras }, essay: { ...a.essay, bodies: [...ids, ...kept] }, updatedAt: Date.now() };
+    });
+    router.push(base + '/essay');
+  };
 
   return (
     <SpecProvider value={prompt}>
@@ -116,14 +132,27 @@ export function AttemptWorkspace({ attemptId }: { attemptId: string }) {
               extras={attempt.mapExtras}
               setExtras={(mapExtras) => touch({ mapExtras })}
               stance={attempt.stance}
-              setStance={(stance) => touch({ stance })}
               review={attempt.chainReview}
               setReview={(chainReview) => touch({ chainReview })}
               onBack={() => router.push('/writing')}
-              onWrite={() => router.push(base + '/essay')}
+              onNext={() => router.push(base + '/weigh')}
+              nav={nav(0)}
+            />
+          ) : view === 'weigh' ? (
+            <WeighScreen
+              chains={attempt.chains}
+              setChains={setChains}
+              extras={attempt.mapExtras}
+              stance={attempt.stance}
+              setStance={(stance) => touch({ stance })}
+              plan={attempt.plan || {}}
+              setPlan={(plan) => touch({ plan })}
+              onBack={() => router.push(base + '/chains')}
+              onWrite={toEssay}
+              nav={nav(1)}
             />
           ) : (
-            <ChainDesk chains={attempt.chains} stance={attempt.stance} essay={attempt.essay} setEssay={setEssay} onBack={() => router.push(base + '/chains')} />
+            <ChainDesk chains={attempt.chains} stance={attempt.stance} essay={attempt.essay} setEssay={setEssay} plan={attempt.plan} onBack={() => router.push(base + '/weigh')} nav={nav(2)} />
           )}
         </div>
       </div>
