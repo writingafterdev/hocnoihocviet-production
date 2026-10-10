@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { AI_ERROR_TEXT, AiRequestError } from '../ai/request';
 import { Translator } from '../ai/Translator';
 import { CL, CL_CIRC, CL_FIXABLE, CL_SHAPE_LABEL } from './constants';
-import { causeLabel, cellQuestion, claimTally, driverOf, gridFor, isCompare, type CellCmp, type MapExtras, type MapRow } from './ideamap';
+import { causeLabel, cellQuestion, driverOf, gridFor, isCompare, type MapExtras, type MapRow } from './ideamap';
 import { filledSteps, newChain, shapeOf } from './model';
 import { requestChainReview, reviewChains, reviewKey, type ChainReview } from './review';
 import { SpecProvider, useSpec } from './SpecContext';
@@ -126,10 +126,6 @@ export function ChainBuilder({ chains, setChains, extras, setExtras, stance, rev
     if (ch) setActiveId(ch.id);
   };
   /** The comparison of one cell of a two-driver map lives with the map's other extras. */
-  const setCmp = (q: Question, r: string, c: string, v: CellCmp) => {
-    const ex = (extras && extras[q.n]) || { rows: [], cols: [] };
-    setExtras({ ...(extras || {}), [q.n]: { ...ex, cmp: { ...(ex.cmp || {}), [r + '|' + c]: v } } });
-  };
   const cmpQ = cellSel ? spec.questions.find((x) => x.n === cellSel.q) : null;
   const compareCell = cellSel && cmpQ && isCompare(spec, cmpQ) ? { ...cellSel, q: cmpQ } : null;
   /** A selected cell of a cause map whose prompt also asks for solutions: cause on top, its solutions under it. */
@@ -152,7 +148,6 @@ export function ChainBuilder({ chains, setChains, extras, setExtras, stance, rev
     setExtras({ ...(extras || {}), [vq.n]: { ...ex, rival: next || undefined } });
     if (neu !== old) setChains((cs) => cs.map((c) => (c.drv === 'B' && (c.q || 1) === vq.n && c.steps[0] === old ? { ...c, steps: [neu, ...c.steps.slice(1)], cell: c.cell ? { ...c.cell, q: c.cell.q.split(old).join(neu) } : c.cell } : c)));
   };
-  const tallyOf = (q: Question) => { const g = gridFor(spec, q, chains, extras?.[q.n]); return claimTally(g.rows, g.cols, extras?.[q.n]?.cmp); };
   const mapOf = (q: Question) => (
     <IdeaMap bare q={q} chains={chains} extras={extras?.[q.n]} onRival={spec.claim ? onRival : undefined} setExtras={(e) => setExtras({ ...(extras || {}), [q.n]: e })} open={isOpen(q.n)} setOpen={(v) => setMapOpen((m) => ({ ...m, [q.n]: v }))}
       sel={cellSel && cellSel.q === q.n ? { r: cellSel.r, c: cellSel.c } : null} onSel={onCell(q)}
@@ -240,11 +235,10 @@ export function ChainBuilder({ chains, setChains, extras, setExtras, stance, rev
         <button type="button" className="cl-btn cl-link" onClick={() => add(active ? active.q || 1 : spec.questions[0].n)} style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontFamily: CL.sans, fontSize: 12, fontWeight: 600, color: CL.ink5, padding: '5px 6px' }}><ClIcon name="plus" size={12} />Mạch trống</button>
       </div>
       {compareCell ? (
-        <CellCompare key={compareCell.r + '|' + compareCell.c} q={compareCell.q} row={compareCell.r} col={compareCell.c} chains={chains} cmp={((extras && extras[compareCell.q.n]) || { cmp: {} }).cmp?.[compareCell.r + '|' + compareCell.c]}
-          onCmp={(v) => setCmp(compareCell.q, compareCell.r, compareCell.c, v)}
+        <CellCompare key={compareCell.r + '|' + compareCell.c} q={compareCell.q} row={compareCell.r} col={compareCell.c} chains={chains}
           onCreate={(drv) => fromCell(compareCell.q, { key: compareCell.r, label: compareCell.r }, compareCell.c, cellQuestion(compareCell.q, { key: compareCell.r, label: compareCell.r }, compareCell.c, driverOf(spec, drv)), drv)}
           onChange={update} onDelete={(c) => { setChains(chains.filter((x) => x.id !== c.id)); setActiveId(null); }}
-          bind={bind} numOf={(c) => chains.indexOf(c) + 1} targets={fixTargets} tally={tallyOf(compareCell.q)} />
+          bind={bind} numOf={(c) => chains.indexOf(c) + 1} targets={fixTargets} onNext={onNext} />
       ) : pairCell ? (
         <CausePair key={pairCell.row.key + '|' + pairCell.col} causeQ={causeQ} solQ={solQ} row={pairCell.row} col={pairCell.col} hint={gridFor(spec, causeQ, chains, extras?.[causeQ.n]).hint(pairCell.col)} cause={pairCell.cause} chains={chains} actors={actors} driver={spec.driver}
           onCreateCause={() => fromCell(causeQ, pairCell.row, pairCell.col, cellQuestion(causeQ, pairCell.row, pairCell.col, spec.driver))}

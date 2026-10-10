@@ -143,6 +143,7 @@ export function AttemptWorkspace({ attemptId }: { attemptId: string }) {
               chains={attempt.chains}
               setChains={setChains}
               extras={attempt.mapExtras}
+              setExtras={(mapExtras) => touch({ mapExtras })}
               stance={attempt.stance}
               setStance={(stance) => touch({ stance })}
               plan={attempt.plan || {}}

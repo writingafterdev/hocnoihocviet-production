@@ -46,7 +46,7 @@ export function IdeaMap({ q, chains, extras, setExtras, onRival, open, setOpen, 
   const made = (r: string, c: string) => cellChains(chains, q.n, r, c);
   const filled = g.rows.reduce((n, r) => n + g.cols.filter((c) => made(r.key, c).length).length, 0);
   const cmpOf = (r: string, c: string) => (ex.cmp || {})[cmpKey(r, c)];
-  const compared = cmpMode ? g.rows.reduce((n, r) => n + g.cols.filter((c) => { const v = cmpOf(r.key, c); return !!v && !!v.win; }).length, 0) : 0;
+  const compared = cmpMode ? g.rows.reduce((n, r) => n + g.cols.filter((c) => { const p = cellPair(chains, q.n, r.key, c); return isWritten(p.A) && isWritten(p.B); }).length, 0) : 0;
   const untouched = g.cols.filter((c) => !g.rows.some((r) => made(r.key, c).length));
 
   const addExtra = () => {
@@ -79,9 +79,9 @@ export function IdeaMap({ q, chains, extras, setExtras, onRival, open, setOpen, 
     <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap', marginBottom: open ? 14 : 0, transition: 'margin ' + MS + ' ease' }}>
       <ClLabel color={CL.ink}>Bản đồ ý</ClLabel>
       <span style={{ fontFamily: CL.sans, fontSize: 12, color: CL.ink4 }}>
-        {open ? (cmpMode ? 'Mỗi ô có mạch A và mạch B, rồi so sánh ngay trong ô' : 'Chọn một ô, rồi viết mạch cho ô đó') : filled + ' / ' + total + ' ô' + (cmpMode ? ' · ' + compared + ' đã so sánh' : '') + (untouched.length && untouched.length < g.cols.length ? ' · chưa chạm: ' + untouched.join(', ') : '')}
+        {open ? (cmpMode ? 'Viết mạch A, mạch B vào ô. So sánh làm hết ở ② Cân' : 'Chọn một ô, rồi viết mạch cho ô đó') : filled + ' / ' + total + ' ô' + (cmpMode ? ' · ' + compared + ' ô cân ở ②' : '') + (untouched.length && untouched.length < g.cols.length ? ' · chưa chạm: ' + untouched.join(', ') : '')}
       </span>
-      {open && <span style={{ marginLeft: 'auto', fontFamily: CL.sans, fontSize: 12, color: CL.ink6 }}><b style={{ fontWeight: 700, color: CL.ink }}>{filled}</b> / {total} ô{cmpMode && <> · <b style={{ fontWeight: 700, color: CL.ink }}>{compared}</b> đã so sánh</>}</span>}
+      {open && <span style={{ marginLeft: 'auto', fontFamily: CL.sans, fontSize: 12, color: CL.ink6 }}><b style={{ fontWeight: 700, color: CL.ink }}>{filled}</b> / {total} ô{cmpMode && <> · <b style={{ fontWeight: 700, color: CL.ink }}>{compared}</b> ô có cả A và B</>}</span>}
       <button type="button" className="cl-btn cl-link" onClick={() => setOpen(!open)} aria-expanded={open} style={{ ...link, marginLeft: open ? 0 : 'auto' }}>{open ? 'Thu gọn' : 'Mở bản đồ'}</button>
     </div>
   );
@@ -132,26 +132,6 @@ export function IdeaMap({ q, chains, extras, setExtras, onRival, open, setOpen, 
               {g.rows.map((r) => (
                 <RowCells key={r.key} q={q} row={r} cols={g.cols} made={made} sel={sel} onSel={setSel} onRemove={g.rowsAddable ? () => removeRow(r) : undefined} compare={cmpMode} chains={chains} cmpOf={cmpOf} fixCount={fixCount} />
               ))}
-              {cmpMode && (
-                <>
-                  <div style={{ paddingTop: 8, fontFamily: CL.sans, fontSize: 10.5, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: CL.ink4 }}>Tổng</div>
-                  {g.cols.map((c) => {
-                    const w = { A: 0, B: 0, '=': 0 };
-                    g.rows.forEach((r) => { const v = cmpOf(r.key, c); if (v && v.win) w[v.win] += 1; });
-                    const n = w.A + w.B + w['='];
-                    return (
-                      <div key={c} style={{ paddingTop: 8 }}>
-                        <div aria-hidden="true" style={{ display: 'flex', height: 8, borderRadius: 4, overflow: 'hidden', background: '#F1F1EE', gap: 1 }}>
-                          {w.A > 0 && <span style={{ flex: w.A, background: DRV.A.solid }} />}
-                          {w['='] > 0 && <span style={{ flex: w['='], background: CL.ink4 }} />}
-                          {w.B > 0 && <span style={{ flex: w.B, background: DRV.B.solid }} />}
-                        </div>
-                        <div style={{ marginTop: 4, textAlign: 'center', fontFamily: CL.sans, fontSize: 10.5, color: n ? CL.ink6 : CL.ink4 }}>{n ? (verdictKind(spec) === 'only' ? [w.A && 'chỉ A ' + w.A, w['='] && 'một phần ' + w['='], w.B && 'B ' + w.B] : [w.A && 'A ' + w.A, w['='] && 'ngang ' + w['='], w.B && 'B ' + w.B]).filter(Boolean).join(' · ') : 'chưa có'}</div>
-                      </div>
-                    );
-                  })}
-                </>
-              )}
             </div>
           </div>
 
@@ -217,8 +197,10 @@ function PairCell({ q, row, col, chains, cmp, on, onSel }: { q: Question; row: M
   const both = isWritten(pair.A) && isWritten(pair.B);
   const win = cmp && cmp.win;
   const only = verdictKind(spec) === 'only';
-  const word = win ? VERDICT_WORDS[only ? 'only' : 'cmp'][win] : both ? 'Chưa so sánh' : '';
-  const color = only ? (win === 'B' ? CL.greenText : win === '=' ? CL.yellowText : win ? CL.ink6 : '#B4483D') : (win === 'A' ? DRV.A.text : win === 'B' ? DRV.B.text : win ? CL.ink6 : '#B4483D');
+  // The comparison happens on screen ②: the map only says where it will, and shows its result once made there.
+  const one = isWritten(pair.A) ? 'A' : isWritten(pair.B) ? 'B' : null;
+  const word = both && win ? VERDICT_WORDS[only ? 'only' : 'cmp'][win] : both ? 'cân ở ②' : one ? 'chỉ ' + one : '';
+  const color = !both || !win ? CL.ink6 : only ? (win === 'B' ? CL.greenText : win === '=' ? CL.yellowText : CL.ink6) : (win === 'A' ? DRV.A.text : win === 'B' ? DRV.B.text : CL.ink6);
   const sq = (k: 'A' | 'B') => {
     const c = pair[k];
     return <span style={{ width: 22, height: 22, boxSizing: 'border-box', borderRadius: 7, display: 'grid', placeItems: 'center', fontFamily: CL.sans, fontSize: 10.5, fontWeight: 700, background: c ? DRV[k].solid : '#fff', color: c ? '#fff' : CL.ink4, border: c ? 'none' : '1.5px dashed ' + CL.ink2, opacity: c && !isWritten(c) ? 0.55 : 1 }}>{k}</span>;
