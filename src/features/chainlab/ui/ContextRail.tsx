@@ -6,11 +6,12 @@ import { useSpec } from '../SpecContext';
 import { ClLabel } from './primitives';
 
 /** The prompt text with its numbered questions (① ②) and their types. */
-export function PromptBlock() {
+/** The prompt and its questions. `bare` drops the frame, for use inside another box. */
+export function PromptBlock({ bare = false }: { bare?: boolean }) {
   const spec = useSpec();
   const qs = spec.questions.filter((q) => q.q);
   return (
-    <div style={{ border: '1px solid ' + CL.ink3, background: '#fff', padding: '14px 16px' }}>
+    <div style={bare ? undefined : { border: '1px solid ' + CL.ink3, background: '#fff', padding: '14px 16px' }}>
       <p style={{ margin: 0, fontFamily: CL.sans, fontSize: 13, fontWeight: 600, fontStyle: 'italic', lineHeight: 1.55, color: '#20252D', textWrap: 'pretty' }}>{spec.text}</p>
       {qs.length > 0 && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 12, paddingTop: 10, borderTop: '1px solid ' + CL.ink1 }}>

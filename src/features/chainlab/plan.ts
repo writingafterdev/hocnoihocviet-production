@@ -1,27 +1,26 @@
 /**
- * Screen ② "Cân": weigh the chains area by area, decide the position, then lay the chains out as paragraphs.
- * Pure helpers; the screen keeps the student's choices in `Plan` on the attempt.
+ * Screen ② "Cân": compare the two sides criterion by criterion, decide the position, then lay the chains out as
+ * paragraphs. Pure helpers; the screen keeps the student's choices in `Plan` on the attempt.
  */
-import { CL_IMPACT_AREAS, CL_SHAPE_LABEL } from './constants';
-import { causeLabel, gridFor, isCompare, isWritten, type MapExtras } from './ideamap';
+import { CL_SHAPE_LABEL } from './constants';
+import { causeLabel, CMP_CRITERIA, gridFor, isCompare, isWritten, claimTally, type ClaimTally, type MapExtras } from './ideamap';
 import { filledSteps, shapeOf, sidesOf, verdictStatus } from './model';
 import type { Chain, PromptSpec, Side } from './types';
 
-/** Which side is heavier in one area. */
+/** Which side is stronger on one criterion. */
 export type Win = 'left' | 'right' | '=';
-export interface AreaWeigh { win: Win | null; crit: string[]; why: string }
+/** One row of the criterion table: who is stronger, and the chain that makes them so. */
+export interface CritWeigh { win: Win | null; chain?: string | null }
 /** How far the position leans: fully / mostly to one side, or balanced. */
 export type Lean = 'L2' | 'L1' | '0' | 'R1' | 'R2';
 export type Layout = 'concede' | 'reasons' | 'views' | 'questions';
 export interface OutlinePara { id: string; job: string; chains: string[] }
 
 export interface Plan {
-  /** Contested areas: the student's weighing, by area name. */
-  areas?: Record<string, AreaWeigh>;
-  /** Areas the student left out of the weighing (and the essay). */
-  dropped?: string[];
-  /** "Không, một vùng nặng hơn cả": the area that decides, and why. */
-  override?: { area: string; why: string } | null;
+  /** The criterion table, by criterion name. */
+  crit?: Record<string, CritWeigh>;
+  /** "Không, một tiêu chí nặng hơn cả": the criterion that decides, and why. */
+  override?: { crit: string; why: string } | null;
   lean?: Lean | null;
   main?: string[];
   concession?: string | null;
@@ -30,107 +29,77 @@ export interface Plan {
   paras?: OutlinePara[];
 }
 
-export interface AreaGroup {
-  area: string;
-  left: Chain[];
-  right: Chain[];
-  /** Chains whose Scope cases fall on both sides: they hold only under a condition. */
-  mixed: Chain[];
-  /** Chains not placed on the rope yet. */
-  loose: Chain[];
-  /** Comparison prompts: the area's result comes from the map's cell verdicts. */
-  fromMap?: { right: number; left: number; eq: number };
-}
-
 /** Comparison prompts: driver A is the first view (right end), B the second (left end). */
 export const drvSide = (c: Chain): Side => (c.drv === 'B' ? 'left' : 'right');
 
+const verdictQ = (spec: PromptSpec) => spec.questions.find((q) => q.shape === 'verdict');
+export const areaOf = (c: Chain) => c.area || (c.cell && c.cell.c) || '';
+
 /** Where a verdict chain sits on the rope; a chain whose cases fall on both sides is 'mixed'. */
-export function chainSide(spec: PromptSpec, c: Chain): Side | 'mixed' {
+export function chainSide(c: Chain): Side | 'mixed' {
   if (c.split) {
     const s = new Set(c.split.branches.map((b) => b.side || null));
     if (s.size === 1) return [...s][0];
     return s.has(null) ? null : 'mixed';
   }
-  if (c.side) return c.side;
-  return isCompareSpec(spec) ? drvSide(c) : null;
+  return c.side || null;
 }
-
-const verdictQ = (spec: PromptSpec) => spec.questions.find((q) => q.shape === 'verdict');
-const isCompareSpec = (spec: PromptSpec) => { const v = verdictQ(spec); return !!v && isCompare(spec, v); };
-export const areaOf = (c: Chain) => c.area || (c.cell && c.cell.c) || 'Khác';
-const ORDER = CL_IMPACT_AREAS.map(([a]) => a);
 
 /** Written verdict chains. */
 export const verdictChains = (spec: PromptSpec, chains: Chain[]) => chains.filter((c) => shapeOf(spec, c) === 'verdict' && isWritten(c));
 
-/** The verdict chains grouped by area, in the map's column order. */
-export function areaGroups(spec: PromptSpec, chains: Chain[], extras?: MapExtras): AreaGroup[] {
-  const m = new Map<string, AreaGroup>();
-  verdictChains(spec, chains).forEach((c) => {
-    const a = areaOf(c);
-    if (!m.has(a)) m.set(a, { area: a, left: [], right: [], mixed: [], loose: [] });
-    const g = m.get(a), s = chainSide(spec, c);
-    (s === 'left' ? g.left : s === 'right' ? g.right : s === 'mixed' ? g.mixed : g.loose).push(c);
-  });
-  const vq = verdictQ(spec);
-  if (vq && isCompare(spec, vq)) {
-    const grid = gridFor(spec, vq, chains, extras);
-    m.forEach((g) => {
-      const t = { right: 0, left: 0, eq: 0 };
-      grid.rows.forEach((r) => { const v = (extras?.cmp || {})[r.key + '|' + g.area]; if (v && v.win) { if (v.win === 'A') t.right += 1; else if (v.win === 'B') t.left += 1; else t.eq += 1; } });
-      g.fromMap = t;
-    });
-  }
-  return [...m.values()].sort((a, b) => (ORDER.indexOf(a.area) + 1 || 99) - (ORDER.indexOf(b.area) + 1 || 99));
+/** A chain's name: its title, else its first own step (a verdict chain's first step is the prompt's driver). */
+export function chainName(spec: PromptSpec, c: Chain): string {
+  if (!c) return '';
+  const drivers = [spec.driver, spec.driver2].filter(Boolean).map((d) => d.trim().toLowerCase());
+  const steps = c.steps.filter((s) => s.trim() && !drivers.includes(s.trim().toLowerCase()));
+  const base = c.title.trim() ? causeLabel(c) : causeLabel({ ...c, steps: steps.length ? steps : c.steps });
+  return (c.drv ? c.drv + ' · ' : '') + base;
 }
 
-export const contested = (g: AreaGroup) => !g.fromMap && g.left.length > 0 && g.right.length > 0;
+// ---- The criterion table -----------------------------------------------------------------------------------
 
-/** An area's result: one-sided areas decide themselves, contested ones need the student, comparison prompts read the map. */
-export function areaWin(g: AreaGroup, plan: Plan): Win | null {
-  if (g.fromMap) { const t = g.fromMap; return t.right + t.left + t.eq === 0 ? null : t.right > t.left ? 'right' : t.left > t.right ? 'left' : '='; }
-  if (g.left.length && !g.right.length) return 'left';
-  if (g.right.length && !g.left.length) return 'right';
-  if (!g.left.length && !g.right.length) return null;
-  return plan.areas?.[g.area]?.win || null;
-}
+/** The criterion table's rows: the comparison grounds, each with the question it asks. */
+export const CRIT_Q: Record<string, string> = {
+  'Độ lớn': 'Thay đổi nhiều hay ít trong đời họ?',
+  'Số người': 'Chạm tới bao nhiêu người?',
+  'Độ dài': 'Vài tuần hay nhiều năm?',
+  'Không thay thế được': 'Nếu bỏ đi, có cách khác bù vào không?',
+  'Độ vững': 'Đổi điều kiện, có còn đúng không?',
+};
+export const CRITERIA = CMP_CRITERIA;
 
 export interface Tally { right: number; left: number; eq: number; open: string[]; done: string[] }
-export function tally(groups: AreaGroup[], plan: Plan): Tally {
+export function tally(plan: Plan): Tally {
   const t: Tally = { right: 0, left: 0, eq: 0, open: [], done: [] };
-  groups.forEach((g) => {
-    if ((plan.dropped || []).includes(g.area)) return;
-    const w = areaWin(g, plan);
-    if (w === null) { if (g.left.length || g.right.length) t.open.push(g.area); return; }
-    t.done.push(g.area);
+  CRITERIA.forEach((k) => {
+    const w = plan.crit?.[k]?.win;
+    if (!w) { t.open.push(k); return; }
+    t.done.push(k);
     if (w === 'right') t.right += 1; else if (w === 'left') t.left += 1; else t.eq += 1;
   });
   return t;
 }
 
-/** The side the weighing points to, before or after the student's override. */
+/** The side the table points to. */
 export function suggestedSide(t: Tally): Win | null {
   if (!t.done.length) return null;
   return t.right > t.left ? 'right' : t.left > t.right ? 'left' : '=';
 }
-export function finalSide(groups: AreaGroup[], plan: Plan): Win | null {
-  if (plan.override && plan.override.area) {
-    const g = groups.find((x) => x.area === plan.override.area);
-    const w = g ? areaWin(g, plan) : null;
-    if (w) return w;
-  }
-  return suggestedSide(tally(groups, plan));
+/** The side after the student's override ("one criterion outweighs the rest"). */
+export function finalSide(plan: Plan): Win | null {
+  const o = plan.override && plan.override.crit && plan.crit?.[plan.override.crit]?.win;
+  return o || suggestedSide(tally(plan));
 }
 
-export function suggestedLean(groups: AreaGroup[], plan: Plan): Lean | null {
-  const side = finalSide(groups, plan), t = tally(groups, plan);
+export function suggestedLean(plan: Plan): Lean | null {
+  const side = finalSide(plan), t = tally(plan);
   if (!side) return null;
   if (side === '=') return '0';
-  const mine = side === 'right' ? t.right : t.left, theirs = side === 'right' ? t.left : t.right;
+  const theirs = side === 'right' ? t.left : t.right;
   const k = side === 'right' ? 'R' : 'L';
-  // "Fully" only once every area is weighed and none went the other way or tied.
-  return (theirs === 0 && t.eq === 0 && !t.open.length && mine > 1 ? k + '2' : k + '1') as Lean;
+  // "Fully" only once every row is filled and none went the other way or tied.
+  return (theirs === 0 && t.eq === 0 && !t.open.length ? k + '2' : k + '1') as Lean;
 }
 
 export const leanSide = (l: Lean | null | undefined): 'left' | 'right' | null => (!l || l === '0' ? null : l[0] === 'R' ? 'right' : 'left');
@@ -140,12 +109,20 @@ export function leanLabel(spec: PromptSpec, l: Lean): string {
   return l === '0' ? 'Cân bằng' : (l[1] === '2' ? 'Hoàn toàn ' : 'Phần lớn ') + (l[0] === 'R' ? R : L).toLowerCase();
 }
 
-/** Chains on one side, strongest-looking first: holds its side, then depends on "if", then untested. */
-export function sideChains(spec: PromptSpec, chains: Chain[], side: 'left' | 'right', groups: AreaGroup[], plan: Plan): Chain[] {
+/** Comparison prompts: the map's cell verdicts, shown above the table as evidence. */
+export function mapTally(spec: PromptSpec, chains: Chain[], extras?: MapExtras): ClaimTally | null {
+  const vq = verdictQ(spec);
+  if (!vq || !isCompare(spec, vq)) return null;
+  const g = gridFor(spec, vq, chains, extras);
+  return claimTally(g.rows, g.cols, extras?.cmp);
+}
+
+/** Chains on one side: those the table cites for that side first, then the ones that hold, then the rest. */
+export function sideChains(spec: PromptSpec, chains: Chain[], side: 'left' | 'right', plan: Plan): Chain[] {
+  const cited = new Set(CRITERIA.filter((k) => plan.crit?.[k]?.win === side).map((k) => plan.crit[k].chain).filter(Boolean));
   const rank = (c: Chain) => { const l = verdictStatus(c).label; return l === 'Giữ hướng' ? 0 : l === 'Chưa thử' ? 2 : 1; };
-  const wonArea = (c: Chain) => { const g = groups.find((x) => x.area === areaOf(c)); return g && areaWin(g, plan) === side ? 0 : 1; };
-  return verdictChains(spec, chains).filter((c) => chainSide(spec, c) === side && !(plan.dropped || []).includes(areaOf(c)))
-    .sort((a, b) => wonArea(a) - wonArea(b) || rank(a) - rank(b));
+  return verdictChains(spec, chains).filter((c) => chainSide(c) === side)
+    .sort((a, b) => (cited.has(a.id) ? 0 : 1) - (cited.has(b.id) ? 0 : 1) || rank(a) - rank(b));
 }
 
 export interface ScopeHint { text: string; from: string }
@@ -153,15 +130,13 @@ export interface ScopeHint { text: string; from: string }
 export function scopeHints(spec: PromptSpec, chains: Chain[]): ScopeHint[] {
   const out: ScopeHint[] = [];
   verdictChains(spec, chains).forEach((c) => {
-    const name = chainName(c);
+    const name = chainName(spec, c);
     c.findings.forEach((f) => { if (!f.empty && f.text.trim() && (f.kind === 'Scope' || (f.side && c.side && f.side !== c.side))) out.push({ text: f.text.trim(), from: name + ' · ' + f.kind }); });
     if (c.split) c.split.branches.forEach((b) => { if (b.label.trim()) out.push({ text: (c.split.noun ? c.split.noun + ': ' : '') + b.label.trim(), from: name + ' · Scope' }); });
   });
   const seen = new Set<string>();
   return out.filter((h) => (seen.has(h.text) ? false : (seen.add(h.text), true))).slice(0, 6);
 }
-
-export const chainName = (c: Chain) => (c.drv ? c.drv + ' · ' : '') + causeLabel(c);
 
 // ---- Outline ------------------------------------------------------------------
 
@@ -187,14 +162,14 @@ export function defaultLayout(spec: PromptSpec, lean: Lean | null | undefined): 
 /** Written chains of any question, in the order of the questions. */
 export const usableChains = (spec: PromptSpec, chains: Chain[]) => chains.filter((c) => (shapeOf(spec, c) === 'verdict' ? isWritten(c) : filledSteps(c) > 0));
 
-/** The paragraphs a layout suggests, filled from the weighing and the position. */
-export function buildOutline(spec: PromptSpec, chains: Chain[], groups: AreaGroup[], plan: Plan, layout: Layout): OutlinePara[] {
+/** The paragraphs a layout suggests, filled from the table and the position. */
+export function buildOutline(spec: PromptSpec, chains: Chain[], plan: Plan, layout: Layout): OutlinePara[] {
   const [L, R] = sidesOf(spec);
-  const my: 'left' | 'right' = leanSide(plan.lean) || (finalSide(groups, plan) === 'left' ? 'left' : 'right');
+  const my: 'left' | 'right' = leanSide(plan.lean) || (finalSide(plan) === 'left' ? 'left' : 'right');
   const other = my === 'right' ? 'left' : 'right';
   const ok = (id: string | null | undefined) => !!id && chains.some((c) => c.id === id);
-  const mine = sideChains(spec, chains, my, groups, plan).map((c) => c.id);
-  const theirs = sideChains(spec, chains, other, groups, plan).map((c) => c.id);
+  const mine = sideChains(spec, chains, my, plan).map((c) => c.id);
+  const theirs = sideChains(spec, chains, other, plan).map((c) => c.id);
   const main = [...(plan.main || []).filter(ok), ...mine].filter((x, i, a) => a.indexOf(x) === i);
   const conc = ok(plan.concession) ? plan.concession : theirs[0] || null;
   const para = (i: number, job: string, ids: (string | null)[]): OutlinePara => ({ id: 'body' + (i + 1), job, chains: ids.filter(Boolean).filter((x, k, a) => a.indexOf(x) === k) });
@@ -226,4 +201,3 @@ export const leftOut = (spec: PromptSpec, chains: Chain[], paras: OutlinePara[])
 
 /** Paragraph ids that still point at chains that exist. */
 export const cleanParas = (paras: OutlinePara[], chains: Chain[]) => paras.map((p) => ({ ...p, chains: p.chains.filter((id) => chains.some((c) => c.id === id)) }));
-

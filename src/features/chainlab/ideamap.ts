@@ -17,11 +17,15 @@ export interface MapExtras {
   rival?: string;
 }
 
-/** What a student can say makes one side stronger in a cell. */
-export const CMP_CRITERIA = ['Mức độ', 'Số người', 'Kéo dài bao lâu', 'Qua được Scope', 'Khó đảo ngược'];
+/** What makes one side stronger: the same grounds in a map cell and in screen ②'s table. Neutral, so they fit a benefit and a harm alike. */
+export const CMP_CRITERIA = ['Độ lớn', 'Số người', 'Độ dài', 'Không thay thế được', 'Độ vững'];
 
 /** For "the only" prompts the grounds are about whether B stands without A. */
-export const CMP_CRITERIA_ONLY = ['Không cần A đi kèm', 'Chạm tới người A không chạm', 'Qua được Scope'];
+export const CMP_CRITERIA_ONLY = ['Không cần A đi kèm', 'Chạm tới người A không chạm', 'Độ vững'];
+
+/** Older saved comparisons used these names. */
+const CRIT_RENAMED: Record<string, string> = { 'Mức độ': 'Độ lớn', 'Kéo dài bao lâu': 'Độ dài', 'Khó đảo ngược': 'Không thay thế được', 'Qua được Scope': 'Độ vững' };
+export const normCrit = (list: string[]) => list.map((c) => CRIT_RENAMED[c] || c);
 
 /** What each verdict is called: two options compared, or a "best" / "only" claim (where `win` B = B stands alone, = partly, A = only A works). */
 export const VERDICT_WORDS = {

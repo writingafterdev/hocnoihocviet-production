@@ -1,18 +1,18 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { CL, CL_CIRC, CL_KIND_STYLE, CL_SHAPE_LABEL } from './constants';
-import { CMP_CRITERIA, DRV, isCompare, type MapExtras } from './ideamap';
+import { CL, CL_CIRC, CL_SHAPE_LABEL } from './constants';
+import { DRV, isCompare, type MapExtras } from './ideamap';
 import { chainStatus, ropeUnits, shapeOf, sidesOf, verdictStatus } from './model';
 import {
-  areaGroups, areaOf, areaWin, buildOutline, chainName, cleanParas, contested, defaultLayout, finalSide, LAYOUT_LABEL, layoutsFor, leanLabel, leanSide, leftOut,
-  sideChains, scopeHints, suggestedLean, suggestedSide, tally, type AreaGroup, type AreaWeigh, type Layout, type Lean, type OutlinePara, type Plan, type Win,
+  areaOf, buildOutline, chainName, chainSide, cleanParas, CRIT_Q, CRITERIA, defaultLayout, finalSide, LAYOUT_LABEL, layoutsFor, leanLabel, leanSide, leftOut,
+  mapTally, sideChains, scopeHints, suggestedLean, suggestedSide, tally, type CritWeigh, type Layout, type Lean, type OutlinePara, type Plan, type Win,
 } from './plan';
 import { SpecProvider, useSpec } from './SpecContext';
 import type { Chain, RopeUnit, Side } from './types';
+import { CardRope } from './ui/CardRope';
 import { PromptBlock } from './ui/ContextRail';
 import { backLinkStyle, ClIcon, ClLabel } from './ui/primitives';
-import { Rope } from './ui/Rope';
 
 export interface WeighScreenProps {
   chains: Chain[];
@@ -34,8 +34,9 @@ const muted: React.CSSProperties = { fontFamily: CL.sans, fontSize: 12, color: C
 const pillBtn = (on: boolean, extra?: React.CSSProperties): React.CSSProperties => ({ minHeight: 34, borderRadius: 999, border: '1px solid ' + (on ? CL.ink : CL.ink2), background: on ? CL.ink : '#fff', color: on ? '#fff' : CL.ink7, padding: '5px 13px', fontFamily: CL.sans, fontSize: 12.5, fontWeight: 600, ...extra });
 
 /**
- * Screen ② "Cân" of "Viết tự do": the rope; the weighing area by area (contested areas only, the rest decide
- * themselves); the position, picked from what was weighed; and the outline, one box per paragraph.
+ * Screen ② "Cân" of "Viết tự do": the prompt and the rope in one box; a table that compares the two sides criterion
+ * by criterion (any area against any area); the position, picked from what the table shows; and the outline, one
+ * box per paragraph.
  */
 export function WeighScreen(props: WeighScreenProps) {
   const base = useSpec();
@@ -51,151 +52,156 @@ function Weigh({ chains, setChains, extras, stance, setStance, plan, setPlan, on
   const compare = !!vq && isCompare(spec, vq);
   const [L, R] = sidesOf(spec);
   const sideName = (s: Side | Win) => (s === 'right' ? R : s === 'left' ? L : 'Ngang nhau');
-  const [sel, setSel] = useState<string | null>(null);
   const set = (p: Partial<Plan>) => setPlan({ ...plan, ...p });
+  const byId = (id: string) => chains.find((c) => c.id === id);
+  const name = (c: Chain) => chainName(spec, c);
 
-  const groups = vq ? areaGroups(spec, chains, vq ? extras?.[vq.n] : undefined) : [];
-  const t = tally(groups, plan);
+  const t = tally(plan);
   const sugg = suggestedSide(t);
-  const side = finalSide(groups, plan);
-  const lean = plan.lean ?? suggestedLean(groups, plan);
+  const side = finalSide(plan);
+  const lean = plan.lean ?? suggestedLean(plan);
   const my: 'left' | 'right' = leanSide(lean) || (side === 'left' ? 'left' : 'right');
   const other = my === 'right' ? 'left' : 'right';
-  const mine = vq ? sideChains(spec, chains, my, groups, plan) : [];
-  const theirs = vq ? sideChains(spec, chains, other, groups, plan) : [];
+  const mine = vq ? sideChains(spec, chains, my, plan) : [];
+  const theirs = vq ? sideChains(spec, chains, other, plan) : [];
   const main = (plan.main || []).filter((id) => mine.some((c) => c.id === id));
   const effMain = main.length ? main : mine.slice(0, 1).map((c) => c.id);
   const conc = plan.concession && theirs.some((c) => c.id === plan.concession) ? plan.concession : theirs[0]?.id || null;
   const eff: Plan = { ...plan, lean, main: effMain, concession: conc };
   const layout: Layout = plan.layout && layoutsFor(spec).includes(plan.layout) ? plan.layout : defaultLayout(spec, lean);
-  const paras = plan.paras ? cleanParas(plan.paras, chains) : buildOutline(spec, chains, groups, eff, layout);
+  const paras = plan.paras ? cleanParas(plan.paras, chains) : buildOutline(spec, chains, eff, layout);
   const out = leftOut(spec, chains, paras);
-  const byId = (id: string) => chains.find((c) => c.id === id);
-
-  // ---- the rope (moved here from screen ①) --------------------------------------------------------------
+  const tone = (s: Win | null) => (s === 'right' ? (compare ? DRV.A : { soft: CL.mintSoft, text: CL.greenText, solid: CL.green }) : s === 'left' ? (compare ? DRV.B : { soft: '#F1F1EE', text: '#3D3D3A', solid: CL.ink5 }) : { soft: '#F7F7F4', text: CL.ink6, solid: CL.ink4 });
+  // ---- the prompt and the rope, in one box ----------------------------------------------------------------
   const units = ropeUnits(spec, chains);
   const moveUnit = (u: RopeUnit, s: Side) => setChains((cs) => cs.map((c) => {
     if (c.id !== u.chainId) return c;
     const r = u.ref;
-    if (r.type === 'finding') return { ...c, findings: c.findings.map((f) => (f.id === r.id ? { ...f, side: s } : f)) };
     if (r.type === 'branch') return { ...c, split: { ...c.split, branches: c.split.branches.map((b, j) => (j === r.k ? { ...b, side: s } : b)) } };
     return { ...c, side: s };
   }));
-  const selChain = sel ? byId(units.find((u) => u.key === sel)?.chainId || sel) : null;
+  const moveFinding = (chainId: string, fid: string, s: Side) => setChains((cs) => cs.map((c) => (c.id === chainId ? { ...c, findings: c.findings.map((f) => (f.id === fid ? { ...f, side: s } : f)) } : c)));
+  const placed = vq ? chains.filter((c) => shapeOf(spec, c) === 'verdict' && chainSide(c)) : [];
+  const areas = new Set(placed.map(areaOf).filter(Boolean));
 
   const left = (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-      <PromptBlock />
+    <section style={{ ...card, padding: '18px 20px 20px', display: 'flex', flexDirection: 'column', gap: 16 }} aria-label="Đề bài và dây kéo">
+      <PromptBlock bare />
+      <div style={{ height: 1, background: CL.ink1 }} />
       {vq ? (
-        <section style={card} aria-label="Dây kéo">
-          <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, marginBottom: 6, flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, flexWrap: 'wrap' }}>
             <ClLabel color={CL.ink}>Dây kéo</ClLabel>
-            <span style={muted}>Kéo mạch và phát hiện về phía chúng ủng hộ</span>
+            <span style={muted}>{placed.length} mạch{areas.size ? ', ' + areas.size + ' vùng' : ''}</span>
           </div>
-          <p style={{ margin: '0 0 14px', fontFamily: CL.sans, fontSize: 12, lineHeight: 1.5, color: CL.ink5 }}>
-            Mỗi mạch tự có nhãn từ các phát hiện của nó: <Status label="Giữ hướng" /> <Status label={'Phụ thuộc "nếu"'} /> <Status label="Chưa thử" />. Phát hiện không bị cân riêng.
-          </p>
-          <Rope units={units} onSide={moveUnit} selected={sel} onSelect={(u) => setSel(sel === u.key ? null : u.key)} />
-          {selChain && <ChainPeek chain={selChain} onClose={() => setSel(null)} />}
-        </section>
+          <p style={{ margin: 0, fontFamily: CL.sans, fontSize: 12, lineHeight: 1.5, color: CL.ink5 }}>Xếp mỗi mạch về phía nó ủng hộ. Bấm vào nhãn của một phát hiện để nói nó ủng hộ mạch hay ngược phía: nhãn <Status label="Giữ hướng" /> hay <Status label={'Phụ thuộc "nếu"'} /> của mạch tính từ đó.</p>
+          <CardRope units={units} chains={chains} onSide={moveUnit} onFinding={moveFinding} />
+        </div>
       ) : (
-        <section style={card} aria-label="Các mạch">
-          <ClLabel color={CL.ink}>Các mạch</ClLabel>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 12 }}>
-            {spec.questions.map((q) => {
-              const mineQ = chains.filter((c) => (c.q || 1) === q.n);
-              return (
-                <div key={q.n} style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                  <span style={{ ...muted, fontWeight: 600, color: CL.ink7, marginTop: 6 }}>{CL_CIRC[q.n - 1]} {CL_SHAPE_LABEL[q.shape]} · {mineQ.length} mạch</span>
-                  {mineQ.map((c) => <ChainLine key={c.id} chain={c} />)}
-                </div>
-              );
-            })}
-          </div>
-        </section>
-      )}
-    </div>
-  );
-
-  // ---- ① weigh each area ---------------------------------------------------------------------------------
-  const setArea = (area: string, v: AreaWeigh) => set({ areas: { ...(plan.areas || {}), [area]: v } });
-  const dropped = plan.dropped || [];
-  const loose = groups.reduce((n, g) => n + g.loose.length, 0);
-  const decided = groups.filter((g) => !contested(g) && !dropped.includes(g.area) && !g.fromMap);
-  const open = groups.filter((g) => contested(g) && !dropped.includes(g.area));
-  const tone = (s: Win | null) => (s === 'right' ? (compare ? DRV.A : { soft: CL.mintSoft, text: CL.greenText, solid: CL.green }) : s === 'left' ? (compare ? DRV.B : { soft: '#F1F1EE', text: '#3D3D3A', solid: CL.ink5 }) : { soft: '#F7F7F4', text: CL.ink6, solid: CL.ink4 });
-
-  const weighCard = vq && (
-    <section style={card} aria-label="Cân từng vùng">
-      <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, marginBottom: 14, flexWrap: 'wrap' }}>
-        <ClLabel color={CL.ink}>1 · Cân từng vùng</ClLabel>
-        <span style={muted}>{compare ? 'Kết quả lấy từ phần so sánh trên bản đồ' : 'Chỉ cân vùng có mạch của cả hai phía'}</span>
-      </div>
-      {!groups.length && <p style={{ margin: 0, ...muted, lineHeight: 1.5 }}>Chưa có mạch nào viết xong. <button type="button" className="cl-btn cl-link" onClick={onBack} style={{ fontWeight: 600, color: CL.ink, textDecoration: 'underline' }}>Viết mạch ở bước ①</button></p>}
-      {loose > 0 && !compare && <p style={{ margin: '0 0 12px', borderRadius: 12, background: CL.yellowSoft, padding: '10px 14px', fontFamily: CL.sans, fontSize: 12.5, lineHeight: 1.5, color: CL.yellowText }}><b>{loose} mạch chưa xếp lên dây kéo.</b> Kéo chúng về một phía để được tính.</p>}
-
-      {compare ? (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-          {groups.map((g) => {
-            const w = areaWin(g, plan), f = g.fromMap;
+          <ClLabel color={CL.ink}>Các mạch</ClLabel>
+          {spec.questions.map((q) => {
+            const mineQ = chains.filter((c) => (c.q || 1) === q.n);
             return (
-              <div key={g.area} style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', borderRadius: 12, border: '1px solid ' + CL.ink2, padding: '9px 12px' }}>
-                <span style={{ fontFamily: CL.sans, fontSize: 13, fontWeight: 700, color: CL.ink, minWidth: 110 }}>{g.area}</span>
-                <span style={muted}>A hơn {f.right} ô · ngang {f.eq} · B hơn {f.left}</span>
-                <span style={{ marginLeft: 'auto', borderRadius: 7, padding: '3px 10px', background: tone(w).soft, color: tone(w).text, fontFamily: CL.sans, fontSize: 11.5, fontWeight: 700 }}>{w ? (w === 'right' ? 'A' : w === 'left' ? 'B' : 'Ngang') : 'Chưa so sánh'}</span>
+              <div key={q.n} style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                <span style={{ ...muted, fontWeight: 600, color: CL.ink7, marginTop: 6 }}>{CL_CIRC[q.n - 1]} {CL_SHAPE_LABEL[q.shape]} · {mineQ.length} mạch</span>
+                {mineQ.map((c) => <ChainLine key={c.id} chain={c} />)}
               </div>
             );
           })}
-          <button type="button" className="cl-btn cl-link" onClick={onBack} style={{ alignSelf: 'flex-start', marginTop: 4, ...muted, fontWeight: 600, color: CL.ink6 }}>Mở lại bản đồ để so sánh thêm</button>
         </div>
+      )}
+    </section>
+  );
+
+  // ---- 1 · the criterion table ------------------------------------------------------------------------------
+  const setCrit = (k: string, v: CritWeigh) => set({ crit: { ...(plan.crit || {}), [k]: v } });
+  const sideList = (s: Win | null) => (s === 'right' || s === 'left' ? sideChains(spec, chains, s, plan) : s === '=' ? [...sideChains(spec, chains, 'right', plan), ...sideChains(spec, chains, 'left', plan)] : []);
+  const mt = vq ? mapTally(spec, chains, extras?.[vq.n]) : null;
+  const wonBy = (s: 'left' | 'right') => CRITERIA.filter((k) => plan.crit?.[k]?.win === s).map((k) => k.toLowerCase());
+  const nPlaced = vq ? sideChains(spec, chains, 'left', plan).length + sideChains(spec, chains, 'right', plan).length : 0;
+
+  const weighCard = vq && (
+    <section style={card} aria-label="So sánh theo tiêu chí">
+      <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, marginBottom: 6, flexWrap: 'wrap' }}>
+        <ClLabel color={CL.ink}>1 · So sánh theo tiêu chí</ClLabel>
+        <span style={muted}>Với mỗi tiêu chí: phía nào mạnh hơn, nhờ mạch nào? Mạch ở vùng nào cũng so được.</span>
+      </div>
+      {mt && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', margin: '6px 0 4px', borderRadius: 12, background: CL.panel, padding: '9px 12px', fontFamily: CL.sans, fontSize: 12.5, color: CL.ink7 }}>
+          <span style={{ fontWeight: 600, color: CL.ink }}>Từ bản đồ:</span>
+          <span style={{ color: DRV.A.text, fontWeight: 700 }}>A hơn {mt.a} ô</span>·<span>ngang {mt.eq}</span>·<span style={{ color: DRV.B.text, fontWeight: 700 }}>B hơn {mt.b} ô</span>
+          <button type="button" className="cl-btn cl-link" onClick={onBack} style={{ marginLeft: 'auto', ...muted, fontWeight: 600 }}>Mở lại bản đồ</button>
+        </div>
+      )}
+      {nPlaced === 0 ? (
+        <p style={{ margin: '10px 0 0', ...muted, lineHeight: 1.5 }}>Xếp ít nhất một mạch lên dây kéo để so sánh.</p>
       ) : (
-        <>
-          {(decided.length > 0 || dropped.length > 0) && (
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: open.length ? 14 : 0 }}>
-              {decided.map((g) => {
-                const w = areaWin(g, plan);
-                return <span key={g.area} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, borderRadius: 999, border: '1px solid ' + CL.ink2, background: '#FAFAF8', padding: '6px 12px', fontFamily: CL.sans, fontSize: 12, color: CL.ink7 }}><b style={{ fontWeight: 700, color: CL.ink }}>{g.area}</b>→ <span style={{ color: tone(w).text, fontWeight: 700 }}>{sideName(w)}</span><span style={{ color: CL.ink4 }}>{g.mixed.length && !g.left.length && !g.right.length ? 'tuỳ điều kiện' : 'chỉ một phía'}</span></span>;
-              })}
-              {dropped.map((a) => (
-                <button key={a} type="button" className="cl-btn" onClick={() => set({ dropped: dropped.filter((x) => x !== a) })} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, borderRadius: 999, border: '1px dashed ' + CL.ink3, padding: '6px 12px', fontFamily: CL.sans, fontSize: 12, color: CL.ink5 }}><s>{a}</s> đã bỏ · <span style={{ fontWeight: 600, color: CL.ink }}>Đưa lại</span></button>
-              ))}
-            </div>
-          )}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            {open.map((g) => <AreaCard key={g.area} g={g} v={plan.areas?.[g.area]} onChange={(v) => setArea(g.area, v)} onDrop={() => set({ dropped: [...dropped, g.area] })} onBack={onBack} sideName={sideName} tone={tone} />)}
+        <div role="table" aria-label="Bảng so sánh" style={{ marginTop: 6 }}>
+          <div role="row" style={critRow}>
+            <span role="columnheader" style={{ ...muted, fontWeight: 600 }}>Tiêu chí</span>
+            <span role="columnheader" style={{ ...muted, fontWeight: 600 }}>Phía mạnh hơn</span>
+            <span role="columnheader" style={{ ...muted, fontWeight: 600 }}>Nhờ mạch</span>
           </div>
-        </>
+          {CRITERIA.map((k) => {
+            const v = plan.crit?.[k] || { win: null, chain: null };
+            const opts = sideList(v.win);
+            const pick = v.chain && opts.some((c) => c.id === v.chain) ? v.chain : '';
+            return (
+              <div key={k} role="row" style={{ ...critRow, borderTop: '1px solid ' + CL.ink1 }}>
+                <span role="cell" style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                  <span style={{ fontFamily: CL.sans, fontSize: 13, fontWeight: 700, color: CL.ink }}>{k}</span>
+                  <span style={{ fontFamily: CL.sans, fontSize: 11.5, lineHeight: 1.35, color: CL.ink5 }}>{CRIT_Q[k]}</span>
+                </span>
+                <span role="cell">
+                  <span role="group" aria-label={k} style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', border: '1px solid ' + CL.ink2, borderRadius: 11, overflow: 'hidden' }}>
+                    {(['right', '=', 'left'] as Win[]).map((w, j) => {
+                      const on = v.win === w, tn = tone(w);
+                      return <button key={w} type="button" className="cl-btn" aria-pressed={on} onClick={() => setCrit(k, { win: on ? null : w, chain: on ? null : v.chain })}
+                        style={{ minHeight: 38, padding: '4px 6px', borderLeft: j ? '1px solid ' + CL.ink2 : 'none', background: on ? tn.soft : '#fff', color: on ? tn.text : CL.ink7, fontFamily: CL.sans, fontSize: 12.5, fontWeight: on ? 700 : 600 }}>{w === '=' ? 'Ngang' : sideName(w)}</button>;
+                    })}
+                  </span>
+                </span>
+                <span role="cell">
+                  <select value={pick} disabled={!v.win} onChange={(e) => setCrit(k, { ...v, chain: e.target.value || null })} aria-label={'Mạch cho ' + k}
+                    style={{ width: '100%', minHeight: 38, borderRadius: 10, border: (v.win && !pick ? '1px dashed ' : '1px solid ') + CL.ink2, background: '#fff', padding: '0 10px', fontFamily: CL.sans, fontSize: 12.5, fontWeight: pick ? 600 : 500, color: pick ? CL.ink : CL.ink5 }}>
+                    <option value="">{v.win ? 'Chọn mạch…' : 'Chọn phía trước'}</option>
+                    {opts.map((c) => <option key={c.id} value={c.id}>{name(c)}{areaOf(c) ? ' · ' + areaOf(c) : ''}</option>)}
+                  </select>
+                </span>
+              </div>
+            );
+          })}
+        </div>
       )}
 
-      {groups.length > 0 && (
-        <div style={{ marginTop: 16, paddingTop: 14, borderTop: '1px solid ' + CL.ink1 }}>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 10 }}>
-            {groups.filter((g) => !dropped.includes(g.area)).map((g) => {
-              const w = areaWin(g, plan);
-              return <span key={g.area} style={{ borderRadius: 8, padding: '6px 10px', background: w ? tone(w).soft : '#fff', border: w ? 'none' : '1.5px dashed ' + CL.ink2, fontFamily: CL.sans, fontSize: 11.5, fontWeight: 700, color: w ? tone(w).text : CL.ink5 }}>{g.area}: {w ? sideName(w) : 'chưa cân'}</span>;
-            })}
-          </div>
-          <div style={{ fontFamily: CL.sans, fontSize: 13, color: CL.ink7 }}>
-            <b style={{ color: CL.ink }}>Tổng{t.open.length ? ' tạm' : ''}:</b> {R} {t.right} vùng · {L} {t.left} vùng{t.eq ? ' · ngang ' + t.eq : ''}{t.open.length ? ' · ' + t.open.length + ' vùng chưa cân' : ''}
+      {t.done.length > 0 && (
+        <div style={{ marginTop: 8, paddingTop: 14, borderTop: '1px solid ' + CL.ink1, display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center', fontFamily: CL.sans, fontSize: 13, color: CL.ink7 }}>
+            <b style={{ color: CL.ink }}>{t.open.length ? 'Tạm:' : 'Kết quả:'}</b>
+            <span style={{ borderRadius: 7, padding: '4px 10px', background: tone('right').soft, color: tone('right').text, fontWeight: 700, fontSize: 12 }}>{R} · {t.right} tiêu chí</span>
+            <span style={{ borderRadius: 7, padding: '4px 10px', background: tone('left').soft, color: tone('left').text, fontWeight: 700, fontSize: 12 }}>{L} · {t.left} tiêu chí</span>
+            {t.eq > 0 && <span style={muted}>ngang {t.eq}</span>}
+            {t.open.length > 0 && <span style={muted}>{t.open.length} tiêu chí chưa chọn</span>}
           </div>
           {sugg && (
-            <div style={{ marginTop: 14, display: 'flex', flexDirection: 'column', gap: 10 }}>
-              <div style={{ borderRadius: 12, background: tone(sugg).soft, padding: '11px 14px', fontFamily: CL.sans, fontSize: 13.5, lineHeight: 1.5, color: tone(sugg).text }}><b>{sugg === '=' ? 'Hai phía đang ngang nhau.' : 'Kết quả nghiêng về ' + sideName(sugg) + '.'}</b> Cả bài có nghiêng như vậy không?</div>
-              <div role="group" aria-label="Cân cuối" style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                <button type="button" className="cl-btn" aria-pressed={!plan.override} onClick={() => set({ override: null })} style={pillBtn(!plan.override)}>Giữ theo kết quả</button>
-                <button type="button" className="cl-btn" aria-pressed={!!plan.override} onClick={() => set({ override: plan.override || { area: '', why: '' } })} style={pillBtn(!!plan.override)}>Không, một vùng nặng hơn cả</button>
+            <div style={{ borderRadius: 12, background: tone(sugg).soft, padding: '11px 14px', fontFamily: CL.sans, fontSize: 13.5, lineHeight: 1.5, color: tone(sugg).text }}>
+              {sugg === '=' ? <b>Hai phía đang ngang nhau.</b> : <><b>{sideName(sugg)} mạnh hơn ở {wonBy(sugg).join(', ')}.</b>{wonBy(sugg === 'right' ? 'left' : 'right').length ? ' ' + sideName(sugg === 'right' ? 'left' : 'right') + ' chỉ hơn ở ' + wonBy(sugg === 'right' ? 'left' : 'right').join(', ') + '.' : ''}</>} Cả bài có nghiêng như vậy không?
+            </div>
+          )}
+          <div role="group" aria-label="Cân cuối" style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            <button type="button" className="cl-btn" aria-pressed={!plan.override} onClick={() => set({ override: null })} style={pillBtn(!plan.override)}>Giữ theo bảng</button>
+            <button type="button" className="cl-btn" aria-pressed={!!plan.override} onClick={() => set({ override: plan.override || { crit: '', why: '' } })} style={pillBtn(!!plan.override)}>Không, một tiêu chí nặng hơn cả</button>
+          </div>
+          {plan.override && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <span style={{ ...muted, fontWeight: 600, color: CL.ink6 }}>Tiêu chí nào quyết định?</span>
+              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                {CRITERIA.filter((k) => { const w = plan.crit?.[k]?.win; return w && w !== '='; }).map((k) => (
+                  <button key={k} type="button" className="cl-btn" aria-pressed={plan.override.crit === k} onClick={() => set({ override: { ...plan.override, crit: k } })} style={pillBtn(plan.override.crit === k)}>{k} → {sideName(plan.crit[k].win)}</button>
+                ))}
               </div>
-              {plan.override && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                  <span style={{ ...muted, fontWeight: 600, color: CL.ink6 }}>Vùng nào quyết định?</span>
-                  <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                    {groups.filter((g) => areaWin(g, plan) && areaWin(g, plan) !== '=' && !dropped.includes(g.area)).map((g) => (
-                      <button key={g.area} type="button" className="cl-btn" aria-pressed={plan.override.area === g.area} onClick={() => set({ override: { ...plan.override, area: g.area } })} style={pillBtn(plan.override.area === g.area)}>{g.area} → {sideName(areaWin(g, plan))}</button>
-                    ))}
-                  </div>
-                  <textarea value={plan.override.why} onChange={(e) => set({ override: { ...plan.override, why: e.target.value.slice(0, 600) } })} rows={2} aria-label="Vì sao vùng này nặng nhất" placeholder="Vùng này nặng hơn tất cả vì…" style={areaText} />
-                </div>
-              )}
+              <textarea value={plan.override.why} onChange={(e) => set({ override: { ...plan.override, why: e.target.value.slice(0, 600) } })} rows={2} aria-label="Vì sao tiêu chí này nặng nhất" placeholder="Tiêu chí này nặng hơn tất cả vì…" style={areaText} />
             </div>
           )}
         </div>
@@ -205,16 +211,16 @@ function Weigh({ chains, setChains, extras, stance, setStance, plan, setPlan, on
 
   // ---- ② the position ------------------------------------------------------------------------------------
   const hints = vq ? scopeHints(spec, chains) : [];
-  const sLean = suggestedLean(groups, plan);
+  const sLean = suggestedLean(plan);
   const ready = !!side;
   const toggleMain = (id: string) => {
     const cur = effMain;
     set({ main: cur.includes(id) ? cur.filter((x) => x !== id) : [...cur, id].slice(-2), paras: undefined });
   };
   const frame = [
-    conc && 'Mặc dù «' + chainName(byId(conc)) + '»',
+    conc && 'Mặc dù «' + name(byId(conc)) + '»',
     lean && (lean === '0' ? 'tôi thấy hai phía cân bằng' : 'tôi ' + leanLabel(spec, lean).toLowerCase()),
-    effMain.length && 'vì «' + effMain.map((id) => chainName(byId(id))).join('» và «') + '»',
+    effMain.length && 'vì «' + effMain.map((id) => name(byId(id))).join('» và «') + '»',
     plan.scope && plan.scope.trim() && 'với điều kiện ' + plan.scope.trim(),
   ].filter(Boolean).join(', ');
 
@@ -222,7 +228,7 @@ function Weigh({ chains, setChains, extras, stance, setStance, plan, setPlan, on
     <section style={{ ...card, opacity: ready ? 1 : 0.6 }} aria-label="Lập trường">
       <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, marginBottom: 6, flexWrap: 'wrap' }}>
         <ClLabel color={CL.ink}>2 · Lập trường</ClLabel>
-        <span style={muted}>{ready ? 'Chọn từ gợi ý, không viết từ đầu' : 'Mở khi đã cân xong ít nhất một vùng'}</span>
+        <span style={muted}>{ready ? 'Chọn từ gợi ý, không viết từ đầu' : 'Mở khi bảng có ít nhất một tiêu chí'}</span>
       </div>
       {ready && (
         <>
@@ -230,10 +236,10 @@ function Weigh({ chains, setChains, extras, stance, setStance, plan, setPlan, on
             {LEANS.map((l) => <button key={l} type="button" className="cl-btn" aria-pressed={lean === l} onClick={() => set({ lean: l, paras: undefined, layout: undefined })} style={pillBtn(lean === l)}>{leanLabel(spec, l)}{l === sLean && lean !== l ? ' · gợi ý' : ''}</button>)}
           </Slot>
           <Slot label="Lý do chính" note={'phía ' + sideName(my) + ' · tối đa 2'}>
-            {mine.length ? mine.map((c) => <button key={c.id} type="button" className="cl-btn" aria-pressed={effMain.includes(c.id)} onClick={() => toggleMain(c.id)} style={pillBtn(effMain.includes(c.id))}>{chainName(c)}</button>) : <span style={muted}>Chưa có mạch nào ở phía {sideName(my)}.</span>}
+            {mine.length ? mine.map((c) => <button key={c.id} type="button" className="cl-btn" aria-pressed={effMain.includes(c.id)} onClick={() => toggleMain(c.id)} style={pillBtn(effMain.includes(c.id))}>{name(c)}</button>) : <span style={muted}>Chưa có mạch nào ở phía {sideName(my)}.</span>}
           </Slot>
           <Slot label="Nhượng bộ" note={'phía ' + sideName(other)}>
-            {theirs.length ? theirs.map((c) => <button key={c.id} type="button" className="cl-btn" aria-pressed={conc === c.id} onClick={() => set({ concession: c.id, paras: undefined })} style={pillBtn(conc === c.id)}>{chainName(c)}<span style={{ marginLeft: 6, opacity: 0.75, fontWeight: 500 }}>{verdictStatus(c).label}</span></button>) : <span style={muted}>Phía {sideName(other)} chưa có mạch nào: bài sẽ thiếu nhượng bộ.</span>}
+            {theirs.length ? theirs.map((c) => <button key={c.id} type="button" className="cl-btn" aria-pressed={conc === c.id} onClick={() => set({ concession: c.id, paras: undefined })} style={pillBtn(conc === c.id)}>{name(c)}<span style={{ marginLeft: 6, opacity: 0.75, fontWeight: 500 }}>{verdictStatus(c).label}</span></button>) : <span style={muted}>Phía {sideName(other)} chưa có mạch nào: bài sẽ thiếu nhượng bộ.</span>}
           </Slot>
           <Slot label="Phạm vi" note="điều kiện để lập trường đúng">
             <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -275,14 +281,14 @@ function Weigh({ chains, setChains, extras, stance, setStance, plan, setPlan, on
     return (
       <span key={c.id} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
         <button type="button" className="cl-btn" draggable onDragStart={(e) => { e.dataTransfer.setData('text/plain', c.id); e.dataTransfer.effectAllowed = 'move'; setMoving(c.id); }} onDragEnd={() => { setMoving(null); setDragOver(null); }}
-          onClick={() => setMoving(on ? null : c.id)} aria-pressed={on} aria-label={chainName(c) + ' · bấm để chuyển sang đoạn khác'}
+          onClick={() => setMoving(on ? null : c.id)} aria-pressed={on} aria-label={name(c) + ' · bấm để chuyển sang đoạn khác'}
           style={{ flex: 1, minWidth: 0, minHeight: 40, display: 'flex', alignItems: 'center', gap: 8, textAlign: 'left', borderRadius: 10, border: '1px solid ' + (on ? CL.ink : CL.ink2), background: on ? '#F4F4F1' : '#fff', padding: '8px 12px', fontFamily: CL.sans, fontSize: 12.5, fontWeight: 600, color: CL.ink, cursor: 'grab' }}>
           <span aria-hidden="true" style={{ color: CL.ink4 }}><ClIcon name="grip" size={13} /></span>
-          <span style={{ flex: 1, minWidth: 0 }}>{chainName(c)}</span>
+          <span style={{ flex: 1, minWidth: 0 }}>{name(c)}</span>
           {shapeOf(spec, c) === 'verdict' && <span style={{ flexShrink: 0, fontSize: 11, color: CL.ink5, fontWeight: 500 }}>{areaOf(c)}</span>}
           <span style={{ flexShrink: 0, borderRadius: 6, padding: '2px 8px', background: st.bg, color: st.fg, fontSize: 10.5, fontWeight: 700 }}>{st.label}</span>
         </button>
-        {where !== 'out' && <button type="button" className="cl-btn cl-del" onClick={() => place(c.id, 'out')} aria-label={'Để ' + chainName(c) + ' ngoài bài'} title="Để ngoài bài" style={{ width: 30, height: 30, display: 'grid', placeItems: 'center', color: CL.ink4 }}><ClIcon name="x" size={13} /></button>}
+        {where !== 'out' && <button type="button" className="cl-btn cl-del" onClick={() => place(c.id, 'out')} aria-label={'Để ' + name(c) + ' ngoài bài'} title="Để ngoài bài" style={{ width: 30, height: 30, display: 'grid', placeItems: 'center', color: CL.ink4 }}><ClIcon name="x" size={13} /></button>}
       </span>
     );
   };
@@ -359,7 +365,7 @@ function Weigh({ chains, setChains, extras, stance, setStance, plan, setPlan, on
           </div>
         </div>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 20, alignItems: 'flex-start' }}>
-          <div style={{ flex: '1 1 380px', minWidth: 0, maxWidth: 620, position: 'sticky', top: 0 }}>{left}</div>
+          <div className="cl-scroll" style={{ flex: '1 1 400px', minWidth: 0, maxWidth: 640, position: 'sticky', top: 0, maxHeight: 'calc(100vh - 150px)', overflowY: 'auto' }}>{left}</div>
           <div style={{ flex: '999 1 560px', minWidth: 0, display: 'flex', flexDirection: 'column', gap: 16 }}>
             {weighCard}
             {positionCard}
@@ -371,6 +377,7 @@ function Weigh({ chains, setChains, extras, stance, setStance, plan, setPlan, on
   );
 }
 
+const critRow: React.CSSProperties = { display: 'grid', gridTemplateColumns: 'minmax(150px, 190px) minmax(220px, 300px) minmax(0, 1fr)', gap: 14, alignItems: 'center', padding: '10px 0' };
 const areaText: React.CSSProperties = { display: 'block', width: '100%', minHeight: 48, boxSizing: 'border-box', resize: 'none', borderRadius: 12, border: '1px solid ' + CL.border, background: '#fff', padding: '10px 14px', fontFamily: CL.serif, fontSize: 14.5, lineHeight: 1.55, color: CL.ink, outline: 'none', fieldSizing: 'content' } as React.CSSProperties;
 
 function Status({ label }: { label: string }) {
@@ -408,73 +415,8 @@ function ChainLine({ chain }: { chain: Chain }) {
   const st = chainStatus(spec, chain);
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 8, borderRadius: 10, border: '1px solid ' + CL.ink2, padding: '8px 12px' }}>
-      <span style={{ flex: 1, minWidth: 0, fontFamily: CL.sans, fontSize: 12.5, fontWeight: 600, color: CL.ink }}>{chainName(chain)}</span>
+      <span style={{ flex: 1, minWidth: 0, fontFamily: CL.sans, fontSize: 12.5, fontWeight: 600, color: CL.ink }}>{chainName(spec, chain)}</span>
       <span style={{ flexShrink: 0, borderRadius: 6, padding: '2px 8px', background: st.bg, color: st.fg, fontFamily: CL.sans, fontSize: 10.5, fontWeight: 700 }}>{st.label}</span>
-    </div>
-  );
-}
-
-/** The chain behind a rope chip: its steps and findings, so the student can weigh what it actually says. */
-function ChainPeek({ chain, onClose }: { chain: Chain; onClose: () => void }) {
-  const st = verdictStatus(chain);
-  return (
-    <div className="cl-rise" style={{ marginTop: 14, borderRadius: 14, background: CL.panel, border: '1px solid ' + CL.ink1, padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 8 }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-        <span style={{ flex: 1, minWidth: 0, fontFamily: CL.sans, fontSize: 13, fontWeight: 700, color: CL.ink }}>{chainName(chain)}</span>
-        <Status label={st.label} />
-        <button type="button" className="cl-btn cl-del" onClick={onClose} aria-label="Đóng" style={{ width: 28, height: 28, display: 'grid', placeItems: 'center', color: CL.ink4 }}><ClIcon name="x" size={13} /></button>
-      </div>
-      <div style={{ fontFamily: CL.serif, fontSize: 14, lineHeight: 1.55, color: CL.ink7 }}>{chain.steps.filter((s) => s.trim()).join(' → ')}</div>
-      {chain.findings.filter((f) => !f.empty && f.text.trim()).map((f) => {
-        const k = CL_KIND_STYLE[f.kind] || CL_KIND_STYLE['Khả thi'];
-        return <div key={f.id} style={{ display: 'flex', gap: 8, fontFamily: CL.sans, fontSize: 12, lineHeight: 1.5, color: CL.ink7 }}><span style={{ flexShrink: 0, borderRadius: 5, padding: '1px 6px', background: k.bg, color: k.fg, fontSize: 10, fontWeight: 700 }}>{f.kind}</span>{f.text}</div>;
-      })}
-    </div>
-  );
-}
-
-/** One contested area: the chains of each side, the grounds, who is heavier, and why. */
-function AreaCard({ g, v, onChange, onDrop, onBack, sideName, tone }: { g: AreaGroup; v?: AreaWeigh; onChange: (v: AreaWeigh) => void; onDrop: () => void; onBack: () => void; sideName: (s: Win) => string; tone: (s: Win | null) => { soft: string; text: string; solid: string } }) {
-  const cur = v || { win: null, crit: [], why: '' };
-  const set = (p: Partial<AreaWeigh>) => onChange({ ...cur, ...p });
-  const untested = [...g.left, ...g.right].every((c) => verdictStatus(c).label === 'Chưa thử');
-  const col = (s: 'left' | 'right', list: Chain[]) => (
-    <div style={{ flex: '1 1 220px', minWidth: 0, display: 'flex', flexDirection: 'column', gap: 6, borderRadius: 12, background: tone(s).soft, padding: '10px 12px' }}>
-      <span style={{ fontFamily: CL.sans, fontSize: 11.5, fontWeight: 700, color: tone(s).text }}>{sideName(s)}</span>
-      {list.map((c) => (
-        <span key={c.id} style={{ display: 'flex', alignItems: 'center', gap: 8, borderRadius: 9, background: '#fff', padding: '7px 10px' }}>
-          <span style={{ flex: 1, minWidth: 0, fontFamily: CL.sans, fontSize: 12.5, fontWeight: 600, color: CL.ink }}>{chainName(c)}</span>
-          <Status label={verdictStatus(c).label} />
-        </span>
-      ))}
-    </div>
-  );
-  return (
-    <div style={{ borderRadius: 14, border: '1px solid ' + (cur.win ? CL.border : CL.ink), padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 10 }}>
-      <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, flexWrap: 'wrap' }}>
-        <span style={{ fontFamily: CL.sans, fontSize: 14, fontWeight: 700, color: CL.ink }}>{g.area}</span>
-        <span style={{ fontFamily: CL.sans, fontSize: 11.5, color: CL.ink5 }}>{g.right.length} mạch {sideName('right')} · {g.left.length} mạch {sideName('left')}</span>
-        {!cur.win && <span style={{ marginLeft: 'auto', borderRadius: 6, padding: '2px 8px', background: '#F1F1EE', color: CL.ink6, fontFamily: CL.sans, fontSize: 10.5, fontWeight: 700 }}>Chưa cân</span>}
-      </div>
-      <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>{col('right', g.right)}{col('left', g.left)}</div>
-      {untested && (
-        <p style={{ margin: 0, fontFamily: CL.sans, fontSize: 12.5, lineHeight: 1.5, color: CL.ink6 }}>
-          Các mạch ở đây chưa thử, cân bây giờ sẽ là cảm tính.{' '}
-          <button type="button" className="cl-btn cl-link" onClick={onBack} style={{ fontWeight: 600, color: CL.ink, textDecoration: 'underline' }}>Thử ở bước ①</button> hoặc{' '}
-          <button type="button" className="cl-btn cl-link" onClick={onDrop} style={{ fontWeight: 600, color: CL.ink, textDecoration: 'underline' }}>bỏ vùng này khỏi bài</button>.
-        </p>
-      )}
-      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
-        <span style={{ fontFamily: CL.sans, fontSize: 12, color: CL.ink6, marginRight: 4 }}>Cân theo</span>
-        {CMP_CRITERIA.map((c) => { const on = cur.crit.includes(c); return <button key={c} type="button" className="cl-btn" aria-pressed={on} onClick={() => set({ crit: on ? cur.crit.filter((x) => x !== c) : [...cur.crit, c] })} style={pillBtn(on, { minHeight: 30, fontSize: 12, padding: '4px 11px' })}>{c}</button>; })}
-      </div>
-      <div role="group" aria-label={'Phía nào nặng hơn ở ' + g.area} style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-        {(['right', '=', 'left'] as Win[]).map((w) => {
-          const on = cur.win === w, tn = tone(w);
-          return <button key={w} type="button" className="cl-btn" aria-pressed={on} onClick={() => set({ win: on ? null : w })} style={{ height: 38, padding: '0 16px', borderRadius: 11, border: on ? '1.5px solid ' + tn.solid : '1px solid ' + CL.ink2, background: on ? tn.soft : '#fff', color: tn.text, fontFamily: CL.sans, fontSize: 13, fontWeight: on ? 700 : 600 }}>{w === '=' ? 'Ngang nhau' : sideName(w) + ' nặng hơn'}</button>;
-        })}
-      </div>
-      {cur.win && <textarea value={cur.why} onChange={(e) => set({ why: e.target.value.slice(0, 600) })} rows={2} aria-label="Vì sao" placeholder="Phía đó nặng hơn vì…" style={areaText} />}
     </div>
   );
 }

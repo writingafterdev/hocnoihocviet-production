@@ -78,9 +78,11 @@ No code change is needed.
 
 ## Final position: no step turns the small comparisons into a decision (2026-10-06) · FIXED 2026-10-10
 
-**Fix.** Screen ② "Cân" (`/write/[id]/weigh`, `WeighScreen.tsx`, `plan.ts`): the rope moved there; chains are
-weighed area by area (one-sided areas decide themselves, contested ones are weighed on the same five grounds, A/B
-prompts read the map's cell verdicts); the student keeps or overrides the total; the position is picked from
+**Fix.** Screen ② "Cân" (`/write/[id]/weigh`, `WeighScreen.tsx`, `plan.ts`): the prompt and the rope sit in one
+box, chains as cards with their findings inside. The two sides are compared criterion by criterion (Độ lớn, Số
+người, Độ dài, Không thay thế được, Độ vững; each row: which side is stronger and the chain behind it), so chains in
+different areas still meet (weighing per area did not: three chains in three areas compared nothing). A/B prompts
+show the map's cell verdicts above the table. The student keeps or overrides the table's result; the position is picked from
 suggestions (lean, main reason, concession, Scope from the findings); then an outline puts chains into paragraphs,
 and the paragraphs become the essay's body sections on ③. The app does suggest a side from the weighing (the
 student can override it).

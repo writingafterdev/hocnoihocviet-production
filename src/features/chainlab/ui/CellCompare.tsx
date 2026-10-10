@@ -1,7 +1,7 @@
 'use client';
 
 import { CL } from '../constants';
-import { CMP_CRITERIA, CMP_CRITERIA_ONLY, cellPair, cellQuestion, type ClaimTally, DRV, driverOf, isWritten, type CellCmp, VERDICT_WORDS, verdictKind } from '../ideamap';
+import { CMP_CRITERIA, CMP_CRITERIA_ONLY, normCrit, cellPair, cellQuestion, type ClaimTally, DRV, driverOf, isWritten, type CellCmp, VERDICT_WORDS, verdictKind } from '../ideamap';
 import { useSpec } from '../SpecContext';
 import type { Chain, Question } from '../types';
 import { ChainCard, type FixTarget } from './ChainCard';
@@ -39,7 +39,7 @@ export function CellCompare({ q, row, col, chains, cmp, onCmp, onCreate, onChang
   const criteria = only ? CMP_CRITERIA_ONLY : CMP_CRITERIA;
   const pair = cellPair(chains, q.n, row, col);
   const ready = isWritten(pair.A) && isWritten(pair.B);
-  const v = cmp || EMPTY;
+  const v = cmp ? { ...cmp, crit: normCrit(cmp.crit || []) } : EMPTY;
   const set = (p: Partial<CellCmp>) => onCmp({ ...v, ...p });
   const pill: React.CSSProperties = { borderRadius: 999, background: CL.ink, color: '#fff', padding: '4px 12px', fontFamily: CL.sans, fontSize: 12, fontWeight: 600 };
 
