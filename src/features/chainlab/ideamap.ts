@@ -4,7 +4,15 @@ import { filledSteps, levelOf, shapeOf } from './model';
 import type { Chain, PromptSpec, Question } from './types';
 
 /** The student's comparison of one cell of a two-driver map: who is stronger there, on what grounds, and why. */
-export interface CellCmp { win: 'A' | 'B' | '=' | null; crit: string[]; why: string }
+export interface CellCmp {
+  win: 'A' | 'B' | '=' | null;
+  crit: string[];
+  why: string;
+  /** Lens by lens (screen ②): 'right' = A, 'left' = B. */
+  lens?: Record<string, { win?: 'left' | 'right' | '=' | null; l?: string; r?: string }>;
+  /** The student picked `win` themselves; otherwise it follows the lens table. */
+  set?: boolean;
+}
 
 export interface MapExtras {
   rows: string[];

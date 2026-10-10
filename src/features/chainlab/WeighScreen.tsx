@@ -6,8 +6,9 @@ import { CMP_CRITERIA_ONLY, DRV, normCrit, VERDICT_WORDS, type CellCmp, type Map
 import { chainStatus, ropeUnits, shapeOf, sidesOf } from './model';
 import {
   buildOutline, chainName, cleanParas, defaultLayout, duelsOf, itemFrame, itemLead, itemPoints, LAYOUT_LABEL, layoutsFor, leanLabel, leftOutChains, leftOutItems, livePairs,
-  modeOf, pairFrame, pairId, pairQuestion, pairTally, pointsOf, REASONS, relOf, REL_LABEL, scopeHints, sideItems, suggestedLean, suggestPairs, TUY_NGUOI, verdictQ,
-  type Board, type Layout, type Lean, type OutlinePara, type Pair, type Plan, type Point, type Win,
+  modeOf, pairFrame, pairId, pairQuestion, pairTally, pointsOf, relOf, REL_LABEL, scopeHints, sideItems, suggestedLean, suggestPairs, verdictQ,
+  chainChips, lensLean, LENSES, pointChips, pointFrame,
+  type Board, type Layout, type Lean, type Lens, type OutlinePara, type Pair, type Plan, type Point, type Win,
 } from './plan';
 import { SpecProvider, useSpec } from './SpecContext';
 import type { Chain, RopeUnit, Side } from './types';
@@ -63,7 +64,7 @@ function Weigh({ chains, setChains, extras, setExtras, stance, setStance, plan, 
   const ex = vq ? extras?.[vq.n] : undefined;
   const points = useMemo(() => pointsOf(spec, chains, ex), [spec, chains, ex]);
   const pairs = livePairs(plan, points);
-  const board: Board = { mode, points, pairs };
+  const board: Board = { mode, points, pairs, chains };
   const P = (k: string) => points.find((p) => p.key === k);
   const t = pairTally(mode, points, pairs);
   const sLean = suggestedLean(t);
@@ -78,6 +79,11 @@ function Weigh({ chains, setChains, extras, setExtras, stance, setStance, plan, 
   const savePairs = (next: Pair[]) => set({ pairs: next, paras: undefined });
   const editPair = (id: string, patch: Partial<Pair>) => {
     const next = pairs.map((p) => (p.id === id ? { ...p, ...patch } : p));
+    // Once a lens row changes, an unpicked result follows the table.
+    if ('lens' in patch) {
+      const old = pairs.find((p) => p.id === id);
+      if (old && !old.set) { const w = lensLean(patch.lens); if (w !== (old.win || null)) return savePairs(next.map((p) => (p.id === id ? { ...p, win: w } : p))); }
+    }
     // A new result can move the pair to another paragraph; a new reason only changes its sentence.
     if ('win' in patch) savePairs(next); else set({ pairs: next });
   };
@@ -196,12 +202,12 @@ function Weigh({ chains, setChains, extras, setExtras, stance, setStance, plan, 
   // ---- 0 · two drivers: the match-up in each cell ---------------------------------------------------------
   const duels = mode === 'two' ? duelsOf(points) : [];
   const byChain = (id?: string) => chains.find((c) => c.id === id);
-  const seg = (opts: { v: string; label: string; s: Side | Win }[], cur: string | null | undefined, onPick: (v: string | null) => void, aria: string) => (
-    <span role="group" aria-label={aria} style={{ display: 'inline-grid', gridTemplateColumns: 'repeat(' + opts.length + ', minmax(0, 1fr))', minWidth: 280, border: '1px solid ' + CL.ink2, borderRadius: 11, overflow: 'hidden' }}>
+  const seg = (opts: { v: string; label: string; s: Side | Win }[], cur: string | null | undefined, onPick: (v: string | null) => void, aria: string, small?: boolean) => (
+    <span role="group" aria-label={aria} style={{ display: 'inline-grid', gridTemplateColumns: 'repeat(' + opts.length + ', minmax(0, 1fr))', minWidth: small ? 0 : 280, border: '1px solid ' + CL.ink2, borderRadius: 11, overflow: 'hidden' }}>
       {opts.map((o, j) => {
         const on = cur === o.v, tn = tone(o.s);
         return <button key={o.v} type="button" className="cl-btn" aria-pressed={on} onClick={() => onPick(on ? null : o.v)}
-          style={{ minHeight: 38, padding: '4px 10px', borderLeft: j ? '1px solid ' + CL.ink2 : 'none', background: on ? tn.soft : '#fff', color: on ? tn.text : CL.ink7, fontFamily: CL.sans, fontSize: 12.5, fontWeight: on ? 700 : 600 }}>{o.label}</button>;
+          style={{ minHeight: small ? 30 : 38, padding: small ? '2px 9px' : '4px 10px', borderLeft: j ? '1px solid ' + CL.ink2 : 'none', background: on ? tn.soft : '#fff', color: on ? tn.text : CL.ink7, fontFamily: CL.sans, fontSize: small ? 11.5 : 12.5, fontWeight: on ? 700 : 600, whiteSpace: 'nowrap' }}>{o.label}</button>;
       })}
     </span>
   );
@@ -211,6 +217,80 @@ function Weigh({ chains, setChains, extras, setExtras, stance, setStance, plan, 
       {list.map((r) => <button key={r} type="button" className="cl-btn" aria-pressed={cur === r} onClick={() => onPick(cur === r ? undefined : r)} style={pillBtn(cur === r, { minHeight: 32, fontSize: 12 })}>{r}</button>)}
     </div>
   );
+  /**
+   * The lens table of a comparison: one row per lens either chain was tested with on ①, both sides' chips side by side,
+   * and who is stronger on it. A lens neither chain has can still be added; the student writes a short note per side.
+   */
+  type LensCol = { s: 'left' | 'right'; label: string; chips: Record<string, string[]> };
+  const lensTable = (cols: LensCol[], lens: Lens | undefined, onLens: (next: Lens) => void, aria: string) => {
+    const cur = lens || {};
+    const withChips = [...new Set(cols.flatMap((c) => Object.keys(c.chips)))];
+    const rows = [...LENSES.filter((k) => withChips.includes(k)), ...withChips.filter((k) => !LENSES.includes(k)), ...Object.keys(cur).filter((k) => !withChips.includes(k))];
+    const spare = LENSES.filter((k) => !rows.includes(k));
+    const put = (k: string, v: { win?: Win | null; l?: string; r?: string } | null) => {
+      if (v && (cur[k]?.win || null) === (v.win || null)) return onLens({ ...cur, [k]: v });
+      // A row whose result changes goes last, so the row settled first stays the lead reason.
+      const next: Lens = { ...cur };
+      delete next[k];
+      if (v) next[k] = v;
+      onLens(next);
+    };
+    const won = (s: Win) => Object.values(cur).filter((v) => v.win === s).length;
+    return (
+      <div role="group" aria-label={aria} style={{ display: 'flex', flexDirection: 'column', borderRadius: 12, border: '1px solid ' + CL.ink1, overflow: 'hidden' }}>
+        {!withChips.length && (
+          <p style={{ margin: 0, padding: '9px 12px', background: '#FAFAF8', fontFamily: CL.sans, fontSize: 12, lineHeight: 1.5, color: CL.ink6 }}>
+            Hai mạch chưa có chip nào ở ①. Vẫn so được: thêm một tiêu chí bên dưới và viết ngắn mỗi bên thế nào, hoặc quay lại ① để thử mạch.
+          </p>
+        )}
+        {rows.map((k, i) => {
+          const v = cur[k] || {};
+          const own = withChips.includes(k);
+          return (
+            <div key={k} style={{ display: 'flex', flexDirection: 'column', gap: 6, padding: '9px 12px', borderTop: i || !withChips.length ? '1px solid ' + CL.ink1 : 'none' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                <span style={{ borderRadius: 6, padding: '2px 8px', background: '#F1F1EE', fontFamily: CL.sans, fontSize: 11.5, fontWeight: 700, color: CL.ink }}>{k}</span>
+                {!own && <button type="button" className="cl-btn cl-del" onClick={() => put(k, null)} aria-label={'Bỏ tiêu chí ' + k} title="Bỏ tiêu chí này" style={{ width: 24, height: 24, display: 'grid', placeItems: 'center', color: CL.ink4 }}><ClIcon name="x" size={11} /></button>}
+                <span style={{ marginLeft: 'auto' }}>
+                  {seg([{ v: cols[0].s, label: cols[0].label + ' hơn', s: cols[0].s }, { v: '=', label: 'Ngang', s: '=' }, { v: cols[1].s, label: cols[1].label + ' hơn', s: cols[1].s }], v.win, (w) => put(k, { ...v, win: w as Win | null }), k + ': bên nào hơn', true)}
+                </span>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 6 }}>
+                {cols.map((c) => {
+                  const chips = c.chips[k] || [], key = c.s === 'left' ? 'l' : 'r', on = v.win === c.s;
+                  return (
+                    <div key={c.s} style={{ display: 'flex', flexDirection: 'column', gap: 3, borderRadius: 9, padding: '6px 9px', background: on ? tone(c.s).soft : '#FAFAF8', border: '1px solid ' + (on ? tone(c.s).solid + '55' : 'transparent') }}>
+                      <span style={{ fontFamily: CL.sans, fontSize: 10, fontWeight: 700, letterSpacing: '0.05em', textTransform: 'uppercase', color: tone(c.s).text }}>{c.label}</span>
+                      {chips.length ? chips.map((t, j) => <span key={j} style={{ fontFamily: CL.sans, fontSize: 12.5, lineHeight: 1.4, color: CL.ink }}>{t}</span>) : (
+                        <input value={v[key] || ''} onChange={(e) => put(k, { ...v, [key]: e.target.value.slice(0, 120) })} aria-label={k + ': ' + c.label + ' thế nào?'} placeholder="Chưa có chip · viết ngắn…" style={{ ...input, height: 30, fontSize: 12.5, padding: '0 8px', background: '#fff' }} />
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          );
+        })}
+        {spare.length > 0 && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap', padding: '8px 12px', borderTop: rows.length || !withChips.length ? '1px solid ' + CL.ink1 : 'none', background: '#FAFAF8' }}>
+            <span style={{ ...muted, fontWeight: 600 }}>So thêm theo</span>
+            {spare.map((k) => <button key={k} type="button" className="cl-btn" onClick={() => onLens({ ...cur, [k]: {} })} style={pillBtn(false, { minHeight: 28, fontSize: 11.5, padding: '3px 10px' })}>+ {k}</button>)}
+          </div>
+        )}
+        {Object.values(cur).some((v) => v.win) && (
+          <div style={{ padding: '7px 12px', borderTop: '1px solid ' + CL.ink1, ...muted }}>
+            Bảng: {cols[0].label} hơn {won(cols[0].s)} tiêu chí, {cols[1].label} hơn {won(cols[1].s)}{won('=') ? ', ngang ' + won('=') : ''}.
+          </div>
+        )}
+      </div>
+    );
+  };
+  /** A chain's steps, as the main line of an idea. */
+  const chainLine = (id?: string) => {
+    const c = byChain(id);
+    const steps = (c?.steps || []).filter((x) => x.trim());
+    return steps.length ? <span style={{ fontFamily: CL.serif, fontSize: 13, lineHeight: 1.45, color: CL.ink7 }}>{steps.join(' → ')}</span> : null;
+  };
   const cellHead = (pt: Point) => (
     <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
       <span style={cellPill}>{pt.who}</span><span style={muted}>×</span><span style={cellPill}>{pt.what}</span>
@@ -232,17 +312,22 @@ function Weigh({ chains, setChains, extras, setExtras, stance, setStance, plan, 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
         {duels.map((pt) => {
           const k = pt.key.slice(5), v = pt.duel.cmp || { win: null, crit: [], why: '' };
-          const why = normCrit(v.crit || [])[0];
+          const A = byChain(pt.duel.a), B = byChain(pt.duel.b);
+          const toWin = (w: Win | null): CellCmp['win'] => (w === 'right' ? 'A' : w === 'left' ? 'B' : w === '=' ? '=' : null);
+          const onLens = (lens: Lens) => setCmp(k, { ...v, lens, win: v.set ? v.win : toWin(lensLean(lens)) });
           return (
             <div key={pt.key} style={{ borderRadius: 14, border: '1px solid ' + CL.ink2, padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 10 }}>
               {cellHead(pt)}
               {drvLine('A', pt.duel.a)}
               {drvLine('B', pt.duel.b)}
-              <span style={{ fontFamily: CL.sans, fontSize: 13.5, fontWeight: 600, color: CL.ink }}>Với {pt.who}, về {pt.what.toLowerCase()}: bên nào nặng hơn?</span>
-              <div style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
-                {seg([{ v: 'A', label: VERDICT_WORDS.cmp.A, s: 'right' }, { v: '=', label: VERDICT_WORDS.cmp['='], s: '=' }, { v: 'B', label: VERDICT_WORDS.cmp.B, s: 'left' }], v.win, (w) => setCmp(k, { ...v, win: w as CellCmp['win'] }), 'Bên thắng ở ' + pt.who + ' × ' + pt.what)}
-                {v.win && v.win !== '=' && reasonPills(REASONS.same, why, (r) => setCmp(k, { ...v, crit: r ? [r] : [] }))}
+              <span style={{ fontFamily: CL.sans, fontSize: 13.5, fontWeight: 600, color: CL.ink }}>Với {pt.who}, về {pt.what.toLowerCase()}: so từng tiêu chí, rồi chọn bên thắng.</span>
+              {lensTable([{ s: 'right', label: 'A', chips: chainChips(A) }, { s: 'left', label: 'B', chips: chainChips(B) }], v.lens, onLens, 'So A và B ở ' + pt.who + ' × ' + pt.what)}
+              <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
+                <span style={{ fontFamily: CL.sans, fontSize: 12.5, fontWeight: 700, color: CL.ink7 }}>Bên thắng</span>
+                {seg([{ v: 'A', label: VERDICT_WORDS.cmp.A, s: 'right' }, { v: '=', label: VERDICT_WORDS.cmp['='], s: '=' }, { v: 'B', label: VERDICT_WORDS.cmp.B, s: 'left' }], v.win, (w) => setCmp(k, { ...v, win: w as CellCmp['win'], set: !!w }), 'Bên thắng ở ' + pt.who + ' × ' + pt.what)}
+                {v.win && !v.set && <span style={muted}>theo bảng</span>}
               </div>
+              {v.win && v.win !== '=' && v.lens && <span style={{ ...muted, lineHeight: 1.5 }}>Khung: {pointFrame(spec, pt, chains)}</span>}
               {v.win === '=' && <span style={muted}>Ngang nhau: ô này không về phía nào. Nó có thể thành câu «phạm vi» ở bước 2.</span>}
             </div>
           );
@@ -300,11 +385,6 @@ function Weigh({ chains, setChains, extras, setExtras, stance, setStance, plan, 
     const next = { ...draft, [s]: key };
     if (next.l && next.r) addPair(next.l, next.r); else setDraft(next);
   };
-  const evidence = (pt: Point) => {
-    const c = byChain(pt.chains[0]);
-    const fs = (c?.findings || []).filter((f) => !f.empty && f.text.trim()).slice(0, 2);
-    return fs.map((f) => <span key={f.id} style={{ fontFamily: CL.sans, fontSize: 11.5, lineHeight: 1.4, color: CL.ink6 }}><b style={{ fontWeight: 700 }}>{f.kind}:</b> {f.text.trim()}</span>);
-  };
   const pairCard = (p: Pair, i: number) => {
     const l = P(p.l), r = P(p.r);
     if (!l || !r) return null;
@@ -314,10 +394,10 @@ function Weigh({ chains, setChains, extras, setExtras, stance, setStance, plan, 
         <span style={{ fontFamily: CL.sans, fontSize: 10.5, fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', color: tone(s).text }}>{sideName(s)}</span>
         <span style={{ fontFamily: CL.sans, fontSize: 13, fontWeight: 600, lineHeight: 1.35, color: CL.ink }}>{pt.name}</span>
         {pt.who && <span style={{ fontFamily: CL.sans, fontSize: 11, color: CL.ink5 }}>{pt.who} · {pt.what}</span>}
-        {evidence(pt)}
+        {chainLine(pt.chains[0])}
       </div>
     );
-    const frame = pairFrame(p, points);
+    const frame = pairFrame(p, points, chains);
     return (
       <div key={p.id} style={{ borderRadius: 14, border: '1px solid ' + (rel === 'none' ? '#E8D9A8' : CL.ink2), padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 10 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -332,16 +412,12 @@ function Weigh({ chains, setChains, extras, setExtras, stance, setStance, plan, 
           </p>
         )}
         <span style={{ fontFamily: CL.serif, fontSize: 15, lineHeight: 1.45, color: CL.ink }}>{pairQuestion(l, r)}</span>
-        <div style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
-          {seg([{ v: 'left', label: L, s: 'left' }, { v: '=', label: 'Ngang', s: '=' }, { v: 'right', label: R, s: 'right' }], p.win, (w) => editPair(p.id, { win: w as Win | null }), 'Bên nặng hơn ở cặp ' + (i + 1))}
-          {p.win && reasonPills(REASONS[rel], p.why, (why) => editPair(p.id, { why }))}
+        {lensTable([{ s: 'left', label: L, chips: pointChips(l, chains) }, { s: 'right', label: R, chips: pointChips(r, chains) }], p.lens, (lens) => editPair(p.id, { lens }), 'So từng tiêu chí ở cặp ' + (i + 1))}
+        <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
+          <span style={{ fontFamily: CL.sans, fontSize: 12.5, fontWeight: 700, color: CL.ink7 }}>Bên thắng</span>
+          {seg([{ v: 'left', label: L, s: 'left' }, { v: '=', label: 'Ngang', s: '=' }, { v: 'right', label: R, s: 'right' }], p.win, (w) => editPair(p.id, { win: w as Win | null, set: !!w }), 'Bên nặng hơn ở cặp ' + (i + 1))}
+          {p.win && !p.set && <span style={muted}>theo bảng</span>}
         </div>
-        {p.why === TUY_NGUOI && (
-          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-            <input value={p.who?.r || ''} onChange={(e) => editPair(p.id, { who: { ...(p.who || {}), r: e.target.value.slice(0, 80) } })} aria-label={'Ai cần «' + r.name + '» hơn?'} placeholder={'Ai cần «' + r.name + '» hơn?'} style={{ ...input, flex: '1 1 220px' }} />
-            <input value={p.who?.l || ''} onChange={(e) => editPair(p.id, { who: { ...(p.who || {}), l: e.target.value.slice(0, 80) } })} aria-label={'Ai cần «' + l.name + '» hơn?'} placeholder={'Ai cần «' + l.name + '» hơn?'} style={{ ...input, flex: '1 1 220px' }} />
-          </div>
-        )}
         {p.win && <span style={{ ...muted, lineHeight: 1.5 }}>Khung: {frame}</span>}
       </div>
     );

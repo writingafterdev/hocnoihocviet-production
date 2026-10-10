@@ -3,7 +3,7 @@
  * asks one question, the pair results suggest the position, and the outline is built from the pairs. Pure helpers; the
  * screen keeps the student's choices in `Plan` on the attempt.
  */
-import { CL_SHAPE_LABEL } from './constants';
+import { CL_SHAPE_LABEL, CL_SHAPE_LENSES } from './constants';
 import { causeLabel, isCompare, isWritten, type CellCmp, type MapExtras } from './ideamap';
 import { filledSteps, ropeUnits, shapeOf, sidesOf } from './model';
 import type { Chain, PromptSpec, RopeUnit, Side } from './types';
@@ -22,11 +22,19 @@ export interface Pair {
   l: string;
   r: string;
   win?: Win | null;
-  /** The reason picked from the pair's reason set. */
+  /** Lens by lens: who is stronger, and what the student wrote where a side has no chip. */
+  lens?: Lens;
+  /** The student picked `win` themselves; otherwise it follows the lens table. */
+  set?: boolean;
+  /** Older plans: the reason picked from a fixed set. */
   why?: string;
-  /** "Tùy người": who needs each side's idea more. */
   who?: { l?: string; r?: string };
 }
+
+/** One lens row of a comparison: who is stronger on it; `l` / `r` = a short note where that side has no chip. */
+export interface LensRow { win?: Win | null; l?: string; r?: string }
+/** Rows in the order the student settled them: the first is the lead reason. */
+export type Lens = Record<string, LensRow>;
 
 export interface Plan {
   /** The pairs, once the student changed the suggested ones. */
@@ -283,28 +291,97 @@ const PHRASE: Record<string, string> = {
   'không tự lo được': 'họ không tự lo được phần này',
 };
 
-export function pairFrame(p: Pair, points: Point[]): string {
+// ---- Lenses: the chips of ① decide each comparison ------------------------------------------------------------
+
+/** The lenses a verdict chain can be tested with on ①. */
+export const LENSES = CL_SHAPE_LENSES.verdict;
+/** How each lens opens a clause of the explanation. */
+const LENS_AT: Record<string, string> = { 'Dài hạn': 'về lâu dài', 'Khả thi': 'về tính khả thi', 'Quy mô': 'về quy mô', 'With/Without': 'khi có và không có nó', Scope: 'về phạm vi' };
+export const lensAt = (k: string) => LENS_AT[k] || 'về ' + k.toLowerCase();
+
+/** A chain's chips by lens (a Scope case: chips for the whole chain or for that case). */
+export function chainChips(c: Chain | undefined, branch?: number | null): Record<string, string[]> {
+  const out: Record<string, string[]> = {};
+  (c?.findings || []).forEach((f) => {
+    if (f.empty || !f.text.trim()) return;
+    if (branch != null && f.target !== 'all' && f.target !== branch) return;
+    (out[f.kind] = out[f.kind] || []).push(f.text.trim());
+  });
+  return out;
+}
+export const pointChips = (pt: Point | undefined, chains: Chain[]) =>
+  pt ? chainChips(chains.find((c) => c.id === pt.chains[0]), pt.unit?.ref.type === 'branch' ? pt.unit.ref.k : null) : {};
+
+/** Who the lens table favours: more rows won; null when no row is settled. */
+export function lensLean(lens?: Lens): Win | null {
+  const rows = Object.values(lens || {}).filter((v) => v.win);
+  if (!rows.length) return null;
+  const l = rows.filter((v) => v.win === 'left').length, r = rows.filter((v) => v.win === 'right').length;
+  return l > r ? 'left' : r > l ? 'right' : '=';
+}
+
+/** A side's text on one lens: its chip, else the student's note. */
+const lensText = (chips: Record<string, string[]>, k: string, note?: string) => (chips[k] && chips[k][0]) || (note || '').trim();
+const q = (t: string) => (t ? '«' + t + '»' : '…');
+
+/**
+ * The explanation a lens table gives: "W nặng hơn: về lâu dài, «…» trong khi «…»; hơn nữa, về quy mô, «…». Dù về
+ * tính khả thi, «…»." Empty when no row is settled.
+ */
+export function lensReason(lens: Lens | undefined, win: Win, W: { name: string; chips: Record<string, string[]>; s: 'l' | 'r' }, Lo: { name: string; chips: Record<string, string[]>; s: 'l' | 'r' }, ctx = ''): string {
+  const rows = Object.entries(lens || {}).filter(([, v]) => v.win);
+  if (!rows.length) return '';
+  const txt = (side: typeof W, k: string, v: LensRow) => lensText(side.chips, k, v[side.s]);
+  if (win === '=') {
+    const by = (s: 'l' | 'r') => rows.filter(([, v]) => v.win === (s === 'l' ? 'left' : 'right')).map(([k]) => lensAt(k));
+    const a = W.s === 'l' ? by('l') : by('r'), b = W.s === 'l' ? by('r') : by('l');
+    return '«' + W.name + '» và «' + Lo.name + '» nặng ngang nhau' + ctx + (a.length || b.length ? ': ' + [a.length && '«' + W.name + '» hơn ' + a.join(', '), b.length && '«' + Lo.name + '» hơn ' + b.join(', ')].filter(Boolean).join(', còn ') : '') + '.';
+  }
+  const won = rows.filter(([, v]) => v.win === win), lost = rows.filter(([, v]) => v.win && v.win !== '=' && v.win !== win);
+  const parts = won.map(([k, v], i) => {
+    const lo = txt(Lo, k, v);
+    return (i === 0 ? '' : i === 1 ? 'hơn nữa, ' : 'thêm nữa, ') + lensAt(k) + ', ' + q(txt(W, k, v)) + (i === 0 && lo ? ' trong khi ' + q(lo) : '');
+  });
+  const head = '«' + W.name + '» nặng hơn' + ctx + (parts.length ? ': ' + parts.join('; ') : '') + '.';
+  const tail = lost.length ? ' Dù ' + lost.map(([k, v]) => lensAt(k) + ', ' + q(txt(Lo, k, v))).join('; ') + '.' : '';
+  return head + tail;
+}
+
+export function pairFrame(p: Pair, points: Point[], chains: Chain[] = []): string {
   const l = points.find((x) => x.key === p.l), r = points.find((x) => x.key === p.r);
   if (!l || !r) return '';
   if (!p.win) return 'Chưa cân: «' + l.name + '» với «' + r.name + '».';
+  const rel = relOf(l, r);
+  const ctx = rel === 'same' ? ' với ' + l.who + ' (' + l.what.toLowerCase() + ')' : rel === 'who' ? ' với ' + l.who : rel === 'what' ? ' về ' + l.what.toLowerCase() : '';
+  const side = (pt: Point, s: 'l' | 'r') => ({ name: pt.name, chips: pointChips(pt, chains), s });
+  const byLens = p.win === 'left' ? lensReason(p.lens, p.win, side(l, 'l'), side(r, 'r'), ctx) : lensReason(p.lens, p.win, side(r, 'r'), side(l, 'l'), ctx);
+  if (byLens) return byLens;
   if (p.win === '=') {
     const wl = p.who?.l?.trim(), wr = p.who?.r?.trim();
     if (p.why === TUY_NGUOI && (wl || wr)) return '«' + r.name + '» quan trọng hơn với ' + (wr || '…') + ', còn «' + l.name + '» với ' + (wl || '…') + '.';
     return '«' + l.name + '» và «' + r.name + '» nặng ngang nhau.';
   }
   const W = p.win === 'left' ? l : r, Lo = p.win === 'left' ? r : l;
-  const rel = relOf(l, r);
-  const ctx = rel === 'same' ? ' với ' + l.who + ' (' + l.what.toLowerCase() + ')' : rel === 'who' ? ' với ' + l.who : rel === 'what' ? ' về ' + l.what.toLowerCase() : '';
   const why = p.why === TUY_NGUOI ? '' : p.why ? ' vì ' + (PHRASE[p.why] || p.why) : '';
   return 'Dù «' + Lo.name + '», «' + W.name + '» nặng hơn' + ctx + why + '.';
 }
 
-export function pointFrame(spec: PromptSpec, pt: Point): string {
+export function pointFrame(spec: PromptSpec, pt: Point, chains: Chain[] = []): string {
   const at = pt.who ? ' (' + pt.who + ' · ' + pt.what.toLowerCase() + ')' : '';
-  if (modeOf(spec) === 'only' && pt.duel) {
+  const mode = modeOf(spec);
+  if (mode === 'only' && pt.duel) {
     const w = pt.duel.cmp?.win;
     const b = pt.duel.b ? '«' + pt.name + '»' : 'cách khác';
     return w === 'B' ? 'Ở ' + pt.who + ' · ' + pt.what.toLowerCase() + ', ' + b + ' làm được mà không cần A.' : w === '=' ? 'Ở ' + pt.who + ' · ' + pt.what.toLowerCase() + ', ' + b + ' làm được một phần.' : w === 'A' ? 'Ở ' + pt.who + ' · ' + pt.what.toLowerCase() + ', chỉ A làm được: «' + pt.name + '».' : '«' + pt.name + '»' + at + ': chưa xét.';
+  }
+  // A two-driver cell: its match-up, explained by its lens table (A on the right, B on the left).
+  const cmp = pt.duel?.cmp;
+  if (mode === 'two' && cmp?.win && cmp.lens) {
+    const C = (id?: string) => chains.find((c) => c.id === id);
+    const A = { name: chainName(spec, C(pt.duel.a)), chips: chainChips(C(pt.duel.a)), s: 'r' as const }, B = { name: chainName(spec, C(pt.duel.b)), chips: chainChips(C(pt.duel.b)), s: 'l' as const };
+    const win: Win = cmp.win === 'A' ? 'right' : cmp.win === 'B' ? 'left' : '=';
+    const t = win === 'left' ? lensReason(cmp.lens, win, B, A, at) : lensReason(cmp.lens, win, A, B, at);
+    if (t) return t;
   }
   return '«' + pt.name + '»' + at + '.';
 }
@@ -334,7 +411,7 @@ export function defaultLayout(spec: PromptSpec, lean: Lean | null | undefined): 
 export const usableChains = (spec: PromptSpec, chains: Chain[]) => chains.filter((c) => (shapeOf(spec, c) === 'verdict' ? isWritten(c) : filledSteps(c) > 0));
 
 /** What the outline works with: the points and pairs of the verdict question. */
-export interface Board { mode: Mode | null; points: Point[]; pairs: Pair[] }
+export interface Board { mode: Mode | null; points: Point[]; pairs: Pair[]; chains?: Chain[] }
 
 export const ptItem = (k: string) => 'pt:' + k;
 /** The ideas an item brings: a pair's two, or one. */
@@ -352,9 +429,9 @@ export function itemChains(item: string, b: Board): string[] {
 }
 export const itemFrame = (spec: PromptSpec, item: string, b: Board) => {
   const pr = b.pairs.find((p) => p.id === item);
-  if (pr) return pairFrame(pr, b.points);
+  if (pr) return pairFrame(pr, b.points, b.chains);
   const pt = itemPoints(item, b)[0];
-  return pt ? pointFrame(spec, pt) : '';
+  return pt ? pointFrame(spec, pt, b.chains) : '';
 };
 export const itemValid = (item: string, b: Board) => (item.startsWith('pt:') ? b.points.some((p) => p.key === item.slice(3)) : b.pairs.some((p) => p.id === item));
 
