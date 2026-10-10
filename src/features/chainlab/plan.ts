@@ -186,7 +186,9 @@ export const pairId = (l: string, r: string) => l + '~' + r;
 /** Suggested pairs: those that meet best first, each idea once; then every idea left over joins its best partner. */
 export function suggestPairs(points: Point[]): Pair[] {
   const Ls = points.filter((p) => p.side === 'left'), Rs = points.filter((p) => p.side === 'right');
-  const all = Ls.flatMap((l, i) => Rs.map((r, j) => ({ l, r, s: SCORE[relOf(l, r)], o: i * 1000 + j }))).filter((x) => x.s > 0);
+  // Two Scope cases of one chain are its own condition (Phạm vi), not two ideas to weigh.
+  const own = (l: Point, r: Point) => l.chains.some((c) => r.chains.includes(c));
+  const all = Ls.flatMap((l, i) => Rs.map((r, j) => ({ l, r, s: SCORE[relOf(l, r)], o: i * 1000 + j }))).filter((x) => x.s > 0 && !own(x.l, x.r));
   // Among equally good pairs, take first the ideas with fewer partners, so more ideas get a pair of their own.
   const deg = (k: string) => all.filter((x) => x.l.key === k || x.r.key === k).length;
   const cands = all.sort((x, y) => y.s - x.s || (deg(x.l.key) + deg(x.r.key)) - (deg(y.l.key) + deg(y.r.key)) || x.o - y.o);
