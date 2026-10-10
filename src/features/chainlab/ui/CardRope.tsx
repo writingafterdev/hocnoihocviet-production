@@ -14,6 +14,9 @@ interface CardRopeProps {
   onSide: (u: RopeUnit, side: Side) => void;
   /** A finding's side: with its chain, against it, or not placed. */
   onFinding: (chainId: string, findingId: string, side: Side) => void;
+  /** Tap-to-place (for touch and keyboard): the chain picked to drop into a table row. */
+  picked?: string | null;
+  onPick?: (chainId: string | null) => void;
 }
 
 /**
@@ -21,7 +24,7 @@ interface CardRopeProps {
  * status, its area and its findings inside it. Drag a card across, or use its arrow; tap a finding to say whether
  * it backs the chain's side or turns against it.
  */
-export function CardRope({ units, chains, onSide, onFinding }: CardRopeProps) {
+export function CardRope({ units, chains, onSide, onFinding, picked, onPick }: CardRopeProps) {
   const spec = useSpec();
   const [L, R] = sidesOf(spec);
   const [over, setOver] = useState<Side | 'tray' | null>(null);
@@ -49,11 +52,14 @@ export function CardRope({ units, chains, onSide, onFinding }: CardRopeProps) {
       </button>
     );
     return (
-      <div key={u.key} draggable onDragStart={(e) => { e.dataTransfer.setData('text/plain', u.key); e.dataTransfer.effectAllowed = 'move'; }}
-        style={{ display: 'flex', flexDirection: 'column', gap: 6, borderRadius: 12, border: '1px solid ' + (s === 'right' ? '#BFE6D7' : CL.ink2), background: '#fff', padding: '9px 8px 9px 12px', cursor: 'grab' }}>
+      <div key={u.key} draggable onDragStart={(e) => { e.dataTransfer.setData('text/plain', u.key); e.dataTransfer.setData('application/x-chain', u.chainId); e.dataTransfer.effectAllowed = 'copyMove'; }}
+        style={{ display: 'flex', flexDirection: 'column', gap: 6, borderRadius: 12, border: picked === c.id ? '1.5px solid ' + CL.ink : '1px solid ' + (s === 'right' ? '#BFE6D7' : CL.ink2), background: picked === c.id ? '#F4F4F1' : '#fff', padding: '9px 8px 9px 12px', cursor: 'grab' }}>
         <div style={{ display: 'flex', alignItems: 'flex-start', gap: 4 }}>
           {s !== 'left' && move('left')}
-          <span style={{ flex: 1, minWidth: 0, paddingTop: 4, fontFamily: CL.sans, fontSize: 13, fontWeight: 600, lineHeight: 1.35, color: CL.ink }}>{chainName(spec, c)}{u.sub ? <span style={{ fontWeight: 500, color: CL.ink6 }}> · {u.sub}</span> : null}</span>
+          {onPick && s ? (
+            <button type="button" className="cl-btn" onClick={() => onPick(picked === c.id ? null : c.id)} aria-pressed={picked === c.id} title="Bấm để chọn, rồi bấm một hàng của bảng để đặt mạch vào"
+              style={{ flex: 1, minWidth: 0, paddingTop: 4, textAlign: 'left', fontFamily: CL.sans, fontSize: 13, fontWeight: 600, lineHeight: 1.35, color: CL.ink }}>{chainName(spec, c)}{u.sub ? <span style={{ fontWeight: 500, color: CL.ink6 }}> · {u.sub}</span> : null}</button>
+          ) : <span style={{ flex: 1, minWidth: 0, paddingTop: 4, fontFamily: CL.sans, fontSize: 13, fontWeight: 600, lineHeight: 1.35, color: CL.ink }}>{chainName(spec, c)}{u.sub ? <span style={{ fontWeight: 500, color: CL.ink6 }}> · {u.sub}</span> : null}</span>}
           {s !== 'right' && move('right')}
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>

@@ -5,7 +5,7 @@ import { CL, CL_CIRC, CL_SHAPE_LABEL } from './constants';
 import { DRV, isCompare, type MapExtras } from './ideamap';
 import { chainStatus, ropeUnits, shapeOf, sidesOf, verdictStatus } from './model';
 import {
-  areaOf, buildOutline, chainName, chainSide, cleanParas, CRIT_Q, CRITERIA, defaultLayout, finalSide, LAYOUT_LABEL, layoutsFor, leanLabel, leanSide, leftOut,
+  areaOf, buildOutline, chainName, chainSide, cleanParas, critChains, CRIT_Q, CRITERIA, decisive, defaultLayout, finalSide, LAYOUT_LABEL, layoutsFor, leanLabel, leanSide, leftOut,
   mapTally, sideChains, scopeHints, suggestedLean, suggestedSide, tally, type CritWeigh, type Layout, type Lean, type OutlinePara, type Plan, type Win,
 } from './plan';
 import { SpecProvider, useSpec } from './SpecContext';
@@ -57,7 +57,10 @@ function Weigh({ chains, setChains, extras, stance, setStance, plan, setPlan, on
   const name = (c: Chain) => chainName(spec, c);
 
   const t = tally(plan);
-  const sugg = suggestedSide(t);
+  const sugg = suggestedSide(tally(plan, decisive(plan)));
+  const [picked, setPicked] = useState<string | null>(null);
+  const [dragRow, setDragRow] = useState<string | null>(null);
+  const [rowMsg, setRowMsg] = useState<{ k: string; text: string } | null>(null);
   const side = finalSide(plan);
   const lean = plan.lean ?? suggestedLean(plan);
   const my: 'left' | 'right' = leanSide(lean) || (side === 'left' ? 'left' : 'right');
@@ -95,7 +98,7 @@ function Weigh({ chains, setChains, extras, stance, setStance, plan, setPlan, on
             <span style={muted}>{placed.length} mạch{areas.size ? ', ' + areas.size + ' vùng' : ''}</span>
           </div>
           <p style={{ margin: 0, fontFamily: CL.sans, fontSize: 12, lineHeight: 1.5, color: CL.ink5 }}>Xếp mỗi mạch về phía nó ủng hộ. Bấm vào nhãn của một phát hiện để nói nó ủng hộ mạch hay ngược phía: nhãn <Status label="Giữ hướng" /> hay <Status label={'Phụ thuộc "nếu"'} /> của mạch tính từ đó.</p>
-          <CardRope units={units} chains={chains} onSide={moveUnit} onFinding={moveFinding} />
+          <CardRope units={units} chains={chains} onSide={moveUnit} onFinding={moveFinding} picked={picked} onPick={setPicked} />
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
@@ -115,17 +118,31 @@ function Weigh({ chains, setChains, extras, stance, setStance, plan, setPlan, on
   );
 
   // ---- 1 · the criterion table ------------------------------------------------------------------------------
-  const setCrit = (k: string, v: CritWeigh) => set({ crit: { ...(plan.crit || {}), [k]: v } });
-  const sideList = (s: Win | null) => (s === 'right' || s === 'left' ? sideChains(spec, chains, s, plan) : s === '=' ? [...sideChains(spec, chains, 'right', plan), ...sideChains(spec, chains, 'left', plan)] : []);
+  const setCrit = (k: string, v: CritWeigh) => set({ crit: { ...(plan.crit || {}), [k]: { win: v.win, chains: critChains(v) } } });
   const mt = vq ? mapTally(spec, chains, extras?.[vq.n]) : null;
-  const wonBy = (s: 'left' | 'right') => CRITERIA.filter((k) => plan.crit?.[k]?.win === s).map((k) => k.toLowerCase());
+  const dec = decisive(plan);
+  const dt = tally(plan, dec);
+  const wonBy = (s: 'left' | 'right', keys: string[]) => keys.filter((k) => plan.crit?.[k]?.win === s).map((k) => k.toLowerCase());
   const nPlaced = vq ? sideChains(spec, chains, 'left', plan).length + sideChains(spec, chains, 'right', plan).length : 0;
+  const filled = CRITERIA.filter((k) => plan.crit?.[k]?.win);
+  const picking = !!picked;
+  /** Puts a chain into a row; an empty row takes the chain's side, a row of the other side refuses it. */
+  const drop = (k: string, chainId: string) => {
+    const c = byId(chainId), cs = c ? chainSide(c) : null;
+    setPicked(null);
+    if (!c || (cs !== 'left' && cs !== 'right')) { setRowMsg({ k, text: 'Xếp mạch này lên dây kéo trước.' }); return; }
+    const v = plan.crit?.[k] || { win: null };
+    if (v.win && v.win !== '=' && v.win !== cs) { setRowMsg({ k, text: 'Mạch này ở phía ' + sideName(cs) + ', hàng này đang chọn ' + sideName(v.win) + '.' }); return; }
+    const list = critChains(v);
+    setRowMsg(null);
+    if (!list.includes(chainId)) setCrit(k, { win: v.win || cs, chains: [...list, chainId] });
+  };
 
   const weighCard = vq && (
     <section style={card} aria-label="So sánh theo tiêu chí">
       <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, marginBottom: 6, flexWrap: 'wrap' }}>
         <ClLabel color={CL.ink}>1 · So sánh theo tiêu chí</ClLabel>
-        <span style={muted}>Với mỗi tiêu chí: phía nào mạnh hơn, nhờ mạch nào? Mạch ở vùng nào cũng so được.</span>
+        <span style={muted}>Chọn phía mạnh hơn, rồi kéo mạch từ dây kéo vào hàng đó (hoặc bấm tên mạch, rồi bấm hàng). Một hàng có thể có nhiều mạch.</span>
       </div>
       {mt && (
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', margin: '6px 0 4px', borderRadius: 12, background: CL.panel, padding: '9px 12px', fontFamily: CL.sans, fontSize: 12.5, color: CL.ink7 }}>
@@ -144,9 +161,10 @@ function Weigh({ chains, setChains, extras, stance, setStance, plan, setPlan, on
             <span role="columnheader" style={{ ...muted, fontWeight: 600 }}>Nhờ mạch</span>
           </div>
           {CRITERIA.map((k) => {
-            const v = plan.crit?.[k] || { win: null, chain: null };
-            const opts = sideList(v.win);
-            const pick = v.chain && opts.some((c) => c.id === v.chain) ? v.chain : '';
+            const v = plan.crit?.[k] || { win: null };
+            const list = critChains(v).map(byId).filter(Boolean);
+            const over = dragRow === k;
+            const msg = rowMsg && rowMsg.k === k ? rowMsg.text : '';
             return (
               <div key={k} role="row" style={{ ...critRow, borderTop: '1px solid ' + CL.ink1 }}>
                 <span role="cell" style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
@@ -157,17 +175,28 @@ function Weigh({ chains, setChains, extras, stance, setStance, plan, setPlan, on
                   <span role="group" aria-label={k} style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', border: '1px solid ' + CL.ink2, borderRadius: 11, overflow: 'hidden' }}>
                     {(['right', '=', 'left'] as Win[]).map((w, j) => {
                       const on = v.win === w, tn = tone(w);
-                      return <button key={w} type="button" className="cl-btn" aria-pressed={on} onClick={() => setCrit(k, { win: on ? null : w, chain: on ? null : v.chain })}
+                      // Changing the side keeps only the chains that still fit it.
+                      const keep = (x: string) => { const c = byId(x); return w === '=' || (c && chainSide(c) === w); };
+                      return <button key={w} type="button" className="cl-btn" aria-pressed={on} onClick={() => { setRowMsg(null); setCrit(k, on ? { win: null, chains: [] } : { win: w, chains: critChains(v).filter(keep) }); }}
                         style={{ minHeight: 38, padding: '4px 6px', borderLeft: j ? '1px solid ' + CL.ink2 : 'none', background: on ? tn.soft : '#fff', color: on ? tn.text : CL.ink7, fontFamily: CL.sans, fontSize: 12.5, fontWeight: on ? 700 : 600 }}>{w === '=' ? 'Ngang' : sideName(w)}</button>;
                     })}
                   </span>
                 </span>
-                <span role="cell">
-                  <select value={pick} disabled={!v.win} onChange={(e) => setCrit(k, { ...v, chain: e.target.value || null })} aria-label={'Mạch cho ' + k}
-                    style={{ width: '100%', minHeight: 38, borderRadius: 10, border: (v.win && !pick ? '1px dashed ' : '1px solid ') + CL.ink2, background: '#fff', padding: '0 10px', fontFamily: CL.sans, fontSize: 12.5, fontWeight: pick ? 600 : 500, color: pick ? CL.ink : CL.ink5 }}>
-                    <option value="">{v.win ? 'Chọn mạch…' : 'Chọn phía trước'}</option>
-                    {opts.map((c) => <option key={c.id} value={c.id}>{name(c)}{areaOf(c) ? ' · ' + areaOf(c) : ''}</option>)}
-                  </select>
+                <span role="cell"
+                  onDragOver={(e) => { e.preventDefault(); if (dragRow !== k) setDragRow(k); }}
+                  onDragLeave={() => setDragRow((d) => (d === k ? null : d))}
+                  onDrop={(e) => { e.preventDefault(); setDragRow(null); const id = e.dataTransfer.getData('application/x-chain'); if (id) drop(k, id); }}
+                  style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 6, minHeight: 40, boxSizing: 'border-box', borderRadius: 10, border: (list.length && !over ? '1px solid ' : '1.5px dashed ') + (over || picking ? CL.ink : CL.ink2), background: over ? CL.panel : '#fff', padding: 4 }}>
+                  {list.map((c) => (
+                    <span key={c.id} style={{ display: 'inline-flex', alignItems: 'center', gap: 4, maxWidth: '100%', borderRadius: 8, background: tone(chainSide(c) as Win).soft, color: tone(chainSide(c) as Win).text, padding: '4px 4px 4px 10px', fontFamily: CL.sans, fontSize: 12, fontWeight: 600 }}>
+                      <span style={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{name(c)}</span>
+                      <button type="button" className="cl-btn cl-del" onClick={() => setCrit(k, { win: v.win, chains: critChains(v).filter((x) => x !== c.id) })} aria-label={'Bỏ ' + name(c) + ' khỏi ' + k} style={{ width: 22, height: 22, display: 'grid', placeItems: 'center' }}><ClIcon name="x" size={11} /></button>
+                    </span>
+                  ))}
+                  {picking ? (
+                    <button type="button" className="cl-btn" onClick={() => drop(k, picked)} style={{ flex: '1 1 auto', minHeight: 30, borderRadius: 8, padding: '4px 10px', textAlign: 'left', fontFamily: CL.sans, fontSize: 12, fontWeight: 600, color: CL.ink }}>Đặt «{name(byId(picked))}» vào đây</button>
+                  ) : !list.length && <span style={{ padding: '0 8px', fontFamily: CL.sans, fontSize: 12, color: CL.ink5 }}>Kéo mạch vào đây</span>}
+                  {msg && <span role="status" style={{ flexBasis: '100%', padding: '2px 8px', fontFamily: CL.sans, fontSize: 11.5, color: CL.redText }}>{msg}</span>}
                 </span>
               </div>
             );
@@ -175,34 +204,27 @@ function Weigh({ chains, setChains, extras, stance, setStance, plan, setPlan, on
         </div>
       )}
 
-      {t.done.length > 0 && (
+      {filled.length > 0 && (
         <div style={{ marginTop: 8, paddingTop: 14, borderTop: '1px solid ' + CL.ink1, display: 'flex', flexDirection: 'column', gap: 10 }}>
-          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center', fontFamily: CL.sans, fontSize: 13, color: CL.ink7 }}>
-            <b style={{ color: CL.ink }}>{t.open.length ? 'Tạm:' : 'Kết quả:'}</b>
-            <span style={{ borderRadius: 7, padding: '4px 10px', background: tone('right').soft, color: tone('right').text, fontWeight: 700, fontSize: 12 }}>{R} · {t.right} tiêu chí</span>
-            <span style={{ borderRadius: 7, padding: '4px 10px', background: tone('left').soft, color: tone('left').text, fontWeight: 700, fontSize: 12 }}>{L} · {t.left} tiêu chí</span>
-            {t.eq > 0 && <span style={muted}>ngang {t.eq}</span>}
-            {t.open.length > 0 && <span style={muted}>{t.open.length} tiêu chí chưa chọn</span>}
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, flexWrap: 'wrap' }}>
+            <span style={{ fontFamily: CL.sans, fontSize: 13, fontWeight: 700, color: CL.ink }}>Tiêu chí nào quyết định lập trường của bạn?</span>
+            <span style={muted}>Chọn một hoặc vài tiêu chí. Chưa chọn thì tính cả bảng.</span>
+          </div>
+          <div role="group" aria-label="Tiêu chí quyết định" style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+            {filled.map((k) => {
+              const on = (plan.decide || []).includes(k), w = plan.crit[k].win;
+              return <button key={k} type="button" className="cl-btn" aria-pressed={on} onClick={() => set({ decide: on ? (plan.decide || []).filter((x) => x !== k) : [...(plan.decide || []), k], paras: undefined })} style={pillBtn(on)}>{k} → {w === '=' ? 'ngang' : sideName(w)}</button>;
+            })}
           </div>
           {sugg && (
             <div style={{ borderRadius: 12, background: tone(sugg).soft, padding: '11px 14px', fontFamily: CL.sans, fontSize: 13.5, lineHeight: 1.5, color: tone(sugg).text }}>
-              {sugg === '=' ? <b>Hai phía đang ngang nhau.</b> : <><b>{sideName(sugg)} mạnh hơn ở {wonBy(sugg).join(', ')}.</b>{wonBy(sugg === 'right' ? 'left' : 'right').length ? ' ' + sideName(sugg === 'right' ? 'left' : 'right') + ' chỉ hơn ở ' + wonBy(sugg === 'right' ? 'left' : 'right').join(', ') + '.' : ''}</>} Cả bài có nghiêng như vậy không?
+              <span style={{ fontWeight: 500 }}>{(plan.decide || []).some((k) => filled.includes(k)) ? 'Theo ' + dec.length + ' tiêu chí bạn chọn: ' : 'Theo cả bảng (' + dec.length + ' tiêu chí): '}</span>
+              {sugg === '=' ? <b>hai phía ngang nhau.</b> : <><b>nghiêng về {sideName(sugg)}</b>{wonBy(sugg, dec).length ? ', mạnh hơn ở ' + wonBy(sugg, dec).join(', ') : ''}.{wonBy(sugg === 'right' ? 'left' : 'right', dec).length ? ' ' + sideName(sugg === 'right' ? 'left' : 'right') + ' hơn ở ' + wonBy(sugg === 'right' ? 'left' : 'right', dec).join(', ') + '.' : ''}</>}
+              {dt.eq > 0 && ' Ngang ở ' + dt.eq + ' tiêu chí.'}
             </div>
           )}
-          <div role="group" aria-label="Cân cuối" style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-            <button type="button" className="cl-btn" aria-pressed={!plan.override} onClick={() => set({ override: null })} style={pillBtn(!plan.override)}>Giữ theo bảng</button>
-            <button type="button" className="cl-btn" aria-pressed={!!plan.override} onClick={() => set({ override: plan.override || { crit: '', why: '' } })} style={pillBtn(!!plan.override)}>Không, một tiêu chí nặng hơn cả</button>
-          </div>
-          {plan.override && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              <span style={{ ...muted, fontWeight: 600, color: CL.ink6 }}>Tiêu chí nào quyết định?</span>
-              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                {CRITERIA.filter((k) => { const w = plan.crit?.[k]?.win; return w && w !== '='; }).map((k) => (
-                  <button key={k} type="button" className="cl-btn" aria-pressed={plan.override.crit === k} onClick={() => set({ override: { ...plan.override, crit: k } })} style={pillBtn(plan.override.crit === k)}>{k} → {sideName(plan.crit[k].win)}</button>
-                ))}
-              </div>
-              <textarea value={plan.override.why} onChange={(e) => set({ override: { ...plan.override, why: e.target.value.slice(0, 600) } })} rows={2} aria-label="Vì sao tiêu chí này nặng nhất" placeholder="Tiêu chí này nặng hơn tất cả vì…" style={areaText} />
-            </div>
+          {(plan.decide || []).some((k) => filled.includes(k)) && (
+            <textarea value={plan.why || ''} onChange={(e) => set({ why: e.target.value.slice(0, 600) })} rows={2} aria-label="Vì sao những tiêu chí này quyết định" placeholder="Những tiêu chí này quan trọng hơn phần còn lại vì…" style={areaText} />
           )}
         </div>
       )}
@@ -248,7 +270,7 @@ function Weigh({ chains, setChains, extras, stance, setStance, plan, setPlan, on
                   {hints.map((h) => <button key={h.text} type="button" className="cl-btn" aria-pressed={plan.scope === h.text} title={'Từ ' + h.from} onClick={() => set({ scope: plan.scope === h.text ? '' : h.text })} style={pillBtn(plan.scope === h.text, { textAlign: 'left' })}>{h.text}</button>)}
                 </div>
               )}
-              <input value={plan.scope || ''} onChange={(e) => set({ scope: e.target.value.slice(0, 200) })} aria-label="Phạm vi" placeholder={hints.length ? 'Hoặc tự viết điều kiện khác…' : 'Với điều kiện… (chưa có phát hiện Scope nào để gợi ý)'}
+              <input value={plan.scope || ''} onChange={(e) => set({ scope: e.target.value.slice(0, 200) })} aria-label="Phạm vi" placeholder={hints.length ? 'Hoặc tự viết điều kiện khác…' : 'Đúng khi… / trừ khi… (gợi ý sẽ hiện khi có phát hiện Scope, trường hợp Scope, hoặc phát hiện ngược phía)'}
                 style={{ height: 38, borderRadius: 10, border: '1px solid ' + CL.ink2, padding: '0 12px', fontFamily: CL.sans, fontSize: 13, color: CL.ink, outline: 'none' }} />
             </div>
           </Slot>

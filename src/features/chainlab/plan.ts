@@ -9,8 +9,9 @@ import type { Chain, PromptSpec, Side } from './types';
 
 /** Which side is stronger on one criterion. */
 export type Win = 'left' | 'right' | '=';
-/** One row of the criterion table: who is stronger, and the chain that makes them so. */
-export interface CritWeigh { win: Win | null; chain?: string | null }
+/** One row of the criterion table: who is stronger, and the chains that make them so (`chain`: older single pick). */
+export interface CritWeigh { win: Win | null; chains?: string[]; chain?: string | null }
+export const critChains = (v?: CritWeigh): string[] => (!v ? [] : v.chains || (v.chain ? [v.chain] : []));
 /** How far the position leans: fully / mostly to one side, or balanced. */
 export type Lean = 'L2' | 'L1' | '0' | 'R1' | 'R2';
 export type Layout = 'concede' | 'reasons' | 'views' | 'questions';
@@ -19,8 +20,9 @@ export interface OutlinePara { id: string; job: string; chains: string[] }
 export interface Plan {
   /** The criterion table, by criterion name. */
   crit?: Record<string, CritWeigh>;
-  /** "Không, một tiêu chí nặng hơn cả": the criterion that decides, and why. */
-  override?: { crit: string; why: string } | null;
+  /** The criteria the student lets decide the position (none chosen = every filled row), and why those. */
+  decide?: string[];
+  why?: string;
   lean?: Lean | null;
   main?: string[];
   concession?: string | null;
@@ -70,9 +72,10 @@ export const CRIT_Q: Record<string, string> = {
 export const CRITERIA = CMP_CRITERIA;
 
 export interface Tally { right: number; left: number; eq: number; open: string[]; done: string[] }
-export function tally(plan: Plan): Tally {
+/** Wins per side over the table's rows (or over `keys` only). */
+export function tally(plan: Plan, keys: string[] = CRITERIA): Tally {
   const t: Tally = { right: 0, left: 0, eq: 0, open: [], done: [] };
-  CRITERIA.forEach((k) => {
+  keys.forEach((k) => {
     const w = plan.crit?.[k]?.win;
     if (!w) { t.open.push(k); return; }
     t.done.push(k);
@@ -86,10 +89,15 @@ export function suggestedSide(t: Tally): Win | null {
   if (!t.done.length) return null;
   return t.right > t.left ? 'right' : t.left > t.right ? 'left' : '=';
 }
-/** The side after the student's override ("one criterion outweighs the rest"). */
+/** The rows that decide: those the student picked that are filled in, else every filled row. */
+export function decisive(plan: Plan): string[] {
+  const filled = CRITERIA.filter((k) => plan.crit?.[k]?.win);
+  const picked = (plan.decide || []).filter((k) => filled.includes(k));
+  return picked.length ? picked : filled;
+}
+/** The side the deciding rows point to. */
 export function finalSide(plan: Plan): Win | null {
-  const o = plan.override && plan.override.crit && plan.crit?.[plan.override.crit]?.win;
-  return o || suggestedSide(tally(plan));
+  return suggestedSide(tally(plan, decisive(plan)));
 }
 
 export function suggestedLean(plan: Plan): Lean | null {
@@ -98,7 +106,7 @@ export function suggestedLean(plan: Plan): Lean | null {
   if (side === '=') return '0';
   const theirs = side === 'right' ? t.left : t.right;
   const k = side === 'right' ? 'R' : 'L';
-  // "Fully" only once every row is filled and none went the other way or tied.
+  // "Fully" only once every row is filled and none went the other way or tied, deciding or not.
   return (theirs === 0 && t.eq === 0 && !t.open.length ? k + '2' : k + '1') as Lean;
 }
 
@@ -119,10 +127,12 @@ export function mapTally(spec: PromptSpec, chains: Chain[], extras?: MapExtras):
 
 /** Chains on one side: those the table cites for that side first, then the ones that hold, then the rest. */
 export function sideChains(spec: PromptSpec, chains: Chain[], side: 'left' | 'right', plan: Plan): Chain[] {
-  const cited = new Set(CRITERIA.filter((k) => plan.crit?.[k]?.win === side).map((k) => plan.crit[k].chain).filter(Boolean));
+  const dec = decisive(plan);
+  const citedBy = (keys: string[]) => new Set(keys.filter((k) => plan.crit?.[k]?.win === side || plan.crit?.[k]?.win === '=').flatMap((k) => critChains(plan.crit[k])));
+  const top = citedBy(dec), cited = citedBy(CRITERIA);
   const rank = (c: Chain) => { const l = verdictStatus(c).label; return l === 'Giữ hướng' ? 0 : l === 'Chưa thử' ? 2 : 1; };
   return verdictChains(spec, chains).filter((c) => chainSide(c) === side)
-    .sort((a, b) => (cited.has(a.id) ? 0 : 1) - (cited.has(b.id) ? 0 : 1) || rank(a) - rank(b));
+    .sort((a, b) => (top.has(a.id) ? 0 : cited.has(a.id) ? 1 : 2) - (top.has(b.id) ? 0 : cited.has(b.id) ? 1 : 2) || rank(a) - rank(b));
 }
 
 export interface ScopeHint { text: string; from: string }
