@@ -21,11 +21,10 @@ interface Product {
 
 // Speaking and Reading are switched off for now; the vocab card uses mint while Reading is closed.
 const PRODUCTS: Product[] = [
-  { id: 'engine', href: '/guidebooks', pillar: 'engine', badge: 'TÀI LIỆU GỐC', eyebrow: 'GUIDEBOOKS', title: 'Sách hướng dẫn', description: 'Phương pháp của The Art of Nuance, tra cứu theo từng công cụ.', meta: '1 tài liệu', illustration: '/assets/illustrations/il-structure.svg', span: 2 },
   { id: 'writing', href: '/writing', pillar: 'writing', badge: 'BETA', eyebrow: 'WRITING FOR IELTS', title: 'Luyện viết Task 2', description: 'Dựng mạch lập luận rồi viết bài, hoặc chép lại bài mẫu từng câu. Chấm theo 4 tiêu chí.', meta: 'Có sẵn', illustration: '/assets/illustrations/il-writing.svg', span: 4 },
   { id: 'vocab', href: '/vocab', pillar: 'reading', badge: 'BETA', eyebrow: 'VOCABULARY', title: 'Từ vựng', description: 'Cụm từ theo chủ đề cho Task 1, Task 2 và Speaking, kèm đoạn văn để luyện dùng.', meta: 'Có sẵn', illustration: '/assets/illustrations/il-knowledge.svg', span: 2 },
-  { id: 'speaking', pillar: 'speaking', badge: 'SẮP RA MẮT', eyebrow: 'SPEAKING FOR IELTS', title: 'Luyện nói', description: 'Ngắt nghỉ, nhấn âm và độ dài câu trả lời cho Part 1 đến 3.', meta: 'Đang phát triển', illustration: '/assets/illustrations/il-conversation.svg', span: 2, disabled: true },
-  { id: 'reading', pillar: 'reading', badge: 'TẠM ĐÓNG', eyebrow: 'READING ARTICLES', title: 'Đọc báo', description: 'Bài từ The Economist, The New Yorker, The Atlantic.', meta: 'Tạm đóng', illustration: '/assets/illustrations/il-study.svg', span: 2, disabled: true },
+  { id: 'speaking', pillar: 'speaking', badge: 'SẮP RA MẮT', eyebrow: 'SPEAKING FOR IELTS', title: 'Luyện nói', description: 'Ngắt nghỉ, nhấn âm và độ dài câu trả lời cho Part 1 đến 3.', meta: 'Đang phát triển', illustration: '/assets/illustrations/il-conversation.svg', span: 3, disabled: true },
+  { id: 'reading', pillar: 'reading', badge: 'TẠM ĐÓNG', eyebrow: 'READING ARTICLES', title: 'Đọc báo', description: 'Bài từ The Economist, The New Yorker, The Atlantic.', meta: 'Tạm đóng', illustration: '/assets/illustrations/il-study.svg', span: 3, disabled: true },
 ];
 
 /** App home: greeting + one card per product. */

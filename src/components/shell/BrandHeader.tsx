@@ -20,7 +20,7 @@ export function BrandBar({ avatar = true, href = '/home', status }: { avatar?: b
   );
 }
 
-/** Header for scrolling pages (home, library, guidebooks, vocab). */
+/** Header for scrolling pages (home, library, vocab). */
 export function PageHeader({ avatar = true }: { avatar?: boolean }) {
   return (
     <header style={{ padding: '24px 40px' }}>
