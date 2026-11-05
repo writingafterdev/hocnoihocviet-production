@@ -17,7 +17,8 @@ export const DAILY_LIMIT = { chain: 40, hint: 80, essay: 5, translate: 60, vocab
 export type AiKind = keyof typeof DAILY_LIMIT;
 
 /** Per-attempt time limit for each kind of call (ms). The browser gives up a little after two attempts. */
-const TIMEOUT_MS: Record<AiKind, number> = { chain: 90_000, hint: 40_000, essay: 150_000, translate: 30_000, vocab: 45_000 };
+/** Slower models (e.g. Qwen through Model Studio) need most of this; past ~100 s without a byte the provider's gateway may drop the call anyway. */
+const TIMEOUT_MS: Record<AiKind, number> = { chain: 95_000, hint: 70_000, essay: 150_000, translate: 45_000, vocab: 95_000 };
 
 const today = () => vnDay(0);
 /** The Vietnam calendar day (YYYY-MM-DD), `ago` days back. */
