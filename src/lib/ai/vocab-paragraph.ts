@@ -50,16 +50,27 @@ export async function aiVocabParagraph(userId: string, skill: VocabSkill, topic:
     input: 'Ticked phrases (use every one):\n' + phrases.map((p) => '- ' + p).join('\n'),
   });
   const covered = new Set<string>();
+  const norm = (x: string) => x.toLowerCase().replace(/[’']/g, "'").replace(/\s+/g, ' ').trim();
   const segs = (out.sentences || []).filter((s) => s && s.en && s.vi).map((s) => {
     const vocab: string[] = [], hl: string[] = [];
+    const en = norm(s.en);
+    const add = (phrase: string, form: string) => { if (!vocab.includes(phrase)) { vocab.push(phrase); hl.push(form); covered.add(phrase); } };
+    // What the model says it used. Models other than Claude often change the case or spacing of a phrase, so match loosely.
     (s.uses || []).forEach((u, k) => {
+      const phrase = phrases.find((p) => norm(p) === norm(u || ''));
       const form = (s.forms || [])[k] || u;
-      // Keep a use only if it is one of the ticked phrases and its form really is in the sentence.
-      if (phrases.includes(u) && form && s.en.toLowerCase().includes(form.toLowerCase()) && !vocab.includes(u)) { vocab.push(u); hl.push(form); covered.add(u); }
+      if (phrase && form && en.includes(norm(form))) add(phrase, s.en.substr(en.indexOf(norm(form)), form.length));
     });
+    // A ticked phrase that appears word for word but wasn't listed in "uses" still counts.
+    phrases.forEach((p) => { const at = en.indexOf(norm(p)); if (at >= 0) add(p, s.en.substr(at, p.length)); });
     return { en: s.en.trim(), vi: s.vi.trim(), vocab, hl };
   });
-  if (segs.length < 2 || phrases.some((p) => !covered.has(p))) throw new AiError('bad_output', 'phrases_missing');
+  // Keep a paragraph that uses most of the phrases (a reworded one is still good practice); reject one that missed the point.
+  const need = phrases.length <= 2 ? phrases.length : Math.ceil(phrases.length * 0.75);
+  if (segs.length < 2 || covered.size < need) {
+    console.error('vocab_paragraph_rejected', 'sentences=' + segs.length, 'covered=' + covered.size + '/' + phrases.length, 'missing=' + phrases.filter((p) => !covered.has(p)).join('|').slice(0, 200));
+    throw new AiError('bad_output', 'phrases_missing');
+  }
   return { id: 'ai-' + crypto.randomUUID().slice(0, 8), prompt: (out.prompt || '').trim() || (topic ? topic.name : skill.title), paragraphs: [segs] };
 }
 
