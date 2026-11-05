@@ -3,6 +3,8 @@ import { initOpenNextCloudflareForDev } from '@opennextjs/cloudflare';
 
 const nextConfig: NextConfig = {
   images: { remotePatterns: [{ protocol: 'https', hostname: 'images.unsplash.com' }] },
+  // Dev server only: extra hostnames allowed to load dev assets (e.g. a preview proxy), comma-separated in DEV_ORIGINS.
+  allowedDevOrigins: (process.env.DEV_ORIGINS || '').split(',').map((s) => s.trim()).filter(Boolean),
 };
 
 export default nextConfig;
