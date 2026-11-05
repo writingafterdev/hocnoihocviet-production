@@ -85,6 +85,10 @@ export interface Chain {
   /** Solution chains: id of the cause/problem chain this solution addresses. */
   fixes?: string | null;
   check?: ChainCheck;
+  /** ① Dựng mạch: which end the student writes; the other one the prompt suggests. */
+  mine?: 'start' | 'end';
+  /** ① Dựng mạch: false while the chain is still two boxes (start, end); true once the middle can be built. */
+  built?: boolean;
 }
 
 export interface Lens {

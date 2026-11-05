@@ -47,7 +47,7 @@ const ago = (t: number) => {
   return h < 24 ? h + ' giờ trước' : Math.round(h / 24) + ' ngày trước';
 };
 
-/** Pop-up after "Viết bài": pick Viết tự do (ChainLab → Writing Desk) or Chép mẫu, or resume the last attempt. */
+/** Pop-up after "Viết bài": pick Tự viết (① Dựng mạch → ② Viết bài) or Chép mẫu, or resume the last attempt. */
 export function ModePickerModal({ prompt, onClose, onStart, onResume }: { prompt: Prompt; onClose: () => void; onStart: (mode: WritingMode) => void; onResume: (attemptId: string) => void }) {
   const [mode, setMode] = useState<WritingMode>('free');
   const [last, setLast] = useState<Attempt | null>(null);
@@ -67,7 +67,7 @@ export function ModePickerModal({ prompt, onClose, onStart, onResume }: { prompt
         </div>
         <p id="mode-title" style={{ fontFamily: 'var(--font-sans)', fontSize: 15, fontWeight: 600, color: '#141413', margin: '0 0 14px' }}>Chọn chế độ làm bài</p>
         <div role="radiogroup" aria-labelledby="mode-title" style={{ display: 'flex', flexWrap: 'wrap', gap: 14, marginBottom: 22 }}>
-          <ModeOption kind="free" selected={mode === 'free'} onClick={() => setMode('free')} title="Viết tự do" desc="Dựng mạch lập luận cho từng câu hỏi, rồi tự viết bài bên cạnh dàn ý. Không gợi ý, chấm TR / CC / LR / GRA khi nộp." />
+          <ModeOption kind="free" selected={mode === 'free'} onClick={() => setMode('free')} title="Tự viết" desc="Dựng một mạch cho mỗi thân bài (đề gợi ý sẵn một đầu), rồi viết bài với mạch nằm cạnh từng đoạn. Chấm TR / CC / LR / GRA khi nộp." />
           <ModeOption kind="guided" selected={mode === 'guided'} onClick={() => setMode('guided')} title="Chép mẫu" desc="Viết lại bài mẫu từng câu từ nghĩa tiếng Việt, chữ cái đầu và công cụ lập luận. Không chấm điểm." disabled={!SAMPLE_IDS.has(prompt.id)} badge={SAMPLE_IDS.has(prompt.id) ? undefined : 'Chưa có bài mẫu'} />
         </div>
         <button type="button" disabled={starting} onClick={() => { setStarting(true); onStart(mode); }} style={{ width: '100%', height: 46, borderRadius: 10, border: 'none', background: '#141413', color: '#fff', fontFamily: 'var(--font-sans)', fontSize: 13, fontWeight: 600, cursor: 'pointer', opacity: starting ? 0.6 : 1 }}>{mode === 'free' && last ? 'Bắt đầu bài mới' : 'Bắt đầu làm bài'}</button>

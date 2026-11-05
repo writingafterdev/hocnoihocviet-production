@@ -2,14 +2,12 @@
  * Attempts: one student's work on one prompt (chains, stance, essay, feedback).
  * Saved per signed-in user in D1 through /api/attempts; the screens only talk to `AttemptStore`.
  */
-import type { MapExtras } from '../chainlab/ideamap';
-import type { Plan } from '../chainlab/plan';
-import type { ChainReview } from '../chainlab/review';
 import type { Chain } from '../chainlab/types';
+import type { CheckResult } from '../coach/useCoach';
 import type { EssayReview } from '../desk/scoring';
 
 export interface EssayState {
-  /** Ids of body paragraphs, in order. */
+  /** Ids of body paragraphs, in order. Each body paragraph is one chain: its id is the chain's id. */
   bodies: string[];
   /** Section id (intro, body…, conclusion) → text. */
   drafts: Record<string, string>;
@@ -30,13 +28,12 @@ export interface Attempt {
   mode: 'free';
   createdAt: number;
   updatedAt: number;
+  /** One chain per body paragraph, in essay order (see features/essay/model). */
   chains: Chain[];
-  /** Rows and columns the student added to a question's idea map, by question number. */
-  mapExtras?: Record<string, MapExtras>;
+  /** Not asked for any more; kept empty for the essay review's input. */
   stance: string;
-  /** Screen ② "Cân": the weighing by area, the position and the paragraph outline. */
-  plan?: Plan;
-  chainReview: ChainReview | null;
+  /** Latest "Kiểm tra mạch" per chain id. */
+  checks?: Record<string, CheckResult>;
   essay: EssayState;
 }
 
@@ -55,8 +52,8 @@ export function createAttempt(promptId: string, chains: Chain[]): Attempt {
   const now = Date.now();
   return {
     id: newId(), promptId, mode: 'free', createdAt: now, updatedAt: now,
-    chains, stance: '', chainReview: null,
-    essay: { bodies: ['body1', 'body2'], drafts: {}, seconds: 0, review: null },
+    chains, stance: '', checks: {},
+    essay: { bodies: chains.map((c) => c.id), drafts: {}, seconds: 0, review: null },
   };
 }
 

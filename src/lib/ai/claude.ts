@@ -12,11 +12,12 @@ export class AiError extends Error {
 export interface Usage { input: number; output: number }
 
 /** Daily limits per student (Vietnam calendar day). */
-export const DAILY_LIMIT = { chain: 10, essay: 5, translate: 60, vocab: 30 } as const;
+/** chain = "Kiểm tra" on one chain (drill or ① Dựng mạch); hint = "Bí? Gợi ý". */
+export const DAILY_LIMIT = { chain: 40, hint: 80, essay: 5, translate: 60, vocab: 30 } as const;
 export type AiKind = keyof typeof DAILY_LIMIT;
 
 /** Per-attempt time limit for each kind of call (ms). The browser gives up a little after two attempts. */
-const TIMEOUT_MS: Record<AiKind, number> = { chain: 120_000, essay: 150_000, translate: 30_000, vocab: 45_000 };
+const TIMEOUT_MS: Record<AiKind, number> = { chain: 90_000, hint: 40_000, essay: 150_000, translate: 30_000, vocab: 45_000 };
 
 const today = () => vnDay(0);
 /** The Vietnam calendar day (YYYY-MM-DD), `ago` days back. */

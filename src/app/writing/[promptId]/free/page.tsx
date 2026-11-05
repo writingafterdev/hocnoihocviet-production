@@ -6,7 +6,7 @@ export function generateStaticParams() {
   return PROMPTS.map((p) => ({ promptId: p.id }));
 }
 
-/** Shareable link that starts a new "Viết tự do" attempt for a prompt. */
+/** Shareable link that starts a new "Tự viết" attempt for a prompt. */
 export default async function Page({ params }: { params: Promise<{ promptId: string }> }) {
   const { promptId } = await params;
   if (!findPrompt(promptId)) notFound();

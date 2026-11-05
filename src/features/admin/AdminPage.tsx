@@ -5,7 +5,7 @@ import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 import { PageHeader } from '@/components/shell/BrandHeader';
 import './admin.css';
 
-const KIND_NAME: Record<string, string> = { essay: 'Chấm bài viết', chain: 'Soát mạch', translate: 'Dịch', vocab: 'Từ vựng' };
+const KIND_NAME: Record<string, string> = { essay: 'Chấm bài viết', chain: 'Kiểm tra mạch', hint: 'Gợi ý', translate: 'Dịch', vocab: 'Từ vựng' };
 const ERROR_NAME: Record<string, string> = { upstream: 'Nhà cung cấp AI báo lỗi', timeout: 'AI trả lời quá lâu', bad_output: 'AI trả về kết quả lỗi', refused: 'AI từ chối nội dung', not_configured: 'AI chưa được bật' };
 
 interface Overview {

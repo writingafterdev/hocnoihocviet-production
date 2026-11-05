@@ -5,13 +5,12 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import { WorkspaceHeader } from '@/components/shell/BrandHeader';
 import { findPrompt } from '@/content/prompts';
-import { ChainBuilder } from '../chainlab/ChainBuilder';
-import type { OutlinePara } from '../chainlab/plan';
 import { StepNav } from '../chainlab/ui/StepNav';
-import { WeighScreen } from '../chainlab/WeighScreen';
-import { SpecProvider } from '../chainlab/SpecContext';
 import type { Chain } from '../chainlab/types';
-import { ChainDesk } from '../desk/ChainDesk';
+import { backLinkStyle, ClIcon } from '../chainlab/ui/primitives';
+import type { CheckResult } from '../coach/useCoach';
+import { BuildScreen } from '../essay/BuildScreen';
+import { WriteScreen } from '../essay/WriteScreen';
 import { attemptStore, SignedOutError, type Attempt, type EssayState } from './store';
 
 type Status = 'loading' | 'ready' | 'missing' | 'error';
@@ -20,15 +19,15 @@ type SaveState = 'saved' | 'saving' | 'failed';
 const SAVE_DELAY = 1500;
 
 /** What counts as an edit worth saving: everything except the running timer and timestamps. */
-const contentKey = (a: Attempt) => JSON.stringify([a.chains, a.mapExtras, a.stance, a.plan, a.chainReview, a.essay.bodies, a.essay.drafts, a.essay.review]);
+const contentKey = (a: Attempt) => JSON.stringify([a.chains, a.checks, a.essay.bodies, a.essay.drafts, a.essay.review, a.essay.fixing]);
 
 const SAVE_LABEL: Record<SaveState, string> = { saved: 'Đã lưu', saving: 'Đang lưu…', failed: 'Chưa lưu được · thử lại' };
 
-/** One "Viết tự do" attempt: ① chains at /write/[id]/chains, ② Cân at /weigh, ③ Writing Desk at /essay. Autosaves. */
+/** One "Tự viết" attempt: ① Dựng mạch at /write/[id]/chains, ② Viết bài at /essay. Autosaves. */
 export function AttemptWorkspace({ attemptId }: { attemptId: string }) {
   const router = useRouter();
   const path = usePathname();
-  const view = path.endsWith('/essay') ? 'essay' : path.endsWith('/weigh') ? 'weigh' : 'chains';
+  const view = path.endsWith('/essay') ? 'essay' : 'chains';
   const [attempt, setAttempt] = useState<Attempt | null>(null);
   const [status, setStatus] = useState<Status>('loading');
   const [save, setSave] = useState<SaveState>('saved');
@@ -100,63 +99,35 @@ export function AttemptWorkspace({ attemptId }: { attemptId: string }) {
   }
 
   const prompt = findPrompt(attempt.promptId);
-  const touch = (patch: Partial<Attempt>) => setAttempt((a) => ({ ...a, ...patch, updatedAt: Date.now() }));
-  const setChains = (fn: Chain[] | ((cs: Chain[]) => Chain[])) =>
-    setAttempt((a) => ({ ...a, chains: typeof fn === 'function' ? fn(a.chains) : fn, updatedAt: Date.now() }));
+  // Body paragraphs follow the chains: same ids, same order.
+  const setChains = (fn: (cs: Chain[]) => Chain[]) =>
+    setAttempt((a) => { const chains = fn(a.chains); return { ...a, chains, essay: { ...a.essay, bodies: chains.map((c) => c.id) }, updatedAt: Date.now() }; });
+  const setCheck = (id: string, r: CheckResult | null) =>
+    setAttempt((a) => { const checks = { ...(a.checks || {}) }; if (r) checks[id] = r; else delete checks[id]; return { ...a, checks, updatedAt: Date.now() }; });
   const setEssay = (fn: (e: EssayState) => EssayState) => setAttempt((a) => ({ ...a, essay: fn(a.essay), updatedAt: Date.now() }));
   const base = '/write/' + attempt.id;
-  const verdict = prompt.questions.some((q) => q.shape === 'verdict');
-  const steps = [{ label: '① Ý', href: base + '/chains' }, { label: verdict ? '② Cân' : '② Dàn bài', href: base + '/weigh' }, { label: '③ Viết', href: base + '/essay' }];
-  const nav = (k: number) => <StepNav steps={steps} current={k} />;
-  /** Leaving ② for ③: the outline becomes the essay's body paragraphs; drafts of other paragraphs are kept. */
-  const toEssay = (paras: OutlinePara[]) => {
-    setAttempt((a) => {
-      const ids = paras.map((p) => p.id);
-      const kept = a.essay.bodies.filter((b) => !ids.includes(b) && (a.essay.drafts[b] || '').trim());
-      return { ...a, plan: { ...(a.plan || {}), paras }, essay: { ...a.essay, bodies: [...ids, ...kept] }, updatedAt: Date.now() };
-    });
-    router.push(base + '/essay');
-  };
+  const steps = [{ label: '① Dựng mạch', href: base + '/chains' }, { label: '② Viết bài', href: base + '/essay' }];
+  const left = (back: string, label: string, k: number) => (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 18 }}>
+      <Link href={back} className="cl-link" style={backLinkStyle}><ClIcon name="left" size={14} />{label}</Link>
+      <StepNav steps={steps} current={k} />
+    </div>
+  );
 
   return (
-    <SpecProvider value={prompt}>
-      <div style={{ height: '100vh', background: '#fff', display: 'flex', flexDirection: 'column' }}>
-        <WorkspaceHeader status={
-          <button type="button" className="cl-btn" disabled={save !== 'failed'} onClick={() => persist(attempt)} aria-live="polite" style={{ fontFamily: 'var(--font-sans)', fontSize: 12, fontWeight: 500, color: save === 'failed' ? '#8B3A35' : '#9A9A93', cursor: save === 'failed' ? 'pointer' : 'default' }}>{SAVE_LABEL[save === 'failed' ? 'failed' : contentKey(attempt) !== savedKey.current ? 'saving' : 'saved']}</button>
-        } />
-        <div style={{ flex: 1, minHeight: 0 }}>
-          {view === 'chains' ? (
-            <ChainBuilder
-              chains={attempt.chains}
-              setChains={setChains}
-              extras={attempt.mapExtras}
-              setExtras={(mapExtras) => touch({ mapExtras })}
-              stance={attempt.stance}
-              review={attempt.chainReview}
-              setReview={(chainReview) => touch({ chainReview })}
-              onBack={() => router.push('/writing')}
-              onNext={() => router.push(base + '/weigh')}
-              nav={nav(0)}
-            />
-          ) : view === 'weigh' ? (
-            <WeighScreen
-              chains={attempt.chains}
-              setChains={setChains}
-              extras={attempt.mapExtras}
-              setExtras={(mapExtras) => touch({ mapExtras })}
-              stance={attempt.stance}
-              setStance={(stance) => touch({ stance })}
-              plan={attempt.plan || {}}
-              setPlan={(plan) => touch({ plan })}
-              onBack={() => router.push(base + '/chains')}
-              onWrite={toEssay}
-              nav={nav(1)}
-            />
-          ) : (
-            <ChainDesk chains={attempt.chains} stance={attempt.stance} essay={attempt.essay} setEssay={setEssay} plan={attempt.plan} onBack={() => router.push(base + '/weigh')} nav={nav(2)} />
-          )}
-        </div>
+    <div style={{ height: '100vh', background: '#fff', display: 'flex', flexDirection: 'column' }}>
+      <WorkspaceHeader status={
+        <button type="button" className="cl-btn" disabled={save !== 'failed'} onClick={() => persist(attempt)} aria-live="polite" style={{ fontFamily: 'var(--font-sans)', fontSize: 12, fontWeight: 500, color: save === 'failed' ? '#8B3A35' : '#9A9A93', cursor: save === 'failed' ? 'pointer' : 'default' }}>{SAVE_LABEL[save === 'failed' ? 'failed' : contentKey(attempt) !== savedKey.current ? 'saving' : 'saved']}</button>
+      } />
+      <div style={{ flex: 1, minHeight: 0 }}>
+        {view === 'chains' ? (
+          <BuildScreen prompt={prompt} chains={attempt.chains} setChains={setChains} checks={attempt.checks || {}} setCheck={setCheck}
+            toolbarLeft={left('/writing', 'Thư viện đề', 0)} onNext={() => router.push(base + '/essay')} />
+        ) : (
+          <WriteScreen prompt={prompt} chains={attempt.chains} setChains={setChains} essay={attempt.essay} setEssay={setEssay}
+            toolbarLeft={left(base + '/chains', 'Dựng mạch', 1)} />
+        )}
       </div>
-    </SpecProvider>
+    </div>
   );
 }

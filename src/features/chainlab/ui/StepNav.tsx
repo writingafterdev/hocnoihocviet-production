@@ -6,7 +6,7 @@ import { CL } from '../constants';
 
 export interface Step { label: string; href: string }
 
-/** The ① Ý · ② Cân · ③ Viết bar of a "Viết tự do" attempt. Every step stays reachable. */
+/** The ① Dựng mạch · ② Viết bài bar of a "Tự viết" attempt. Every step stays reachable. */
 export function StepNav({ steps, current }: { steps: Step[]; current: number }) {
   return (
     <nav aria-label="Các bước" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>

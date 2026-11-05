@@ -20,7 +20,7 @@ export function describePrompt(p: Prompt) {
 export function describeChains(p: Prompt, chains: Chain[], stance: string) {
   const [left, right] = sidesOf(p);
   const side = (s?: Side) => (s === 'left' ? left : s === 'right' ? right : 'chưa xếp');
-  const out: string[] = ['CÁC MẠCH CỦA HỌC SINH'];
+  const out: string[] = ['CÁC MẠCH CỦA HỌC SINH (mỗi mạch là một đoạn thân bài, theo đúng thứ tự: Mạch 1 = Thân bài 1…; bước 1 là điểm đầu, bước cuối là điểm cuối)'];
   chains.forEach((c, i) => {
     const sh = shapeOf(p, c);
     out.push('', `[Mạch ${i + 1}] id=${c.id} · câu ${c.q || 1} (${CL_SHAPE_LABEL[sh]}) · tên: ${c.title || '(chưa đặt)'}${c.drv ? ' · xuất phát từ driver ' + c.drv : ''}${sh === 'verdict' ? ` · tông: ${c.tone === 'cost' ? 'tác hại' : 'lợi ích'}` : ''}${sh === 'cause' ? ' · loại nguyên nhân: ' + (levelOf(c) || '(chưa viết)') + (upstreamSteps(c).length ? ' (bước 1–' + upstreamSteps(c).length + ' là nguyên nhân thượng nguồn thuộc hệ thống, các bước sau là của người trong cuộc)' : '') : ''}${c.area ? ' · vùng: ' + c.area : ''}${c.cell ? ' · ô bản đồ: ' + String(c.cell.r).slice(0, 60) + ' × ' + String(c.cell.c).slice(0, 60) : ''}`);
@@ -35,7 +35,7 @@ export function describeChains(p: Prompt, chains: Chain[], stance: string) {
       out.push('  xử lý: ' + (k >= 0 ? 'Mạch ' + (k + 1) : '(chưa chọn)'));
     }
   });
-  if (p.questions.some((q) => q.shape === 'verdict')) out.push('', 'LẬP TRƯỜNG: ' + (stance.trim() || '(chưa viết)'));
+  if (stance.trim()) out.push('', 'LẬP TRƯỜNG: ' + stance.trim());
   return out.join('\n');
 }
 

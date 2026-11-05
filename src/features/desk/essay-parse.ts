@@ -6,7 +6,7 @@ import type { Chain, ReviewItem } from '../chainlab/types';
 import { bandOf, CRITERIA, type EssayReview } from './scoring';
 
 export interface SectionIn { id: string; label: string; text: string }
-interface Comment { criterion: string; sectionId: string; quote: string; label?: string; text: string; fix: string; chainId: string }
+interface Comment { criterion: string; sectionId: string; quote: string; label?: string; text: string; fix: string; chainId: string; step?: number }
 type Criteria = Record<'tr' | 'cc' | 'lr' | 'gra', { score: number; why: string; gap?: string; next: string }>;
 
 const norm = (s: string) => s.replace(/[‘’]/g, "'").replace(/[“”]/g, '"').replace(/\s+/g, ' ').toLowerCase();
@@ -66,6 +66,8 @@ export function toItems(criterion: string, out: { comments?: Comment[] }, sectio
       sectionId: hit.id,
       where: s.label + (k >= 0 ? ' · Mạch ' + (k + 1) : ''),
       ...(k >= 0 ? { chainId: chains[k].id } : {}),
+      // The model counts steps from 1 (step 1 = the starting point).
+      ...(k >= 0 && Number.isInteger(c.step) && c.step >= 1 && c.step <= chains[k].steps.length ? { at: c.step - 1 } : {}),
       word: hit.text,
       quote: hit.text,
       ...(label ? { label } : {}),
