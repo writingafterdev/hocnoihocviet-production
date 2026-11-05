@@ -63,7 +63,7 @@ export function TranslatorChat({ ideas = [], onClose, skill = 'task2' }: { ideas
   };
 
   return (
-    <section aria-label="Dịch" style={{ flex: '1 1 0', minHeight: 320, display: 'flex', flexDirection: 'column', borderRadius: 18, border: '1px solid ' + CL.border, background: '#fff', overflow: 'hidden' }}>
+    <section aria-label="Dịch" style={{ flex: '1 1 0', minHeight: 0, height: '100%', display: 'flex', flexDirection: 'column', borderRadius: 18, border: '1px solid ' + CL.border, background: '#fff', overflow: 'hidden' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, minHeight: 54, padding: '0 12px 0 20px', borderBottom: '1px solid ' + CL.ink1 }}>
         <span style={{ width: 8, height: 8, borderRadius: 999, background: CL.mint }} />
         <ClLabel color={CL.ink}>Dịch</ClLabel>

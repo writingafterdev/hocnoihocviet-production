@@ -54,12 +54,74 @@ a:hover { color: #44443F; }
 }
 
 /* Coach screens (Chứng minh nhanh, ① Dựng mạch, ② Viết bài) */
+:root { --co-ease: cubic-bezier(.22, 1, .36, 1); --co-spring: cubic-bezier(.34, 1.4, .64, 1); }
 .co-ta { field-sizing: content; }
 .co-ta::placeholder { color: #9A9A93; }
-.co-grid { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr) 406px; gap: 26px; }
+/* Main column + right column. The right column slides like the old writing screens: the track eases open or shut,
+   the panel inside keeps its width and fades + drifts. Panels in it share the height and fold away the same way. */
+.co-grid { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr) 406px; transition: grid-template-columns .75s var(--co-ease); }
+.co-grid.shut { grid-template-columns: minmax(0, 1fr) 0px; }
 .co-col { min-height: 0; display: flex; flex-direction: column; gap: 14px; }
+.co-side { min-width: 0; min-height: 0; overflow: hidden; }
+.co-side-in { width: 406px; height: 100%; padding-left: 26px; display: flex; flex-direction: column; transition: opacity .5s ease, transform .75s var(--co-ease); }
+.co-grid.shut .co-side-in { opacity: 0; transform: translateX(24px); }
+.co-stack { min-height: 0; overflow: hidden; display: flex; flex-direction: column; transition: flex .75s var(--co-ease), opacity .5s ease, margin .75s var(--co-ease); }
+.co-stack.off { flex: 0 0 0px !important; opacity: 0; margin-top: 0 !important; }
 @media (max-width: 1100px) {
-  .co-grid { display: flex; flex-direction: column; overflow-y: auto; }
+  .co-grid, .co-grid.shut { display: flex; flex-direction: column; overflow-y: auto; }
   .co-col { flex: none !important; min-height: auto; }
   .co-col > * { flex: none !important; }
+  .co-side-in { width: auto; height: auto; padding: 16px 0 0; }
+  .co-grid.shut .co-side, .co-stack.off { display: none; }
+  .co-stack { flex: none !important; min-height: 320px; }
+}
+
+/* Chain motion */
+.co-enter .co-line { animation: co-grow .6s var(--co-ease) both; }
+.co-enter .co-dot { animation: co-pop .55s var(--co-spring) .18s both; }
+.co-enter .co-content { animation: co-rise .6s var(--co-ease) .12s both; }
+.co-noted { animation: co-tint .6s var(--co-ease) var(--d, 0s) both; }
+.co-badge { animation: co-pop .55s var(--co-spring) var(--d, 0s) both; }
+.co-jump { transform-origin: top; animation: co-grow .7s var(--co-ease) var(--d, 0s) both; }
+.co-dot { transition: background-color .3s, transform .3s var(--co-spring); }
+.co-dot.co-ping { animation: co-ping .5s var(--co-ease); }
+.co-dot.co-ok > span { background: #1FA97A !important; }
+.co-unfold { transform-origin: top left; animation: co-unfold .65s var(--co-ease) both; }
+.co-rise { animation: co-rise .6s var(--co-ease) var(--d, 0s) both; }
+.co-slidein { animation: co-slidein .6s var(--co-ease) var(--d, 0s) both; }
+.co-pop { animation: co-pop .5s var(--co-spring) var(--d, 0s) both; }
+.co-bump { display: inline-block; animation: co-bump .5s var(--co-spring); }
+.co-flip { animation: co-flip .6s var(--co-ease); }
+.co-fade { animation: co-fade .6s ease both; }
+.co-tick { stroke-dasharray: 20; stroke-dashoffset: 20; animation: co-tick .4s var(--co-ease) .25s forwards; }
+.co-scan { position: absolute; left: 1px; top: 0; width: 15px; height: 15px; border-radius: 999px; background: radial-gradient(circle, rgba(98,218,177,.95) 0 35%, rgba(98,218,177,.35) 36% 60%, rgba(98,218,177,0) 61%); box-shadow: 0 0 14px 4px rgba(98,218,177,.45); z-index: 3; pointer-events: none; }
+.co-trail { position: absolute; left: 8px; width: 1px; background: #62DAB1; transform-origin: top; z-index: 1; pointer-events: none; }
+.co-sweep { position: absolute; left: 7.5px; width: 2px; border-radius: 2px; background: #1FA97A; transform-origin: top; z-index: 1; pointer-events: none; }
+.co-hl { border-radius: 4px; padding: 0 4px; background-repeat: no-repeat; background-size: 0% 100%; animation: co-mark .9s var(--co-ease) var(--d, .15s) forwards; }
+.co-hl.still { animation: none; }
+.co-reel-win { position: relative; overflow: hidden; transition: height .6s var(--co-ease); }
+.co-reel-win::before, .co-reel-win::after { content: ""; position: absolute; left: 0; right: 0; height: 18px; z-index: 2; pointer-events: none; transition: opacity .4s; }
+.co-reel-win::before { top: 0; background: linear-gradient(#fff, rgba(255,255,255,0)); }
+.co-reel-win::after { bottom: 0; background: linear-gradient(rgba(255,255,255,0), #fff); }
+.co-reel-win.settled::before, .co-reel-win.settled::after { opacity: 0; }
+.co-dice { display: inline-block; transition: transform .6s var(--co-ease); }
+.co-dice.on { transform: rotate(360deg); }
+@keyframes co-grow { from { transform: scaleY(0); } to { transform: scaleY(1); } }
+@keyframes co-pop { from { transform: scale(.4); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+@keyframes co-rise { from { transform: translateY(8px); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes co-slidein { from { transform: translateX(18px); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes co-unfold { from { transform: translateY(-8px) scaleY(.6); opacity: 0; clip-path: inset(0 0 100% 0 round 12px); } to { transform: none; opacity: 1; clip-path: inset(0 0 0 0 round 12px); } }
+@keyframes co-tint { from { background-color: transparent; } }
+@keyframes co-ping { 0% { transform: scale(1); } 40% { transform: scale(1.45); } 100% { transform: scale(1); } }
+@keyframes co-mark { to { background-size: 100% 100%; } }
+@keyframes co-bump { 0% { transform: scale(1); } 40% { transform: scale(1.5); color: #1FA97A; } 100% { transform: scale(1); } }
+@keyframes co-flip { from { transform: rotateX(90deg); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes co-fade { from { opacity: 0; } }
+@keyframes co-tick { to { stroke-dashoffset: 0; } }
+@media (prefers-reduced-motion: reduce) {
+  .co-grid, .co-side-in, .co-stack, .co-dot, .co-reel-win { transition: none !important; }
+  .co-enter *, .co-noted, .co-badge, .co-jump, .co-unfold, .co-rise, .co-slidein, .co-pop, .co-bump, .co-flip, .co-fade, .co-hl, .co-dot.co-ping { animation: none !important; }
+  .co-hl { background-size: 100% 100%; }
+  .co-tick { stroke-dashoffset: 0; }
+  .co-scan, .co-trail, .co-sweep { display: none; }
 }

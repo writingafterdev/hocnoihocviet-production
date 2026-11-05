@@ -7,6 +7,7 @@ import { AI_ERROR_TEXT, AiRequestError } from '../ai/request';
 import { CL } from '../chainlab/constants';
 import type { Chain, ReviewItem } from '../chainlab/types';
 import { ClIcon, ClLabel, toolbarBtn } from '../chainlab/ui/primitives';
+import { CoachGrid, SidePanel } from '../coach/CoachGrid';
 import { TranslatorChat } from '../coach/TranslatorChat';
 import { primaryBtn } from '../coach/ui';
 import { CRITERIA, CRITERION_STYLE, draftsKey, requestEssayReview, retryEssayCriterion, wordCount, type EssaySection } from '../desk/scoring';
@@ -198,7 +199,9 @@ export function WriteScreen({ prompt, chains, setChains, essay, setEssay, toolba
         </div>
       </div>
 
-      <div className="co-grid">
+      <CoachGrid
+        open={chat || !!review}
+        main={
         <main className="co-col" style={{ minWidth: 0 }}>
           <section style={{ flex: '1 1 0', minHeight: 0, display: 'flex', flexDirection: 'column', borderRadius: 18, border: '1px solid ' + CL.border, background: '#fff', overflow: 'hidden' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 14, minHeight: 56, padding: '0 24px', borderBottom: '1px solid ' + CL.ink1, background: CL.panel }}>
@@ -222,8 +225,11 @@ export function WriteScreen({ prompt, chains, setChains, essay, setEssay, toolba
             </div>
           </section>
         </main>
-
-        <aside className="co-col cl-scroll" style={{ minWidth: 0, overflowY: chat ? 'hidden' : 'auto' }}>
+        }
+        side={
+          <>
+            <SidePanel on={!!review && !chat} grow={3}>
+              <div className="cl-scroll" style={{ height: '100%', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 14 }}>
           {review && scores && (
             <section style={{ flexShrink: 0, borderRadius: 18, border: '1px solid ' + CL.border, background: '#fff', padding: '18px 20px', display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div style={{ display: 'flex', gap: 22, alignItems: 'center' }}>
@@ -251,7 +257,7 @@ export function WriteScreen({ prompt, chains, setChains, essay, setEssay, toolba
               )}
             </section>
           )}
-          {review && !chat && notes.map((note) => {
+          {review && notes.map((note) => {
             const on = active === note, st = CRITERION_STYLE[note.crit];
             return (
               <button key={note.item.key + note.crit} type="button" className="cl-btn" onClick={() => setActive(on ? null : note)} aria-pressed={on}
@@ -267,10 +273,14 @@ export function WriteScreen({ prompt, chains, setChains, essay, setEssay, toolba
               </button>
             );
           })}
-          {chat && <TranslatorChat onClose={() => setChat(false)} />}
-          {!review && !chat && <p style={{ margin: 0, padding: '4px 6px', fontFamily: CL.sans, fontSize: 12.5, lineHeight: 1.6, color: CL.ink4 }}>Viết xong bấm “Nộp bài”. Điểm và nhận xét hiện ở đây; mỗi nhận xét chỉ vào câu trong bài và bước trong mạch.</p>}
-        </aside>
-      </div>
+              </div>
+            </SidePanel>
+            <SidePanel on={chat} grow={2}>
+              <TranslatorChat onClose={() => setChat(false)} />
+            </SidePanel>
+          </>
+        }
+      />
     </div>
   );
 }

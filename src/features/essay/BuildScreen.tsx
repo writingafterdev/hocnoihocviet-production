@@ -6,6 +6,7 @@ import { CL, CL_CIRC } from '../chainlab/constants';
 import type { Chain } from '../chainlab/types';
 import { ClIcon, ClLabel, toolbarBtn } from '../chainlab/ui/primitives';
 import { ChainEditor, miniBtn } from '../coach/ChainEditor';
+import { CoachGrid, SidePanel, useLast } from '../coach/CoachGrid';
 import { NotesPanel } from '../coach/NotesPanel';
 import { TranslatorChat } from '../coach/TranslatorChat';
 import { primaryBtn } from '../coach/ui';
@@ -112,6 +113,7 @@ function BodyCard({ prompt, chain, num, canDelete, onChange, onDelete, check, on
               notes={notes} active={focused ? active : null} onPick={(k) => { onFocus(); onPick(k); }}
               hint={coach.hint} asking={coach.asking} onHint={coach.askHint} onCloseHint={coach.closeHint}
               helper={coach.error || (coach.checking ? 'Đang kiểm tra…' : filled ? 'Enter để thêm bước.' : 'Từ điểm đầu đi tới điểm cuối, qua những người bị ảnh hưởng.')}
+              checking={coach.checking} clean={coach.fresh && !!coach.result && coach.result.placed.length === 0}
             />
           </div>
           <div style={{ borderTop: '1px solid ' + CL.ink1, background: CL.panel, padding: '10px 22px', display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -139,6 +141,8 @@ export function BuildScreen({ prompt, chains, setChains, checks, setCheck, toolb
   const shown = focused && checks[focused.id] ? focused : null;
   const shownCheck = shown ? checks[shown.id] : null;
   const fresh = !!shown && !!shownCheck && shownCheck.snap === JSON.stringify([startOf(shown), endOf(shown), middleOf(shown).map((s) => s.trim()).filter(Boolean)]);
+  const notesOn = !!(shown && shownCheck && notesOpen);
+  const lastCheck = useLast(notesOn ? shownCheck : null);
   const multi = prompt.questions.length > 1;
   const rule = multi
     ? 'Mỗi mạch là một thân bài. Câu nguyên nhân và câu giải pháp đã cho điểm cuối, nên bạn viết điểm đầu; câu hỏi tác động đã cho điểm đầu, nên bạn viết điểm cuối.'
@@ -155,7 +159,9 @@ export function BuildScreen({ prompt, chains, setChains, checks, setCheck, toolb
         </div>
       </div>
 
-      <div className="co-grid">
+      <CoachGrid
+        open={chat || notesOn}
+        main={
         <main className="co-col cl-scroll" style={{ minWidth: 0, overflowY: 'auto', gap: 16, paddingBottom: 24 }}>
           <section style={{ flexShrink: 0, borderRadius: 18, border: '1px solid ' + CL.border, background: '#fff', padding: '18px 24px', display: 'flex', flexDirection: 'column', gap: 8 }}>
             <span style={{ display: 'flex', justifyContent: 'space-between' }}><ClLabel>Writing Task 2</ClLabel><ClLabel>40 phút</ClLabel></span>
@@ -177,16 +183,18 @@ export function BuildScreen({ prompt, chains, setChains, checks, setCheck, toolb
             ))}
           </div>
         </main>
-
-        <aside className="co-col" style={{ minWidth: 0 }}>
-          {shown && shownCheck && notesOpen && (
-            <NotesPanel result={shownCheck} fresh={fresh} active={active} onPick={setActive} onClose={() => setNotesOpen(false)} />
-          )}
-          {shown && shownCheck && !notesOpen && <button type="button" className="cl-btn cl-add" onClick={() => setNotesOpen(true)} style={{ flexShrink: 0, borderRadius: 12, border: '1px solid ' + CL.border, padding: '12px 16px', textAlign: 'left', fontFamily: CL.sans, fontSize: 12.5, fontWeight: 600, color: CL.ink6 }}>Xem nhận xét ({shownCheck.placed.length})</button>}
-          {chat && <TranslatorChat onClose={() => setChat(false)} />}
-          {!chat && !shown && <p style={{ margin: 0, padding: '4px 6px', fontFamily: CL.sans, fontSize: 12.5, lineHeight: 1.6, color: CL.ink4 }}>Bấm “Kiểm tra mạch” ở một thân bài để xem nhận xét ở đây.</p>}
-        </aside>
-      </div>
+        }
+        side={
+          <>
+            <SidePanel on={notesOn} grow={3}>
+              {lastCheck && <NotesPanel result={lastCheck} fresh={fresh} active={active} onPick={setActive} onClose={() => setNotesOpen(false)} />}
+            </SidePanel>
+            <SidePanel on={chat} grow={2} top={notesOn}>
+              <TranslatorChat onClose={() => setChat(false)} />
+            </SidePanel>
+          </>
+        }
+      />
     </div>
   );
 }
