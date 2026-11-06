@@ -175,7 +175,6 @@ export function ChainEditor(p: ChainEditorProps) {
       <li style={{ display: 'flex', gap: 18, minHeight: 44 }}>
         <Rail center={CENTER.add} track={false} dot={<span style={{ width: DOT, height: DOT, borderRadius: 999, border: '1.5px dashed ' + CL.ink3, background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', color: CL.ink4 }}><ClIcon name="plus" size={9} /></span>} />
         <div style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 6, padding: '6px 0' }}>
-          <button type="button" className="cl-btn cl-add" onClick={addStep} style={miniBtn}><ClIcon name="plus" size={11} />Thêm bước</button>
           <button type="button" className="cl-btn" onClick={p.onHint} disabled={p.asking} style={{ ...miniBtn, border: '1px dashed #D9BE66', background: CL.yellowSoft, color: CL.yellowText, opacity: p.asking ? 0.6 : 1 }}>{p.asking ? 'Đang nghĩ…' : 'Bí? Gợi ý'}</button>
           {p.helper && <span style={{ marginLeft: 6, fontFamily: CL.sans, fontSize: 11.5, lineHeight: 1.4, color: CL.ink4 }}>{p.helper}</span>}
         </div>

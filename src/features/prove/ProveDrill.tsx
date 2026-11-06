@@ -29,14 +29,22 @@ export function kindChip(s: Pick<Statement, 'kind' | 'tone'>) {
 
 const sentenceStyle: React.CSSProperties = { margin: 0, fontFamily: CL.serif, fontSize: 21, lineHeight: 1.5, color: CL.ink };
 
-/** The statement with its start (mint) and stakeholder (sky) highlighted; `still` skips the highlighter sweep. */
+/** Highlights in the statement: the starting point, the stakeholder and the ending point, swept in in reading order. */
+const MARK = {
+  start: { title: 'Điểm đầu', fg: CL.greenText, bg: CL.mintSoft, delay: '.15s' },
+  who: { title: 'Stakeholder', fg: '#17667A', bg: '#E4F5FA', delay: '.45s' },
+  end: { title: 'Điểm cuối', fg: '#8A5A12', bg: CL.yellowSoft, delay: '.75s' },
+} as const;
+
+/** The statement with its start (mint), stakeholder (sky) and end (yellow) highlighted; `still` skips the highlighter sweep. */
 function Sentence({ s, still }: { s: Statement; still?: boolean }) {
   return (
     <>
-      {sentenceParts(s.sentence).map((part, k) => part.mark
-        ? <span key={k} title={part.mark === 'start' ? 'Điểm đầu' : 'Stakeholder'} className={'co-hl' + (still ? ' still' : '')}
-          style={{ color: part.mark === 'start' ? CL.greenText : '#17667A', backgroundImage: 'linear-gradient(' + (part.mark === 'start' ? CL.mintSoft : '#E4F5FA') + ',' + (part.mark === 'start' ? CL.mintSoft : '#E4F5FA') + ')', ['--d' as string]: part.mark === 'start' ? '.15s' : '.45s' }}>{part.text}</span>
-        : <span key={k}>{part.text}</span>)}
+      {sentenceParts(s.sentence).map((part, k) => {
+        if (!part.mark) return <span key={k}>{part.text}</span>;
+        const m = MARK[part.mark];
+        return <span key={k} title={m.title} className={'co-hl' + (still ? ' still' : '')} style={{ color: m.fg, backgroundImage: 'linear-gradient(' + m.bg + ',' + m.bg + ')', ['--d' as string]: m.delay }}>{part.text}</span>;
+      })}
     </>
   );
 }
