@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import type { Prompt } from '@/content/prompts';
 import { SignedOutError, type EssayState } from '../attempts/store';
@@ -20,6 +21,8 @@ export interface WriteProps {
   essay: EssayState;
   setEssay: (fn: (e: EssayState) => EssayState) => void;
   toolbarLeft: ReactNode;
+  /** ① Dựng mạch, for chains that aren't built yet. */
+  chainsHref: string;
 }
 
 interface Note { item: ReviewItem; crit: string; n: number }
@@ -61,7 +64,10 @@ function Marked({ text, notes, active, onPick }: { text: string; notes: Note[]; 
 }
 
 /** The chain next to its paragraph: start, middle, end. A note about one step tints that step. */
-function MiniChain({ prompt, chain, num, first, last, onMove, hit }: { prompt: Prompt; chain: Chain; num: number; first: boolean; last: boolean; onMove: (d: -1 | 1) => void; hit: { at: number | null; bg: string } | null }) {
+function MiniChain({ prompt, chain, num, first, last, onMove, hit, focused, onOpen, chainsHref }: { prompt: Prompt; chain: Chain; num: number; first: boolean; last: boolean; onMove: (d: -1 | 1) => void; hit: { at: number | null; bg: string } | null; focused: boolean; onOpen: () => void; chainsHref: string }) {
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => { if (focused || hit) ref.current?.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); }, [focused, hit?.at, hit?.bg]); // eslint-disable-line react-hooks/exhaustive-deps
+  const built = chain.built !== false && middleOf(chain).some((s) => s.trim());
   const steps = [startOf(chain), ...middleOf(chain).filter((s) => s.trim()), endOf(chain)];
   const total = chain.steps.length;
   // `at` indexes the stored steps (start, middle…, end); map it onto the shown list, which skips empty middle steps.
@@ -72,12 +78,17 @@ function MiniChain({ prompt, chain, num, first, last, onMove, hit }: { prompt: P
     </button>
   );
   return (
-    <div style={{ borderRadius: 12, border: '1px solid ' + CL.ink2, background: '#fff', overflow: 'hidden' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 10px 10px 14px', borderBottom: '1px solid ' + CL.ink1, background: hit && hit.at == null ? hit.bg : '#fff', transition: 'background-color .2s' }}>
+    <div ref={ref} onClick={onOpen} style={{ flexShrink: 0, cursor: 'pointer', borderRadius: 12, border: '1px solid ' + (focused ? CL.ink4 : CL.ink2), background: '#fff', overflow: 'hidden', transition: 'border-color .25s' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 10px 10px 14px', borderBottom: '1px solid ' + CL.ink1, background: hit && hit.at == null ? hit.bg : focused ? CL.panel : '#fff', transition: 'background-color .25s' }}>
         <span style={{ fontFamily: CL.sans, fontSize: 13, fontWeight: 600, color: CL.ink }}>Thân bài {num}</span>
         <span style={{ borderRadius: 999, background: '#F1F1EE', padding: '2px 9px', fontFamily: CL.sans, fontSize: 10.5, fontWeight: 600, color: CL.ink6 }}>{KIND_ASK[kindOf(prompt, chain)].chip}</span>
-        <span style={{ marginLeft: 'auto', display: 'flex', gap: 4 }}>{arrowBtn(-1, first)}{arrowBtn(1, last)}</span>
+        <span onClick={(e) => e.stopPropagation()} style={{ marginLeft: 'auto', display: 'flex', gap: 4 }}>{arrowBtn(-1, first)}{arrowBtn(1, last)}</span>
       </div>
+      {!built && (
+        <div style={{ padding: '10px 14px', borderBottom: '1px solid ' + CL.ink1, background: CL.yellowSoft, fontFamily: CL.sans, fontSize: 12, lineHeight: 1.5, color: CL.yellowText }}>
+          Mạch này chưa có bước nào ở giữa. <Link href={chainsHref} onClick={(e) => e.stopPropagation()} style={{ fontWeight: 600, textDecoration: 'underline', color: CL.yellowText }}>Quay lại dựng mạch</Link>
+        </div>
+      )}
       <ol style={{ position: 'relative', listStyle: 'none', margin: 0, padding: '10px 10px 12px' }}>
         <span aria-hidden="true" style={{ position: 'absolute', left: 20.5, top: 22, bottom: 24, width: 1, background: CL.ink2 }} />
         {steps.map((s, k) => {
@@ -94,13 +105,18 @@ function MiniChain({ prompt, chain, num, first, last, onMove, hit }: { prompt: P
   );
 }
 
-/** ② Viết bài: each body paragraph beside its chain; after "Nộp bài", the band, the scores and comments that point at the essay and the chain. */
-export function WriteScreen({ prompt, chains, setChains, essay, setEssay, toolbarLeft }: WriteProps) {
+/**
+ * ② Viết bài, in three panels: the prompt and the chains (the essay's skeleton) on the left, the essay in the middle,
+ * and the translator or, after "Nộp bài", the band, scores and comments on the right. Comments point at the essay and the chain.
+ */
+export function WriteScreen({ prompt, chains, setChains, essay, setEssay, toolbarLeft, chainsHref }: WriteProps) {
   const sections = sectionsFor(chains);
   const review = essay.review;
   const editing = !review || !!essay.fixing;
   const [chat, setChat] = useState(!review);
-  const [showPrompt, setShowPrompt] = useState(false);
+  /** The body paragraph being written (its chain is highlighted on the left). */
+  const [focus, setFocus] = useState<string | null>(null);
+  const paraRefs = useRef<Record<string, HTMLElement | null>>({});
   const [sending, setSending] = useState(false);
   const [error, setError] = useState('');
   const [active, setActive] = useState<Note | null>(null);
@@ -162,7 +178,7 @@ export function WriteScreen({ prompt, chains, setChains, essay, setEssay, toolba
     const range = s.guide.match(/\d+/g)!.map(Number);
     const own = notes.filter((n) => n.item.sectionId === s.id);
     return (
-      <div style={{ minWidth: 0, display: 'flex', flexDirection: 'column', gap: 8 }}>
+      <div ref={(el) => { paraRefs.current[s.id] = el; }} style={{ minWidth: 0, display: 'flex', flexDirection: 'column', gap: 8, scrollMarginTop: 12 }}>
         <span style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
           <span style={{ fontFamily: CL.sans, fontSize: 14, fontWeight: 600, color: CL.ink }}>{s.label}</span>
           <span style={{ fontFamily: CL.sans, fontSize: 11, color: CL.ink4 }}>{s.guide}</span>
@@ -170,7 +186,7 @@ export function WriteScreen({ prompt, chains, setChains, essay, setEssay, toolba
         </span>
         <div style={{ borderRadius: 12, border: '1px solid ' + CL.ink2, background: '#fff', padding: '14px 18px' }}>
           {editing ? (
-            <textarea className="co-ta" value={text} onChange={(e) => setDraft(s.id, e.target.value)} rows={3} placeholder={s.placeholder} aria-label={s.label}
+            <textarea className="co-ta" value={text} onChange={(e) => setDraft(s.id, e.target.value)} onFocus={() => setFocus(s.id)} rows={3} placeholder={s.placeholder} aria-label={s.label}
               style={{ display: 'block', width: '100%', minHeight: 72, resize: 'none', border: 'none', outline: 'none', background: 'transparent', padding: 0, fontFamily: CL.serif, fontSize: 15, lineHeight: 1.75, color: CL.ink8 }} />
           ) : (
             <p style={{ margin: 0, whiteSpace: 'pre-wrap', fontFamily: CL.serif, fontSize: 15, lineHeight: 1.75, color: CL.ink8 }}>{text ? <Marked text={text} notes={own} active={active} onPick={(n) => setActive(active === n ? null : n)} /> : <span style={{ color: CL.ink4 }}>(trống)</span>}</p>
@@ -179,7 +195,13 @@ export function WriteScreen({ prompt, chains, setChains, essay, setEssay, toolba
       </div>
     );
   };
-  const noChain = (label: string) => <div style={{ marginTop: 26, borderRadius: 12, border: '1px dashed ' + CL.ink2, padding: '12px 14px', fontFamily: CL.sans, fontSize: 12.5, color: CL.ink4 }}>{label} · không cần mạch</div>;
+  /** Clicking a chain on the left brings its paragraph into view and puts the cursor in it. */
+  const openPara = (id: string) => {
+    setFocus(id);
+    const el = paraRefs.current[id];
+    el?.scrollIntoView({ block: 'start', behavior: 'smooth' });
+    el?.querySelector('textarea')?.focus({ preventScroll: true });
+  };
 
   return (
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column', width: '100%', maxWidth: 1710, margin: '0 auto', padding: '12px 40px 16px' }}>
@@ -191,7 +213,6 @@ export function WriteScreen({ prompt, chains, setChains, essay, setEssay, toolba
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           {error && <span role="alert" style={{ fontFamily: CL.sans, fontSize: 12, color: CL.redText, marginRight: 4 }}>{error}</span>}
-          <button type="button" className="cl-btn" onClick={() => setShowPrompt(!showPrompt)} aria-pressed={showPrompt} style={toolbarBtn(showPrompt)}>Đề bài</button>
           <button type="button" className="cl-btn" onClick={() => setChat(!chat)} aria-pressed={chat} style={toolbarBtn(chat)}>Dịch</button>
           {editing
             ? <button type="button" className="cl-btn cl-primary" onClick={submit} disabled={sending || !words} style={{ ...primaryBtn, opacity: sending || !words ? 0.4 : 1 }}>{sending ? 'Đang chấm…' : review ? 'Nộp lại' : 'Nộp bài'}</button>
@@ -202,26 +223,30 @@ export function WriteScreen({ prompt, chains, setChains, essay, setEssay, toolba
       <CoachGrid
         open={chat || !!review}
         main={
-        <main className="co-col" style={{ minWidth: 0 }}>
-          <section style={{ flex: '1 1 0', minHeight: 0, display: 'flex', flexDirection: 'column', borderRadius: 18, border: '1px solid ' + CL.border, background: '#fff', overflow: 'hidden' }}>
+        <main className="co-col co-write3" style={{ minWidth: 0 }}>
+          <aside aria-label="Dàn bài" style={{ minHeight: 0, display: 'flex', flexDirection: 'column', borderRadius: 18, border: '1px solid ' + CL.border, background: '#fff', overflow: 'hidden' }}>
+            <div style={{ padding: '18px 20px 16px', borderBottom: '1px solid ' + CL.ink1, display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <span style={{ display: 'flex', justifyContent: 'space-between' }}><ClLabel>Đề bài</ClLabel><ClLabel>40 phút</ClLabel></span>
+              <p style={{ margin: 0, fontFamily: CL.sans, fontSize: 14, fontStyle: 'italic', lineHeight: 1.6, color: CL.ink8 }}>{prompt.text}</p>
+            </div>
+            <div className="cl-scroll" style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: '14px 16px 18px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+              <span style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between' }}><ClLabel>Dàn bài · {chains.length} thân bài</ClLabel><span style={{ fontFamily: CL.sans, fontSize: 11, color: CL.ink4 }}>bấm để tới đoạn</span></span>
+              <div style={{ borderRadius: 10, border: '1px dashed ' + CL.ink2, padding: '9px 12px', fontFamily: CL.sans, fontSize: 12, color: CL.ink4 }}>Mở bài · không cần mạch</div>
+              {chains.map((c, i) => (
+                <MiniChain key={c.id} prompt={prompt} chain={c} num={i + 1} first={i === 0} last={i === chains.length - 1} onMove={(d) => move(i, d)} hit={hitFor(c)}
+                  focused={focus === c.id} onOpen={() => openPara(c.id)} chainsHref={chainsHref} />
+              ))}
+              <div style={{ borderRadius: 10, border: '1px dashed ' + CL.ink2, padding: '9px 12px', fontFamily: CL.sans, fontSize: 12, color: CL.ink4 }}>Kết bài · không cần mạch</div>
+            </div>
+          </aside>
+          <section style={{ minHeight: 0, display: 'flex', flexDirection: 'column', borderRadius: 18, border: '1px solid ' + CL.border, background: '#fff', overflow: 'hidden' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 14, minHeight: 56, padding: '0 24px', borderBottom: '1px solid ' + CL.ink1, background: CL.panel }}>
               <ClLabel color={CL.ink}>Bài viết</ClLabel>
-              <span style={{ fontFamily: CL.sans, fontSize: 12, color: CL.ink5 }}>{editing ? 'Mỗi đoạn thân bài nằm cạnh mạch của nó.' : 'Bấm chỗ tô màu để xem nhận xét.'}{stale && editing ? ' Bạn đã sửa bài, nộp lại để chấm bản mới.' : ''}</span>
+              <span style={{ fontFamily: CL.sans, fontSize: 12, color: CL.ink5 }}>{editing ? 'Viết theo mạch ở bên trái.' : 'Bấm chỗ tô màu để xem nhận xét.'}{stale && editing ? ' Bạn đã sửa bài, nộp lại để chấm bản mới.' : ''}</span>
               <span style={{ marginLeft: 'auto', fontFamily: CL.sans, fontSize: 12, color: CL.ink5 }}>Số từ: <b style={{ color: words >= 250 ? CL.green : CL.ink }}>{words}</b> / 250</span>
             </div>
-            <div className="cl-scroll" style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: '18px 24px 28px' }}>
-              {showPrompt && <p className="cl-rise" style={{ margin: '0 0 18px', borderRadius: 12, background: CL.panel, padding: '12px 16px', fontFamily: CL.sans, fontSize: 14, fontStyle: 'italic', lineHeight: 1.6, color: CL.ink8 }}>{prompt.text}</p>}
-              <div style={{ display: 'grid', gridTemplateColumns: 'minmax(220px, 330px) minmax(0, 1fr)', columnGap: 22, rowGap: 24, alignItems: 'start' }}>
-                <ClLabel>Mạch</ClLabel><ClLabel>Đoạn văn</ClLabel>
-                {noChain('Mở bài')}{paragraph(sections[0])}
-                {chains.map((c, i) => (
-                  <div key={c.id} style={{ display: 'contents' }}>
-                    <div style={{ marginTop: 26 }}><MiniChain prompt={prompt} chain={c} num={i + 1} first={i === 0} last={i === chains.length - 1} onMove={(d) => move(i, d)} hit={hitFor(c)} /></div>
-                    {paragraph(sections[i + 1])}
-                  </div>
-                ))}
-                {noChain('Kết bài')}{paragraph(sections[sections.length - 1])}
-              </div>
+            <div className="cl-scroll" style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: '20px 26px 28px', display: 'flex', flexDirection: 'column', gap: 22 }}>
+              {sections.map((s) => <div key={s.id}>{paragraph(s)}</div>)}
             </div>
           </section>
         </main>

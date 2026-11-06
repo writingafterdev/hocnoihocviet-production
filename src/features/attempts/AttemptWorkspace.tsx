@@ -125,7 +125,7 @@ export function AttemptWorkspace({ attemptId }: { attemptId: string }) {
             toolbarLeft={left('/writing', 'Thư viện đề', 0)} onNext={() => router.push(base + '/essay')} />
         ) : (
           <WriteScreen prompt={prompt} chains={attempt.chains} setChains={setChains} essay={attempt.essay} setEssay={setEssay}
-            toolbarLeft={left(base + '/chains', 'Dựng mạch', 1)} />
+            toolbarLeft={left(base + '/chains', 'Dựng mạch', 1)} chainsHref={base + '/chains'} />
         )}
       </div>
     </div>
