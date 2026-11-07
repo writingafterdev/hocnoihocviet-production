@@ -117,6 +117,8 @@ export interface ReviewItem {
   label?: string;
   /** Essay feedback: a drop-in replacement for `quote`, when the fix fits inside it. */
   fix?: string;
+  /** Essay feedback on ideas or flow (TR/CC): a guided fix. Open questions shown one by one, then a sentence starter. */
+  task?: { title?: string; ask: string[]; starter?: string; ok?: string };
   para?: boolean;
   fixed?: boolean;
 }

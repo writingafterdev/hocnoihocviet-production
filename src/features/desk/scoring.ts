@@ -40,13 +40,16 @@ export interface EssayReview {
 /** Feedback groups, one per IELTS criterion. */
 export const CRITERIA: [string, string][] = [['tr', 'Task Response'], ['cc', 'Coherence & Cohesion'], ['lr', 'Lexical Resource'], ['gra', 'Grammatical Range & Accuracy']];
 
-/** Highlight colours per criterion: underline/bar and soft background. */
-export const CRITERION_STYLE: Record<string, { line: string; soft: string }> = {
-  tr: { line: '#D5452E', soft: '#FADAD4' },
-  cc: { line: '#C08A00', soft: '#FFEDB3' },
-  lr: { line: '#17839A', soft: '#D3EEF5' },
-  gra: { line: '#6A4BC4', soft: '#E6DFFA' },
+/** Per criterion: short code, underline/bar colour, soft background and text colour. */
+export const CRITERION_STYLE: Record<string, { short: string; line: string; soft: string; fg: string }> = {
+  tr: { short: 'TR', line: '#D5452E', soft: '#FADAD4', fg: '#8B3A35' },
+  cc: { short: 'CC', line: '#2F6FDB', soft: '#DFE9FB', fg: '#1E4FA8' },
+  lr: { short: 'LR', line: '#3B9B5A', soft: '#DDF2E3', fg: '#276B3E' },
+  gra: { short: 'GRA', line: '#6A4BC4', soft: '#E6DFFA', fg: '#4B3596' },
 };
+
+/** A band as shown: whole numbers without ".0" for criteria, one decimal for the overall band. */
+export const bandText = (v: number, overall = false) => (overall || v % 1 ? v.toFixed(1) : String(v));
 
 /** Overall band: mean of the four criteria, rounded to the nearest half band (.25 and .75 round up). */
 export const bandOf = (tr: number, cc: number, lr: number, gra: number) => Math.round(((tr + cc + lr + gra) / 4) * 2) / 2;

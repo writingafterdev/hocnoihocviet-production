@@ -1,18 +1,18 @@
 'use client';
 
-import Link from 'next/link';
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import type { Prompt } from '@/content/prompts';
 import { SignedOutError, type EssayState } from '../attempts/store';
 import { AI_ERROR_TEXT, AiRequestError } from '../ai/request';
 import { CL } from '../chainlab/constants';
 import type { Chain, ReviewItem } from '../chainlab/types';
-import { ClIcon, ClLabel, toolbarBtn } from '../chainlab/ui/primitives';
+import { ClLabel, toolbarBtn } from '../chainlab/ui/primitives';
 import { CoachGrid, SidePanel } from '../coach/CoachGrid';
 import { TranslatorChat } from '../coach/TranslatorChat';
 import { primaryBtn } from '../coach/ui';
-import { CRITERIA, CRITERION_STYLE, draftsKey, requestEssayReview, retryEssayCriterion, wordCount, type EssaySection } from '../desk/scoring';
-import { endOf, KIND_ASK, kindOf, middleOf, startOf } from './model';
+import { bandText, CRITERIA, CRITERION_STYLE, draftsKey, requestEssayReview, retryEssayCriterion, wordCount, type EssaySection } from '../desk/scoring';
+import { DiffView, fixTasks, FixView } from './FixFlow';
+import { MiniChain } from './MiniChain';
 
 export interface WriteProps {
   prompt: Prompt;
@@ -27,7 +27,7 @@ export interface WriteProps {
 
 interface Note { item: ReviewItem; crit: string; n: number }
 
-const CRIT_SHORT: Record<string, string> = { tr: 'Task Response', cc: 'Coherence', lr: 'Lexical', gra: 'Grammar' };
+const CRIT_SHORT: Record<string, string> = { tr: 'Task Response', cc: 'Coherence', lr: 'Lexical Resource', gra: 'Grammar' };
 const mmss = (s: number) => String(Math.floor(s / 60)).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0');
 
 export function sectionsFor(chains: Chain[]): EssaySection[] {
@@ -63,48 +63,6 @@ function Marked({ text, notes, active, onPick }: { text: string; notes: Note[]; 
   return <>{out}</>;
 }
 
-/** The chain next to its paragraph: start, middle, end. A note about one step tints that step. */
-function MiniChain({ prompt, chain, num, first, last, onMove, hit, focused, onOpen, chainsHref }: { prompt: Prompt; chain: Chain; num: number; first: boolean; last: boolean; onMove: (d: -1 | 1) => void; hit: { at: number | null; bg: string } | null; focused: boolean; onOpen: () => void; chainsHref: string }) {
-  const ref = useRef<HTMLDivElement>(null);
-  useEffect(() => { if (focused || hit) ref.current?.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); }, [focused, hit?.at, hit?.bg]); // eslint-disable-line react-hooks/exhaustive-deps
-  const built = chain.built !== false && middleOf(chain).some((s) => s.trim());
-  const steps = [startOf(chain), ...middleOf(chain).filter((s) => s.trim()), endOf(chain)];
-  const total = chain.steps.length;
-  // `at` indexes the stored steps (start, middle…, end); map it onto the shown list, which skips empty middle steps.
-  const shownAt = hit && hit.at != null ? (hit.at === 0 ? 0 : hit.at === total - 1 ? steps.length - 1 : 1 + middleOf(chain).slice(0, hit.at - 1).filter((s) => s.trim()).length) : null;
-  const arrowBtn = (d: -1 | 1, off: boolean) => (
-    <button type="button" className="cl-btn cl-link" onClick={() => onMove(d)} disabled={off} aria-label={d < 0 ? 'Đưa thân bài lên' : 'Đưa thân bài xuống'} style={{ width: 26, height: 26, borderRadius: 6, border: '1px solid ' + CL.ink1, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', color: CL.ink5, opacity: off ? 0.3 : 1 }}>
-      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{d < 0 ? <path d="M6 15l6-6 6 6" /> : <path d="M6 9l6 6 6-6" />}</svg>
-    </button>
-  );
-  return (
-    <div ref={ref} onClick={onOpen} style={{ flexShrink: 0, cursor: 'pointer', borderRadius: 12, border: '1px solid ' + (focused ? CL.ink4 : CL.ink2), background: '#fff', overflow: 'hidden', transition: 'border-color .25s' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 10px 10px 14px', borderBottom: '1px solid ' + CL.ink1, background: hit && hit.at == null ? hit.bg : focused ? CL.panel : '#fff', transition: 'background-color .25s' }}>
-        <span style={{ fontFamily: CL.sans, fontSize: 13, fontWeight: 600, color: CL.ink }}>Thân bài {num}</span>
-        <span style={{ borderRadius: 999, background: '#F1F1EE', padding: '2px 9px', fontFamily: CL.sans, fontSize: 10.5, fontWeight: 600, color: CL.ink6 }}>{KIND_ASK[kindOf(prompt, chain)].chip}</span>
-        <span onClick={(e) => e.stopPropagation()} style={{ marginLeft: 'auto', display: 'flex', gap: 4 }}>{arrowBtn(-1, first)}{arrowBtn(1, last)}</span>
-      </div>
-      {!built && (
-        <div style={{ padding: '10px 14px', borderBottom: '1px solid ' + CL.ink1, background: CL.yellowSoft, fontFamily: CL.sans, fontSize: 12, lineHeight: 1.5, color: CL.yellowText }}>
-          Mạch này chưa có bước nào ở giữa. <Link href={chainsHref} onClick={(e) => e.stopPropagation()} style={{ fontWeight: 600, textDecoration: 'underline', color: CL.yellowText }}>Quay lại dựng mạch</Link>
-        </div>
-      )}
-      <ol style={{ position: 'relative', listStyle: 'none', margin: 0, padding: '10px 10px 12px' }}>
-        <span aria-hidden="true" style={{ position: 'absolute', left: 20.5, top: 22, bottom: 24, width: 1, background: CL.ink2 }} />
-        {steps.map((s, k) => {
-          const isStart = k === 0, isEnd = k === steps.length - 1;
-          return (
-            <li key={k} style={{ position: 'relative', display: 'flex', gap: 10, alignItems: 'baseline', padding: '4px 6px', borderRadius: 6, background: shownAt === k ? hit!.bg : 'transparent', transition: 'background-color .2s' }}>
-              <span style={{ position: 'relative', top: 1, width: 9, height: 9, flexShrink: 0, borderRadius: isEnd ? 2 : 999, background: isStart ? CL.green : isEnd ? '#B8862B' : CL.ink3, boxShadow: '0 0 0 3px ' + (shownAt === k ? hit!.bg : '#fff') }} />
-              <span style={{ fontFamily: isEnd ? CL.sans : CL.serif, fontSize: 13, fontWeight: isEnd ? 600 : 400, lineHeight: 1.5, color: isEnd ? '#8A5A12' : isStart ? CL.ink8 : CL.ink6 }}>{s || '—'}</span>
-            </li>
-          );
-        })}
-      </ol>
-    </div>
-  );
-}
-
 /**
  * ② Viết bài, in three panels: the prompt and the chains (the essay's skeleton) on the left, the essay in the middle,
  * and the translator or, after "Nộp bài", the band, scores and comments on the right. Comments point at the essay and the chain.
@@ -121,6 +79,8 @@ export function WriteScreen({ prompt, chains, setChains, essay, setEssay, toolba
   const [error, setError] = useState('');
   const [active, setActive] = useState<Note | null>(null);
   const [retrying, setRetrying] = useState(false);
+  /** The criterion tab open in the feedback panel; the essay highlights only its comments. */
+  const [tab, setTab] = useState('tr');
 
   // Timer: runs while the student is writing.
   const tick = useRef(setEssay);
@@ -137,6 +97,8 @@ export function WriteScreen({ prompt, chains, setChains, essay, setEssay, toolba
     let n = 0;
     return review.groups.flatMap((g) => g.items.map((item) => ({ item, crit: g.id, n: ++n })));
   }, [review]);
+  const tasks = useMemo(() => fixTasks(review), [review]);
+  const tabNotes = notes.filter((n) => n.crit === tab);
   const stale = !!review && review.key !== draftsKey(essay.drafts);
   const setDraft = (id: string, v: string) => setEssay((e) => ({ ...e, drafts: { ...e.drafts, [id]: v } }));
   const move = (i: number, d: -1 | 1) => setChains((cs) => { const a = [...cs]; [a[i], a[i + d]] = [a[i + d], a[i]]; return a; });
@@ -146,7 +108,8 @@ export function WriteScreen({ prompt, chains, setChains, essay, setEssay, toolba
     setSending(true); setError(''); setActive(null);
     try {
       const r = await requestEssayReview(prompt, sections, essay.drafts, chains, '');
-      setEssay((e) => ({ ...e, review: r, fixing: false, prevScores: e.review ? e.review.scores : null }));
+      setEssay((e) => ({ ...e, review: r, fixing: false, fix: null, prevScores: e.review ? e.review.scores : null }));
+      setTab('tr');
       setChat(false);
     } catch (e) {
       if (e instanceof SignedOutError) { location.href = '/login?next=' + encodeURIComponent(location.pathname); return; }
@@ -169,6 +132,14 @@ export function WriteScreen({ prompt, chains, setChains, essay, setEssay, toolba
     setRetrying(false);
   };
 
+  /** "Sửa bài": the guided round over the idea/flow comments, resumed where it was left; plain editing when there are none. */
+  const startFix = () => {
+    setActive(null);
+    if (essay.fix) setEssay((e) => (e.fix ? { ...e, fix: { ...e.fix, view: 'fix' } } : e));
+    else if (tasks.length) setEssay((e) => ({ ...e, fix: { view: 'fix', step: 0, solved: [], before: { ...e.drafts } } }));
+    else setEssay((e) => ({ ...e, fixing: true }));
+  };
+
   const hitFor = (c: Chain) => (active && active.item.chainId === c.id ? { at: active.item.at ?? null, bg: CRITERION_STYLE[active.crit].soft } : null);
   const scores = review?.scores;
 
@@ -176,7 +147,7 @@ export function WriteScreen({ prompt, chains, setChains, essay, setEssay, toolba
     const text = essay.drafts[s.id] || '';
     const wc = wordCount(text);
     const range = s.guide.match(/\d+/g)!.map(Number);
-    const own = notes.filter((n) => n.item.sectionId === s.id);
+    const own = tabNotes.filter((n) => n.item.sectionId === s.id);
     return (
       <div ref={(el) => { paraRefs.current[s.id] = el; }} style={{ minWidth: 0, display: 'flex', flexDirection: 'column', gap: 8, scrollMarginTop: 12 }}>
         <span style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
@@ -203,8 +174,19 @@ export function WriteScreen({ prompt, chains, setChains, essay, setEssay, toolba
     el?.querySelector('textarea')?.focus({ preventScroll: true });
   };
 
+  const shell = { height: '100%', display: 'flex', flexDirection: 'column', width: '100%', maxWidth: 1710, margin: '0 auto', padding: '12px 40px 16px' } as const;
+  if (essay.fix && essay.fix.view !== 'paused' && tasks.length) {
+    return (
+      <div style={shell}>
+        {essay.fix.view === 'diff'
+          ? <DiffView sections={sections} essay={essay} setEssay={setEssay} tasks={tasks} onResubmit={submit} sending={sending} error={error} />
+          : <FixView prompt={prompt} chains={chains} sections={sections} essay={essay} setEssay={setEssay} tasks={tasks} chainsHref={chainsHref} />}
+      </div>
+    );
+  }
+
   return (
-    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', width: '100%', maxWidth: 1710, margin: '0 auto', padding: '12px 40px 16px' }}>
+    <div style={shell}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10, minHeight: 42, paddingBottom: 12 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 18 }}>
           {toolbarLeft}
@@ -216,7 +198,7 @@ export function WriteScreen({ prompt, chains, setChains, essay, setEssay, toolba
           <button type="button" className="cl-btn" onClick={() => setChat(!chat)} aria-pressed={chat} style={toolbarBtn(chat)}>Dịch</button>
           {editing
             ? <button type="button" className="cl-btn cl-primary" onClick={submit} disabled={sending || !words} style={{ ...primaryBtn, opacity: sending || !words ? 0.4 : 1 }}>{sending ? 'Đang chấm…' : review ? 'Nộp lại' : 'Nộp bài'}</button>
-            : <button type="button" className="cl-btn" onClick={() => { setEssay((e) => ({ ...e, fixing: true })); setActive(null); }} style={{ ...toolbarBtn(false), color: CL.ink }}>Sửa bài</button>}
+            : <button type="button" className="cl-btn cl-primary" onClick={startFix} style={primaryBtn}>{essay.fix ? 'Tiếp tục sửa' : 'Sửa bài'}</button>}
         </div>
       </div>
 
@@ -256,48 +238,62 @@ export function WriteScreen({ prompt, chains, setChains, essay, setEssay, toolba
             <SidePanel on={!!review && !chat} grow={3}>
               <div className="cl-scroll" style={{ height: '100%', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 14 }}>
           {review && scores && (
-            <section style={{ flexShrink: 0, borderRadius: 18, border: '1px solid ' + CL.border, background: '#fff', padding: '18px 20px', display: 'flex', flexDirection: 'column', gap: 14 }}>
-              <div style={{ display: 'flex', gap: 22, alignItems: 'center' }}>
-                <div style={{ flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 2, paddingRight: 22, borderRight: '1px solid ' + CL.ink1 }}>
-                  <ClLabel>Band</ClLabel>
-                  <span style={{ fontFamily: CL.serif, fontSize: 46, fontWeight: 500, lineHeight: 1, color: CL.ink }}>{scores.band.toFixed(1)}</span>
-                  <span style={{ fontFamily: CL.sans, fontSize: 11.5, color: CL.ink5 }}>{notes.length} nhận xét</span>
-                </div>
-                <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 9 }}>
-                  {CRITERIA.map(([id]) => {
-                    const v = scores[id as 'tr'];
-                    return (
-                      <div key={id} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                        <span style={{ width: 104, flexShrink: 0, fontFamily: CL.sans, fontSize: 12, fontWeight: 500, color: CL.ink7, whiteSpace: 'nowrap' }}>{CRIT_SHORT[id]}</span>
-                        <span style={{ flex: 1, height: 4, borderRadius: 999, background: CL.ink1, overflow: 'hidden' }}><span style={{ display: 'block', height: '100%', width: Math.max(0, Math.min(100, ((v - 4) / 5) * 100)) + '%', borderRadius: 999, background: CL.mint }} /></span>
-                        <span style={{ width: 28, textAlign: 'right', fontFamily: CL.sans, fontSize: 13, fontWeight: 600, fontVariantNumeric: 'tabular-nums', color: CL.ink }}>{v.toFixed(1)}</span>
-                      </div>
-                    );
-                  })}
-                </div>
+            <section style={{ flexShrink: 0, borderRadius: 18, border: '1px solid ' + CL.border, background: '#fff', overflow: 'hidden' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '16px 18px 14px' }}>
+                <span style={{ fontFamily: CL.serif, fontSize: 42, fontWeight: 500, lineHeight: 1, color: CL.ink }}>{bandText(scores.band, true)}</span>
+                {review.summary && <span style={{ fontFamily: CL.sans, fontSize: 12.5, lineHeight: 1.5, color: CL.ink6 }}>{review.summary.replace(/\*\*/g, '')}</span>}
               </div>
-              {review.summary && <p style={{ margin: 0, fontFamily: CL.sans, fontSize: 12.5, lineHeight: 1.6, color: CL.ink6 }}>{review.summary}</p>}
+              <div role="tablist" aria-label="Tiêu chí" style={{ display: 'flex', gap: 2, padding: '6px 6px 0', background: '#F3F3F1', borderTop: '1px solid ' + CL.ink1 }}>
+                {CRITERIA.map(([id]) => {
+                  const st = CRITERION_STYLE[id], on = tab === id, v = scores[id as 'tr'], was = essay.prevScores?.[id as 'tr'];
+                  return (
+                    <button key={id} type="button" role="tab" aria-selected={on} className="cl-btn" onClick={() => { setTab(id); setActive(null); }}
+                      style={{ flex: 1, borderRadius: '12px 12px 0 0', background: on ? '#fff' : 'transparent', padding: '10px 4px 11px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, fontFamily: CL.sans, fontSize: 13, fontWeight: on ? 700 : 500, color: on ? CL.ink : CL.ink6, transition: 'background-color .2s' }}>
+                      {st.short}
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 2, borderRadius: 999, background: st.soft, padding: '2px 9px', fontSize: 12.5, fontWeight: 700, color: st.fg, fontVariantNumeric: 'tabular-nums' }}>
+                        {bandText(v)}{was != null && v > was && <span style={{ fontSize: 10.5 }} title={'Trước: ' + bandText(was)}>↑</span>}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+              {review.criteria?.[tab]?.why && (
+                <div style={{ padding: '14px 18px 16px', display: 'flex', flexDirection: 'column', gap: 8, fontFamily: CL.sans, fontSize: 13, lineHeight: 1.55 }}>
+                  <span style={{ color: CL.ink7 }}>{review.criteria[tab].why.replace(/\*\*/g, '')} {(review.criteria[tab].gap || '').replace(/\*\*/g, '')}</span>
+                  {review.criteria[tab].next && <span style={{ color: CL.ink, fontWeight: 600 }}>→ {review.criteria[tab].next.replace(/\*\*/g, '')}</span>}
+                </div>
+              )}
               {review.failed && review.failed.length > 0 && (
-                <p style={{ margin: 0, fontFamily: CL.sans, fontSize: 12, color: CL.redText }}>Chưa tải được nhận xét của {review.failed.map((id) => CRIT_SHORT[id]).join(', ')}. <button type="button" className="cl-btn" onClick={retry} disabled={retrying} style={{ textDecoration: 'underline', color: CL.ink, fontSize: 12 }}>{retrying ? 'Đang tải…' : 'Thử lại'}</button></p>
+                <p style={{ margin: 0, padding: '0 18px 14px', fontFamily: CL.sans, fontSize: 12, color: CL.redText }}>Chưa tải được nhận xét của {review.failed.map((id) => CRIT_SHORT[id]).join(', ')}. <button type="button" className="cl-btn" onClick={retry} disabled={retrying} style={{ textDecoration: 'underline', color: CL.ink, fontSize: 12 }}>{retrying ? 'Đang tải…' : 'Thử lại'}</button></p>
               )}
             </section>
           )}
-          {review && notes.map((note) => {
+          {review && <ClLabel>{tabNotes.length ? tabNotes.length + ' nhận xét' : 'Không có nhận xét'}</ClLabel>}
+          {review && tabNotes.map((note) => {
             const on = active === note, st = CRITERION_STYLE[note.crit];
             return (
               <button key={note.item.key + note.crit} type="button" className="cl-btn" onClick={() => setActive(on ? null : note)} aria-pressed={on}
-                style={{ flexShrink: 0, textAlign: 'left', padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 8, borderRadius: 18, border: '1px solid ' + CL.border, background: on ? CL.panel : '#fff', opacity: stale ? 0.6 : 1, transition: 'background-color .2s' }}>
+                style={{ flexShrink: 0, textAlign: 'left', padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 6, borderRadius: 12, border: '1px solid ' + CL.ink1, background: on ? CL.panel : '#fff', opacity: stale ? 0.6 : 1, transition: 'background-color .2s' }}>
                 <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <span style={{ width: 3, height: 14, borderRadius: 2, background: st.line }} />
-                  <span style={{ fontFamily: CL.sans, fontSize: 14, fontWeight: 600, color: CL.ink }}>{note.item.label || CRIT_SHORT[note.crit]}</span>
-                  <span style={{ marginLeft: 'auto', fontFamily: CL.sans, fontSize: 11, color: CL.ink4, textAlign: 'right' }}>{CRIT_SHORT[note.crit]} · {note.item.where.split(' · Mạch')[0]}{note.item.chainId ? ' · bài + mạch' : ''}</span>
+                  <span style={{ width: 3, height: 13, borderRadius: 2, background: st.line }} />
+                  <span style={{ fontFamily: CL.sans, fontSize: 13, fontWeight: 600, color: CL.ink }}>{note.item.label || CRIT_SHORT[note.crit]}</span>
+                  <span style={{ marginLeft: 'auto', fontFamily: CL.sans, fontSize: 10.5, color: CL.ink5, textAlign: 'right' }}>{note.item.where.split(' · Mạch')[0]}</span>
                 </span>
-                {note.item.quote && <span style={{ padding: '8px 10px', borderRadius: 8, background: st.soft, fontFamily: CL.serif, fontSize: 13, lineHeight: 1.5, color: CL.ink8 }}>“{note.item.quote}”</span>}
-                <span style={{ fontFamily: CL.sans, fontSize: 13, lineHeight: 1.55, color: CL.ink7 }}>{note.item.text.replace(/\*\*/g, '')}</span>
+                {note.item.quote && <span style={{ fontFamily: CL.serif, fontSize: 12.5, fontStyle: 'italic', lineHeight: 1.5, color: CL.ink6 }}>“{note.item.quote}”</span>}
+                <span style={{ fontFamily: CL.sans, fontSize: 12.5, lineHeight: 1.5, color: CL.ink7 }}>{note.item.text.replace(/\*\*/g, '')}</span>
                 {note.item.fix && <span style={{ fontFamily: CL.sans, fontSize: 12.5, lineHeight: 1.5, color: CL.greenText }}>Sửa: <i style={{ fontFamily: CL.serif }}>{note.item.fix}</i></span>}
               </button>
             );
           })}
+          {review && !editing && tasks.length > 0 && (
+            <section style={{ marginTop: 'auto', flexShrink: 0, borderRadius: 18, border: '1px solid ' + CL.ink, background: '#fff', padding: '13px 16px', display: 'flex', alignItems: 'center', gap: 12 }}>
+              <span style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 3 }}>
+                <ClLabel color={CL.ink}>Sửa ý và mạch · {tasks.length - (essay.fix?.solved.length || 0)} việc</ClLabel>
+                <span style={{ fontFamily: CL.sans, fontSize: 12, lineHeight: 1.45, color: CL.ink6 }}>Task Response và Coherence, từng chỗ một.</span>
+              </span>
+              <button type="button" className="cl-btn cl-primary" onClick={startFix} style={primaryBtn}>{essay.fix ? 'Tiếp tục →' : 'Bắt đầu sửa →'}</button>
+            </section>
+          )}
               </div>
             </SidePanel>
             <SidePanel on={chat} grow={2}>

@@ -18,6 +18,11 @@ export interface EssayState {
   fixing?: boolean;
   /** Keys of the comments the student ticked "Đã sửa" in "Sửa bài". Their own to-do list; nothing is detected. */
   ticked?: string[];
+  /**
+   * The guided fix round after a review ("Sửa bài"): one task per idea/flow comment, fixed in place, then a
+   * before/after view ('paused': back on the assessment, resumed by "Sửa bài"). `before` is the drafts when the round started; `solved` holds the comment keys that passed "Kiểm tra".
+   */
+  fix?: { view: 'fix' | 'diff' | 'paused'; step: number; solved: string[]; before: Record<string, string> } | null;
   /** Scores of the review before the latest one, to show how much a resubmission moved them. */
   prevScores?: EssayReview['scores'] | null;
 }

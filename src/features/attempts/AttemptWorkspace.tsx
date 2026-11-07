@@ -19,7 +19,7 @@ type SaveState = 'saved' | 'saving' | 'failed';
 const SAVE_DELAY = 1500;
 
 /** What counts as an edit worth saving: everything except the running timer and timestamps. */
-const contentKey = (a: Attempt) => JSON.stringify([a.chains, a.checks, a.essay.bodies, a.essay.drafts, a.essay.review, a.essay.fixing]);
+const contentKey = (a: Attempt) => JSON.stringify([a.chains, a.checks, a.essay.bodies, a.essay.drafts, a.essay.review, a.essay.fixing, a.essay.fix]);
 
 const SAVE_LABEL: Record<SaveState, string> = { saved: 'Đã lưu', saving: 'Đang lưu…', failed: 'Chưa lưu được · thử lại' };
 

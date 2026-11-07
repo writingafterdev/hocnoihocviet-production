@@ -30,15 +30,18 @@ export const SAMPLE_DRAFTS: Record<string, string> = {
 
 const LABEL: Record<string, string> = { intro: 'Mở bài', [B1]: 'Thân bài 1', [B2]: 'Thân bài 2', conclusion: 'Kết bài' };
 
-type Note = { sec: string; quote: string; label: string; text: string; chain?: string; at?: number; fix?: string };
+type Note = { sec: string; quote: string; label: string; text: string; chain?: string; at?: number; fix?: string; task?: ReviewItem['task'] };
 
 const NOTES: Record<'tr' | 'cc' | 'lr' | 'gra', Note[]> = {
   tr: [
-    { sec: B1, chain: B1, at: 4, quote: 'This makes them more open-minded and confident, which is a very good thing for society.', label: 'Kết đoạn chưa về điểm cuối', text: 'Mạch đi tới "cởi mở, tự tin" rồi dừng ở một lời khen chung cho xã hội. Điểm cuối trong dàn bài là **du lịch không còn là đặc quyền của người giàu**: câu cuối đoạn nên quay về đúng điều đó, vì đó là lý do bạn nói xu hướng này tích cực.' },
-    { sec: B2, chain: B2, at: 2, quote: 'It also causes a lot of pollution.', label: 'Câu lặp, không thêm bước', text: 'Câu này nói lại "đốt nhiên liệu" bằng từ khác, không thêm bước nào. Trong mạch, bước còn thiếu là khí thải làm môi trường bị hại **ra sao, ở đâu**. Thay câu này bằng một hậu quả cụ thể.' },
+    { sec: B1, chain: B1, at: 4, quote: 'This makes them more open-minded and confident, which is a very good thing for society.', label: 'Kết đoạn chưa về điểm cuối', text: 'Mạch đi tới "cởi mở, tự tin" rồi dừng ở một lời khen chung cho xã hội. Điểm cuối trong dàn bài là **du lịch không còn là đặc quyền của người giàu**: câu cuối đoạn nên quay về đúng điều đó, vì đó là lý do bạn nói xu hướng này tích cực.',
+      task: { title: 'Chưa về điểm cuối', ask: ['Khi người trẻ đã cởi mở và tự tin hơn, điều đó nói gì về việc ai được đi du lịch bây giờ?', 'Trước đây chỉ ai mới đi nước ngoài được? Giờ thêm những ai?'], starter: 'This shows that travel is no longer…', ok: 'Đoạn đã về đúng điểm cuối của mạch: du lịch không còn là đặc quyền của người giàu.' } },
+    { sec: B2, chain: B2, at: 2, quote: 'It also causes a lot of pollution.', label: 'Câu lặp, không thêm bước', text: 'Câu này nói lại "đốt nhiên liệu" bằng từ khác, không thêm bước nào. Trong mạch, bước còn thiếu là khí thải làm môi trường bị hại **ra sao, ở đâu**. Thay câu này bằng một hậu quả cụ thể.',
+      task: { title: 'Câu lặp ý', ask: ['Khí thải từ máy bay làm hại cụ thể điều gì, ở đâu, cho ai?', 'Nếu chỉ được thêm một hậu quả, hậu quả nào người đọc thấy rõ nhất?'], starter: 'These emissions add to…', ok: 'Câu mới thêm đúng bước còn thiếu: khí thải làm hại môi trường ra sao, cho ai.' } },
   ],
   cc: [
-    { sec: B1, chain: B1, at: 2, quote: 'As a result, young people', label: 'Từ nối sai quan hệ', text: 'Trải nghiệm văn hoá không phải "kết quả" của giá vé rẻ; đó là việc người ta làm được khi đã đi. Nối bằng một cụm chỉ đúng bước đó.', fix: 'Once abroad, young people' },
+    { sec: B1, chain: B1, at: 2, quote: 'As a result, young people', label: 'Từ nối sai quan hệ', text: 'Trải nghiệm văn hoá không phải "kết quả" của giá vé rẻ; đó là việc người ta làm được khi đã đi. Nối bằng một cụm chỉ đúng bước đó.', fix: 'Once abroad, young people',
+      task: { title: 'Nối sai một bước', ask: ['Người trẻ được trải nghiệm văn hoá vì vé rẻ, hay vì họ đã đến được nơi đó?', 'Câu trước nói chuyện mua được vé. Câu này xảy ra lúc nào?'], starter: 'Once abroad, …', ok: 'Câu này giờ nối đúng bước: đi được rồi mới trải nghiệm.' } },
     { sec: B2, chain: B2, quote: 'However, this problem can be reduced', label: 'Chữ trỏ mơ hồ', text: '"This problem" trỏ chung chung trong khi đoạn vừa nói nhiên liệu và ô nhiễm. Gọi tên đúng thứ bạn đang trả lời để câu phản biện bám vào ý trước.', fix: 'However, this environmental cost can be reduced' },
   ],
   lr: [
@@ -54,12 +57,12 @@ const TITLE: Record<string, string> = { tr: 'Task Response', cc: 'Coherence & Co
 
 /** The assessment, keyed to the drafts so it isn't shown as out of date. */
 export function sampleReview(): EssayReview {
-  const scores = { tr: 6.5, cc: 7, lr: 7, gra: 6.5 };
+  const scores = { tr: 6, cc: 7, lr: 8, gra: 7 };
   return {
     key: draftsKey(SAMPLE_DRAFTS),
     source: 'sample',
     scores: { ...scores, band: bandOf(scores.tr, scores.cc, scores.lr, scores.gra) },
-    summary: 'Lập trường rõ và cả hai thân bài đều có mạch thật, nên bài đứng vững ở band 7. Điểm kéo xuống nhiều nhất là Task Response: thân bài 1 dừng ở một lời khen chung thay vì về điểm cuối, và thân bài 2 có một câu chỉ lặp lại ý. Việc quan trọng nhất: kết mỗi đoạn bằng đúng điểm cuối trong dàn bài.',
+    summary: 'Lập trường rõ và cả hai thân bài đều có mạch thật, nên bài đứng ở band 7. Task Response kéo điểm xuống nhiều nhất.',
     criteria: {
       tr: { why: 'Bài trả lời đúng câu hỏi tích cực hay tiêu cực, có lập trường rõ ở mở bài và kết bài, và có so hai bên.', gap: 'Chưa lên 7 vì thân bài 1 kết bằng một nhận xét chung và thân bài 2 có câu không thêm bước nào.', next: 'Kết mỗi đoạn bằng **điểm cuối** của mạch.' },
       cc: { why: 'Thứ tự đoạn hợp lý, có câu phản biện ở thân bài 2.', gap: 'Một từ nối sai quan hệ và một chữ trỏ mơ hồ.', next: 'Chọn từ nối theo đúng bước trong mạch.' },
@@ -71,7 +74,7 @@ export function sampleReview(): EssayReview {
       items: NOTES[id].map((n, k): ReviewItem => ({
         key: id + k, sectionId: n.sec, where: LABEL[n.sec] + (n.chain ? ' · Mạch ' + (n.chain === B1 ? 1 : 2) : ''),
         ...(n.chain ? { chainId: n.chain } : {}), ...(n.at != null ? { at: n.at } : {}),
-        word: n.quote, quote: n.quote, label: n.label, ...(n.fix ? { fix: n.fix } : {}), snap: SAMPLE_DRAFTS[n.sec], text: n.text,
+        word: n.quote, quote: n.quote, label: n.label, ...(n.fix ? { fix: n.fix } : {}), ...(n.task ? { task: n.task } : {}), snap: SAMPLE_DRAFTS[n.sec], text: n.text,
       })),
     })),
   };

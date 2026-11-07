@@ -33,9 +33,10 @@ function locate(sections: SectionIn[], prefer: string, quote: string): { id: str
   return null;
 }
 
-const clampBand = (x: number) => Math.max(1, Math.min(9, Math.round((Number(x) || 0) * 2) / 2));
+/** Each criterion gets a whole band (the overall band can still end in .5). */
+const clampBand = (x: number) => Math.max(1, Math.min(9, Math.round(Number(x) || 0)));
 
-/** The "scores" reply: bands (rounded to 0.5), why / gap / next per criterion, and the summary. */
+/** The "scores" reply: whole bands per criterion, why / gap / next per criterion, and the summary. */
 export function toScores(out: { criteria?: Criteria; summary?: string }): Pick<EssayReview, 'scores' | 'summary' | 'criteria'> {
   const cr = out.criteria || ({} as Criteria);
   const tr = clampBand(cr.tr?.score), cc = clampBand(cr.cc?.score), lr = clampBand(cr.lr?.score), gra = clampBand(cr.gra?.score);
