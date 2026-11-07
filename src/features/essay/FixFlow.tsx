@@ -7,7 +7,7 @@ import { CL } from '../chainlab/constants';
 import type { Chain, ReviewItem } from '../chainlab/types';
 import { ClLabel, toolbarBtn } from '../chainlab/ui/primitives';
 import { primaryBtn } from '../coach/ui';
-import { CRITERION_STYLE, wordCount, type EssayReview, type EssaySection } from '../desk/scoring';
+import { bandOf, bandText, CRITERIA, CRITERION_STYLE, wordCount, type EssayReview, type EssaySection } from '../desk/scoring';
 import { MiniChain } from './MiniChain';
 
 /** One guided fix: an idea or flow comment (TR / CC) that quotes the essay. */
@@ -195,41 +195,76 @@ export function FixView({ prompt, chains, sections, essay, setEssay, tasks, chai
   );
 }
 
-type Seg = { t: string; kind: 'same' | 'del' | 'add' };
+/** A run of the fixed essay: unchanged text, or one change (old words out, new words in) shown as a single block. */
+type Piece = { same: string } | { del: string; add: string };
 
-/** Word-level diff (longest common subsequence), as runs of unchanged, removed and added text. */
-function wordDiff(a: string, b: string): { before: Seg[]; after: Seg[] } {
+/**
+ * Word-level diff (longest common subsequence) of a paragraph, read as one text. Changes separated only by spaces
+ * merge into one block, so a rewritten clause shows as one struck-through run followed by one new run.
+ */
+function inlineDiff(a: string, b: string): Piece[] {
+  if (a === b) return [{ same: a }];
   const A = a.split(/(\s+)/), B = b.split(/(\s+)/), n = A.length, m = B.length;
   const L = Array.from({ length: n + 1 }, () => new Uint16Array(m + 1));
   for (let i = n - 1; i >= 0; i--) for (let j = m - 1; j >= 0; j--) L[i][j] = A[i] === B[j] ? L[i + 1][j + 1] + 1 : Math.max(L[i + 1][j], L[i][j + 1]);
-  const before: Seg[] = [], after: Seg[] = [];
-  const push = (arr: Seg[], t: string, kind: Seg['kind']) => { const last = arr[arr.length - 1]; if (last && last.kind === kind) last.t += t; else arr.push({ t, kind }); };
+  const ops: { k: 'same' | 'del' | 'add'; t: string }[] = [];
   let i = 0, j = 0;
   while (i < n && j < m) {
-    if (A[i] === B[j]) { push(before, A[i], 'same'); push(after, B[j], 'same'); i++; j++; }
-    else if (L[i + 1][j] >= L[i][j + 1]) push(before, A[i++], 'del');
-    else push(after, B[j++], 'add');
+    if (A[i] === B[j]) { ops.push({ k: 'same', t: A[i] }); i++; j++; }
+    else if (L[i + 1][j] >= L[i][j + 1]) ops.push({ k: 'del', t: A[i++] });
+    else ops.push({ k: 'add', t: B[j++] });
   }
-  while (i < n) push(before, A[i++], 'del');
-  while (j < m) push(after, B[j++], 'add');
-  // A space shared between two changed words joins them, so a rewritten clause reads as one run.
-  const join = (arr: Seg[]) => arr.reduce<Seg[]>((out, g, k) => {
-    const prev = out[out.length - 1], next = arr[k + 1];
-    if (prev && prev.kind !== 'same' && g.kind === 'same' && /^\s+$/.test(g.t) && next && next.kind === prev.kind) prev.t += g.t;
-    else if (prev && g.kind === prev.kind) prev.t += g.t;
-    else out.push({ ...g });
-    return out;
-  }, []);
-  return { before: join(before), after: join(after) };
+  while (i < n) ops.push({ k: 'del', t: A[i++] });
+  while (j < m) ops.push({ k: 'add', t: B[j++] });
+
+  const blank = (o: { k: string; t: string }) => o.k === 'same' && !o.t.trim();
+  const out: Piece[] = [];
+  let blk: { del: string; add: string } | null = null;
+  const flush = () => {
+    if (!blk) return;
+    const del = blk.del.replace(/\s+/g, ' ').trim(), add = blk.add.replace(/\s+/g, ' ').trim();
+    // Spaces at either edge of the change stay outside the highlight, so the words around it keep their gap.
+    const raw = blk.add.trim() ? blk.add : blk.del;
+    const lead = /^\s*/.exec(raw)![0], tail = /\s*$/.exec(raw)![0];
+    const last = out[out.length - 1];
+    if (lead) { if (last && 'same' in last) last.same += lead; else out.push({ same: lead }); }
+    out.push({ del, add });
+    if (tail) out.push({ same: tail });
+    blk = null;
+  };
+  ops.forEach((o, k) => {
+    if (o.k === 'same') {
+      // A space between two changes belongs to the change; anything else ends it.
+      if (blk && blank(o) && ops.slice(k + 1).find((x) => !blank(x))?.k !== 'same' && k + 1 < ops.length) { blk.del += o.t; blk.add += o.t; return; }
+      flush();
+      const last = out[out.length - 1];
+      if (last && 'same' in last) last.same += o.t; else out.push({ same: o.t });
+      return;
+    }
+    blk = blk || { del: '', add: '' };
+    blk[o.k] += o.t;
+  });
+  flush();
+  return out;
 }
 
-const SEG_STYLE = { same: {}, del: { background: CL.redSoft, color: CL.redText, textDecoration: 'line-through' }, add: { background: CL.mintSoft, color: CL.greenText } } as const;
+/** The fixed essay's estimated bands: a criterion goes up one band once every one of its fix tasks is solved. */
+function estimate(scores: EssayReview['scores'], tasks: FixTask[], solved: string[]) {
+  const up = (id: string) => {
+    const own = tasks.filter((t) => t.crit === id);
+    return own.length > 0 && own.every((t) => solved.includes(t.item.key)) ? 1 : 0;
+  };
+  const next = { tr: Math.min(9, scores.tr + up('tr')), cc: Math.min(9, scores.cc + up('cc')), lr: scores.lr, gra: scores.gra };
+  return { ...next, band: bandOf(next.tr, next.cc, next.lr, next.gra) };
+}
 
-/** "Trước và sau": each changed paragraph, old beside new, then "Nộp lại". */
+/** "Trước và sau": the whole essay as one text with every change marked in place, the estimated bands beside it, then "Nộp lại". */
 export function DiffView({ sections, essay, setEssay, tasks, onResubmit, sending, error }: { sections: EssaySection[]; essay: EssayState; setEssay: SetEssay; tasks: FixTask[]; onResubmit: () => void; sending: boolean; error: string }) {
   const fix = essay.fix as Fix;
   const changed = sections.filter((s) => (fix.before[s.id] || '') !== (essay.drafts[s.id] || ''));
   const solved = tasks.filter((t) => fix.solved.includes(t.item.key));
+  const scores = essay.review!.scores;
+  const est = estimate(scores, tasks, fix.solved);
   return (
     <>
       <Bar
@@ -238,38 +273,76 @@ export function DiffView({ sections, essay, setEssay, tasks, onResubmit, sending
           <span style={pill}>Trước và sau</span>
           <span style={{ fontFamily: CL.sans, fontSize: 12.5, color: CL.ink5 }}>Bạn đã sửa {solved.length} / {tasks.length} việc trong {changed.length} đoạn.</span>
         </>}
-        right={<>
-          {error && <span role="alert" style={{ fontFamily: CL.sans, fontSize: 12, color: CL.redText, marginRight: 4 }}>{error}</span>}
-          <button type="button" className="cl-btn cl-primary" onClick={onResubmit} disabled={sending} style={{ ...primaryBtn, opacity: sending ? 0.4 : 1 }}>{sending ? 'Đang chấm…' : 'Nộp lại →'}</button>
-        </>}
+        right={error ? <span role="alert" style={{ fontFamily: CL.sans, fontSize: 12, color: CL.redText }}>{error}</span> : null}
       />
-      <div className="cl-scroll" style={{ flex: 1, minHeight: 0, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 16 }}>
-        <div style={{ display: 'flex', gap: 18, fontFamily: CL.sans, fontSize: 12, color: CL.ink6 }}>
-          <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}><span style={{ width: 14, height: 10, borderRadius: 3, background: CL.redSoft }} />Bỏ đi</span>
-          <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}><span style={{ width: 14, height: 10, borderRadius: 3, background: CL.mintSoft }} />Thêm vào</span>
-        </div>
-        {changed.length === 0 && <div style={{ borderRadius: 18, border: '1px dashed ' + CL.ink3, padding: 40, textAlign: 'center', fontFamily: CL.sans, fontSize: 14, color: CL.ink5 }}>Chưa có đoạn nào được sửa.</div>}
-        {changed.map((s) => {
-          const d = wordDiff(fix.before[s.id] || '', essay.drafts[s.id] || '');
-          const n = solved.filter((t) => t.item.sectionId === s.id).length;
-          return (
-            <section key={s.id} style={{ ...card, flexShrink: 0, overflow: 'hidden' }}>
-              <div style={{ padding: '12px 22px', borderBottom: '1px solid ' + CL.ink1, background: CL.panel, fontFamily: CL.sans, fontSize: 13.5, fontWeight: 600, color: CL.ink }}>
-                {s.label}{n > 0 && <span style={{ fontWeight: 400, fontSize: 12, color: CL.ink5 }}> · {n} việc đã sửa</span>}
-              </div>
-              <div className="co-diff2">
-                {([['Trước', d.before, CL.ink5], ['Sau', d.after, CL.greenText]] as const).map(([title, segs, fg]) => (
-                  <div key={title} style={{ padding: '16px 22px', display: 'flex', flexDirection: 'column', gap: 8 }}>
-                    <ClLabel color={fg}>{title}</ClLabel>
-                    <p style={{ margin: 0, whiteSpace: 'pre-wrap', fontFamily: CL.serif, fontSize: 14.5, lineHeight: 1.75, color: CL.ink8 }}>
-                      {segs.map((g, k) => <span key={k} style={{ borderRadius: 3, ...SEG_STYLE[g.kind] }}>{g.t}</span>)}
-                    </p>
+      <div className="co-diffwrap" style={{ flex: 1, minHeight: 0 }}>
+        <section style={{ ...card, minHeight: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 18, minHeight: 52, padding: '0 24px', borderBottom: '1px solid ' + CL.ink1, background: CL.panel, fontFamily: CL.sans, fontSize: 12, color: CL.ink6 }}>
+            <ClLabel color={CL.ink}>Bài đã sửa</ClLabel>
+            <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}><span style={{ width: 14, height: 10, borderRadius: 3, background: CL.redSoft }} />Bỏ đi</span>
+            <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}><span style={{ width: 14, height: 10, borderRadius: 3, background: CL.mintSoft }} />Thêm vào</span>
+          </div>
+          <div className="cl-scroll" style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: '20px 28px 28px', display: 'flex', flexDirection: 'column', gap: 18 }}>
+            {sections.map((s) => {
+              const pieces = inlineDiff(fix.before[s.id] || '', essay.drafts[s.id] || '');
+              const n = solved.filter((t) => t.item.sectionId === s.id).length;
+              return (
+                <div key={s.id} style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  <span style={{ display: 'flex', alignItems: 'baseline', gap: 8, fontFamily: CL.sans, fontSize: 13.5, fontWeight: 600, color: CL.ink }}>
+                    {s.label}{n > 0 && <span style={{ fontWeight: 600, fontSize: 11, color: CL.greenText }}>· {n} việc đã sửa</span>}
+                  </span>
+                  <p style={{ margin: 0, whiteSpace: 'pre-wrap', fontFamily: CL.serif, fontSize: 15, lineHeight: 1.8, color: CL.ink8 }}>
+                    {pieces.map((g, k) => 'same' in g ? <span key={k}>{g.same}</span> : (
+                      <span key={k}>
+                        {g.del && <del style={{ borderRadius: 3, padding: '1px 2px', background: CL.redSoft, color: CL.redText, textDecorationColor: CL.red, boxDecorationBreak: 'clone', WebkitBoxDecorationBreak: 'clone' }}>{g.del}</del>}
+                        {g.del && g.add && ' '}
+                        {g.add && <ins style={{ borderRadius: 3, padding: '1px 2px', background: CL.mintSoft, color: CL.greenText, textDecoration: 'none', boxDecorationBreak: 'clone', WebkitBoxDecorationBreak: 'clone' }}>{g.add}</ins>}
+                      </span>
+                    ))}
+                  </p>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+
+        <aside style={{ minHeight: 0, display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <section style={{ ...card, padding: '18px 20px', display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <ClLabel>Điểm ước tính sau khi sửa</ClLabel>
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: 12 }}>
+              <span style={{ fontFamily: CL.serif, fontSize: 24, color: CL.ink4 }}>{bandText(scores.band, true)}</span>
+              <span style={{ fontFamily: CL.sans, fontSize: 16, color: CL.ink4 }}>→</span>
+              <span style={{ fontFamily: CL.serif, fontSize: 44, fontWeight: 500, lineHeight: 1, color: CL.ink }}>{bandText(est.band, true)}</span>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {CRITERIA.map(([id, name]) => {
+                const st = CRITERION_STYLE[id], was = scores[id as 'tr'], now = est[id as 'tr'];
+                return (
+                  <div key={id} style={{ display: 'flex', alignItems: 'center', gap: 10, fontFamily: CL.sans, fontSize: 12.5 }}>
+                    <span style={{ width: 34, fontWeight: 700, color: CL.ink }}>{st.short}</span>
+                    <span style={{ flex: 1, color: CL.ink5, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{name}</span>
+                    {now > was && <span style={{ color: CL.ink4, fontVariantNumeric: 'tabular-nums' }}>{bandText(was)} →</span>}
+                    <span style={{ borderRadius: 999, background: st.soft, padding: '2px 9px', fontWeight: 700, color: st.fg, fontVariantNumeric: 'tabular-nums' }}>{bandText(now)}{now > was ? ' ↑' : ''}</span>
                   </div>
-                ))}
-              </div>
-            </section>
-          );
-        })}
+                );
+              })}
+            </div>
+            <span style={{ fontFamily: CL.sans, fontSize: 11.5, lineHeight: 1.5, color: CL.ink5 }}>Ước tính theo các việc bạn đã sửa. Nộp lại để chấm chính xác cả bài.</span>
+            <button type="button" className="cl-btn cl-primary" onClick={onResubmit} disabled={sending} style={{ ...primaryBtn, opacity: sending ? 0.4 : 1, justifyContent: 'center' }}>{sending ? 'Đang chấm…' : 'Nộp lại →'}</button>
+          </section>
+          <section style={{ ...card, padding: '14px 18px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <ClLabel>Đã sửa · {solved.length} / {tasks.length}</ClLabel>
+            {tasks.map((t) => {
+              const done = fix.solved.includes(t.item.key);
+              return (
+                <span key={t.item.key} style={{ display: 'flex', alignItems: 'center', gap: 8, fontFamily: CL.sans, fontSize: 12.5, color: done ? CL.ink : CL.ink4 }}>
+                  <span style={{ width: 18, height: 18, flexShrink: 0, borderRadius: 999, background: done ? CL.mintSoft : CL.ink1, color: CL.greenText, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 700 }}>{done ? '✓' : ''}</span>
+                  {t.title}<span style={{ marginLeft: 'auto', fontSize: 11, color: CL.ink4 }}>{CRITERION_STYLE[t.crit].short}</span>
+                </span>
+              );
+            })}
+          </section>
+        </aside>
       </div>
     </>
   );
