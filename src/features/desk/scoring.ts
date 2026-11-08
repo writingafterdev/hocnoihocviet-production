@@ -1,3 +1,4 @@
+import type React from 'react';
 /**
  * "Nộp bài" — essay feedback and band estimate for the Writing Desk.
  *
@@ -46,6 +47,20 @@ export const CRITERION_STYLE: Record<string, { short: string; line: string; soft
   cc: { short: 'CC', line: '#2F6FDB', soft: '#DFE9FB', fg: '#1E4FA8' },
   lr: { short: 'LR', line: '#3B9B5A', soft: '#DDF2E3', fg: '#276B3E' },
   gra: { short: 'GRA', line: '#6A4BC4', soft: '#E6DFFA', fg: '#4B3596' },
+};
+
+/**
+ * How a quoted problem is marked in the essay: a thin underline in the criterion's colour, and when it's the one
+ * in focus, a soft highlighter band across the lower half of the words.
+ */
+export const markStyle = (crit: string, on: boolean): React.CSSProperties => {
+  const st = CRITERION_STYLE[crit];
+  return {
+    color: 'inherit', padding: 0,
+    background: on ? 'linear-gradient(transparent 52%, ' + st.soft + ' 52%)' : 'transparent',
+    textDecoration: 'underline', textDecorationColor: st.line, textDecorationThickness: '1.5px', textUnderlineOffset: '4px', textDecorationSkipInk: 'none',
+    boxDecorationBreak: 'clone', WebkitBoxDecorationBreak: 'clone', transition: 'background .25s',
+  };
 };
 
 /** A band as shown: whole numbers without ".0" for criteria, one decimal for the overall band. */

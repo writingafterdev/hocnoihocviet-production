@@ -7,7 +7,7 @@ import { CL } from '../chainlab/constants';
 import type { Chain, ReviewItem } from '../chainlab/types';
 import { ClLabel, toolbarBtn } from '../chainlab/ui/primitives';
 import { primaryBtn } from '../coach/ui';
-import { bandOf, bandText, CRITERIA, CRITERION_STYLE, wordCount, type EssayReview, type EssaySection } from '../desk/scoring';
+import { bandOf, bandText, CRITERIA, CRITERION_STYLE, markStyle, wordCount, type EssayReview, type EssaySection } from '../desk/scoring';
 import { MiniChain } from './MiniChain';
 
 /** One guided fix: an idea or flow comment (TR / CC) that quotes the essay. */
@@ -54,8 +54,7 @@ function Bar({ left, right }: { left: ReactNode; right: ReactNode }) {
 function Highlighted({ text, quote, crit }: { text: string; quote?: string; crit: string }) {
   const at = quote ? text.indexOf(quote) : -1;
   if (at < 0) return <>{text}</>;
-  const st = CRITERION_STYLE[crit];
-  return <>{text.slice(0, at)}<mark style={{ color: 'inherit', borderRadius: 3, background: st.soft, boxShadow: 'inset 0 -2px 0 ' + st.line, padding: '0 1px' }}>{quote}</mark>{text.slice(at + quote!.length)}</>;
+  return <>{text.slice(0, at)}<mark style={markStyle(crit, true)}>{quote}</mark>{text.slice(at + quote!.length)}</>;
 }
 
 /**

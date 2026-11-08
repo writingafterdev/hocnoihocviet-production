@@ -10,7 +10,7 @@ import { ClLabel, toolbarBtn } from '../chainlab/ui/primitives';
 import { CoachGrid, SidePanel } from '../coach/CoachGrid';
 import { TranslatorChat } from '../coach/TranslatorChat';
 import { primaryBtn } from '../coach/ui';
-import { bandText, CRITERIA, CRITERION_STYLE, draftsKey, requestEssayReview, retryEssayCriterion, wordCount, type EssaySection } from '../desk/scoring';
+import { bandText, CRITERIA, markStyle, CRITERION_STYLE, draftsKey, requestEssayReview, retryEssayCriterion, wordCount, type EssaySection } from '../desk/scoring';
 import { DiffView, fixTasks, FixView } from './FixFlow';
 import { MiniChain } from './MiniChain';
 
@@ -55,8 +55,8 @@ function Marked({ text, notes, active, onPick }: { text: string; notes: Note[]; 
   let last = 0;
   spans.forEach((s, k) => {
     if (s.at > last) out.push(<span key={'t' + k}>{text.slice(last, s.at)}</span>);
-    const st = CRITERION_STYLE[s.note.crit], on = active === s.note;
-    out.push(<mark key={'m' + k} ref={on ? (el) => el?.scrollIntoView({ block: 'center', behavior: 'smooth' }) : undefined} onClick={() => onPick(s.note)} style={{ cursor: 'pointer', color: 'inherit', borderRadius: 3, background: on ? st.soft : 'transparent', boxShadow: 'inset 0 -2px 0 ' + st.line, padding: '0 1px', transition: 'background-color .2s' }}>{text.slice(s.at, s.end)}</mark>);
+    const on = active === s.note;
+    out.push(<mark key={'m' + k} ref={on ? (el) => el?.scrollIntoView({ block: 'center', behavior: 'smooth' }) : undefined} onClick={() => onPick(s.note)} style={{ ...markStyle(s.note.crit, on), cursor: 'pointer' }}>{text.slice(s.at, s.end)}</mark>);
     last = s.end;
   });
   if (last < text.length) out.push(<span key="end">{text.slice(last)}</span>);
