@@ -53,7 +53,7 @@ function BodyCard({ prompt, chain, num, canDelete, onChange, onDelete, check, on
   const setEnd = (which: 'start' | 'end', v: string) => onChange(withEnds(chain, which === 'start' ? v : start, which === 'end' ? v : end));
   const notes = coach.fresh && coach.result ? coach.result.placed : [];
   const multi = prompt.questions.length > 1;
-  const status = !chain.built ? (ready ? 'Bấm Enter để dựng' : 'Chưa đủ hai đầu') : filled ? filled + ' bước ở giữa' : 'Chưa có bước nào';
+  const status = !chain.built ? (ready ? 'Đủ hai đầu' : 'Chưa đủ hai đầu') : filled ? filled + ' bước ở giữa' : 'Chưa có bước nào';
   const tone = hasTone(prompt, chain);
 
   const endBox = (which: 'start' | 'end') => {
@@ -110,7 +110,7 @@ function BodyCard({ prompt, chain, num, canDelete, onChange, onDelete, check, on
               steps={middle.length ? middle : ['']} setSteps={(m) => onChange(withMiddle(chain, m))}
               notes={notes} active={focused ? active : null} onPick={(k) => { onFocus(); onPick(k); }}
               hint={coach.hint} asking={coach.asking} onHint={coach.askHint} onCloseHint={coach.closeHint}
-              helper={coach.error || (coach.checking ? 'Đang kiểm tra…' : filled ? 'Enter để thêm bước.' : 'Từ điểm đầu đi tới điểm cuối, qua những người bị ảnh hưởng.')}
+              helper={coach.error || (coach.checking ? 'Đang kiểm tra…' : '')}
               checking={coach.checking} clean={coach.fresh && !!coach.result && coach.result.placed.length === 0}
             />
           </div>

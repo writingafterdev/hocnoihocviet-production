@@ -212,7 +212,7 @@ export function WriteScreen({ prompt, chains, setChains, essay, setEssay, toolba
               <p style={{ margin: 0, fontFamily: CL.sans, fontSize: 14, fontStyle: 'italic', lineHeight: 1.6, color: CL.ink8 }}>{prompt.text}</p>
             </div>
             <div className="cl-scroll" style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: '14px 16px 18px', display: 'flex', flexDirection: 'column', gap: 12 }}>
-              <span style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between' }}><ClLabel>Dàn bài · {chains.length} thân bài</ClLabel><span style={{ fontFamily: CL.sans, fontSize: 11, color: CL.ink4 }}>bấm để tới đoạn</span></span>
+              <ClLabel>Dàn bài · {chains.length} thân bài</ClLabel>
               <div style={{ borderRadius: 10, border: '1px dashed ' + CL.ink2, padding: '9px 12px', fontFamily: CL.sans, fontSize: 12, color: CL.ink4 }}>Mở bài · không cần mạch</div>
               {chains.map((c, i) => (
                 <MiniChain key={c.id} prompt={prompt} chain={c} num={i + 1} first={i === 0} last={i === chains.length - 1} onMove={(d) => move(i, d)} hit={hitFor(c)}

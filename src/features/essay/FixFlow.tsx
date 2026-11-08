@@ -116,7 +116,6 @@ export function FixView({ prompt, chains, sections, essay, setEssay, tasks, chai
             {chain ? <>
               <ClLabel>Mạch của {label}</ClLabel>
               <MiniChain prompt={prompt} chain={chain} num={chains.indexOf(chain) + 1} hit={{ at: task.item.at ?? null, bg: st.soft }} focused={false} chainsHref={chainsHref} />
-              <span style={{ fontFamily: CL.sans, fontSize: 11.5, lineHeight: 1.5, color: CL.ink5 }}>Bước tô màu là chỗ đoạn văn đang thiếu hoặc lệch so với mạch.</span>
             </> : <span style={{ fontFamily: CL.sans, fontSize: 12.5, lineHeight: 1.5, color: CL.ink5 }}>{label} không có mạch. Đọc câu hỏi rồi sửa thẳng trong đoạn.</span>}
           </div>
         </aside>
@@ -136,7 +135,6 @@ export function FixView({ prompt, chains, sections, essay, setEssay, tasks, chai
           <section style={{ ...card, flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, minHeight: 50, padding: '0 22px', borderBottom: '1px solid ' + CL.ink1, background: CL.panel }}>
               <span style={{ fontFamily: CL.sans, fontSize: 13.5, fontWeight: 600, color: CL.ink }}>{label}</span>
-              <span style={{ fontFamily: CL.sans, fontSize: 12, color: CL.ink5 }}>{editing ? 'Sửa thẳng trong đoạn.' : 'Bấm vào đoạn để sửa.'}</span>
               <span style={{ marginLeft: 'auto', fontFamily: CL.sans, fontSize: 12, color: CL.ink5 }}>{wordCount(text)} từ</span>
             </div>
             <div className="cl-scroll" style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: '18px 22px', display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -188,7 +186,6 @@ export function FixView({ prompt, chains, sections, essay, setEssay, tasks, chai
               </button>
             );
           })}
-          <span style={{ marginTop: 4, fontFamily: CL.sans, fontSize: 12, lineHeight: 1.55, color: CL.ink5 }}>Mỗi việc: đọc câu hỏi, sửa thẳng trong đoạn, bấm Kiểm tra. Bí thì bấm Gợi ý thêm.</span>
         </aside>
       </div>
     </>

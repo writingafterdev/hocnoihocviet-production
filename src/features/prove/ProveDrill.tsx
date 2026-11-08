@@ -139,7 +139,7 @@ export function ProveDrill() {
   const chip = s ? kindChip(s) : null;
   const notesOn = (checked && notesOpen) || coach.checking;
   const shownResult = useLast(coach.result);
-  const helper = coach.checking ? 'Đang kiểm tra…' : coach.fresh ? (coach.result?.placed.length ? coach.result.placed.length + ' nhận xét ở bên phải. Sửa rồi bấm Kiểm tra lại.' : 'Mạch đi liền. Bấm Câu tiếp để sang câu khác.') : checked ? 'Bạn đã sửa mạch. Kiểm tra lại để xem nhận xét mới.' : coach.filled ? 'Từ điểm đầu đi tới điểm cuối, qua những người bị ảnh hưởng. Enter để thêm bước.' : 'Phần giữa đang trống. Bí thì bấm Gợi ý.';
+  const helper = coach.checking ? 'Đang kiểm tra…' : coach.fresh ? (coach.result?.placed.length ? coach.result.placed.length + ' nhận xét ở bên phải.' : 'Mạch đi liền.') : checked ? 'Bạn đã sửa mạch, kiểm tra lại để xem nhận xét mới.' : '';
 
   return (
     <div style={{ height: '100vh', background: '#fff', display: 'flex', flexDirection: 'column' }}>
@@ -202,7 +202,6 @@ export function ProveDrill() {
                     </div>
                     {checked && !rolling && (
                       <div className="co-rise" style={{ borderTop: '1px solid ' + CL.ink1, background: CL.panel, padding: '12px 22px', display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-                        <span style={{ fontFamily: CL.sans, fontSize: 12.5, color: CL.ink6 }}>Câu này lấy từ một đề trong thư viện.</span>
                         {openError && <span role="alert" style={{ fontFamily: CL.sans, fontSize: 12, color: CL.redText }}>{openError}</span>}
                         <button type="button" className="cl-btn cl-add" onClick={writeEssay} disabled={opening} style={{ marginLeft: 'auto', display: 'inline-flex', alignItems: 'center', gap: 6, borderRadius: 5, border: '1px solid ' + CL.ink, background: '#fff', color: CL.ink, padding: '6px 12px', fontFamily: CL.sans, fontSize: 12, fontWeight: 600 }}>{opening ? 'Đang tạo bài…' : 'Viết cả bài cho đề này'}<ClIcon name="right" size={12} /></button>
                       </div>
