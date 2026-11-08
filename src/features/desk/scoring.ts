@@ -31,8 +31,12 @@ export interface EssayReview {
   source?: 'ai' | 'mock' | 'sample';
   /** Overall assessment across the four criteria (AI only). */
   summary?: string;
-  /** Per criterion: why it got this band, why not higher or lower, and what would raise it (AI only). May contain **bold**. */
-  criteria?: Record<string, { why: string; gap?: string; next: string }>;
+  /** Per criterion: the official descriptor phrase for its band and for the next band, why it got this band, what is missing, and what would raise it (AI only). May contain **bold**. */
+  criteria?: Record<string, { why: string; gap?: string; next: string; bandQuote?: string; nextQuote?: string }>;
+  /** One sentence praising something specific to keep (AI only). */
+  praise?: string;
+  /** Set by "Nộp lại" after a fix round: the scores changed against the last grading, with a line per criterion that moved (or didn't despite fixes). */
+  rescore?: { notes: { criterion: string; text: string }[] };
   /** Criteria whose detailed comments failed to load (AI only); they can be retried once with `ticket`. */
   failed?: string[];
   ticket?: string;

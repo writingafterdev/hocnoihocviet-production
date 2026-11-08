@@ -20,7 +20,7 @@ export const AI_ERROR_TEXT: Record<AiErrorCode, string> = {
 };
 
 /** How long the browser waits per route before giving up (ms): a bit more than the server's two attempts. */
-const WAIT_MS: Record<string, number> = { 'chain-check': 200_000, 'chain-hint': 150_000, 'essay-review': 320_000, translate: 100_000, 'vocab-paragraph': 200_000, 'vocab-groups': 30_000 };
+const WAIT_MS: Record<string, number> = { 'chain-check': 200_000, 'chain-hint': 150_000, 'essay-review': 320_000, 'essay-fix': 260_000, translate: 100_000, 'vocab-paragraph': 200_000, 'vocab-groups': 30_000 };
 
 export async function postAi<T>(path: string, body: unknown): Promise<T> {
   let res: Response;

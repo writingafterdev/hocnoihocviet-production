@@ -6,8 +6,8 @@ import type { Chain, ReviewItem } from '../chainlab/types';
 import { bandOf, CRITERIA, type EssayReview } from './scoring';
 
 export interface SectionIn { id: string; label: string; text: string }
-interface Comment { criterion: string; sectionId: string; quote: string; label?: string; text: string; fix: string; chainId: string; step?: number }
-type Criteria = Record<'tr' | 'cc' | 'lr' | 'gra', { score: number; why: string; gap?: string; next: string }>;
+interface Comment { criterion: string; sectionId: string; quote: string; label?: string; text: string; fix: string; example?: string; chainId: string; step?: number }
+type Criteria = Record<'tr' | 'cc' | 'lr' | 'gra', { score: number; why: string; gap?: string; next: string; band_quote?: string; next_quote?: string }>;
 
 const norm = (s: string) => s.replace(/[‘’]/g, "'").replace(/[“”]/g, '"').replace(/\s+/g, ' ').toLowerCase();
 
@@ -36,14 +36,18 @@ function locate(sections: SectionIn[], prefer: string, quote: string): { id: str
 /** Each criterion gets a whole band (the overall band can still end in .5). */
 const clampBand = (x: number) => Math.max(1, Math.min(9, Math.round(Number(x) || 0)));
 
-/** The "scores" reply: whole bands per criterion, why / gap / next per criterion, and the summary. */
-export function toScores(out: { criteria?: Criteria; summary?: string }): Pick<EssayReview, 'scores' | 'summary' | 'criteria'> {
+/** The "scores" reply: whole bands per criterion, descriptor quotes and why / gap / next per criterion, the summary and the praise. */
+export function toScores(out: { criteria?: Criteria; summary?: string; praise?: string }): Pick<EssayReview, 'scores' | 'summary' | 'criteria' | 'praise'> {
   const cr = out.criteria || ({} as Criteria);
   const tr = clampBand(cr.tr?.score), cc = clampBand(cr.cc?.score), lr = clampBand(cr.lr?.score), gra = clampBand(cr.gra?.score);
   const txt = (x: unknown) => (typeof x === 'string' ? x.trim() : '');
   return {
     summary: txt(out.summary),
-    criteria: Object.fromEntries(CRITERIA.map(([id]) => [id, { why: txt(cr[id as 'tr']?.why), gap: txt(cr[id as 'tr']?.gap), next: txt(cr[id as 'tr']?.next) }])),
+    praise: txt(out.praise),
+    criteria: Object.fromEntries(CRITERIA.map(([id]) => {
+      const c = cr[id as 'tr'];
+      return [id, { why: txt(c?.why), gap: txt(c?.gap), next: txt(c?.next), bandQuote: txt(c?.band_quote), nextQuote: txt(c?.next_quote) }];
+    })),
     scores: { tr, cc, lr, gra, band: bandOf(tr, cc, lr, gra) },
   };
 }
@@ -61,6 +65,7 @@ export function toItems(criterion: string, out: { comments?: Comment[] }, sectio
     const s = sections.find((x) => x.id === hit.id);
     const k = chains.findIndex((x) => x.id === c.chainId);
     const fix = typeof c.fix === 'string' ? c.fix.trim() : '';
+    const example = typeof c.example === 'string' ? c.example.trim() : '';
     const label = typeof c.label === 'string' ? c.label.trim().slice(0, 60) : '';
     items.push({
       key: criterion + items.length,
@@ -73,6 +78,7 @@ export function toItems(criterion: string, out: { comments?: Comment[] }, sectio
       quote: hit.text,
       ...(label ? { label } : {}),
       ...(fix && fix !== hit.text ? { fix } : {}),
+      ...(example && example !== fix ? { example } : {}),
       snap: s.text,
       text,
     });

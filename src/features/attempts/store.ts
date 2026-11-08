@@ -5,6 +5,7 @@
 import type { Chain } from '../chainlab/types';
 import type { CheckResult } from '../coach/useCoach';
 import type { EssayReview } from '../desk/scoring';
+import type { CheckOut, PlanTask } from '../essay/fix-api';
 
 export interface EssayState {
   /** Ids of body paragraphs, in order. Each body paragraph is one chain: its id is the chain's id. */
@@ -20,9 +21,11 @@ export interface EssayState {
   ticked?: string[];
   /**
    * The guided fix round after a review ("Sửa bài"): one task per idea/flow comment, fixed in place, then a
-   * before/after view ('paused': back on the assessment, resumed by "Sửa bài"). `before` is the drafts when the round started; `solved` holds the comment keys that passed "Kiểm tra".
+   * before/after view ('paused': back on the assessment, resumed by "Sửa bài"). `before` is the drafts when the round started; `solved` holds the task keys that passed "Kiểm tra".
+   * `plan` holds the AI's tasks (made from the review's TR/CC comments); without it the tasks come from the comments themselves
+   * and "Kiểm tra" is a simple local check. `checks` keeps the AI's latest verdict per task key.
    */
-  fix?: { view: 'fix' | 'diff' | 'paused'; step: number; solved: string[]; before: Record<string, string> } | null;
+  fix?: { view: 'fix' | 'diff' | 'paused'; step: number; solved: string[]; before: Record<string, string>; plan?: PlanTask[]; checks?: Record<string, CheckOut> } | null;
   /** Scores of the review before the latest one, to show how much a resubmission moved them. */
   prevScores?: EssayReview['scores'] | null;
 }

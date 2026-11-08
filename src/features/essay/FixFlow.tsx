@@ -8,17 +8,25 @@ import type { Chain, ReviewItem } from '../chainlab/types';
 import { ClLabel, toolbarBtn } from '../chainlab/ui/primitives';
 import { primaryBtn } from '../coach/ui';
 import { bandOf, bandText, CRITERIA, CRITERION_STYLE, markStyle, wordCount, type EssayReview, type EssaySection } from '../desk/scoring';
+import { AI_ERROR_TEXT, AiRequestError } from '../ai/request';
+import { checkFix, type PlanTask } from './fix-api';
 import { MiniChain } from './MiniChain';
 
-/** One guided fix: an idea or flow comment (TR / CC) that quotes the essay. */
-export interface FixTask { item: ReviewItem; crit: string; title: string; ask: string[]; starter?: string; ok: string }
+/** One guided fix: an idea or flow problem (TR / CC) that quotes the essay. `plan` = the AI's task, checked by the AI. */
+export interface FixTask { item: ReviewItem; crit: string; title: string; ask: string[]; starter?: string; ok: string; plan?: PlanTask }
 
 /**
- * The fix round's tasks: comments that carry a guided fix (`task`). A review without any (older ones, the
- * rule-based checks) falls back to every TR / CC comment that quotes the essay, asked as its own text.
+ * The fix round's tasks. With the AI's plan, one task per planned fix. Otherwise the comments that carry a guided
+ * fix (`task`, the worked sample), or every TR / CC comment that quotes the essay, asked as its own text.
  */
-export function fixTasks(review: EssayReview | null): FixTask[] {
+export function fixTasks(review: EssayReview | null, plan?: PlanTask[]): FixTask[] {
   if (!review) return [];
+  if (plan) {
+    return plan.map((p, k) => ({
+      item: { key: 'p' + k, where: '', text: p.title, sectionId: p.sectionId, quote: p.quote, chainId: p.sectionId },
+      crit: p.criterion, title: p.title, ask: p.ask, starter: p.starter || undefined, ok: '', plan: p,
+    }));
+  }
   const all = review.groups.flatMap((g) => g.items.map((item) => ({ item, crit: g.id })));
   const guided = all.filter((n) => n.item.task);
   const pick = guided.length ? guided : all.filter((n) => (n.crit === 'tr' || n.crit === 'cc') && n.item.quote && n.item.sectionId);
@@ -73,6 +81,9 @@ export function FixView({ prompt, chains, sections, essay, setEssay, tasks, chai
   const [editing, setEditing] = useState(false);
   const [hint, setHint] = useState(0);
   const [checked, setChecked] = useState(false);
+  const [checking, setChecking] = useState(false);
+  const [error, setError] = useState('');
+  const verdict = fix.checks?.[task.item.key];
   const st = CRITERION_STYLE[task.crit];
   const chain = chains.find((c) => c.id === sec);
   const label = sections.find((s) => s.id === sec)?.label || '';
@@ -80,11 +91,27 @@ export function FixView({ prompt, chains, sections, essay, setEssay, tasks, chai
   const changed = sections.some((s) => (fix.before[s.id] || '') !== (essay.drafts[s.id] || ''));
 
   const setFix = (f: Partial<Fix>) => setEssay((e) => (e.fix ? { ...e, fix: { ...e.fix, ...f } } : e));
-  const go = (k: number) => { setFix({ step: k }); setEditing(false); setHint(0); setChecked(false); };
-  const check = () => {
-    const pass = passes(task, text, fix.before[sec] || '');
-    setChecked(true);
-    if (pass) { setFix({ solved: [...fix.solved, task.item.key] }); setEditing(false); }
+  const go = (k: number) => { setFix({ step: k }); setEditing(false); setHint(0); setChecked(false); setError(''); };
+  const check = async () => {
+    const before = fix.before[sec] || '';
+    if (!task.plan) {
+      const pass = passes(task, text, before);
+      setChecked(true);
+      if (pass) { setFix({ solved: [...fix.solved, task.item.key] }); setEditing(false); }
+      return;
+    }
+    // Nothing changed in the paragraph: say so without asking the AI.
+    if (text.trim() === before.trim()) { setChecked(true); setFix({ checks: { ...fix.checks, [task.item.key]: { solved: false, reply: 'Đoạn này chưa thay đổi ở chỗ cần sửa.', ask: task.ask[0] } } }); return; }
+    setChecking(true); setError('');
+    try {
+      const v = await checkFix(prompt, chains, task.plan, before, text);
+      setChecked(true);
+      setEssay((e) => (e.fix ? { ...e, fix: { ...e.fix, checks: { ...e.fix.checks, [task.item.key]: v }, solved: v.solved && !e.fix.solved.includes(task.item.key) ? [...e.fix.solved, task.item.key] : e.fix.solved } } : e));
+      if (v.solved) setEditing(false);
+    } catch (e) {
+      setError(e instanceof AiRequestError ? AI_ERROR_TEXT[e.code] : AI_ERROR_TEXT.network);
+    }
+    setChecking(false);
   };
   const next = () => {
     if (allDone) { setFix({ view: 'diff' }); return; }
@@ -154,18 +181,24 @@ export function FixView({ prompt, chains, sections, essay, setEssay, tasks, chai
               )}
               {ok && (
                 <div className="co-unfold" style={{ display: 'flex', alignItems: 'center', gap: 8, borderRadius: 10, background: CL.mintSoft, padding: '10px 14px', fontFamily: CL.sans, fontSize: 13, color: CL.greenText }}>
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M5 12l5 5 9-10" /></svg>{task.ok}
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M5 12l5 5 9-10" /></svg>{verdict?.solved && verdict.reply ? verdict.reply : task.ok || 'Đã sửa xong chỗ này.'}
                 </div>
               )}
-              {checked && !ok && (
+              {checked && !ok && (task.plan ? verdict && !verdict.solved && (
+                <div role="status" className="co-unfold" style={{ display: 'flex', flexDirection: 'column', gap: 6, borderRadius: 10, background: '#F3F3F1', padding: '10px 14px', fontFamily: CL.sans, fontSize: 13, lineHeight: 1.5, color: CL.ink7 }}>
+                  <span>Chưa được: {verdict.reply}</span>
+                  {verdict.ask && <b style={{ fontSize: 14, color: CL.ink }}>{verdict.ask}</b>}
+                </div>
+              ) : (
                 <div role="status" className="co-unfold" style={{ borderRadius: 10, background: '#F3F3F1', padding: '10px 14px', fontFamily: CL.sans, fontSize: 13, lineHeight: 1.5, color: CL.ink7 }}>
                   {text.includes(task.item.quote!) ? 'Chưa được: câu cũ vẫn còn nguyên. Đọc lại câu hỏi ở trên rồi sửa thẳng chỗ tô màu.' : 'Gần rồi, nhưng đoạn đang ngắn đi. Thêm ý trả lời câu hỏi thay vì chỉ xoá câu cũ.'}
                 </div>
-              )}
+              ))}
+              {error && <span role="alert" style={{ fontFamily: CL.sans, fontSize: 12.5, color: CL.redText }}>{error}</span>}
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '12px 22px', borderTop: '1px solid ' + CL.ink1, background: CL.panel }}>
               {hints > 0 && <button type="button" className="cl-btn" onClick={() => setHint(hint + 1)} disabled={hint >= hints} style={{ ...toolbarBtn(false), color: CL.ink, opacity: hint >= hints ? 0.4 : 1 }}>Gợi ý thêm</button>}
-              <button type="button" className="cl-btn cl-primary" onClick={ok ? next : check} style={{ ...primaryBtn, marginLeft: 'auto' }}>{!ok ? 'Kiểm tra' : allDone ? 'Xem trước / sau →' : 'Việc tiếp →'}</button>
+              <button type="button" className="cl-btn cl-primary" onClick={ok ? next : check} disabled={checking} style={{ ...primaryBtn, marginLeft: 'auto', opacity: checking ? 0.5 : 1 }}>{checking ? 'Đang kiểm tra…' : !ok ? 'Kiểm tra' : allDone ? 'Xem trước / sau →' : 'Việc tiếp →'}</button>
             </div>
           </section>
         </div>
