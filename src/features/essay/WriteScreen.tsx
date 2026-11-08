@@ -224,7 +224,7 @@ export function WriteScreen({ prompt, chains, setChains, essay, setEssay, toolba
           <section style={{ minHeight: 0, display: 'flex', flexDirection: 'column', borderRadius: 18, border: '1px solid ' + CL.border, background: '#fff', overflow: 'hidden' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 14, minHeight: 56, padding: '0 24px', borderBottom: '1px solid ' + CL.ink1, background: CL.panel }}>
               <ClLabel color={CL.ink}>Bài viết</ClLabel>
-              <span style={{ fontFamily: CL.sans, fontSize: 12, color: CL.ink5 }}>{editing ? 'Viết theo mạch ở bên trái.' : 'Bấm chỗ tô màu để xem nhận xét.'}{stale && editing ? ' Bạn đã sửa bài, nộp lại để chấm bản mới.' : ''}</span>
+              <span style={{ fontFamily: CL.sans, fontSize: 12, color: CL.ink5 }}>{editing ? '' : 'Bấm chỗ tô màu để xem nhận xét.'}{stale && editing ? 'Bạn đã sửa bài, nộp lại để chấm bản mới.' : ''}</span>
               <span style={{ marginLeft: 'auto', fontFamily: CL.sans, fontSize: 12, color: CL.ink5 }}>Số từ: <b style={{ color: words >= 250 ? CL.green : CL.ink }}>{words}</b> / 250</span>
             </div>
             <div className="cl-scroll" style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: '20px 26px 28px', display: 'flex', flexDirection: 'column', gap: 22 }}>

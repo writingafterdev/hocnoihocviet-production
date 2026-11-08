@@ -69,7 +69,6 @@ function BodyCard({ prompt, chain, num, canDelete, onChange, onDelete, check, on
           onChange={(e) => setEnd(which, e.target.value)} onFocus={onFocus}
           onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) { e.preventDefault(); build(); } }}
           style={fieldStyle} />
-        <span style={{ fontFamily: CL.sans, fontSize: 11, color: CL.ink4 }}>{isMine ? 'Viết xong bấm Enter.' : 'Sửa được nếu muốn.'}</span>
       </div>
     );
   };
@@ -98,7 +97,6 @@ function BodyCard({ prompt, chain, num, canDelete, onChange, onDelete, check, on
             </div>
           </div>
           <div style={{ borderTop: '1px solid ' + CL.ink1, background: CL.panel, padding: '12px 22px', display: 'flex', alignItems: 'center', gap: 10 }}>
-            <span style={{ fontFamily: CL.sans, fontSize: 12, color: CL.ink5 }}>Có đủ hai đầu thì mới dựng phần giữa.</span>
             <button type="button" className="cl-btn cl-primary" onClick={build} disabled={!ready} style={{ ...miniBtn, marginLeft: 'auto', border: 'none', background: CL.ink, color: '#fff', opacity: ready ? 1 : 0.3 }}>Dựng mạch ↵</button>
           </div>
         </>
@@ -144,10 +142,6 @@ export function BuildScreen({ prompt, chains, setChains, checks, setCheck, toolb
   const notesOn = !!(shown && shownCheck && notesOpen);
   const lastCheck = useLast(notesOn ? shownCheck : null);
   const multi = prompt.questions.length > 1;
-  const rule = multi
-    ? 'Mỗi mạch là một thân bài. Câu nguyên nhân và câu giải pháp đã cho điểm cuối, nên bạn viết điểm đầu; câu hỏi tác động đã cho điểm đầu, nên bạn viết điểm cuối.'
-    : prompt.questions[0].shape === 'verdict' ? 'Mỗi mạch là một thân bài. Đề đã cho điểm đầu; bạn viết tác động ở điểm cuối, rồi chọn đó là lợi ích hay tác hại.'
-      : 'Mỗi mạch là một thân bài. Một đầu đề đã gợi ý, đầu còn lại bạn viết.';
 
   return (
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column', width: '100%', maxWidth: 1710, margin: '0 auto', padding: '12px 40px 16px' }}>
@@ -166,7 +160,6 @@ export function BuildScreen({ prompt, chains, setChains, checks, setCheck, toolb
           <section style={{ flexShrink: 0, borderRadius: 18, border: '1px solid ' + CL.border, background: '#fff', padding: '18px 24px', display: 'flex', flexDirection: 'column', gap: 8 }}>
             <span style={{ display: 'flex', justifyContent: 'space-between' }}><ClLabel>Writing Task 2</ClLabel><ClLabel>40 phút</ClLabel></span>
             <p style={{ margin: 0, fontFamily: CL.sans, fontSize: 15, fontStyle: 'italic', lineHeight: 1.6, color: CL.ink8 }}>{prompt.text}</p>
-            <p style={{ margin: 0, fontFamily: CL.sans, fontSize: 12.5, lineHeight: 1.55, color: CL.ink6 }}>{rule}</p>
           </section>
           {chains.map((c, i) => (
             <BodyCard key={c.id} prompt={prompt} chain={c} num={i + 1} canDelete={chains.length > 1}
