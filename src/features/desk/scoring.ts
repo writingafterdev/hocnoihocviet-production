@@ -50,15 +50,14 @@ export const CRITERION_STYLE: Record<string, { short: string; line: string; soft
 };
 
 /**
- * How a quoted problem is marked in the essay: a thin underline in the criterion's colour, and when it's the one
- * in focus, a soft highlighter band across the lower half of the words.
+ * How a quoted problem is marked in the essay: a soft tint of the criterion's colour behind the words, no
+ * underline; the one in focus gets the full tint.
  */
 export const markStyle = (crit: string, on: boolean): React.CSSProperties => {
   const st = CRITERION_STYLE[crit];
   return {
-    color: 'inherit', padding: 0,
-    background: on ? 'linear-gradient(transparent 52%, ' + st.soft + ' 52%)' : 'transparent',
-    textDecoration: 'underline', textDecorationColor: st.line, textDecorationThickness: '1.5px', textUnderlineOffset: '4px', textDecorationSkipInk: 'none',
+    color: 'inherit', padding: '1px 0', borderRadius: 3,
+    background: on ? st.soft : 'color-mix(in srgb, ' + st.soft + ' 55%, transparent)',
     boxDecorationBreak: 'clone', WebkitBoxDecorationBreak: 'clone', transition: 'background .25s',
   };
 };
