@@ -95,6 +95,9 @@ a:hover { color: #44443F; }
 .co-dot.co-ping { animation: co-ping .5s var(--co-ease); }
 .co-dot.co-ok > span { background: #1FA97A !important; }
 .co-unfold { transform-origin: top left; animation: co-unfold .65s var(--co-ease) both; }
+/* Skeleton: grey blocks in the shape of the coming content, with a soft shimmer. */
+.co-skel { display: block; border-radius: 6px; background: linear-gradient(90deg, #EEEEEB 25%, #F8F8F6 40%, #EEEEEB 60%); background-size: 300% 100%; animation: co-shimmer 1.5s ease-in-out infinite; }
+.co-skel-in { animation: co-fade .35s ease both; }
 .co-rise { animation: co-rise .6s var(--co-ease) var(--d, 0s) both; }
 .co-slidein { animation: co-slidein .6s var(--co-ease) var(--d, 0s) both; }
 .co-pop { animation: co-pop .5s var(--co-spring) var(--d, 0s) both; }
@@ -118,6 +121,7 @@ a:hover { color: #44443F; }
 @keyframes co-pop { from { transform: scale(.4); opacity: 0; } to { transform: scale(1); opacity: 1; } }
 @keyframes co-rise { from { transform: translateY(8px); opacity: 0; } to { transform: none; opacity: 1; } }
 @keyframes co-slidein { from { transform: translateX(18px); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes co-shimmer { from { background-position: 100% 0; } to { background-position: 0 0; } }
 @keyframes co-unfold { from { transform: translateY(-8px) scaleY(.6); opacity: 0; clip-path: inset(0 0 100% 0 round 12px); } to { transform: none; opacity: 1; clip-path: inset(0 0 0 0 round 12px); } }
 @keyframes co-tint { from { background-color: transparent; } }
 @keyframes co-ping { 0% { transform: scale(1); } 40% { transform: scale(1.45); } 100% { transform: scale(1); } }
@@ -128,6 +132,7 @@ a:hover { color: #44443F; }
 @keyframes co-tick { to { stroke-dashoffset: 0; } }
 @media (prefers-reduced-motion: reduce) {
   .co-grid, .co-side-in, .co-stack, .co-dot, .co-reel-win { transition: none !important; }
+  .co-skel { animation: none; }
   .co-enter *, .co-noted, .co-badge, .co-jump, .co-unfold, .co-rise, .co-slidein, .co-pop, .co-bump, .co-flip, .co-fade, .co-hl, .co-dot.co-ping { animation: none !important; }
   .co-hl { background-size: 100% 100%; }
   .co-tick { stroke-dashoffset: 0; }

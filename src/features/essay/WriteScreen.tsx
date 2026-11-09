@@ -64,6 +64,44 @@ function Marked({ text, notes, active, onPick }: { text: string; notes: Note[]; 
   return <>{out}</>;
 }
 
+/** A grey block that shimmers: stands in for text that is on its way. */
+const Bone = ({ w = '100%', h = 11, r }: { w?: number | string; h?: number; r?: number }) => <span className="co-skel" style={{ width: w, height: h, ...(r ? { borderRadius: r } : {}) }} />;
+
+/** A comment card that hasn't arrived yet: title, quote, two lines of text. */
+function CommentBone() {
+  return (
+    <div aria-hidden="true" style={{ flexShrink: 0, padding: '14px 14px', display: 'flex', flexDirection: 'column', gap: 9, borderRadius: 12, border: '1px solid ' + CL.ink1, background: '#fff' }}>
+      <span style={{ display: 'flex', justifyContent: 'space-between' }}><Bone w="46%" h={12} /><Bone w="16%" h={10} /></span>
+      <Bone w="92%" h={10} /><Bone w="70%" h={10} />
+      <Bone w="100%" /><Bone w="84%" />
+    </div>
+  );
+}
+
+/** The feedback panel while the essay is being graded and the scores haven't arrived: the layout, in grey. */
+function ReviewBone() {
+  return (
+    <>
+      <section aria-hidden="true" style={{ flexShrink: 0, borderRadius: 18, border: '1px solid ' + CL.border, background: '#fff', overflow: 'hidden' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '16px 18px 14px' }}>
+          <Bone w={64} h={44} r={10} />
+          <span style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 8 }}><Bone /><Bone w="88%" /><Bone w="60%" /></span>
+        </div>
+        <div style={{ display: 'flex', gap: 2, padding: '6px 6px 0', background: '#F3F3F1', borderTop: '1px solid ' + CL.ink1 }}>
+          {CRITERIA.map(([id], k) => (
+            <span key={id} style={{ flex: 1, borderRadius: '12px 12px 0 0', background: k === 0 ? '#fff' : 'transparent', padding: '12px 0 13px', display: 'flex', justifyContent: 'center' }}><Bone w={52} h={14} r={999} /></span>
+          ))}
+        </div>
+        <div style={{ padding: '16px 18px 18px', display: 'flex', flexDirection: 'column', gap: 9 }}>
+          <Bone w="76%" h={10} /><Bone /><Bone w="94%" /><Bone w="58%" h={10} /><Bone w="82%" />
+        </div>
+      </section>
+      <span role="status" style={{ fontFamily: CL.sans, fontSize: 10.5, fontWeight: 700, letterSpacing: '0.11em', textTransform: 'uppercase', color: CL.ink5 }}>Đang chấm bài…</span>
+      <CommentBone /><CommentBone /><CommentBone />
+    </>
+  );
+}
+
 /**
  * ② Viết bài, in three panels: the prompt and the chains (the essay's skeleton) on the left, the essay in the middle,
  * and the translator or, after "Nộp bài", the band, scores and comments on the right. Comments point at the essay and the chain.
@@ -77,6 +115,8 @@ export function WriteScreen({ prompt, chains, setChains, essay, setEssay, toolba
   const [focus, setFocus] = useState<string | null>(null);
   const paraRefs = useRef<Record<string, HTMLElement | null>>({});
   const [sending, setSending] = useState(false);
+  /** While grading: the review so far (scores first, then each criterion's comments as they land). Never saved. */
+  const [live, setLive] = useState<EssayReview | null>(null);
   const [error, setError] = useState('');
   const [active, setActive] = useState<Note | null>(null);
   const [retrying, setRetrying] = useState(false);
@@ -84,6 +124,8 @@ export function WriteScreen({ prompt, chains, setChains, essay, setEssay, toolba
   const [planning, setPlanning] = useState(false);
   /** The criterion tab open in the feedback panel; the essay highlights only its comments. */
   const [tab, setTab] = useState('tr');
+  /** What the feedback panel shows: the review, or while grading, what has arrived so far (null = all skeleton). */
+  const panel = sending ? live : review;
 
   // Timer: runs while the student is writing.
   const tick = useRef(setEssay);
@@ -96,10 +138,10 @@ export function WriteScreen({ prompt, chains, setChains, essay, setEssay, toolba
 
   const words = sections.reduce((n, s) => n + wordCount(essay.drafts[s.id]), 0);
   const notes: Note[] = useMemo(() => {
-    if (!review) return [];
+    if (!panel) return [];
     let n = 0;
-    return review.groups.flatMap((g) => g.items.map((item) => ({ item, crit: g.id, n: ++n })));
-  }, [review]);
+    return panel.groups.flatMap((g) => g.items.map((item) => ({ item, crit: g.id, n: ++n })));
+  }, [panel]);
   const plan = essay.fix?.plan;
   const tasks = useMemo(() => fixTasks(review, plan), [review, plan]);
   /** Before a round starts: will "Sửa bài" have idea/flow work to plan? */
@@ -111,9 +153,9 @@ export function WriteScreen({ prompt, chains, setChains, essay, setEssay, toolba
 
   const submit = async () => {
     if (sending || !words) return;
-    setSending(true); setError(''); setActive(null);
+    setSending(true); setError(''); setActive(null); setLive(null); setChat(false); setTab('tr');
     try {
-      const r = await requestEssayReview(prompt, sections, essay.drafts, chains, '');
+      const r = await requestEssayReview(prompt, sections, essay.drafts, chains, '', setLive);
       setEssay((e) => ({ ...e, review: r, fixing: false, fix: null, prevScores: e.review ? e.review.scores : null }));
       setTab('tr');
       setChat(false);
@@ -121,6 +163,7 @@ export function WriteScreen({ prompt, chains, setChains, essay, setEssay, toolba
       if (e instanceof SignedOutError) { location.href = '/login?next=' + encodeURIComponent(location.pathname); return; }
       setError(e instanceof AiRequestError ? AI_ERROR_TEXT[e.code] : AI_ERROR_TEXT.network);
     }
+    setLive(null);
     setSending(false);
   };
   const retry = async () => {
@@ -186,7 +229,7 @@ export function WriteScreen({ prompt, chains, setChains, essay, setEssay, toolba
   };
 
   const hitFor = (c: Chain) => (active && active.item.chainId === c.id ? { at: active.item.at ?? null, bg: CRITERION_STYLE[active.crit].soft } : null);
-  const scores = review?.scores;
+  const scores = panel?.scores;
 
   const paragraph = (s: EssaySection) => {
     const text = essay.drafts[s.id] || '';
@@ -202,7 +245,7 @@ export function WriteScreen({ prompt, chains, setChains, essay, setEssay, toolba
         </span>
         <div style={{ borderRadius: 12, border: '1px solid ' + CL.ink2, background: '#fff', padding: '14px 18px' }}>
           {editing ? (
-            <textarea className="co-ta" value={text} onChange={(e) => setDraft(s.id, e.target.value)} onFocus={() => setFocus(s.id)} rows={3} placeholder={s.placeholder} aria-label={s.label}
+            <textarea className="co-ta" value={text} readOnly={sending} onChange={(e) => setDraft(s.id, e.target.value)} onFocus={() => setFocus(s.id)} rows={3} placeholder={s.placeholder} aria-label={s.label}
               style={{ display: 'block', width: '100%', minHeight: 72, resize: 'none', border: 'none', outline: 'none', background: 'transparent', padding: 0, fontFamily: CL.serif, fontSize: 15, lineHeight: 1.75, color: CL.ink8 }} />
           ) : (
             <p style={{ margin: 0, whiteSpace: 'pre-wrap', fontFamily: CL.serif, fontSize: 15, lineHeight: 1.75, color: CL.ink8 }}>{text ? <Marked text={text} notes={own} active={active} onPick={(n) => setActive(active === n ? null : n)} /> : <span style={{ color: CL.ink4 }}>(trống)</span>}</p>
@@ -248,7 +291,7 @@ export function WriteScreen({ prompt, chains, setChains, essay, setEssay, toolba
       </div>
 
       <CoachGrid
-        open={chat || !!review}
+        open={chat || !!review || sending}
         main={
         <main className="co-col co-write3" style={{ minWidth: 0 }}>
           <aside aria-label="Dàn bài" style={{ minHeight: 0, display: 'flex', flexDirection: 'column', borderRadius: 18, border: '1px solid ' + CL.border, background: '#fff', overflow: 'hidden' }}>
@@ -280,22 +323,23 @@ export function WriteScreen({ prompt, chains, setChains, essay, setEssay, toolba
         }
         side={
           <>
-            <SidePanel on={!!review && !chat} grow={3}>
+            <SidePanel on={(!!review || sending) && !chat} grow={3}>
               <div className="cl-scroll" style={{ height: '100%', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 14 }}>
-          {review && scores && (
+          {sending && !scores && <ReviewBone />}
+          {panel && scores && (
             <section style={{ flexShrink: 0, borderRadius: 18, border: '1px solid ' + CL.border, background: '#fff', overflow: 'hidden' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '16px 18px 14px' }}>
                 <span style={{ fontFamily: CL.serif, fontSize: 42, fontWeight: 500, lineHeight: 1, color: CL.ink }}>{bandText(scores.band, true)}</span>
-                {review.rescore
+                {panel.rescore
                   ? <span style={{ fontFamily: CL.sans, fontSize: 12.5, lineHeight: 1.5, color: CL.ink6 }}>Đã chấm lại sau vòng sửa.</span>
-                  : review.summary && <span style={{ display: 'flex', flexDirection: 'column', gap: 6, fontFamily: CL.sans, fontSize: 12.5, lineHeight: 1.5, color: CL.ink6 }}>
-                    {review.summary.replace(/\*\*/g, '')}
-                    {review.praise && <span style={{ color: CL.greenText }}>{review.praise.replace(/\*\*/g, '')}</span>}
+                  : panel.summary && <span style={{ display: 'flex', flexDirection: 'column', gap: 6, fontFamily: CL.sans, fontSize: 12.5, lineHeight: 1.5, color: CL.ink6 }}>
+                    {panel.summary.replace(/\*\*/g, '')}
+                    {panel.praise && <span style={{ color: CL.greenText }}>{panel.praise.replace(/\*\*/g, '')}</span>}
                   </span>}
               </div>
-              {review.rescore && review.rescore.notes.length > 0 && (
+              {panel.rescore && panel.rescore.notes.length > 0 && (
                 <div style={{ margin: '0 18px 14px', borderRadius: 12, background: CL.panel, padding: '10px 14px', display: 'flex', flexDirection: 'column', gap: 6 }}>
-                  {review.rescore.notes.map((n) => (
+                  {panel.rescore.notes.map((n) => (
                     <span key={n.criterion} style={{ display: 'flex', gap: 8, fontFamily: CL.sans, fontSize: 12.5, lineHeight: 1.5, color: CL.ink7 }}>
                       <b style={{ flexShrink: 0, width: 30, color: CRITERION_STYLE[n.criterion]?.fg }}>{CRITERION_STYLE[n.criterion]?.short}</b>{n.text}
                     </span>
@@ -316,30 +360,32 @@ export function WriteScreen({ prompt, chains, setChains, essay, setEssay, toolba
                   );
                 })}
               </div>
-              {review.criteria?.[tab]?.why && (() => {
-                const c = review.criteria[tab], v = scores[tab as 'tr'], plain = (x?: string) => (x || '').replace(/\*\*/g, '');
+              {panel.criteria?.[tab]?.why && (() => {
+                const c = panel.criteria[tab], v = scores[tab as 'tr'], plain = (x?: string) => (x || '').replace(/\*\*/g, '');
                 const quote = { fontFamily: CL.serif, fontSize: 13, fontStyle: 'italic', color: CL.ink6 } as const;
                 return (
                   <div style={{ padding: '14px 18px 16px', display: 'flex', flexDirection: 'column', gap: 8, fontFamily: CL.sans, fontSize: 13, lineHeight: 1.55 }}>
-                    {review.rescore && <ClLabel>Nhận xét lần chấm trước</ClLabel>}
-                    {c.bandQuote && !review.rescore && <span style={quote}>Band {v}: “{c.bandQuote}”</span>}
+                    {panel.rescore && <ClLabel>Nhận xét lần chấm trước</ClLabel>}
+                    {c.bandQuote && !panel.rescore && <span style={quote}>Band {v}: “{c.bandQuote}”</span>}
                     <span style={{ color: CL.ink7 }}>{plain(c.why)}</span>
-                    {c.nextQuote && !review.rescore && v < 9 && <span style={quote}>Band {v + 1}: “{c.nextQuote}”</span>}
+                    {c.nextQuote && !panel.rescore && v < 9 && <span style={quote}>Band {v + 1}: “{c.nextQuote}”</span>}
                     {c.gap && <span style={{ color: CL.ink7 }}>{plain(c.gap)}</span>}
-                    {c.next && !review.rescore && <span style={{ color: CL.ink, fontWeight: 600 }}>→ {plain(c.next)}</span>}
+                    {c.next && !panel.rescore && <span style={{ color: CL.ink, fontWeight: 600 }}>→ {plain(c.next)}</span>}
                   </div>
                 );
               })()}
-              {review.failed && review.failed.length > 0 && (
-                <p style={{ margin: 0, padding: '0 18px 14px', fontFamily: CL.sans, fontSize: 12, color: CL.redText }}>Chưa tải được nhận xét của {review.failed.map((id) => CRIT_SHORT[id]).join(', ')}. <button type="button" className="cl-btn" onClick={retry} disabled={retrying} style={{ textDecoration: 'underline', color: CL.ink, fontSize: 12 }}>{retrying ? 'Đang tải…' : 'Thử lại'}</button></p>
+              {panel.failed && panel.failed.length > 0 && (
+                <p style={{ margin: 0, padding: '0 18px 14px', fontFamily: CL.sans, fontSize: 12, color: CL.redText }}>Chưa tải được nhận xét của {panel.failed.map((id) => CRIT_SHORT[id]).join(', ')}. <button type="button" className="cl-btn" onClick={retry} disabled={retrying} style={{ textDecoration: 'underline', color: CL.ink, fontSize: 12 }}>{retrying ? 'Đang tải…' : 'Thử lại'}</button></p>
               )}
             </section>
           )}
-          {review && <ClLabel>{tabNotes.length ? tabNotes.length + ' nhận xét' : 'Không có nhận xét'}</ClLabel>}
-          {review && tabNotes.map((note) => {
+          {panel && (panel.loading?.includes(tab)
+            ? <><span role="status" style={{ fontFamily: CL.sans, fontSize: 10.5, fontWeight: 700, letterSpacing: '0.11em', textTransform: 'uppercase', color: CL.ink5 }}>Đang viết nhận xét…</span><CommentBone /><CommentBone /></>
+            : <ClLabel>{tabNotes.length ? tabNotes.length + ' nhận xét' : 'Không có nhận xét'}</ClLabel>)}
+          {panel && tabNotes.map((note) => {
             const on = active === note, st = CRITERION_STYLE[note.crit];
             return (
-              <button key={note.item.key + note.crit} type="button" className="cl-btn" onClick={() => setActive(on ? null : note)} aria-pressed={on}
+              <button key={note.item.key + note.crit} type="button" className={'cl-btn' + (sending ? ' co-skel-in' : '')} onClick={() => setActive(on ? null : note)} aria-pressed={on}
                 style={{ flexShrink: 0, textAlign: 'left', padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 6, borderRadius: 12, border: '1px solid ' + CL.ink1, background: on ? CL.panel : '#fff', opacity: stale ? 0.6 : 1, transition: 'background-color .2s' }}>
                 <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                   <span style={{ width: 3, height: 13, borderRadius: 2, background: st.line }} />
@@ -353,7 +399,7 @@ export function WriteScreen({ prompt, chains, setChains, essay, setEssay, toolba
               </button>
             );
           })}
-          {review && !editing && fixable && (
+          {review && !sending && !editing && fixable && (
             <section style={{ marginTop: 'auto', flexShrink: 0, borderRadius: 18, border: '1px solid ' + CL.ink, background: '#fff', padding: '13px 16px', display: 'flex', alignItems: 'center', gap: 12 }}>
               <span style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 3 }}>
                 <ClLabel color={CL.ink}>{essay.fix ? 'Sửa ý và mạch · ' + (tasks.length - essay.fix.solved.length) + ' việc' : 'Sửa ý và mạch'}</ClLabel>

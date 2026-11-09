@@ -40,6 +40,8 @@ export interface EssayReview {
   /** Criteria whose detailed comments failed to load (AI only); they can be retried once with `ticket`. */
   failed?: string[];
   ticket?: string;
+  /** While grading (never saved): criteria whose comments haven't arrived yet. */
+  loading?: string[];
 }
 
 /** Feedback groups, one per IELTS criterion. */
@@ -134,8 +136,11 @@ export function reviewEssay(spec: PromptSpec, sections: EssaySection[], drafts: 
   };
 }
 
-/** Sends the essay for scoring. Falls back to the rule-based checks when the AI is not configured. */
-export async function requestEssayReview(spec: PromptSpec, sections: EssaySection[], drafts: Record<string, string>, chains: Chain[], stance: string): Promise<EssayReview> {
+/**
+ * Sends the essay for scoring. Falls back to the rule-based checks when the AI is not configured. `onPart` gets the
+ * review so far each time a part lands after the scores (with `loading` = criteria still on their way).
+ */
+export async function requestEssayReview(spec: PromptSpec, sections: EssaySection[], drafts: Record<string, string>, chains: Chain[], stance: string, onPart?: (partial: EssayReview) => void): Promise<EssayReview> {
   const body = {
     promptId: spec.id,
     sections: sections.map((s) => ({ id: s.id, label: s.label, text: drafts[s.id] || '' })),
@@ -154,9 +159,18 @@ export async function requestEssayReview(spec: PromptSpec, sections: EssaySectio
   const call = (part: string) => postAiStream('essay-review', { ...body, part, ticket }).then(({ text, stop }) => {
     try { return parseReply<Record<string, unknown>>(text, stop, part === 'scores' ? ['criteria', 'summary'] : ['comments']); } catch { throw new AiRequestError('bad_output'); }
   });
+  let head: ReturnType<typeof toScores> | null = null;
+  const got: Record<string, ReviewItem[]> = {};
+  const emit = () => {
+    if (!head || !onPart) return;
+    onPart({ ...head, key: draftsKey(drafts), source: 'ai', groups: CRITERIA.map(([id, title]) => ({ id, title, items: got[id] || [] })), loading: CRITERIA.map(([id]) => id).filter((id) => !(id in got)) });
+  };
   const [scored, ...parts] = await Promise.allSettled([
-    call('scores').then((out) => toScores(out)),
-    ...CRITERIA.map(([id]) => call(id).then((out) => ({ items: toItems(id, out, body.sections, body.chains) }))),
+    call('scores').then((out) => { head = toScores(out); emit(); return head; }),
+    ...CRITERIA.map(([id]) => call(id).then((out) => ({ items: toItems(id, out, body.sections, body.chains) })).then(
+      (r) => { got[id] = r.items; emit(); return r; },
+      (e) => { got[id] = []; emit(); throw e; },
+    )),
   ]);
   if (scored.status === 'rejected') throw scored.reason;
   // Two criteria can quote the same words; keep the first (TR, CC, LR, GRA order) so highlights don't stack.
