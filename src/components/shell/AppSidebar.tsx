@@ -48,7 +48,7 @@ export function AppSidebar({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex min-h-screen bg-white">
       <aside aria-label="Thanh bên" className={cn('sticky top-0 hidden h-screen shrink-0 flex-col bg-white transition-[width] duration-200 md:flex', open ? 'w-56' : 'w-0 overflow-hidden')}>
-        <div className="flex w-56 flex-1 flex-col gap-6 overflow-y-auto px-6 pb-6 pt-[70px]">
+        <div className="flex w-56 flex-1 flex-col gap-6 overflow-y-auto pb-6 pl-12 pr-3 pt-[70px]">
           {GROUPS.map((g, k) => {
             const value = g.items.findIndex((it) => it.match.some((m) => inside(path, m)));
             return (
@@ -60,7 +60,7 @@ export function AppSidebar({ children }: { children: React.ReactNode }) {
             );
           })}
         </div>
-        <div className="flex h-16 w-56 shrink-0 items-center px-6"><UserMenu placement="up" /></div>
+        <div className="flex h-16 w-56 shrink-0 items-center pl-12 pr-3"><UserMenu placement="up" /></div>
       </aside>
       <div className="relative min-w-0 flex-1">
         <button type="button" onClick={toggle} aria-label={open ? 'Ẩn thanh bên' : 'Hiện thanh bên'} aria-pressed={open}
