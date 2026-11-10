@@ -2,7 +2,10 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { Volume2, VolumeX } from 'lucide-react';
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { Illustration } from '@/components/brand/Illustration';
+import { setSfxEnabled, sfx, sfxEnabled } from '@/lib/sfx';
 import { WorkspaceHeader } from '@/components/shell/BrandHeader';
 import { findPrompt } from '@/content/prompts';
 import { KIND_LABEL, sentenceParts, plainSentence, STATEMENTS, type Statement } from '@/content/statements';
@@ -18,6 +21,8 @@ import { useCoach } from '../coach/useCoach';
 import { primaryBtn } from '../coach/ui';
 
 const shuffle = <T,>(xs: T[]) => { const a = [...xs]; for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+/** A brand drawing for each kind of statement: why (a question), what it does (charts), what to do (brainstorm). */
+const DRAWING: Record<string, string> = { cause: 'man-sitting-on-question-mark-and-thinking', impact: 'hands-holding-different-charts', solution: 'woman-brainstorming-and-choosing-ideas' };
 const reducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 const ROLL_MS = 1900;
 
@@ -80,8 +85,22 @@ export function ProveDrill() {
   const coach = useCoach(s?.promptId || '', { kind: s?.kind || 'impact', tone: s?.tone || null, start: s?.start || '', end: s?.end || '', steps, sentence: s ? plainSentence(s.sentence) : '', stakeholder: s?.stakeholder });
   const rolling = !!reel;
 
+  // Sounds: on by default, muted with the speaker button (remembered).
+  const [sound, setSound] = useState(true);
+  useEffect(() => { setSound(sfxEnabled()); }, []);
+  const toggleSound = () => { const on = !sound; setSound(on); setSfxEnabled(on); if (on) sfx.pop(); };
+  const prevSteps = useRef(steps.length);
+  useEffect(() => { if (steps.length > prevSteps.current) sfx.pop(); prevSteps.current = steps.length; }, [steps.length]);
+  const shownHint = useRef(false);
+  useEffect(() => { if (coach.hint && !shownHint.current) sfx.tick(); shownHint.current = !!coach.hint; }, [coach.hint]);
+  useEffect(() => {
+    if (!coach.result || !coach.fresh) return;
+    if (coach.result.placed.length === 0) sfx.success(); else sfx.note();
+  }, [coach.result]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const land = (k: number) => {
     setI(k); setSteps(['']); setActive(null); setNotesOpen(true); setOpenError(''); setReel(null); setPromptOut(false); setLanded((n) => n + 1);
+    sfx.pop();
     coach.reset();
   };
 
@@ -91,6 +110,7 @@ export function ProveDrill() {
     if (counted && coach.result) setDone((d) => d + 1);
     const k = i + 1, target = deck[k % deck.length];
     coach.reset(); setActive(null);
+    sfx.roll(ROLL_MS);
     const el = sentenceRef.current;
     if (!el || reducedMotion()) { land(k); return; }
     const startH = el.getBoundingClientRect().height;
@@ -155,6 +175,7 @@ export function ProveDrill() {
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             {coach.error && <span role="alert" style={{ fontFamily: CL.sans, fontSize: 12, color: CL.redText, marginRight: 4 }}>{coach.error}</span>}
             <button type="button" className="cl-btn" onClick={() => go(false)} disabled={rolling} style={{ ...toolbarBtn(false), opacity: rolling ? 0.5 : 1 }}><span className={'co-dice' + (rolling ? ' on' : '')} aria-hidden="true">⟳</span> Đổi câu</button>
+            <button type="button" className="cl-btn" onClick={toggleSound} aria-pressed={sound} aria-label={sound ? 'Tắt âm thanh' : 'Bật âm thanh'} title={sound ? 'Tắt âm thanh' : 'Bật âm thanh'} style={{ ...toolbarBtn(false), width: 36, padding: 0, color: sound ? CL.ink7 : CL.ink4 }}>{sound ? <Volume2 size={16} strokeWidth={1.75} /> : <VolumeX size={16} strokeWidth={1.75} />}</button>
             <button type="button" className="cl-btn" onClick={() => setChat(!chat)} aria-pressed={chat} style={toolbarBtn(chat)}>Dịch</button>
             {!checked ? (
               <button type="button" className="cl-btn cl-primary" onClick={check} disabled={!coach.filled || coach.checking || rolling} style={{ ...primaryBtn, opacity: coach.filled && !coach.checking && !rolling ? 1 : 0.35 }}>{coach.checking ? 'Đang kiểm tra…' : 'Kiểm tra'}</button>
@@ -174,7 +195,8 @@ export function ProveDrill() {
               <section style={{ flex: '1 1 0', minHeight: 0, display: 'flex', flexDirection: 'column', borderRadius: 12, border: '1px solid ' + CL.border, background: '#fff', overflow: 'hidden' }}>
                 {s && chip && prompt ? (
                   <>
-                    <div style={{ padding: '22px 34px 20px', borderBottom: '1px solid ' + CL.ink1, display: 'flex', flexDirection: 'column', gap: 12 }}>
+                    <div className="relative pb-5 pl-[34px] pr-[34px] pt-[22px] xl:pr-[200px]" style={{ borderBottom: '1px solid ' + CL.ink1, display: 'flex', flexDirection: 'column', gap: 12 }}>
+                      <Illustration key={s.id} name={DRAWING[s.kind] || DRAWING.impact} className="co-rise pointer-events-none absolute bottom-3 right-6 top-3 hidden h-[calc(100%-24px)] w-[150px] xl:block" />
                       <span style={{ display: 'flex', alignItems: 'center', gap: 10, perspective: 400 }}>
                         <ClLabel>Chứng minh câu này</ClLabel>
                         <span key={s.id} className={landed ? 'co-flip' : ''} style={{ display: 'inline-block', borderRadius: 5, padding: '4px 8px', background: chip.bg, color: chip.fg, fontFamily: CL.sans, fontSize: 12, fontWeight: 500 }}>{chip.label}</span>
@@ -200,6 +222,12 @@ export function ProveDrill() {
                         helper={helper} checking={coach.checking} clean={clean}
                       />
                     </div>
+                    {clean && !rolling && (
+                      <div className="co-rise" style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '6px 34px 14px' }}>
+                        <Illustration name="person-with-archery-bow-hitting-bullseye" className="h-24 w-auto" />
+                        <span style={{ fontFamily: CL.sans, fontSize: 14, fontWeight: 600, color: CL.ink }}>Mạch đi liền</span>
+                      </div>
+                    )}
                     {checked && !rolling && (
                       <div className="co-rise" style={{ borderTop: '1px solid ' + CL.ink1, background: CL.panel, padding: '12px 22px', display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
                         {openError && <span role="alert" style={{ fontFamily: CL.sans, fontSize: 12, color: CL.redText }}>{openError}</span>}

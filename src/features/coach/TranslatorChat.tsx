@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { Illustration } from '@/components/brand/Illustration';
 import { CL } from '../chainlab/constants';
 import { ClLabel } from '../chainlab/ui/primitives';
 import { AI_ERROR_TEXT, AiRequestError, postAi } from '../ai/request';
@@ -77,6 +78,7 @@ export function TranslatorChat({ ideas = [], onClose, skill = 'task2' }: { ideas
       <div ref={listRef} className="cl-scroll" style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: '16px 16px 8px', display: 'flex', flexDirection: 'column', gap: 12 }}>
         {!msgs.length && (
           <div style={{ margin: 'auto 0', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, textAlign: 'center', padding: '8px 12px' }}>
+            <Illustration name="earth-with-chat-bubbles-for-global-communication" className="h-32 w-auto" />
             <span style={{ fontFamily: CL.sans, fontSize: 13, lineHeight: 1.6, color: CL.ink5 }}>Gõ tiếng Việt hay tiếng Anh, mình dịch chiều còn lại.</span>
             {ideas.length > 0 && (
               <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: 6 }}>
