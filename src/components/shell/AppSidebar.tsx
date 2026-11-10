@@ -4,22 +4,23 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import { Logo } from '@/components/brand/Logo';
+import { NavIcon } from '@/components/brand/NavIcon';
 import { HookSidebar } from '@/components/ui/hook-sidebar';
 import { cn } from '@/lib/utils';
 import { UserMenu } from './UserMenu';
 
 /** One group of the sidebar: a small heading and its pages. `match` tells which pages count as being inside an item. */
-interface Group { label?: string; items: { label: string; href: string; match: string[] }[] }
+interface Group { label?: string; items: { label: string; href: string; match: string[]; icon: React.ReactNode }[] }
 
 // Task 2 holds the quick drill and the writing practice; vocab and the student's own essays stand apart.
 const GROUPS: Group[] = [
-  { items: [{ label: 'Trang chủ', href: '/home', match: ['/home'] }] },
+  { items: [{ label: 'Trang chủ', href: '/home', match: ['/home'], icon: <NavIcon name="home" /> }] },
   { label: 'Task 2', items: [
-    { label: 'Chứng minh nhanh', href: '/prove', match: ['/prove'] },
-    { label: 'Luyện viết', href: '/writing', match: ['/writing', '/write'] },
+    { label: 'Chứng minh nhanh', href: '/prove', match: ['/prove'], icon: <NavIcon name="drill" /> },
+    { label: 'Luyện viết', href: '/writing', match: ['/writing', '/write'], icon: <NavIcon name="write" /> },
   ] },
-  { label: 'Từ vựng', items: [{ label: 'Từ vựng theo chủ đề', href: '/vocab', match: ['/vocab'] }] },
-  { label: 'Của bạn', items: [{ label: 'Bài đã viết', href: '/attempts', match: ['/attempts'] }] },
+  { label: 'Từ vựng', items: [{ label: 'Từ vựng theo chủ đề', href: '/vocab', match: ['/vocab'], icon: <NavIcon name="vocab" /> }] },
+  { label: 'Của bạn', items: [{ label: 'Bài đã viết', href: '/attempts', match: ['/attempts'], icon: <NavIcon name="essays" /> }] },
 ];
 
 const inside = (path: string, base: string) => path === base || path.startsWith(base + '/');

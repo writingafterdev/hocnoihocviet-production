@@ -3,7 +3,7 @@
 // Hook Sidebar from Rare UI (https://www.rareui.com/components/hooksidebar), MIT with the Commons Clause and an
 // attribution requirement: keep this notice and the visible credit link to rareui.com (see AppCredits).
 
-import { useEffect, useRef, useState, type ComponentProps } from "react";
+import { useEffect, useRef, useState, type ComponentProps, type ReactNode } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion, useReducedMotion } from "motion/react";
@@ -13,7 +13,7 @@ const CORNER = 6;
 const DASH =
   "repeating-linear-gradient(to top, transparent 0 2px, currentColor 2px 4px)";
 
-export type HookSidebarItem = string | { label: string; href?: string };
+export type HookSidebarItem = string | { label: string; href?: string; icon?: ReactNode };
 
 export type HookSidebarProps = Omit<ComponentProps<"nav">, "onChange"> & {
   items: HookSidebarItem[];
@@ -30,6 +30,9 @@ const hrefOf = (item: HookSidebarItem) =>
 
 const labelOf = (item: HookSidebarItem) =>
   typeof item === "string" ? item : item.label;
+
+const iconOf = (item: HookSidebarItem) =>
+  typeof item === "string" ? undefined : item.icon;
 
 const Rail = ({
   from = 0,
@@ -201,7 +204,7 @@ export function HookSidebar({
             onBlur: () => setFocusInside(false),
             onClick: () => select(index),
             className: cn(
-              "rounded-lg py-1.5 pl-5 pr-2 text-left text-sm transition-colors duration-200 motion-reduce:transition-none",
+              "flex items-center gap-2.5 rounded-lg py-1.5 pl-5 pr-2 text-left text-sm transition-colors duration-200 motion-reduce:transition-none",
               isActive
                 ? "bg-black/[0.045] font-medium text-foreground"
                 : "text-foreground/50 hover:bg-black/[0.03] hover:text-foreground/80",
@@ -216,6 +219,7 @@ export function HookSidebar({
               href={href}
               aria-current={isActive ? "page" : undefined}
             >
+              {iconOf(item)}
               {text}
             </Link>
           ) : (
@@ -226,6 +230,7 @@ export function HookSidebar({
               type="button"
               aria-current={isActive ? "true" : undefined}
             >
+              {iconOf(item)}
               {text}
             </button>
           );
