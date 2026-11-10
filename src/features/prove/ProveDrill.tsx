@@ -8,7 +8,8 @@ import { Illustration } from '@/components/brand/Illustration';
 import { setSfxEnabled, sfx, sfxEnabled } from '@/lib/sfx';
 import { WorkspaceHeader } from '@/components/shell/BrandHeader';
 import { findPrompt } from '@/content/prompts';
-import { KIND_LABEL, sentenceParts, plainSentence, STATEMENTS, type Statement } from '@/content/statements';
+import { KIND_LABEL, sentenceParts, plainSentence, STATEMENTS, type Statement, type StatementKind } from '@/content/statements';
+import { cn } from '@/lib/utils';
 import { SignedOutError } from '../attempts/store';
 import { startFromStatement } from '../attempts/start';
 import { CL } from '../chainlab/constants';
@@ -54,6 +55,41 @@ function Sentence({ s, still }: { s: Statement; still?: boolean }) {
   );
 }
 
+const KINDS: { kind: StatementKind; note: string; bg: string }[] = [
+  { kind: 'cause', note: 'Vì sao chuyện này xảy ra?', bg: 'bg-tomato-soft' },
+  { kind: 'impact', note: 'Nó ảnh hưởng ai, và ra sao?', bg: 'bg-blue-soft' },
+  { kind: 'solution', note: 'Làm gì để giải quyết?', bg: 'bg-leaf-soft' },
+];
+const TONES: { tone: 'benefit' | 'cost' | undefined; label: string }[] = [{ tone: 'benefit', label: 'Có lợi' }, { tone: 'cost', label: 'Có hại' }, { tone: undefined, label: 'Cả hai' }];
+const chipBtn = 'cursor-pointer rounded-full border-0 bg-paper-2 px-4 py-2 text-[13px] font-medium text-ink shadow-none transition-colors hover:bg-blue-soft hover:text-blue-deep';
+
+/** Step one: which kind of claim to prove. Impact asks one more question (good or bad); then the reel spins. */
+function KindPicker({ onPick }: { onPick: (kind?: StatementKind, tone?: 'benefit' | 'cost') => void }) {
+  const [impact, setImpact] = useState(false);
+  return (
+    <div className="co-rise flex min-h-0 flex-1 flex-col items-center justify-center gap-6 overflow-y-auto p-8">
+      <ClLabel>Hôm nay chứng minh loại câu nào?</ClLabel>
+      <div className="grid w-full max-w-[720px] grid-cols-3 gap-3 sm:gap-4">
+        {KINDS.map((k) => (
+          <button key={k.kind} type="button" onClick={() => (k.kind === 'impact' ? setImpact(true) : onPick(k.kind))}
+            className={cn('group m-0 flex w-full min-w-0 cursor-pointer flex-col overflow-hidden rounded-xl border-0 bg-white p-0 text-left shadow-ring transition-shadow duration-150 hover:shadow-ring-hover focus-visible:outline-none focus-visible:shadow-[0_0_0_2px_var(--brand-blue-deep)]', impact && k.kind === 'impact' && 'shadow-[0_0_0_2px_var(--brand-blue-deep)]')}>
+            <div className={cn('grid h-28 place-items-center', k.bg)}><Illustration name={DRAWING[k.kind]} className="h-24 w-auto transition-transform duration-300 group-hover:scale-[1.04]" /></div>
+            <div className="flex flex-col gap-1 px-4 pb-4 pt-3">
+              <span className="text-[15px] font-semibold tracking-[-0.01em] text-ink">{KIND_LABEL[k.kind]}</span>
+              <span className="text-[13px] leading-snug text-ink-soft">{k.note}</span>
+            </div>
+          </button>
+        ))}
+      </div>
+      <div className="flex min-h-9 items-center gap-2">
+        {impact
+          ? <>{TONES.map((t) => <button key={t.label} type="button" onClick={() => onPick('impact', t.tone)} className={cn(chipBtn, 'co-rise')}>{t.label}</button>)}</>
+          : <button type="button" onClick={() => onPick()} className={chipBtn}>Ngẫu nhiên</button>}
+      </div>
+    </div>
+  );
+}
+
 interface Reel { items: string[]; target: Statement; startH: number; endH: number; h: number; settled: boolean }
 
 /**
@@ -78,9 +114,8 @@ export function ProveDrill() {
   const sentenceRef = useRef<HTMLParagraphElement>(null);
   const reelRef = useRef<HTMLDivElement>(null);
 
-  // Shuffled in the browser only, so the server render and the first client render agree.
-  useEffect(() => { setDeck(shuffle(STATEMENTS)); }, []);
-  const s = deck ? deck[i % deck.length] : null;
+  // The deck is shuffled when a kind is picked (in the browser only), so server and client renders agree.
+  const s = deck && deck.length ? deck[i % deck.length] : null;
   const prompt = s ? findPrompt(s.promptId) : null;
   const coach = useCoach(s?.promptId || '', { kind: s?.kind || 'impact', tone: s?.tone || null, start: s?.start || '', end: s?.end || '', steps, sentence: s ? plainSentence(s.sentence) : '', stakeholder: s?.stakeholder });
   const rolling = !!reel;
@@ -104,9 +139,26 @@ export function ProveDrill() {
     coach.reset();
   };
 
+  /** Step one done: build a shuffled deck of the chosen kind and spin the reel onto its first statement. */
+  const choose = (kind?: StatementKind, tone?: 'benefit' | 'cost') => {
+    if (rolling) return;
+    const pool = shuffle(STATEMENTS.filter((x) => (!kind || x.kind === kind) && (!tone || x.tone === tone)));
+    const target = pool[0];
+    setDeck(pool); setI(0); setSteps(['']); setActive(null); setNotesOpen(true); setOpenError(''); coach.reset();
+    sfx.roll(ROLL_MS);
+    if (reducedMotion()) { setLanded((n) => n + 1); return; }
+    const others = shuffle(STATEMENTS.filter((x) => x.id !== target.id)).slice(0, 8).map((x) => plainSentence(x.sentence));
+    setReel({ items: others, target, startH: 0, endH: 0, h: 64, settled: false });
+    setPromptOut(true);
+    setTimeout(() => setReel((r) => (r ? { ...r, settled: true } : r)), ROLL_MS * 0.72);
+    setTimeout(() => setPromptOut(false), ROLL_MS);
+    setTimeout(() => land(0), ROLL_MS + 250);
+  };
+  const backToPick = () => { if (rolling) return; setDeck(null); setI(0); setSteps(['']); setActive(null); setOpenError(''); coach.reset(); };
+
   /** Spin to the next statement: other statements slide past, slow down, and the new one eases into place. */
   const go = (counted: boolean) => {
-    if (!deck || rolling) return;
+    if (!deck || !s || rolling) return;
     if (counted && coach.result) setDone((d) => d + 1);
     const k = i + 1, target = deck[k % deck.length];
     coach.reset(); setActive(null);
@@ -121,7 +173,7 @@ export function ProveDrill() {
     el.parentElement!.appendChild(probe);
     const endH = probe.getBoundingClientRect().height;
     probe.remove();
-    const others = shuffle(deck.filter((x) => x.id !== target.id && x.id !== s!.id)).slice(0, 7).map((x) => plainSentence(x.sentence));
+    const others = shuffle(STATEMENTS.filter((x) => x.id !== target.id && x.id !== s!.id)).slice(0, 7).map((x) => plainSentence(x.sentence));
     setReel({ items: [plainSentence(s!.sentence), ...others], target, startH, endH, h: Math.max(startH, endH), settled: false });
     setPromptOut(true);
     setTimeout(() => setReel((r) => (r ? { ...r, settled: true } : r)), ROLL_MS * 0.72);
@@ -133,6 +185,8 @@ export function ProveDrill() {
   useLayoutEffect(() => {
     const el = reelRef.current;
     if (!reel || !el || reel.settled) return;
+    // First spin (from the picker) has no sentence on screen yet: measure the target's height, then run.
+    if (!reel.endH) { const eh = (el.lastElementChild as HTMLElement).getBoundingClientRect().height; setReel((r) => (r ? { ...r, startH: eh, endH: eh, h: eh } : r)); return; }
     const dist = reel.h * reel.items.length;
     const a = el.animate([
       { transform: 'translateY(0)', filter: 'blur(0px)' },
@@ -141,7 +195,7 @@ export function ProveDrill() {
       { transform: 'translateY(' + -dist + 'px)', filter: 'blur(0px)' },
     ], { duration: ROLL_MS, easing: 'cubic-bezier(.4,0,.2,1)', fill: 'forwards' });
     return () => { if (!reelRef.current) a.cancel(); };
-  }, [reel?.target.id]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [reel?.target.id, reel?.endH]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const check = () => { setActive(null); setNotesOpen(true); coach.runCheck(); };
   const writeEssay = () => {
@@ -174,7 +228,8 @@ export function ProveDrill() {
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             {coach.error && <span role="alert" style={{ fontFamily: CL.sans, fontSize: 12, color: CL.redText, marginRight: 4 }}>{coach.error}</span>}
-            <button type="button" className="cl-btn" onClick={() => go(false)} disabled={rolling} style={{ ...toolbarBtn(false), opacity: rolling ? 0.5 : 1 }}><span className={'co-dice' + (rolling ? ' on' : '')} aria-hidden="true">⟳</span> Đổi câu</button>
+            {s && <button type="button" className="cl-btn" onClick={backToPick} disabled={rolling} style={{ ...toolbarBtn(false), opacity: rolling ? 0.5 : 1 }}>Đổi loại</button>}
+            <button type="button" className="cl-btn" onClick={() => go(false)} disabled={rolling || !s} style={{ ...toolbarBtn(false), opacity: rolling || !s ? 0.5 : 1 }}><span className={'co-dice' + (rolling ? ' on' : '')} aria-hidden="true">⟳</span> Đổi câu</button>
             <button type="button" className="cl-btn" onClick={toggleSound} aria-pressed={sound} aria-label={sound ? 'Tắt âm thanh' : 'Bật âm thanh'} title={sound ? 'Tắt âm thanh' : 'Bật âm thanh'} style={{ ...toolbarBtn(false), width: 36, padding: 0, color: sound ? CL.ink7 : CL.ink4 }}>{sound ? <Volume2 size={16} strokeWidth={1.75} /> : <VolumeX size={16} strokeWidth={1.75} />}</button>
             <button type="button" className="cl-btn" onClick={() => setChat(!chat)} aria-pressed={chat} style={toolbarBtn(chat)}>Dịch</button>
             {!checked ? (
@@ -236,7 +291,7 @@ export function ProveDrill() {
                     )}
                   </>
                 ) : (
-                  <div style={{ flex: 1 }} />
+                  <KindPicker onPick={choose} />
                 )}
               </section>
             </main>
