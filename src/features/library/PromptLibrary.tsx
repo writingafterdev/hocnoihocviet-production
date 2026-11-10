@@ -110,7 +110,7 @@ export function PromptLibrary() {
   const filtered = PROMPTS.filter((p) => p.task === task && (cats.length === 0 || cats.includes(p.category)) && (topics.length === 0 || topics.includes(p.topic)));
 
   return (
-    <div style={{ minHeight: '100vh', background: '#FFFFFF' }}>
+    <div style={{ minHeight: '100%', background: '#FFFFFF' }}>
       <PageHeader />
       <div style={{ maxWidth: 1200, margin: '0 auto', padding: '22px 32px 96px' }}>
 

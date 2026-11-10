@@ -30,7 +30,7 @@ export function AttemptHistory() {
   }, [router]);
 
   return (
-    <div style={{ minHeight: '100vh', background: '#fff' }}>
+    <div style={{ minHeight: '100%', background: '#fff' }}>
       <PageHeader />
       <main style={{ maxWidth: 960, margin: '0 auto', padding: '22px 32px 96px', fontFamily: 'var(--font-sans)', color: '#171717' }}>
         <h1 style={{ fontSize: 32, fontWeight: 600, letterSpacing: '-0.01em', margin: '0 0 8px' }}>Bài đã viết</h1>

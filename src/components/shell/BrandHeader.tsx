@@ -1,17 +1,16 @@
 import type { ReactNode } from 'react';
 
 /**
- * Pages in the app share the left sidebar, which carries the logo, the navigation and the account.
- * These two keep their place at the top of each screen: an empty strip for scrolling pages (where the sidebar's fold
- * button sits), and for the full-height workspaces a slim strip that also shows a status such as "Đã lưu".
+ * The app frame (AppSidebar) carries the brand, the navigation, the page title and the account. Scrolling pages need
+ * nothing more at the top; the full-height workspaces keep a slim strip that shows a status such as "Đã lưu".
  */
 export function PageHeader() {
-  return <div className="h-12" aria-hidden="true" />;
+  return null;
 }
 
 export function WorkspaceHeader({ status }: { status?: ReactNode }) {
   return (
-    <header style={{ width: '100%', maxWidth: 1710, margin: '0 auto', padding: '10px 40px 4px', flexShrink: 0, minHeight: 44, display: 'flex', alignItems: 'center', justifyContent: 'flex-end' }}>
+    <header style={{ width: '100%', maxWidth: 1710, margin: '0 auto', padding: '8px 40px 0', flexShrink: 0, minHeight: 30, display: 'flex', alignItems: 'center', justifyContent: 'flex-end' }}>
       {status}
     </header>
   );

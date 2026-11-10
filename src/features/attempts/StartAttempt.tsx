@@ -13,5 +13,5 @@ export function StartAttempt({ promptId }: { promptId: string }) {
     startFreeAttempt(findPrompt(promptId)).then((url) => { if (alive) router.replace(url); });
     return () => { alive = false; };
   }, [promptId, router]);
-  return <div style={{ height: '100vh', background: '#fff' }}><WorkspaceHeader /></div>;
+  return <div style={{ height: '100%', background: '#fff' }}><WorkspaceHeader /></div>;
 }

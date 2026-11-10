@@ -10,7 +10,7 @@ import { GuidedWriting } from './GuidedWriting';
 export function GuidedFlow({ sample }: { sample: (GuidedSample & { source: 'book' | 'hocnoihocviet' }) | null }) {
   const router = useRouter();
   return (
-    <div style={{ height: '100vh', background: '#fff', display: 'flex', flexDirection: 'column' }}>
+    <div style={{ height: '100%', background: '#fff', display: 'flex', flexDirection: 'column' }}>
       <WorkspaceHeader />
       <div style={{ flex: 1, minHeight: 0 }}>
         {sample ? (

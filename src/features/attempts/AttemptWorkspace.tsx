@@ -78,7 +78,7 @@ export function AttemptWorkspace({ attemptId }: { attemptId: string }) {
 
   if (status !== 'ready') {
     return (
-      <div style={{ height: '100vh', background: '#fff', display: 'flex', flexDirection: 'column' }}>
+      <div style={{ height: '100%', background: '#fff', display: 'flex', flexDirection: 'column' }}>
         <WorkspaceHeader />
         {status === 'error' && (
           <main style={{ maxWidth: 520, margin: '96px auto 0', padding: '0 24px', fontFamily: 'var(--font-sans)', color: '#171717' }}>
@@ -115,7 +115,7 @@ export function AttemptWorkspace({ attemptId }: { attemptId: string }) {
   );
 
   return (
-    <div style={{ height: '100vh', background: '#fff', display: 'flex', flexDirection: 'column' }}>
+    <div style={{ height: '100%', background: '#fff', display: 'flex', flexDirection: 'column' }}>
       <WorkspaceHeader status={
         <button type="button" className="cl-btn" disabled={save !== 'failed'} onClick={() => persist(attempt)} aria-live="polite" style={{ fontFamily: 'var(--font-sans)', fontSize: 12, fontWeight: 500, color: save === 'failed' ? '#B33A1A' : '#A3A3A3', cursor: save === 'failed' ? 'pointer' : 'default' }}>{SAVE_LABEL[save === 'failed' ? 'failed' : contentKey(attempt) !== savedKey.current ? 'saving' : 'saved']}</button>
       } />

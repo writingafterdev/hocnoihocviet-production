@@ -142,7 +142,7 @@ export function ProveDrill() {
   const helper = coach.checking ? 'Đang kiểm tra…' : coach.fresh ? (coach.result?.placed.length ? coach.result.placed.length + ' nhận xét ở bên phải.' : 'Mạch đi liền.') : checked ? 'Bạn đã sửa mạch, kiểm tra lại để xem nhận xét mới.' : '';
 
   return (
-    <div style={{ height: '100vh', background: '#fff', display: 'flex', flexDirection: 'column' }}>
+    <div style={{ height: '100%', background: '#fff', display: 'flex', flexDirection: 'column' }}>
       <WorkspaceHeader />
       <div style={{ flex: 1, minHeight: 0, width: '100%', maxWidth: 1710, margin: '0 auto', padding: '12px 40px 16px', display: 'flex', flexDirection: 'column' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10, minHeight: 42, paddingBottom: 12 }}>

@@ -26,6 +26,18 @@ const inside = (path: string, base: string) => path === base || path.startsWith(
 const KEY = 'hnhv-sidebar';
 /** The workspaces (drill, chains, essay) need every pixel, so there the sidebar starts hidden. Everywhere else it starts open. */
 const WORKSPACE = ['/prove', '/write'];
+const SIDEBAR_W = 232;
+
+/** What the top bar says about the current page: a section (muted) and the page. */
+function titleOf(path: string): { section?: string; page: string } {
+  if (inside(path, '/prove')) return { section: 'Task 2', page: 'Chứng minh nhanh' };
+  if (inside(path, '/writing')) return { section: 'Task 2', page: 'Thư viện đề' };
+  if (inside(path, '/write')) return { section: 'Task 2', page: 'Luyện viết' };
+  if (inside(path, '/vocab')) return { page: 'Từ vựng' };
+  if (inside(path, '/attempts')) return { page: 'Bài đã viết' };
+  if (inside(path, '/admin')) return { page: 'Quản trị' };
+  return { page: 'Trang chủ' };
+}
 
 /** Cloudflare's sidebar toggle icon: a rounded panel with a bar that moves across when the sidebar closes. */
 function ToggleIcon({ open }: { open: boolean }) {
@@ -37,31 +49,11 @@ function ToggleIcon({ open }: { open: boolean }) {
   );
 }
 
-/** The sidebar's content: the brand as the first heading with the home page under it, the groups, the account. */
-function SidebarBody({ path }: { path: string }) {
-  return (
-    <>
-      <div className="flex flex-1 flex-col gap-6 overflow-y-auto pb-6 pl-12 pr-2 pt-[var(--content-top,70px)]">
-        {GROUPS.map((g, k) => {
-          const value = g.items.findIndex((it) => it.match.some((m) => inside(path, m)));
-          return (
-            <div key={k}>
-              {/* The brand is the first heading, with the home page under it, just like Task 2 and its pages. */}
-              {k === 0 && <Link href="/home" aria-label="hocnoihocviet · Trang chủ" className="mb-3 block"><Logo /></Link>}
-              <HookSidebar label={g.label} items={g.items} value={value} color="var(--brand-tomato)" className="whitespace-nowrap" />
-            </div>
-          );
-        })}
-      </div>
-      <div className="flex h-16 shrink-0 items-center pl-[56px] pr-2"><UserMenu placement="up" /></div>
-    </>
-  );
-}
-
 /**
- * The app's left sidebar (Rare UI's hook sidebar), on the same layer as the page: hiding it gives its width back to
- * the content, showing it takes the width again. One button at the top-left of the content (or ⌘B / Ctrl+B) does both.
- * The choice is remembered, separately for the workspaces and for the other pages.
+ * The app frame, laid out like the Cloudflare dashboard in four regions: the brand in the top-left cell, the
+ * navigation under it, a top bar across the rest (where you are, your account), and the page below the bar.
+ * The sidebar is on the same layer as the page: hiding it (button at the bottom-left, or ⌘B / Ctrl+B) gives its
+ * width back to the page. The choice is remembered, separately for the workspaces and the other pages.
  */
 export function AppSidebar({ children }: { children: React.ReactNode }) {
   const path = usePathname();
@@ -82,18 +74,40 @@ export function AppSidebar({ children }: { children: React.ReactNode }) {
     document.addEventListener('keydown', key);
     return () => document.removeEventListener('keydown', key);
   }, []);
+  const title = titleOf(path);
 
   return (
-    <div className="flex min-h-screen bg-white">
-      <aside aria-label="Thanh bên" aria-hidden={!open} inert={!open}
-        className={cn('sticky top-0 hidden h-screen shrink-0 flex-col overflow-hidden bg-white transition-[width] duration-200 ease-out md:flex', open ? 'w-[208px]' : 'w-0')}>
-        <div className="flex h-full w-[208px] shrink-0 flex-col"><SidebarBody path={path} /></div>
-      </aside>
-      <div className="relative min-w-0 flex-1">
-        {children}
+    <div className="flex h-screen flex-col bg-white">
+      {/* Top: the brand cell (as wide as the sidebar), then the bar. */}
+      <header className="flex h-14 shrink-0 border-b border-line">
+        <div style={{ width: open ? SIDEBAR_W : 0 }} className={cn('hidden shrink-0 items-center overflow-hidden transition-[width] duration-200 ease-out md:flex', open && 'border-r border-line')}>
+          <Link href="/home" aria-label="hocnoihocviet · Trang chủ" className="flex w-[232px] shrink-0 items-center px-4"><Logo /></Link>
+        </div>
+        <div className="flex min-w-0 flex-1 items-center gap-3 px-5">
+          {!open && <Link href="/home" aria-label="hocnoihocviet · Trang chủ" className="hidden md:block"><Logo word={false} /></Link>}
+          <h1 className="m-0 truncate text-[15px] font-medium tracking-[-0.01em] text-ink">
+            {title.section && <span className="font-normal text-ink-soft">{title.section} / </span>}{title.page}
+          </h1>
+          <div className="ml-auto flex items-center gap-3"><UserMenu /></div>
+        </div>
+      </header>
+      <div className="flex min-h-0 flex-1">
+        <aside aria-label="Thanh bên" aria-hidden={!open} inert={!open} style={{ width: open ? SIDEBAR_W : 0 }}
+          className={cn('hidden shrink-0 flex-col overflow-hidden bg-white transition-[width] duration-200 ease-out md:flex', open && 'border-r border-line')}>
+          <div className="flex h-full w-[232px] shrink-0 flex-col">
+            <div className="flex flex-1 flex-col gap-5 overflow-y-auto px-3 py-4">
+              {GROUPS.map((g, k) => {
+                const value = g.items.findIndex((it) => it.match.some((m) => inside(path, m)));
+                return <HookSidebar key={k} label={g.label} items={g.items} value={value} color="var(--brand-tomato)" className="whitespace-nowrap" />;
+              })}
+            </div>
+            <div className="h-14 shrink-0 border-t border-line" />
+          </div>
+        </aside>
+        <main className="relative min-h-0 min-w-0 flex-1 overflow-y-auto">{children}</main>
       </div>
       <button type="button" onClick={toggle} aria-label={open ? 'Ẩn thanh bên (⌘B)' : 'Hiện thanh bên (⌘B)'} title={(open ? 'Ẩn' : 'Hiện') + ' thanh bên · ⌘B'} aria-expanded={open}
-        className="fixed bottom-4 left-[6px] z-50 hidden size-[34px] items-center justify-center rounded-lg text-ink-soft transition-colors hover:bg-paper-2 hover:text-ink md:flex">
+        className={cn('fixed bottom-[11px] z-50 hidden size-[34px] items-center justify-center rounded-lg text-ink-soft transition-colors hover:bg-paper-2 hover:text-ink md:flex', open ? 'left-4' : 'left-[5px]')}>
         <ToggleIcon open={open} />
       </button>
     </div>

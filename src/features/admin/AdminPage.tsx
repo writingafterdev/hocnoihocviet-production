@@ -99,11 +99,11 @@ export function AdminPage() {
   };
 
   if (state === 'missing') {
-    return <div style={{ minHeight: '100vh', background: '#fff', display: 'grid', placeItems: 'center', fontFamily: 'var(--font-sans)', color: '#737373' }}>Không tìm thấy trang này.</div>;
+    return <div style={{ minHeight: '100%', background: '#fff', display: 'grid', placeItems: 'center', fontFamily: 'var(--font-sans)', color: '#737373' }}>Không tìm thấy trang này.</div>;
   }
   const head = <PageHeader />;
   if (state !== 'ready' || !ov) {
-    return <div className="adm" style={{ minHeight: '100vh', background: '#fff' }}>{head}<p style={{ maxWidth: 1200, margin: '0 auto', padding: '8px 40px', fontSize: 14, color: state === 'error' ? '#B33A1A' : '#737373' }} role={state === 'error' ? 'alert' : undefined}>{state === 'error' ? 'Không tải được số liệu. Thử tải lại trang.' : 'Đang tải…'}</p></div>;
+    return <div className="adm" style={{ minHeight: '100%', background: '#fff' }}>{head}<p style={{ maxWidth: 1200, margin: '0 auto', padding: '8px 40px', fontSize: 14, color: state === 'error' ? '#B33A1A' : '#737373' }} role={state === 'error' ? 'alert' : undefined}>{state === 'error' ? 'Không tải được số liệu. Thử tải lại trang.' : 'Đang tải…'}</p></div>;
   }
 
   const peak = Math.max(10, ...ov.series.map((s) => s.total));
@@ -116,7 +116,7 @@ export function AdminPage() {
   const COLS = 'minmax(240px, 2.2fr) minmax(150px, 1.3fr) 96px 96px 96px minmax(180px, 1.4fr)';
 
   return (
-    <div className="adm" style={{ minHeight: '100vh', background: '#fff' }}>
+    <div className="adm" style={{ minHeight: '100%', background: '#fff' }}>
       {head}
       <main style={{ maxWidth: 1200, margin: '0 auto', padding: '8px 40px 80px', display: 'flex', flexDirection: 'column', gap: 32 }}>
 
