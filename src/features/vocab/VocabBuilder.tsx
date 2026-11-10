@@ -399,7 +399,7 @@ export function VocabBuilder({ onBack }: { onBack: () => void }) {
   const label = n > MAX_TICK ? 'Tối đa ' + MAX_TICK + ' cụm; sẽ dùng ' + MAX_TICK + ' cụm đầu' : n > 6 ? 'Đã chọn ' + n + ' cụm · chia thành vài đoạn' : n ? 'Đã chọn ' + n + ' cụm' : 'Chưa chọn cụm nào. Ôn ngay 4 cụm bạn ít luyện nhất.';
 
   return shell(
-    <div style={{ maxWidth: 1440, margin: '0 auto', padding: '0 40px 24px', fontFamily: VB.sans, color: VB.ink }}>
+    <div style={{ maxWidth: 1440, margin: '0 auto', padding: '32px 40px 24px', fontFamily: VB.sans, color: VB.ink }}>
       <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-end', justifyContent: 'space-between', gap: 16, marginBottom: 18 }}>
         <div>
           <span style={cardLabel}>{skill.eyebrow}</span>
