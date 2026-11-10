@@ -35,6 +35,17 @@ const speak = (t: string) => {
   try { const u = new SpeechSynthesisUtterance(t); u.lang = 'en-GB'; u.rate = 0.9; window.speechSynthesis.cancel(); window.speechSynthesis.speak(u); } catch { /* speech not supported */ }
 };
 
+/** A brand drawing for each topic (and for the saved list), shown beside the title of the topic page. */
+const TOPIC_DRAWING: Record<string, string> = {
+  education: 'person-reaching-for-star-on-podium-using-books-achievement-through-education-personal-growth-and-learning-motivation',
+  environment: 'sad-woman-with-rain-cloud',
+  trends: 'hands-holding-different-charts',
+  comparison: 'man-standing-out-from-crowd',
+  hobbies: 'relaxing-on-a-sofa-and-checking-phone',
+  hometown: 'people-in-a-cafe-windows',
+  saved: 'finishing-tasks-on-checklist-task-completion-or-productivity-concept',
+};
+
 /** Landing: one card per skill. */
 function Landing({ savedCount, onOpen, onBack }: { savedCount: (sk: VocabSkill) => number; onOpen: (id: VocabSkill['id']) => void; onBack: () => void }) {
   return (
@@ -401,9 +412,14 @@ export function VocabBuilder({ onBack }: { onBack: () => void }) {
   return shell(
     <div style={{ maxWidth: 1440, margin: '0 auto', padding: '32px 40px 24px', fontFamily: VB.sans, color: VB.ink }}>
       <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-end', justifyContent: 'space-between', gap: 16, marginBottom: 18 }}>
-        <div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
+          <div style={{ width: 88, height: 88, borderRadius: 14, background: skill.pillar, display: 'grid', placeItems: 'center', flexShrink: 0 }}>
+            <img key={isSaved ? 'saved' : topicId} src={'/illustrations/' + (isSaved ? TOPIC_DRAWING.saved : TOPIC_DRAWING[topicId] || TOPIC_DRAWING.saved) + '.svg'} alt="" className="co-rise" style={{ width: 76, height: 76, objectFit: 'contain', mixBlendMode: 'multiply' }} />
+          </div>
+          <div>
           <span style={cardLabel}>{skill.eyebrow}</span>
           <h1 style={{ margin: '6px 0 0', fontFamily: 'var(--font-sans)', fontSize: 32, fontWeight: 600, letterSpacing: '-0.02em', lineHeight: 1.15, textWrap: 'balance' }}>{isSaved ? 'Từ đã lưu' : topic.name}<span style={{ color: VB.ink3 }}> · {isSaved ? skill.title : topic.vi}</span></h1>
+          </div>
         </div>
         <div role="group" aria-label="Chủ đề" style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
           {pill('saved', 'Đã lưu', savedCount(skill))}
