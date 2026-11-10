@@ -1,8 +1,8 @@
 import { cn } from '@/lib/utils';
 
 /**
- * The sidebar's icons: Icons8 "Cute Color" (one pack for the whole app, see icons8.json), shown at 20px from
- * 64px files in /public/icons. Each stands for a page: home, the quick drill (lightning), writing (pencil),
+ * The sidebar's icons: Icons8 "Plumpy" (one pack for the whole app, see icons8.json), recoloured to the brand
+ * palette (blue, tomato, sun, leaf, blush) and shown at 20px from 64px files in /public/icons. Each stands for a page: home, the quick drill (lightning), writing (pencil),
  * vocabulary (book) and the student's own essays (document).
  */
 export type NavIconName = 'home' | 'drill' | 'write' | 'vocab' | 'essays';

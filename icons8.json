@@ -1,15 +1,32 @@
 {
   "version": 2,
   "icons": {
-    "pack": "dusk",
-    "sizes": [20],
-    "color": "pack colours",
+    "pack": "plumpy",
+    "sizes": [
+      20
+    ],
+    "color": "recoloured PNG: body = brand colour, detail = its deep shade",
     "items": {
-      "home": { "id": "42814", "commonName": "home" },
-      "drill": { "id": "43169", "commonName": "lightning-bolt" },
-      "write": { "id": "42799", "commonName": "edit" },
-      "vocab": { "id": "43131", "commonName": "book" },
-      "essays": { "id": "42795", "commonName": "document" }
+      "home": {
+        "id": "i8Zz2fM8dE3U",
+        "commonName": "home"
+      },
+      "drill": {
+        "id": "ISGGufIOoX7Z",
+        "commonName": "lightning-bolt"
+      },
+      "write": {
+        "id": "JjYzdPSlhZdJ",
+        "commonName": "edit"
+      },
+      "vocab": {
+        "id": "1uqpeZSGVSfe",
+        "commonName": "book"
+      },
+      "essays": {
+        "id": "Cuz0gckUKJ98",
+        "commonName": "document"
+      }
     }
   }
 }
