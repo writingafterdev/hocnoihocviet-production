@@ -2,7 +2,8 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { PanelLeft } from 'lucide-react';
 import { Logo } from '@/components/brand/Logo';
 import { HookSidebar } from '@/components/ui/hook-sidebar';
 import { cn } from '@/lib/utils';
@@ -23,14 +24,15 @@ const GROUPS: Group[] = [
 ];
 
 const inside = (path: string, base: string) => path === base || path.startsWith(base + '/');
-/** The workspaces (drill, chains, essay) need every pixel, so the sidebar stays hidden there until the cursor reaches the left edge. */
+const KEY = 'hnhv-sidebar';
+/** The workspaces (drill, chains, essay) need every pixel, so there the sidebar starts hidden. Everywhere else it starts open. */
 const WORKSPACE = ['/prove', '/write'];
 
 /** The sidebar's content: the brand as the first heading with the home page under it, the groups, the account. */
-function SidebarBody({ path, overlay = false }: { path: string; overlay?: boolean }) {
+function SidebarBody({ path }: { path: string }) {
   return (
     <>
-      <div className={cn('flex flex-1 flex-col gap-6 overflow-y-auto pb-6', overlay ? 'px-7 pt-7' : 'pl-12 pr-2 pt-[var(--content-top,70px)]')}>
+      <div className="flex flex-1 flex-col gap-6 overflow-y-auto pb-6 pl-12 pr-2 pt-[var(--content-top,70px)]">
         {GROUPS.map((g, k) => {
           const value = g.items.findIndex((it) => it.match.some((m) => inside(path, m)));
           return (
@@ -42,48 +44,49 @@ function SidebarBody({ path, overlay = false }: { path: string; overlay?: boolea
           );
         })}
       </div>
-      <div className={cn('flex h-16 shrink-0 items-center', overlay ? 'px-7' : 'pl-12 pr-2')}><UserMenu placement="up" /></div>
+      <div className="flex h-16 shrink-0 items-center pl-12 pr-2"><UserMenu placement="up" /></div>
     </>
   );
 }
 
 /**
- * The app's left sidebar (Rare UI's hook sidebar). On most pages it sits beside the content. On the workspaces it is
- * hidden; moving the cursor to the left edge slides it in over the page, and moving away (or Escape) hides it again.
+ * The app's left sidebar (Rare UI's hook sidebar), on the same layer as the page: hiding it gives its width back to
+ * the content, showing it takes the width again. One button at the top-left of the content (or ⌘B / Ctrl+B) does both.
+ * The choice is remembered, separately for the workspaces and for the other pages.
  */
 export function AppSidebar({ children }: { children: React.ReactNode }) {
   const path = usePathname();
   const workspace = WORKSPACE.some((b) => inside(path, b));
-  const [peek, setPeek] = useState(false);
-  // A new page starts with the sidebar tucked away.
-  useEffect(() => { setPeek(false); }, [path]);
+  const kind = workspace ? 'workspace' : 'page';
+  const [stored, setStored] = useState<Record<string, boolean>>({});
+  useEffect(() => { try { setStored(JSON.parse(localStorage.getItem(KEY) || '{}')); } catch { /* private mode */ } }, []);
+  const open = stored[kind] ?? !workspace;
+  const toggle = () => setStored((cur) => {
+    const next = { ...cur, [kind]: !(cur[kind] ?? !workspace) };
+    try { localStorage.setItem(KEY, JSON.stringify(next)); } catch { /* private mode */ }
+    return next;
+  });
+  const toggleRef = useRef(toggle);
+  toggleRef.current = toggle;
   useEffect(() => {
-    if (!peek) return;
-    const esc = (e: KeyboardEvent) => { if (e.key === 'Escape') setPeek(false); };
-    document.addEventListener('keydown', esc);
-    return () => document.removeEventListener('keydown', esc);
-  }, [peek]);
+    const key = (e: KeyboardEvent) => { if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'b' && !e.altKey && !e.shiftKey) { e.preventDefault(); toggleRef.current(); } };
+    document.addEventListener('keydown', key);
+    return () => document.removeEventListener('keydown', key);
+  }, []);
 
   return (
     <div className="flex min-h-screen bg-white">
-      {!workspace && (
-        <aside aria-label="Thanh bên" className="sticky top-0 hidden h-screen w-[208px] shrink-0 flex-col bg-white md:flex">
-          <SidebarBody path={path} />
-        </aside>
-      )}
-      {workspace && (
-        <>
-          {/* The hot zone along the left edge, then the sidebar that slides over the page. */}
-          <div aria-hidden="true" onMouseEnter={() => setPeek(true)} className="fixed inset-y-0 left-0 z-40 hidden w-3 md:block" />
-          <div onMouseLeave={() => setPeek(false)} onFocusCapture={() => setPeek(true)}
-            className={cn('fixed inset-y-0 left-0 z-50 hidden w-[256px] p-3 transition-transform duration-200 ease-out md:block', peek ? 'translate-x-0' : 'pointer-events-none -translate-x-full')}>
-            <aside aria-label="Thanh bên" className="flex h-full w-full flex-col rounded-xl bg-white shadow-pop">
-              <SidebarBody path={path} overlay />
-            </aside>
-          </div>
-        </>
-      )}
-      <div className="min-w-0 flex-1">{children}</div>
+      <aside aria-label="Thanh bên" aria-hidden={!open} inert={!open}
+        className={cn('sticky top-0 hidden h-screen shrink-0 flex-col overflow-hidden bg-white transition-[width] duration-200 ease-out md:flex', open ? 'w-[208px]' : 'w-0')}>
+        <div className="flex h-full w-[208px] shrink-0 flex-col"><SidebarBody path={path} /></div>
+      </aside>
+      <div className="relative min-w-0 flex-1">
+        <button type="button" onClick={toggle} aria-label={open ? 'Ẩn thanh bên (⌘B)' : 'Hiện thanh bên (⌘B)'} title={(open ? 'Ẩn' : 'Hiện') + ' thanh bên · ⌘B'} aria-expanded={open}
+          className="absolute left-3 top-3 z-30 hidden size-8 items-center justify-center rounded-lg text-ink-soft transition-colors hover:bg-paper-2 hover:text-ink md:flex">
+          <PanelLeft className="size-[18px]" />
+        </button>
+        {children}
+      </div>
     </div>
   );
 }
