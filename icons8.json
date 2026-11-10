@@ -1,0 +1,15 @@
+{
+  "version": 2,
+  "icons": {
+    "pack": "dusk",
+    "sizes": [20],
+    "color": "pack colours",
+    "items": {
+      "home": { "id": "42814", "commonName": "home" },
+      "drill": { "id": "43169", "commonName": "lightning-bolt" },
+      "write": { "id": "42799", "commonName": "edit" },
+      "vocab": { "id": "43131", "commonName": "book" },
+      "essays": { "id": "42795", "commonName": "document" }
+    }
+  }
+}
