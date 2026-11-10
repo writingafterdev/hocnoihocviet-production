@@ -46,8 +46,7 @@ function Landing({ savedCount, onOpen, onBack }: { savedCount: (sk: VocabSkill) 
           </div>
           <div style={{ paddingTop: 4 }}>
             <p style={{ fontFamily: VB.label, fontSize: 12, fontWeight: 600, color: '#737373', margin: '0 0 8px' }}>Vocabulary</p>
-            <h1 style={{ fontSize: 38, fontWeight: 700, letterSpacing: '-0.03em', lineHeight: 1, margin: '0 0 14px' }}>Học từ vựng</h1>
-            <p style={{ fontSize: 15, lineHeight: 1.6, color: '#716D63', maxWidth: 560, margin: 0 }}>Chọn kỹ năng, chọn chủ đề, rồi viết lại đoạn mẫu dùng chính những từ đó. Học từ để dùng, không phải để thuộc.</p>
+            <h1 style={{ fontSize: 38, fontWeight: 700, letterSpacing: '-0.03em', lineHeight: 1, margin: 0 }}>Học từ vựng</h1>
           </div>
         </div>
       </section>
