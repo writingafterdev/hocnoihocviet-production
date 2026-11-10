@@ -39,7 +39,7 @@ export function UserMenu() {
   const item: React.CSSProperties = { display: 'block', width: '100%', textAlign: 'left', padding: '10px 14px', borderRadius: 8, fontFamily: 'var(--font-sans)', fontSize: 13.5, color: '#141413', background: 'none', border: 'none', cursor: 'pointer' };
   return (
     <div ref={ref} style={{ position: 'relative' }}>
-      <button type="button" onClick={() => setOpen(!open)} aria-haspopup="menu" aria-expanded={open} aria-label="Tài khoản" style={{ width: 40, height: 40, padding: 0, border: 'none', borderRadius: 9999, background: 'var(--brand-orange)', overflow: 'hidden', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--font-sans)', fontSize: 12, fontWeight: 600, color: '#141413' }}>
+      <button type="button" onClick={() => setOpen(!open)} aria-haspopup="menu" aria-expanded={open} aria-label="Tài khoản" style={{ width: 40, height: 40, padding: 0, border: '1.5px solid var(--brand-ink)', borderRadius: 9999, background: 'var(--brand-blue)', overflow: 'hidden', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--font-sans)', fontSize: 12, fontWeight: 600, color: '#141413' }}>
         {user.image ? <img src={user.image} alt="" referrerPolicy="no-referrer" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : initials(user.name || user.email)}
       </button>
       {open && (

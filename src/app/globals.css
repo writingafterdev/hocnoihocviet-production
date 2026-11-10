@@ -1,7 +1,110 @@
+@layer theme, base, components, utilities;
+@import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/utilities.css" layer(utilities);
+@import "tw-animate-css";
+/* No dark theme yet: dark: classes only apply inside an element with class="dark". */
+@custom-variant dark (&:is(.dark *));
 @import '../styles/colors.css';
 @import '../styles/typography.css';
 @import '../styles/spacing.css';
 @import '../styles/effects.css';
+
+/* ============================================================
+   BRAND 2026 — taken from the illustration set (thick ink lines, flat fills).
+   Two primaries: Blue and Tomato. Accents for memory, used sparingly:
+   Sun, Leaf, Blush. Everything sits on warm paper with ink lines.
+   ============================================================ */
+:root {
+  --brand-paper: #F5F2EB;
+  --brand-paper-2: #EEEBE2;
+  --brand-ink: #1E1D19;
+  --brand-ink-soft: #5F5D55;
+  --brand-line: #DCD8CD;
+  --brand-blue: #77A1DD;
+  --brand-blue-deep: #2F5DA8;
+  --brand-blue-soft: #DCE7F7;
+  --brand-tomato: #FF5C33;
+  --brand-tomato-deep: #C23A17;
+  --brand-tomato-soft: #FFE0D6;
+  --brand-sun: #FFC73C;
+  --brand-sun-soft: #FFF0C7;
+  --brand-leaf: #2D881A;
+  --brand-leaf-soft: #DDEFD6;
+  --brand-blush: #FFA0C1;
+  --brand-blush-soft: #FFE3EC;
+
+  /* shadcn roles */
+  --radius: 14px;
+  --background: var(--brand-paper);
+  --foreground: var(--brand-ink);
+  --card: #FFFFFF;
+  --card-foreground: var(--brand-ink);
+  --popover: #FFFFFF;
+  --popover-foreground: var(--brand-ink);
+  --primary: var(--brand-ink);
+  --primary-foreground: #FFFFFF;
+  --secondary: var(--brand-paper-2);
+  --secondary-foreground: var(--brand-ink);
+  --muted: var(--brand-paper-2);
+  --muted-foreground: var(--brand-ink-soft);
+  --accent: var(--brand-blue-soft);
+  --accent-foreground: var(--brand-blue-deep);
+  --destructive: var(--brand-tomato-deep);
+  --border: var(--brand-line);
+  --input: var(--brand-line);
+  --ring: var(--brand-blue);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-paper: var(--brand-paper);
+  --color-paper-2: var(--brand-paper-2);
+  --color-ink: var(--brand-ink);
+  --color-ink-soft: var(--brand-ink-soft);
+  --color-line: var(--brand-line);
+  --color-blue: var(--brand-blue);
+  --color-blue-deep: var(--brand-blue-deep);
+  --color-blue-soft: var(--brand-blue-soft);
+  --color-tomato: var(--brand-tomato);
+  --color-tomato-deep: var(--brand-tomato-deep);
+  --color-tomato-soft: var(--brand-tomato-soft);
+  --color-sun: var(--brand-sun);
+  --color-sun-soft: var(--brand-sun-soft);
+  --color-leaf: var(--brand-leaf);
+  --color-leaf-soft: var(--brand-leaf-soft);
+  --color-blush: var(--brand-blush);
+  --color-blush-soft: var(--brand-blush-soft);
+  --radius-sm: calc(var(--radius) - 6px);
+  --radius-md: calc(var(--radius) - 3px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 6px);
+  --font-display: 'Newsreader', Georgia, serif;
+  --font-ui: 'Be Vietnam Pro', system-ui, sans-serif;
+  --font-essay: 'Lora', Georgia, serif;
+  --shadow-ink: 3px 3px 0 var(--brand-ink);
+  --shadow-ink-sm: 2px 2px 0 var(--brand-ink);
+}
+
+/* Tailwind's border utilities set only the width; the style comes from here (no full preflight yet, so the
+   screens not yet moved to the new system keep their look). */
+@layer base { *, ::before, ::after { border-width: 0; border-style: solid; border-color: var(--border); } }
 
 /* Page surface is white everywhere (product decision, overrides the cream --surface-base). */
 html, body { margin: 0; min-height: 100%; background: #fff; color: var(--text-primary); font-family: var(--font-sans); -webkit-font-smoothing: antialiased; }

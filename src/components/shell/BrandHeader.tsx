@@ -1,16 +1,14 @@
 import Link from 'next/link';
 import type { ReactNode } from 'react';
+import { Logo } from '@/components/brand/Logo';
 import { UserMenu } from './UserMenu';
 
-/** Logo tile + lowercase wordmark on the left, user avatar on the right. Shared by every signed-in screen. */
+/** The brand mark + lowercase wordmark on the left, user avatar on the right. Shared by every signed-in screen. */
 export function BrandBar({ avatar = true, href = '/home', status }: { avatar?: boolean; href?: string; status?: ReactNode }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
-      <Link href={href} style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-        <span style={{ width: 42, height: 42, borderRadius: 14, background: 'var(--brand-mint)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <img src="/assets/illustrations/il-structure.svg" style={{ width: 26, height: 26 }} alt="" />
-        </span>
-        <span style={{ fontFamily: 'var(--font-sans)', fontSize: 20, fontWeight: 500, letterSpacing: '-0.01em', color: '#141413' }}>hocnoihocviet</span>
+      <Link href={href} aria-label="hocnoihocviet · Trang chủ">
+        <Logo />
       </Link>
       <div style={{ display: 'flex', alignItems: 'center', gap: 18 }}>
         {status}
