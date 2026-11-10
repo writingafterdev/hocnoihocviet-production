@@ -89,7 +89,7 @@ function BodyCard({ prompt, chain, num, canDelete, onChange, onDelete, check, on
       {!chain.built ? (
         <>
           <div style={{ padding: '20px 24px 18px' }}>
-            <p style={{ margin: '0 0 14px', fontFamily: CL.sans, fontSize: 14, lineHeight: 1.55, color: CL.ink7 }}>{info.ask}{q.q ? <span style={{ color: CL.ink4 }}> · {q.q}</span> : null}</p>
+            <p style={{ margin: '0 0 14px', fontFamily: CL.sans, fontSize: 14, lineHeight: 1.55, color: CL.ink7 }}>{info.ask}{q.q && prompt.questions.length > 1 ? <span style={{ color: CL.ink4 }}> · {q.q}</span> : null}</p>
             <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) 36px minmax(0,1fr)', alignItems: 'stretch' }}>
               {endBox('start')}
               {arrow}
@@ -158,7 +158,6 @@ export function BuildScreen({ prompt, chains, setChains, checks, setCheck, toolb
         main={
         <main className="co-col cl-scroll" style={{ minWidth: 0, overflowY: 'auto', gap: 16, paddingBottom: 24 }}>
           <section style={{ flexShrink: 0, borderRadius: 12, border: '1px solid ' + CL.border, background: '#fff', padding: '18px 24px', display: 'flex', flexDirection: 'column', gap: 8 }}>
-            <span style={{ display: 'flex', justifyContent: 'space-between' }}><ClLabel>Writing Task 2</ClLabel><ClLabel>40 phút</ClLabel></span>
             <p style={{ margin: 0, fontFamily: CL.sans, fontSize: 15, fontStyle: 'italic', lineHeight: 1.6, color: CL.ink8 }}>{prompt.text}</p>
           </section>
           {chains.map((c, i) => (

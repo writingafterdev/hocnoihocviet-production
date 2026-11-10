@@ -296,7 +296,7 @@ export function WriteScreen({ prompt, chains, setChains, essay, setEssay, toolba
         <main className="co-col co-write3" style={{ minWidth: 0 }}>
           <aside aria-label="Dàn bài" style={{ minHeight: 0, display: 'flex', flexDirection: 'column', borderRadius: 12, border: '1px solid ' + CL.border, background: '#fff', overflow: 'hidden' }}>
             <div style={{ padding: '18px 20px 16px', borderBottom: '1px solid ' + CL.ink1, display: 'flex', flexDirection: 'column', gap: 8 }}>
-              <span style={{ display: 'flex', justifyContent: 'space-between' }}><ClLabel>Đề bài</ClLabel><ClLabel>40 phút</ClLabel></span>
+              <ClLabel>Đề bài</ClLabel>
               <p style={{ margin: 0, fontFamily: CL.sans, fontSize: 14, fontStyle: 'italic', lineHeight: 1.6, color: CL.ink8 }}>{prompt.text}</p>
             </div>
             <div className="cl-scroll" style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: '14px 16px 18px', display: 'flex', flexDirection: 'column', gap: 12 }}>

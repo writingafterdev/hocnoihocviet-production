@@ -7,7 +7,6 @@ import { Check, ChevronLeft, ChevronRight } from 'lucide-react';
 import { PageHeader } from '@/components/shell/BrandHeader';
 import { ModePickerModal } from './ModePickerModal';
 import { CATEGORIES_TASK1, CATEGORIES_TASK2, PROMPTS, TOPIC_ILLUSTRATION, TOPICS_TASK2, type Prompt, type Task } from '@/content/prompts';
-import { CL_CIRC, CL_SHAPE_LABEL } from '../chainlab/constants';
 import { startFreeAttempt } from '../attempts/start';
 
 const EASE = 'cubic-bezier(.16,1,.3,1)';
@@ -42,8 +41,6 @@ function Pager({ page, pages, onPage }: { page: number; pages: number; onPage: (
 
 
 /** "① Nguyên nhân · ② Giải pháp" */
-const questionTypes = (p: Prompt) => p.questions.map((x) => (p.questions.length > 1 ? CL_CIRC[x.n - 1] + ' ' : '') + CL_SHAPE_LABEL[x.shape]).join(' · ');
-
 /** 'Government & Criminal Justice' -> 'government-and-criminal-justice': the file name of the option's icon in /icons/filters. */
 const iconSlug = (label: string) => label.toLowerCase().replace(/&/g, 'and').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 
@@ -87,7 +84,6 @@ function PromptCard({ prompt, onWrite }: { prompt: Prompt; onWrite: () => void }
             <span style={{ borderRadius: 4, background: '#EDF7EA', padding: '4px 8px', fontFamily: 'var(--font-mono)', fontSize: 12, fontWeight: 600, color: '#167A59' }}>{prompt.topic}</span>
           </div>
           <p style={{ fontFamily: 'var(--font-sans)', fontSize: 14, fontWeight: 500, lineHeight: 1.55, color: '#171717', margin: 0 }}>{prompt.text}</p>
-          <p style={{ fontFamily: 'var(--font-sans)', fontSize: 11.5, fontWeight: 600, color: '#737373', margin: '10px 0 0' }}>{questionTypes(prompt)}</p>
         </div>
       </div>
       <div style={{ gridArea: '1/1', display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: '16px 20px', ...layer(hover) }}>

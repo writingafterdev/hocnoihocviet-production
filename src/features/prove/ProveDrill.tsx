@@ -68,7 +68,6 @@ function KindPicker({ onPick }: { onPick: (kind?: StatementKind, tone?: 'benefit
   const [impact, setImpact] = useState(false);
   return (
     <div className="co-rise flex min-h-0 flex-1 flex-col items-center justify-center gap-6 overflow-y-auto p-8">
-      <ClLabel>Hôm nay chứng minh loại câu nào?</ClLabel>
       <div className="grid w-full max-w-[720px] grid-cols-3 gap-3 sm:gap-4">
         {KINDS.map((k) => (
           <button key={k.kind} type="button" onClick={() => (k.kind === 'impact' ? setImpact(true) : onPick(k.kind))}

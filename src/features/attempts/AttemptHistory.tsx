@@ -33,12 +33,10 @@ export function AttemptHistory() {
     <div style={{ minHeight: '100%', background: '#fff' }}>
       <PageHeader />
       <main style={{ maxWidth: 960, margin: '0 auto', padding: '40px 32px 96px', fontFamily: 'var(--font-sans)', color: '#171717' }}>
-        <h1 style={{ fontSize: 32, fontWeight: 600, letterSpacing: '-0.01em', margin: '0 0 8px' }}>Bài đã viết</h1>
-        <p style={{ fontSize: 15, color: '#737373', margin: '0 0 20px' }}>Mỗi lần bạn bắt đầu một đề là một bài. Mở lại để viết tiếp hoặc xem nhận xét.</p>
+        <h1 style={{ fontSize: 32, fontWeight: 600, letterSpacing: '-0.01em', margin: '0 0 24px' }}>Bài đã viết</h1>
         <button type="button" onClick={openSample} disabled={opening} style={{ display: 'flex', alignItems: 'center', gap: 14, width: '100%', textAlign: 'left', borderRadius: 10, border: 'none', boxShadow: '0 0 0 1px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.05)', background: '#fff', padding: '14px 20px', margin: '0 0 28px', cursor: 'pointer', fontFamily: 'inherit', color: '#171717' }}>
           <span style={{ flex: 1 }}>
             <span style={{ display: 'block', fontSize: 14, fontWeight: 600 }}>Xem một bài chấm mẫu</span>
-            <span style={{ display: 'block', fontSize: 12.5, color: '#525252', marginTop: 3 }}>Bài band 7 về du lịch giá rẻ: hai mạch, bài viết, điểm từng tiêu chí và nhận xét chỉ vào câu trong bài và bước trong mạch. Mở ra là một bản của riêng bạn, sửa thoải mái.</span>
           </span>
           <span style={{ flexShrink: 0, fontSize: 13, fontWeight: 600 }}>{opening ? 'Đang mở…' : 'Mở →'}</span>
         </button>
