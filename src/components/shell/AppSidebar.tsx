@@ -47,7 +47,7 @@ export function AppSidebar({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="flex min-h-screen bg-white">
-      <aside aria-label="Thanh bên" className={cn('sticky top-0 hidden h-screen shrink-0 flex-col border-r border-line bg-white transition-[width] duration-200 md:flex', open ? 'w-60' : 'w-0 overflow-hidden border-r-0')}>
+      <aside aria-label="Thanh bên" className={cn('sticky top-0 hidden h-screen shrink-0 flex-col bg-white transition-[width] duration-200 md:flex', open ? 'w-60' : 'w-0 overflow-hidden')}>
         <div className="flex h-14 w-60 shrink-0 items-center px-5">
           <Link href="/home" aria-label="hocnoihocviet · Trang chủ"><Logo /></Link>
         </div>
@@ -57,7 +57,7 @@ export function AppSidebar({ children }: { children: React.ReactNode }) {
             return <HookSidebar key={k} label={g.label} items={g.items} value={value} color="var(--brand-tomato)" />;
           })}
         </div>
-        <div className="flex h-16 w-60 shrink-0 items-center border-t border-line px-5"><UserMenu placement="up" /></div>
+        <div className="flex h-16 w-60 shrink-0 items-center px-5"><UserMenu placement="up" /></div>
       </aside>
       <div className="relative min-w-0 flex-1">
         <button type="button" onClick={toggle} aria-label={open ? 'Ẩn thanh bên' : 'Hiện thanh bên'} aria-pressed={open}
