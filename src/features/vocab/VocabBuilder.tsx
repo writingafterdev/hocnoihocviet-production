@@ -221,8 +221,12 @@ function PhraseRow({ item, selected, focused, practiced, onSelect, onFocus }: { 
 const cardLabel: React.CSSProperties = { fontFamily: VB.sans, fontSize: 12, fontWeight: 500, color: VB.ink3 };
 
 /** The focused phrase in full: pronunciation, meaning, usage notes, collocations and examples. */
-function PhraseCard({ item }: { item: VocabItem }) {
+function PhraseCard({ item, drawing, tint }: { item: VocabItem; drawing: string; tint: string }) {
   return (
+    <>
+    <div style={{ height: 132, background: tint, display: 'grid', placeItems: 'center' }}>
+      <img key={drawing} src={'/illustrations/' + drawing + '.svg'} alt="" className="co-rise" style={{ height: 112, width: 'auto', objectFit: 'contain', mixBlendMode: 'multiply' }} />
+    </div>
     <div key={item.en} className="vb-card-in" style={{ padding: '22px 24px 24px', display: 'flex', flexDirection: 'column', gap: 18 }}>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
         <span style={cardLabel}>{item.pos}</span>
@@ -252,6 +256,7 @@ function PhraseCard({ item }: { item: VocabItem }) {
         </div>
       )}
     </div>
+    </>
   );
 }
 
@@ -451,7 +456,7 @@ export function VocabBuilder({ onBack }: { onBack: () => void }) {
           </section>
           {focused && (
             <aside aria-live="polite" className="vb-detail" style={{ position: 'sticky', top: 16, minWidth: 0, borderRadius: 12, border: '1px solid ' + VB.border, background: '#fff', overflow: 'hidden' }}>
-              <PhraseCard item={focused} />
+              <PhraseCard item={focused} drawing={TOPIC_DRAWING[topicId] || TOPIC_DRAWING.saved} tint={skill.pillar} />
             </aside>
           )}
         </div>
