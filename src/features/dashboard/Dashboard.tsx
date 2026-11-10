@@ -15,19 +15,19 @@ const SOON = [
 
 const card = 'overflow-hidden rounded-xl bg-white shadow-ring';
 
-/** Task 2: the big card, the drawing on the left. The whole card is the link to the writing practice. */
+/** Task 2: the big card, tinted all over so there is no empty white. Words on the left, the drawing large on the right. */
 function Task2Card() {
   return (
-    <Link href="/writing" className={cn(card, 'group flex flex-col transition-shadow duration-150 hover:shadow-ring-hover focus-visible:shadow-[0_0_0_2px_var(--brand-blue-deep)] focus-visible:outline-none md:flex-row')}>
-      <div className="relative grid h-64 shrink-0 place-items-center bg-tomato-soft md:h-auto md:w-80">
-        <Illustration name="person-typing-essay-on-laptop-digital-writing-or-blogging" className="h-60 w-auto transition-transform duration-300 group-hover:scale-[1.03]" />
-        <Badge variant="blue" className="absolute left-3 top-3">Beta</Badge>
-      </div>
-      <div className="flex flex-1 flex-col justify-center gap-2 p-8">
+    <Link href="/writing" className="group relative flex min-h-[400px] flex-col overflow-hidden rounded-xl bg-tomato-soft shadow-ring transition-shadow duration-150 hover:shadow-ring-hover focus-visible:shadow-[0_0_0_2px_var(--brand-blue-deep)] focus-visible:outline-none md:flex-row">
+      <div className="relative z-10 flex flex-col gap-2 p-8 md:w-[46%]">
+        <Badge variant="blue" className="mb-4 bg-white">Beta</Badge>
         <span className="text-xs font-medium text-ink-soft">Writing · IELTS</span>
-        <h2 className="m-0 text-[32px] font-semibold leading-tight tracking-[-0.025em] text-ink">Task 2</h2>
-        <p className="m-0 max-w-[40ch] text-[15px] leading-[1.6] text-ink-soft">Từ một câu khởi động đến cả bài viết: dựng mạch cho từng thân bài, viết, rồi nhận điểm theo bốn tiêu chí của giám khảo.</p>
-        <span className="inline-flex items-center gap-0.5 pt-3 text-sm font-medium text-blue-deep">Bắt đầu <ChevronRight className="size-4 transition-transform group-hover:translate-x-0.5" /></span>
+        <h2 className="m-0 text-[44px] font-semibold leading-none tracking-[-0.03em] text-ink">Task 2</h2>
+        <p className="m-0 mt-1 max-w-[36ch] text-[15px] leading-[1.6] text-ink/70">Từ một câu khởi động đến cả bài viết: dựng mạch cho từng thân bài, viết, rồi nhận điểm theo bốn tiêu chí của giám khảo.</p>
+        <span className="mt-auto inline-flex items-center gap-0.5 pt-6 text-sm font-medium text-blue-deep">Bắt đầu <ChevronRight className="size-4 transition-transform group-hover:translate-x-0.5" /></span>
+      </div>
+      <div className="relative min-h-64 flex-1">
+        <Illustration name="person-typing-essay-on-laptop-digital-writing-or-blogging" className="absolute inset-0 m-auto h-[88%] w-[92%] transition-transform duration-300 group-hover:scale-[1.03]" />
       </div>
     </Link>
   );
