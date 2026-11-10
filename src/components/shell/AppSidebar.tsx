@@ -51,7 +51,7 @@ export function AppSidebar({ children }: { children: React.ReactNode }) {
         <div className="flex h-14 w-60 shrink-0 items-center px-5">
           <Link href="/home" aria-label="hocnoihocviet · Trang chủ"><Logo /></Link>
         </div>
-        <div className="flex w-60 flex-1 flex-col gap-6 overflow-y-auto px-5 pb-6 pt-4">
+        <div className="flex w-60 flex-1 flex-col justify-center gap-6 overflow-y-auto px-5 pb-6 pt-4">
           {GROUPS.map((g, k) => {
             const value = g.items.findIndex((it) => it.match.some((m) => inside(path, m)));
             return <HookSidebar key={k} label={g.label} items={g.items} value={value} color="var(--brand-tomato)" />;
