@@ -48,16 +48,16 @@ export function AppSidebar({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex min-h-screen bg-white">
       <aside aria-label="Thanh bên" className={cn('sticky top-0 hidden h-screen shrink-0 flex-col bg-white transition-[width] duration-200 md:flex', open ? 'w-60' : 'w-0 overflow-hidden')}>
-        <div className="flex h-14 w-60 shrink-0 items-center px-5">
+        <div className="flex h-14 w-60 shrink-0 items-center px-8">
           <Link href="/home" aria-label="hocnoihocviet · Trang chủ"><Logo /></Link>
         </div>
-        <div className="flex w-60 flex-1 flex-col justify-center gap-6 overflow-y-auto px-5 pb-6 pt-4">
+        <div className="flex w-60 flex-1 flex-col gap-6 overflow-y-auto px-8 pb-6 pt-[14px]">
           {GROUPS.map((g, k) => {
             const value = g.items.findIndex((it) => it.match.some((m) => inside(path, m)));
             return <HookSidebar key={k} label={g.label} items={g.items} value={value} color="var(--brand-tomato)" />;
           })}
         </div>
-        <div className="flex h-16 w-60 shrink-0 items-center px-5"><UserMenu placement="up" /></div>
+        <div className="flex h-16 w-60 shrink-0 items-center px-8"><UserMenu placement="up" /></div>
       </aside>
       <div className="relative min-w-0 flex-1">
         <button type="button" onClick={toggle} aria-label={open ? 'Ẩn thanh bên' : 'Hiện thanh bên'} aria-pressed={open}

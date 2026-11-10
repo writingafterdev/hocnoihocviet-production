@@ -71,9 +71,9 @@ function SoonCard({ p }: { p: (typeof SOON)[number] }) {
 /** App home: Task 2 as the big card on the left, vocabulary beside it, what's coming below. */
 export function Dashboard() {
   return (
-    <div className="flex min-h-screen flex-col bg-white text-ink">
+    <div className="min-h-screen bg-white text-ink">
       <PageHeader />
-      <main className="mx-auto flex w-full max-w-[1200px] flex-1 flex-col justify-center px-6 pb-10">
+      <main className="mx-auto w-full max-w-[1200px] px-6 pb-10 pt-[22px]">
         <div className="grid grid-cols-1 gap-5 md:grid-cols-6">
           <div className="grid md:col-span-4"><Task2Card /></div>
           <div className="grid md:col-span-2"><VocabCard /></div>
