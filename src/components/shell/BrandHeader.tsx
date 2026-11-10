@@ -11,7 +11,7 @@ export function PageHeader() {
 
 export function WorkspaceHeader({ status }: { status?: ReactNode }) {
   return (
-    <header style={{ width: '100%', maxWidth: 1710, margin: '0 auto', padding: '10px 40px 4px 52px', flexShrink: 0, minHeight: 44, display: 'flex', alignItems: 'center', justifyContent: 'flex-end' }}>
+    <header style={{ width: '100%', maxWidth: 1710, margin: '0 auto', padding: '10px 40px 4px', flexShrink: 0, minHeight: 44, display: 'flex', alignItems: 'center', justifyContent: 'flex-end' }}>
       {status}
     </header>
   );

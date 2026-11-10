@@ -3,7 +3,6 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
-import { PanelLeft } from 'lucide-react';
 import { Logo } from '@/components/brand/Logo';
 import { HookSidebar } from '@/components/ui/hook-sidebar';
 import { cn } from '@/lib/utils';
@@ -28,6 +27,16 @@ const KEY = 'hnhv-sidebar';
 /** The workspaces (drill, chains, essay) need every pixel, so there the sidebar starts hidden. Everywhere else it starts open. */
 const WORKSPACE = ['/prove', '/write'];
 
+/** Cloudflare's sidebar toggle icon: a rounded panel with a bar that moves across when the sidebar closes. */
+function ToggleIcon({ open }: { open: boolean }) {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true" focusable="false" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" className="shrink-0">
+      <path d="M21.25 6.72v10.56a2.97 2.97 0 0 1-2.97 2.97H5.72a2.97 2.97 0 0 1-2.97-2.97V6.72a2.97 2.97 0 0 1 2.97-2.97h12.56a2.97 2.97 0 0 1 2.97 2.97" />
+      <path d="M6.25 7.25v9.5" style={{ transform: open ? 'translateX(1px)' : 'translateX(10.5px)', transition: 'transform 200ms ease-out' }} />
+    </svg>
+  );
+}
+
 /** The sidebar's content: the brand as the first heading with the home page under it, the groups, the account. */
 function SidebarBody({ path }: { path: string }) {
   return (
@@ -44,7 +53,7 @@ function SidebarBody({ path }: { path: string }) {
           );
         })}
       </div>
-      <div className="flex h-16 shrink-0 items-center pl-12 pr-2"><UserMenu placement="up" /></div>
+      <div className="flex h-16 shrink-0 items-center pl-[56px] pr-2"><UserMenu placement="up" /></div>
     </>
   );
 }
@@ -81,12 +90,12 @@ export function AppSidebar({ children }: { children: React.ReactNode }) {
         <div className="flex h-full w-[208px] shrink-0 flex-col"><SidebarBody path={path} /></div>
       </aside>
       <div className="relative min-w-0 flex-1">
-        <button type="button" onClick={toggle} aria-label={open ? 'Ẩn thanh bên (⌘B)' : 'Hiện thanh bên (⌘B)'} title={(open ? 'Ẩn' : 'Hiện') + ' thanh bên · ⌘B'} aria-expanded={open}
-          className="absolute left-3 top-3 z-30 hidden size-8 items-center justify-center rounded-lg text-ink-soft transition-colors hover:bg-paper-2 hover:text-ink md:flex">
-          <PanelLeft className="size-[18px]" />
-        </button>
         {children}
       </div>
+      <button type="button" onClick={toggle} aria-label={open ? 'Ẩn thanh bên (⌘B)' : 'Hiện thanh bên (⌘B)'} title={(open ? 'Ẩn' : 'Hiện') + ' thanh bên · ⌘B'} aria-expanded={open}
+        className="fixed bottom-4 left-[6px] z-50 hidden size-[34px] items-center justify-center rounded-lg text-ink-soft transition-colors hover:bg-paper-2 hover:text-ink md:flex">
+        <ToggleIcon open={open} />
+      </button>
     </div>
   );
 }
