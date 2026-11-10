@@ -30,7 +30,7 @@ const WORKSPACE = ['/prove', '/write'];
 function SidebarBody({ path, overlay = false }: { path: string; overlay?: boolean }) {
   return (
     <>
-      <div className={cn('flex flex-1 flex-col gap-6 overflow-y-auto pb-6 pl-12 pr-2', overlay ? 'pt-6' : 'pt-[var(--content-top,70px)]')}>
+      <div className={cn('flex flex-1 flex-col gap-6 overflow-y-auto pb-6', overlay ? 'px-7 pt-7' : 'pl-12 pr-2 pt-[var(--content-top,70px)]')}>
         {GROUPS.map((g, k) => {
           const value = g.items.findIndex((it) => it.match.some((m) => inside(path, m)));
           return (
@@ -42,7 +42,7 @@ function SidebarBody({ path, overlay = false }: { path: string; overlay?: boolea
           );
         })}
       </div>
-      <div className="flex h-16 shrink-0 items-center pl-12 pr-2"><UserMenu placement="up" /></div>
+      <div className={cn('flex h-16 shrink-0 items-center', overlay ? 'px-7' : 'pl-12 pr-2')}><UserMenu placement="up" /></div>
     </>
   );
 }
@@ -75,10 +75,12 @@ export function AppSidebar({ children }: { children: React.ReactNode }) {
         <>
           {/* The hot zone along the left edge, then the sidebar that slides over the page. */}
           <div aria-hidden="true" onMouseEnter={() => setPeek(true)} className="fixed inset-y-0 left-0 z-40 hidden w-3 md:block" />
-          <aside aria-label="Thanh bên" onMouseLeave={() => setPeek(false)} onFocusCapture={() => setPeek(true)}
-            className={cn('fixed inset-y-0 left-0 z-50 hidden w-[208px] flex-col bg-white shadow-pop transition-transform duration-200 ease-out md:flex', peek ? 'translate-x-0' : '-translate-x-full')}>
-            <SidebarBody path={path} overlay />
-          </aside>
+          <div onMouseLeave={() => setPeek(false)} onFocusCapture={() => setPeek(true)}
+            className={cn('fixed inset-y-0 left-0 z-50 hidden w-[256px] p-3 transition-transform duration-200 ease-out md:block', peek ? 'translate-x-0' : 'pointer-events-none -translate-x-full')}>
+            <aside aria-label="Thanh bên" className="flex h-full w-full flex-col rounded-xl bg-white shadow-pop">
+              <SidebarBody path={path} overlay />
+            </aside>
+          </div>
         </>
       )}
       <div className="min-w-0 flex-1">{children}</div>
