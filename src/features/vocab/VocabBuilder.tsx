@@ -25,7 +25,7 @@ function VbLabel({ children, color = VB.ink3, style }: { children: ReactNode; co
 /** Bold the phrase (or its first word's stem) inside an example sentence. */
 function Example({ text, phrase }: { text: string; phrase: string }) {
   const i = text.toLowerCase().indexOf(phrase.toLowerCase());
-  const mark: React.CSSProperties = { fontWeight: 500, color: VB.ink, background: 'linear-gradient(transparent 62%, #EDF7EA 62%)' };
+  const mark: React.CSSProperties = { fontWeight: 500, color: VB.ink, background: '#E3F1DE', borderRadius: 3, padding: '1px 2px', boxDecorationBreak: 'clone', WebkitBoxDecorationBreak: 'clone' };
   if (i >= 0) return <span>{text.slice(0, i)}<b style={mark}>{text.slice(i, i + phrase.length)}</b>{text.slice(i + phrase.length)}</span>;
   const key = phrase.replace(/^(a|an|the|be)\s+/i, '').split(/\s+/)[0].toLowerCase().slice(0, 4);
   return <span>{text.split(/(\s+)/).map((w, k) => (w.toLowerCase().replace(/[^a-z]/g, '').startsWith(key) ? <b key={k} style={mark}>{w}</b> : w))}</span>;
@@ -142,7 +142,7 @@ function SavedList({ skill, items, loaded, onTopic, onDelete, onEnrich }: { skil
   items.forEach((it) => counts.set(it.topic, (counts.get(it.topic) || 0) + 1));
   const shown = items.filter((it) => (!topic || it.topic === topic) && (!q.trim() || (it.en + ' ' + it.vi).toLowerCase().includes(q.trim().toLowerCase())));
   const chip = (id: string, label: string, n: number) => (
-    <button key={id} type="button" className="cl-btn" aria-pressed={topic === id} onClick={() => setTopic(id)} style={{ borderRadius: 999, border: '1px solid ' + (topic === id ? VB.ink : VB.border), background: topic === id ? VB.ink : '#fff', color: topic === id ? '#fff' : VB.ink2, padding: '5px 11px', fontFamily: VB.sans, fontSize: 12.5, fontWeight: 600, whiteSpace: 'nowrap' }}>{label} <span style={{ opacity: 0.7 }}>{n}</span></button>
+    <button key={id} type="button" className="cl-btn" aria-pressed={topic === id} onClick={() => setTopic(id)} style={{ borderRadius: 999, border: 'none', boxShadow: topic === id ? 'none' : '0 0 0 1px rgba(0,0,0,0.1)', background: topic === id ? '#EEF3FC' : '#fff', color: topic === id ? '#2F62C4' : VB.ink2, padding: '5px 11px', fontFamily: VB.sans, fontSize: 12.5, fontWeight: 600, whiteSpace: 'nowrap' }}>{label} <span style={{ opacity: 0.7 }}>{n}</span></button>
   );
   return (
     <section style={{ minWidth: 0, borderRadius: 12, border: '1px solid ' + VB.border, background: '#fff', overflow: 'hidden' }}>
@@ -185,7 +185,7 @@ function SavedList({ skill, items, loaded, onTopic, onDelete, onEnrich }: { skil
 
 function CheckBox({ on, label, onClick }: { on: boolean; label: string; onClick: () => void }) {
   return (
-    <button type="button" className="cl-btn vb-check" role="checkbox" aria-checked={on} aria-label={label} onClick={onClick} style={{ width: 20, height: 20, borderRadius: 6, border: '1.5px solid ' + (on ? VB.ink : VB.strong), background: on ? VB.ink : '#fff', color: '#fff', display: 'grid', placeItems: 'center' }}>
+    <button type="button" className="cl-btn vb-check" role="checkbox" aria-checked={on} aria-label={label} onClick={onClick} style={{ width: 20, height: 20, borderRadius: 6, border: '1.5px solid ' + (on ? '#2F62C4' : VB.strong), background: on ? '#2F62C4' : '#fff', color: '#fff', display: 'grid', placeItems: 'center' }}>
       {on && <Check size={13} strokeWidth={3} />}
     </button>
   );
@@ -391,8 +391,8 @@ export function VocabBuilder({ onBack }: { onBack: () => void }) {
   const pill = (id: string, name: string, n: number) => {
     const on = topicId === id;
     return (
-      <button key={id} type="button" className="cl-btn vb-pill" onClick={() => setTopicId(id)} aria-pressed={on} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, minHeight: 34, borderRadius: 999, padding: '0 14px', border: '1px solid ' + (on ? VB.ink : VB.border), background: on ? VB.ink : '#fff', color: on ? '#fff' : VB.ink2, fontFamily: VB.sans, fontSize: 12.5, fontWeight: 600, transition: 'background-color .25s, color .25s, border-color .25s' }}>
-        {name}<span style={{ fontSize: 11, fontWeight: 500, color: on ? 'rgba(255,255,255,.6)' : VB.ink4 }}>{n}</span>
+      <button key={id} type="button" className="cl-btn vb-pill" onClick={() => setTopicId(id)} aria-pressed={on} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, minHeight: 34, borderRadius: 999, padding: '0 14px', border: 'none', boxShadow: on ? 'none' : '0 0 0 1px rgba(0,0,0,0.1)', background: on ? '#EEF3FC' : '#fff', color: on ? '#2F62C4' : VB.ink2, fontFamily: VB.sans, fontSize: 12.5, fontWeight: 600, transition: 'background-color .25s, color .25s, border-color .25s' }}>
+        {name}<span style={{ fontSize: 11, fontWeight: 500, color: on ? 'rgba(47,98,196,.7)' : VB.ink4 }}>{n}</span>
       </button>
     );
   };
@@ -401,12 +401,10 @@ export function VocabBuilder({ onBack }: { onBack: () => void }) {
 
   return shell(
     <div style={{ maxWidth: 1440, margin: '0 auto', padding: '0 40px 24px', fontFamily: VB.sans, color: VB.ink }}>
-      <button type="button" className="cl-btn cl-link" onClick={() => { setSkillId(null); setTopicId(null); }} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, marginBottom: 14, fontFamily: VB.sans, fontSize: 12, fontWeight: 500, color: VB.ink3 }}><ArrowLeft size={13} strokeWidth={2} />Từ vựng</button>
       <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-end', justifyContent: 'space-between', gap: 16, marginBottom: 18 }}>
         <div>
           <span style={cardLabel}>{skill.eyebrow}</span>
           <h1 style={{ margin: '6px 0 0', fontFamily: 'var(--font-sans)', fontSize: 32, fontWeight: 600, letterSpacing: '-0.02em', lineHeight: 1.15, textWrap: 'balance' }}>{isSaved ? 'Từ đã lưu' : topic.name}<span style={{ color: VB.ink3 }}> · {isSaved ? skill.title : topic.vi}</span></h1>
-          {!isSaved && <p style={{ margin: '6px 0 0', fontSize: 13.5, color: VB.ink3 }}>{rows.length} cụm · {done} đã luyện</p>}
         </div>
         <div role="group" aria-label="Chủ đề" style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
           {pill('saved', 'Đã lưu', savedCount(skill))}
@@ -421,7 +419,6 @@ export function VocabBuilder({ onBack }: { onBack: () => void }) {
               <span style={{ display: 'inline-flex', alignItems: 'center', gap: 10, fontWeight: 600, color: VB.ink2 }}>
                 <CheckBox on={allPicked} label="Chọn tất cả" onClick={() => setSel((s) => ({ ...s, [key]: allPicked ? [] : rows.map((r) => r.it.en) }))} />Chọn tất cả
               </span>
-              <span style={{ marginLeft: 'auto' }}>Bấm vào cụm để xem đủ · tick để ôn</span>
             </div>
             {rows.length ? (
               <ul key={key} className="vb-list" style={{ listStyle: 'none', margin: 0, padding: 6, display: 'flex', flexDirection: 'column' }}>
