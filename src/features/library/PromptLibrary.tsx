@@ -120,8 +120,7 @@ export function PromptLibrary() {
           </div>
           <div style={{ paddingTop: 4 }}>
             <p style={{ fontFamily: 'var(--font-mono)', fontSize: 12, fontWeight: 500, color: '#737373', margin: '0 0 12px' }}>Nghị luận xã hội</p>
-            <h1 style={{ fontFamily: 'var(--font-sans)', fontSize: 32, fontWeight: 600, letterSpacing: '-0.01em', color: '#171717', margin: '0 0 8px' }}>Thư viện đề thi</h1>
-            <p style={{ fontFamily: 'var(--font-sans)', fontSize: 15, color: '#737373', maxWidth: 560, lineHeight: 1.6, margin: 0 }}>Chọn một đề bài để luyện tập. Chúng mình sẽ mô phỏng lại cấu trúc lập luận của bạn và chỉ ra chính xác lỗ hổng trong logic.</p>
+            <h1 style={{ fontFamily: 'var(--font-sans)', fontSize: 32, fontWeight: 600, letterSpacing: '-0.01em', color: '#171717', margin: 0 }}>Thư viện đề thi</h1>
           </div>
         </div>
 
