@@ -21,7 +21,7 @@ export function BrandBar({ avatar = true, href = '/home', status }: { avatar?: b
 /** Header for scrolling pages (home, library, vocab). */
 export function PageHeader({ avatar = true }: { avatar?: boolean }) {
   return (
-    <header style={{ padding: '24px 40px' }}>
+    <header className="sticky top-0 z-20 flex h-14 items-center border-b border-line bg-white/90 px-6 backdrop-blur">
       <BrandBar avatar={avatar} />
     </header>
   );

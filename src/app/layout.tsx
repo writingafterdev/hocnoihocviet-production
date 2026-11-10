@@ -1,5 +1,7 @@
 import type { Metadata } from 'next';
 // Fonts ship with the app (Fontsource), so builds never download from Google. Family names match the design tokens.
+import '@fontsource-variable/inter';
+import '@fontsource-variable/inter/standard-italic.css';
 import '@fontsource/be-vietnam-pro/400.css';
 import '@fontsource/be-vietnam-pro/400-italic.css';
 import '@fontsource/be-vietnam-pro/500.css';

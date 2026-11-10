@@ -1,13 +1,13 @@
 'use client';
 
 import Link from 'next/link';
-import { ArrowRight } from 'lucide-react';
+import { ChevronRight } from 'lucide-react';
 import { Illustration } from '@/components/brand/Illustration';
 import { Badge } from '@/components/ui/badge';
 import { PageHeader } from '@/components/shell/BrandHeader';
 import { cn } from '@/lib/utils';
 
-type Tint = 'blue' | 'tomato' | 'leaf' | 'blush' | 'paper';
+type Tint = 'blue' | 'tomato' | 'leaf' | 'neutral';
 
 interface Product {
   id: string;
@@ -19,16 +19,9 @@ interface Product {
   tint: Tint;
   /** A short note on the card: new, beta, coming soon. */
   note?: { text: string; variant: 'tomato' | 'blue' | 'secondary' };
-  wide?: boolean;
 }
 
-const TINT: Record<Tint, string> = {
-  blue: 'bg-blue-soft',
-  tomato: 'bg-tomato-soft',
-  leaf: 'bg-leaf-soft',
-  blush: 'bg-blush-soft',
-  paper: 'bg-paper-2',
-};
+const TINT: Record<Tint, string> = { blue: 'bg-blue-soft', tomato: 'bg-tomato-soft', leaf: 'bg-leaf-soft', neutral: 'bg-paper-2' };
 
 // Speaking and Reading are switched off for now.
 const LIVE: Product[] = [
@@ -37,63 +30,68 @@ const LIVE: Product[] = [
   { id: 'vocab', href: '/vocab', tag: 'Từ vựng · theo chủ đề', title: 'Từ vựng', description: 'Cụm từ cho Task 1, Task 2 và Speaking, kèm đoạn văn để luyện dùng ngay.', illustration: 'person-studying-different-sciences', tint: 'leaf', note: { text: 'Beta', variant: 'blue' } },
 ];
 const SOON: Product[] = [
-  { id: 'speaking', tag: 'Speaking · Part 1–3', title: 'Luyện nói', description: 'Ngắt nghỉ, nhấn âm và độ dài câu trả lời.', illustration: 'woman-answering-questions-on-a-podium', tint: 'paper', note: { text: 'Sắp ra mắt', variant: 'secondary' }, wide: true },
-  { id: 'reading', tag: 'Reading · bài báo', title: 'Đọc báo', description: 'Bài từ The Economist, The New Yorker, The Atlantic.', illustration: 'woman-with-paper-document-thinking', tint: 'paper', note: { text: 'Tạm đóng', variant: 'secondary' }, wide: true },
+  { id: 'speaking', tag: 'Speaking · Part 1–3', title: 'Luyện nói', description: 'Ngắt nghỉ, nhấn âm và độ dài câu trả lời.', illustration: 'woman-answering-questions-on-a-podium', tint: 'neutral', note: { text: 'Sắp ra mắt', variant: 'secondary' } },
+  { id: 'reading', tag: 'Reading · bài báo', title: 'Đọc báo', description: 'Bài từ The Economist, The New Yorker, The Atlantic.', illustration: 'woman-with-paper-document-thinking', tint: 'neutral', note: { text: 'Tạm đóng', variant: 'secondary' } },
 ];
 
-/** A product: the drawing on a tinted panel, then what it is and a way in. The whole card is the link. */
-function ProductTile({ p }: { p: Product }) {
-  const off = !p.href;
-  const body = (
-    <>
-      <div className={cn('relative grid place-items-center overflow-hidden rounded-t-[17px] border-b-[1.5px]', off ? 'border-line' : 'border-ink', TINT[p.tint], p.wide ? 'h-36 md:h-auto md:w-56 md:shrink-0 md:rounded-l-[17px] md:rounded-tr-none md:border-b-0 md:border-r-[1.5px]' : 'h-48')}>
-        <Illustration name={p.illustration} className={cn(p.wide ? 'h-32 w-auto transition-transform duration-300 md:h-40' : 'h-40 w-auto transition-transform duration-300', off ? 'opacity-60 grayscale' : 'group-hover:scale-[1.04]')} />
+/** A product you can open now: the drawing on a soft panel, then what it is. The whole card is the link. */
+function ProductCard({ p }: { p: Product }) {
+  return (
+    <Link href={p.href} className="group flex flex-col overflow-hidden rounded-xl bg-white shadow-ring transition-shadow duration-150 hover:shadow-ring-hover focus-visible:shadow-[0_0_0_2px_var(--brand-blue-deep)] focus-visible:outline-none">
+      <div className={cn('relative grid h-44 place-items-center', TINT[p.tint])}>
+        <Illustration name={p.illustration} className="h-36 w-auto transition-transform duration-300 group-hover:scale-[1.03]" />
         {p.note && <Badge variant={p.note.variant} className="absolute left-3 top-3">{p.note.text}</Badge>}
       </div>
-      <div className="flex flex-1 flex-col gap-2 p-5">
-        <span className="font-ui text-[12.5px] font-medium text-ink-soft">{p.tag}</span>
-        <h2 className="m-0 font-display text-[27px] font-medium leading-[1.1] tracking-[-0.015em] text-ink">{p.title}</h2>
-        <p className="m-0 font-ui text-[14px] leading-[1.55] text-ink-soft">{p.description}</p>
-        {!off && (
-          <span className="mt-auto inline-flex items-center gap-1.5 pt-3 font-ui text-[13.5px] font-semibold text-ink">
-            Bắt đầu <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" />
-          </span>
-        )}
+      <div className="flex flex-1 flex-col gap-1.5 px-4 pb-4 pt-3.5">
+        <span className="text-xs font-medium text-ink-soft">{p.tag}</span>
+        <h2 className="m-0 text-base font-semibold tracking-[-0.015em] text-ink">{p.title}</h2>
+        <p className="m-0 text-sm leading-[1.5] text-ink-soft">{p.description}</p>
+        <span className="mt-auto inline-flex items-center gap-0.5 pt-2.5 text-[13px] font-medium text-blue-deep">
+          Bắt đầu <ChevronRight className="size-4 transition-transform group-hover:translate-x-0.5" />
+        </span>
       </div>
-    </>
+    </Link>
   );
-  const frame = cn(
-    'group flex overflow-hidden rounded-[18px] border-[1.5px] bg-card text-left',
-    p.wide ? 'flex-col md:flex-row' : 'flex-col',
-    off ? 'border-dashed border-line' : 'border-ink transition-[transform,box-shadow] duration-150 hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-ink focus-visible:-translate-y-0.5 focus-visible:shadow-ink focus-visible:outline-none',
-  );
-  return off ? <div aria-disabled="true" className={frame}>{body}</div> : <Link href={p.href} className={frame}>{body}</Link>;
 }
 
-/** App home: a greeting with a drawing, the three things to do now, then what's coming. */
+/** Something not open yet: a quiet row with a small drawing. */
+function SoonRow({ p }: { p: Product }) {
+  return (
+    <div aria-disabled="true" className="flex items-center gap-4 px-4 py-3">
+      <div className={cn('grid size-12 shrink-0 place-items-center rounded-lg', TINT[p.tint])}>
+        <Illustration name={p.illustration} className="h-10 w-auto opacity-70 grayscale" />
+      </div>
+      <div className="min-w-0 flex-1">
+        <div className="text-sm font-medium text-ink">{p.title}</div>
+        <div className="truncate text-[13px] text-ink-soft">{p.description}</div>
+      </div>
+      {p.note && <Badge variant={p.note.variant}>{p.note.text}</Badge>}
+    </div>
+  );
+}
+
+/** App home: a greeting, the three things to do now, then what's coming. */
 export function Dashboard() {
   return (
-    <div className="min-h-screen bg-paper pb-20 text-ink">
+    <div className="min-h-screen bg-white pb-20 text-ink">
       <PageHeader />
-      <main className="mx-auto max-w-[1080px] px-6">
-        <section className="flex items-end justify-between gap-6 border-b-[1.5px] border-ink pb-8 pt-4">
+      <main className="mx-auto max-w-[1040px] px-6">
+        <section className="flex items-center justify-between gap-6 pb-8 pt-10">
           <div>
-            <h1 className="m-0 font-display text-[52px] font-normal leading-[0.98] tracking-[-0.03em] md:text-[64px]">
-              Chào bạn,<br /><em className="text-tomato-deep">hôm nay</em> học gì?
-            </h1>
-            <p className="mb-0 mt-4 max-w-[34ch] font-ui text-[15px] leading-[1.6] text-ink-soft">Chọn một việc nhỏ. Mười lăm phút đều đặn tốt hơn ba tiếng một lần.</p>
+            <h1 className="m-0 text-[30px] font-semibold leading-[1.2] tracking-[-0.025em]">Chào bạn, hôm nay học gì?</h1>
+            <p className="mb-0 mt-1.5 text-sm text-ink-soft">Chọn một việc nhỏ. Mười lăm phút đều đặn tốt hơn ba tiếng một lần.</p>
           </div>
-          <Illustration name="student-walking-with-thought-bubble-backpack" className="hidden h-44 w-auto shrink-0 md:block" />
+          <Illustration name="student-walking-with-thought-bubble-backpack" className="hidden h-28 w-auto shrink-0 md:block" />
         </section>
 
-        <h2 className="mb-4 mt-10 font-ui text-[13px] font-semibold text-ink">Luyện ngay</h2>
-        <div className="grid grid-cols-1 gap-5 md:grid-cols-3">
-          {LIVE.map((p) => <ProductTile key={p.id} p={p} />)}
+        <h2 className="mb-3 mt-0 text-sm font-medium text-ink">Luyện ngay</h2>
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+          {LIVE.map((p) => <ProductCard key={p.id} p={p} />)}
         </div>
 
-        <h2 className="mb-4 mt-12 font-ui text-[13px] font-semibold text-ink-soft">Sắp có</h2>
-        <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
-          {SOON.map((p) => <ProductTile key={p.id} p={p} />)}
+        <h2 className="mb-3 mt-10 text-sm font-medium text-ink">Sắp có</h2>
+        <div className="divide-y divide-line overflow-hidden rounded-xl bg-white shadow-ring">
+          {SOON.map((p) => <SoonRow key={p.id} p={p} />)}
         </div>
       </main>
     </div>

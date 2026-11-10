@@ -10,49 +10,48 @@
 @import '../styles/effects.css';
 
 /* ============================================================
-   BRAND 2026 — taken from the illustration set (thick ink lines, flat fills).
-   Two primaries: Blue and Tomato. Accents for memory, used sparingly:
-   Sun, Leaf, Blush. Everything sits on warm paper with ink lines.
+   BRAND 2026 — clean and minimal (Cloudflare-dashboard spacing): pure white, hairline rings, Inter.
+   Two primaries from the illustration set: Blue and Tomato. Accents, used sparingly: Sun, Leaf, Blush.
    ============================================================ */
 :root {
-  --brand-paper: #F5F2EB;
-  --brand-paper-2: #EEEBE2;
-  --brand-ink: #1E1D19;
-  --brand-ink-soft: #5F5D55;
-  --brand-line: #DCD8CD;
+  --brand-paper: #FFFFFF;
+  --brand-paper-2: #F5F5F5;
+  --brand-ink: #171717;
+  --brand-ink-soft: #737373;
+  --brand-line: rgba(0, 0, 0, 0.1);
   --brand-blue: #77A1DD;
-  --brand-blue-deep: #2F5DA8;
-  --brand-blue-soft: #DCE7F7;
+  --brand-blue-deep: #2F62C4;
+  --brand-blue-soft: #EEF3FC;
   --brand-tomato: #FF5C33;
-  --brand-tomato-deep: #C23A17;
-  --brand-tomato-soft: #FFE0D6;
+  --brand-tomato-deep: #D2401B;
+  --brand-tomato-soft: #FFF0EB;
   --brand-sun: #FFC73C;
-  --brand-sun-soft: #FFF0C7;
+  --brand-sun-soft: #FFF7E1;
   --brand-leaf: #2D881A;
-  --brand-leaf-soft: #DDEFD6;
+  --brand-leaf-soft: #EDF7EA;
   --brand-blush: #FFA0C1;
-  --brand-blush-soft: #FFE3EC;
+  --brand-blush-soft: #FFF0F5;
 
   /* shadcn roles */
-  --radius: 14px;
-  --background: var(--brand-paper);
+  --radius: 8px;
+  --background: #FFFFFF;
   --foreground: var(--brand-ink);
   --card: #FFFFFF;
   --card-foreground: var(--brand-ink);
   --popover: #FFFFFF;
   --popover-foreground: var(--brand-ink);
-  --primary: var(--brand-ink);
+  --primary: var(--brand-blue-deep);
   --primary-foreground: #FFFFFF;
   --secondary: var(--brand-paper-2);
   --secondary-foreground: var(--brand-ink);
   --muted: var(--brand-paper-2);
   --muted-foreground: var(--brand-ink-soft);
-  --accent: var(--brand-blue-soft);
-  --accent-foreground: var(--brand-blue-deep);
+  --accent: var(--brand-paper-2);
+  --accent-foreground: var(--brand-ink);
   --destructive: var(--brand-tomato-deep);
   --border: var(--brand-line);
   --input: var(--brand-line);
-  --ring: var(--brand-blue);
+  --ring: var(--brand-blue-deep);
 }
 
 @theme inline {
@@ -95,11 +94,12 @@
   --radius-md: calc(var(--radius) - 3px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 6px);
-  --font-display: 'Newsreader', Georgia, serif;
-  --font-ui: 'Be Vietnam Pro', system-ui, sans-serif;
+  --font-display: 'Inter Variable', 'Inter', system-ui, sans-serif;
+  --font-ui: 'Inter Variable', 'Inter', system-ui, sans-serif;
   --font-essay: 'Lora', Georgia, serif;
-  --shadow-ink: 3px 3px 0 var(--brand-ink);
-  --shadow-ink-sm: 2px 2px 0 var(--brand-ink);
+  --shadow-ring: 0 0 0 1px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-ring-hover: 0 0 0 1px rgba(0, 0, 0, 0.14), 0 2px 6px rgba(0, 0, 0, 0.06);
+  --shadow-pop: 0 0 0 1px rgba(0, 0, 0, 0.08), 0 8px 24px rgba(0, 0, 0, 0.08);
 }
 
 /* Tailwind's border utilities set only the width; the style comes from here (no full preflight yet, so the
@@ -107,7 +107,7 @@
 @layer base { *, ::before, ::after { border-width: 0; border-style: solid; border-color: var(--border); } }
 
 /* Page surface is white everywhere (product decision, overrides the cream --surface-base). */
-html, body { margin: 0; min-height: 100%; background: #fff; color: var(--text-primary); font-family: var(--font-sans); -webkit-font-smoothing: antialiased; }
+html, body { margin: 0; min-height: 100%; background: #fff; color: var(--text-primary); font-family: var(--font-sans); letter-spacing: -0.011em; -webkit-font-smoothing: antialiased; }
 *, *::before, *::after { box-sizing: border-box; }
 a { color: #141413; text-decoration: none; }
 a:hover { color: #44443F; }

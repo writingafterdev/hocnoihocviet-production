@@ -4,29 +4,29 @@ import { cn } from "@/lib/utils"
 import { Slot } from "radix-ui"
 
 const buttonVariants = cva(
-  "inline-flex shrink-0 items-center justify-center gap-2 rounded-[12px] font-ui text-sm font-semibold whitespace-nowrap transition-[transform,box-shadow,background-color,color] duration-150 outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+  "inline-flex shrink-0 items-center justify-center gap-2 rounded-lg font-ui text-sm font-medium whitespace-nowrap transition-colors duration-150 outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
   {
     variants: {
       variant: {
-        // Brand: ink lines like the illustrations. The main action has a hard ink shadow and lifts on hover.
-        default: "border-[1.5px] border-ink bg-ink text-white hover:-translate-y-px hover:bg-ink/90 active:translate-y-0",
-        tomato: "border-[1.5px] border-ink bg-tomato text-ink shadow-ink-sm hover:-translate-x-px hover:-translate-y-px hover:shadow-ink active:translate-x-0 active:translate-y-0 active:shadow-none",
-        blue: "border-[1.5px] border-ink bg-blue text-ink shadow-ink-sm hover:-translate-x-px hover:-translate-y-px hover:shadow-ink active:translate-x-0 active:translate-y-0 active:shadow-none",
-        destructive: "bg-destructive text-white hover:bg-destructive/90 focus-visible:ring-destructive/20",
-        outline: "border-[1.5px] border-ink bg-card text-ink hover:bg-paper-2",
-        secondary: "bg-paper-2 text-ink hover:bg-line/60",
+        // Clean and minimal: a filled primary with a 1px darker ring, quiet secondaries with a hairline ring.
+        default: "bg-primary text-white shadow-[0_0_0_1px_#2453AE,0_1px_2px_rgba(0,0,0,0.05)] hover:bg-[#2856B3]",
+        tomato: "bg-tomato text-white shadow-[0_0_0_1px_#D2401B,0_1px_2px_rgba(0,0,0,0.05)] hover:bg-[#F04E26]",
+        blue: "bg-blue-soft text-blue-deep hover:bg-[#E2EBFA]",
+        destructive: "bg-destructive text-white hover:bg-destructive/90",
+        outline: "bg-white text-ink shadow-ring hover:bg-paper-2",
+        secondary: "bg-paper-2 text-ink hover:bg-[#EDEDED]",
         ghost: "text-ink-soft hover:bg-paper-2 hover:text-ink",
         link: "text-blue-deep underline-offset-4 hover:underline",
       },
       size: {
-        default: "h-10 px-5 has-[>svg]:px-4",
-        xs: "h-7 gap-1 rounded-md px-2.5 text-xs has-[>svg]:px-2 [&_svg:not([class*='size-'])]:size-3",
-        sm: "h-8 gap-1.5 rounded-md px-3.5 has-[>svg]:px-3",
-        lg: "h-12 rounded-xl px-7 text-[15px] has-[>svg]:px-5",
-        icon: "size-10",
-        "icon-xs": "size-7 rounded-md [&_svg:not([class*='size-'])]:size-3",
+        default: "h-9 px-3.5 has-[>svg]:px-3",
+        xs: "h-6 gap-1 rounded-md px-2 text-xs has-[>svg]:px-1.5 [&_svg:not([class*='size-'])]:size-3",
+        sm: "h-8 gap-1.5 px-3 text-[13px] has-[>svg]:px-2.5",
+        lg: "h-10 px-4 has-[>svg]:px-3.5",
+        icon: "size-9",
+        "icon-xs": "size-6 rounded-md [&_svg:not([class*='size-'])]:size-3",
         "icon-sm": "size-8",
-        "icon-lg": "size-12",
+        "icon-lg": "size-10",
       },
     },
     defaultVariants: {

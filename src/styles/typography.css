@@ -20,7 +20,7 @@
 
 :root {
   /* ---- Font families ---- */
-  --font-sans:        'Be Vietnam Pro', ui-sans-serif, system-ui, sans-serif;   /* primary UI — app shell, dashboard, nav */
+  --font-sans:        'Inter Variable', 'Inter', ui-sans-serif, system-ui, sans-serif;   /* primary UI everywhere (brand 2026) */
   --font-sans-market:  'DM Sans', ui-sans-serif, system-ui, sans-serif;          /* landing / growth pages */
   --font-serif:       'Lora', Georgia, serif;                                   /* editorial body, pull quotes, marketing display */
   --font-heading:     'Newsreader', 'Lora', serif;                              /* Reading-module article headlines */
