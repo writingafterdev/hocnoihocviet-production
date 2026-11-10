@@ -44,6 +44,9 @@ function Pager({ page, pages, onPage }: { page: number; pages: number; onPage: (
 /** "① Nguyên nhân · ② Giải pháp" */
 const questionTypes = (p: Prompt) => p.questions.map((x) => (p.questions.length > 1 ? CL_CIRC[x.n - 1] + ' ' : '') + CL_SHAPE_LABEL[x.shape]).join(' · ');
 
+/** 'Government & Criminal Justice' -> 'government-and-criminal-justice': the file name of the option's icon in /icons/filters. */
+const iconSlug = (label: string) => label.toLowerCase().replace(/&/g, 'and').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+
 function Filter({ title, options, selected, onToggle }: { title: string; options: readonly string[]; selected: string[]; onToggle: (v: string) => void }) {
   return (
     <fieldset style={{ marginBottom: 32, border: 'none', padding: 0, minWidth: 0 }}>
@@ -57,6 +60,8 @@ function Filter({ title, options, selected, onToggle }: { title: string; options
               <span aria-hidden="true" style={{ width: 20, height: 20, borderRadius: 6, border: '1.5px solid rgba(44,51,56,0.2)', background: on ? '#2c3338' : '#fff', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff' }}>
                 {on && <Check size={12} strokeWidth={3} />}
               </span>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={'/icons/filters/' + iconSlug(opt) + '.png'} alt="" width={24} height={24} draggable={false} onError={(e) => { e.currentTarget.style.display = 'none'; }} style={{ flexShrink: 0, marginTop: -2 }} />
               <span style={{ fontFamily: 'var(--font-sans)', fontSize: 15, fontWeight: 500, color: 'rgba(44,51,56,0.8)', lineHeight: 1.3 }}>{opt}</span>
             </label>
           );
