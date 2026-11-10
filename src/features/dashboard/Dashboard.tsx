@@ -54,44 +54,32 @@ function ProductCard({ p }: { p: Product }) {
   );
 }
 
-/** Something not open yet: a quiet row with a small drawing. */
-function SoonRow({ p }: { p: Product }) {
+/** Something not open yet: a wide, quiet card with the drawing on the left. */
+function SoonCard({ p }: { p: Product }) {
   return (
-    <div aria-disabled="true" className="flex items-center gap-4 px-4 py-3">
-      <div className={cn('grid size-12 shrink-0 place-items-center rounded-lg', TINT[p.tint])}>
-        <Illustration name={p.illustration} className="h-10 w-auto opacity-70 grayscale" />
+    <div aria-disabled="true" className="flex overflow-hidden rounded-xl bg-white shadow-ring">
+      <div className={cn('relative grid w-40 shrink-0 place-items-center', TINT[p.tint])}>
+        <Illustration name={p.illustration} className="h-28 w-auto opacity-60 grayscale" />
       </div>
-      <div className="min-w-0 flex-1">
-        <div className="text-sm font-medium text-ink">{p.title}</div>
-        <div className="truncate text-[13px] text-ink-soft">{p.description}</div>
+      <div className="flex flex-1 flex-col gap-1.5 px-4 py-4">
+        <span className="text-xs font-medium text-ink-soft">{p.tag}</span>
+        <h2 className="m-0 text-base font-semibold tracking-[-0.015em] text-ink">{p.title}</h2>
+        <p className="m-0 text-sm leading-[1.5] text-ink-soft">{p.description}</p>
+        {p.note && <Badge variant={p.note.variant} className="mt-auto">{p.note.text}</Badge>}
       </div>
-      {p.note && <Badge variant={p.note.variant}>{p.note.text}</Badge>}
     </div>
   );
 }
 
-/** App home: a greeting, the three things to do now, then what's coming. */
+/** App home: a bento grid, the three things to do now on top, then what's coming. */
 export function Dashboard() {
   return (
     <div className="min-h-screen bg-white pb-20 text-ink">
       <PageHeader />
       <main className="mx-auto max-w-[1040px] px-6">
-        <section className="flex items-center justify-between gap-6 pb-8 pt-10">
-          <div>
-            <h1 className="m-0 text-[30px] font-semibold leading-[1.2] tracking-[-0.025em]">Chào bạn, hôm nay học gì?</h1>
-            <p className="mb-0 mt-1.5 text-sm text-ink-soft">Chọn một việc nhỏ. Mười lăm phút đều đặn tốt hơn ba tiếng một lần.</p>
-          </div>
-          <Illustration name="student-walking-with-thought-bubble-backpack" className="hidden h-28 w-auto shrink-0 md:block" />
-        </section>
-
-        <h2 className="mb-3 mt-0 text-sm font-medium text-ink">Luyện ngay</h2>
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-          {LIVE.map((p) => <ProductCard key={p.id} p={p} />)}
-        </div>
-
-        <h2 className="mb-3 mt-10 text-sm font-medium text-ink">Sắp có</h2>
-        <div className="divide-y divide-line overflow-hidden rounded-xl bg-white shadow-ring">
-          {SOON.map((p) => <SoonRow key={p.id} p={p} />)}
+        <div className="grid grid-cols-1 gap-4 pt-8 md:grid-cols-6">
+          {LIVE.map((p) => <div key={p.id} className="grid md:col-span-2"><ProductCard p={p} /></div>)}
+          {SOON.map((p) => <div key={p.id} className="grid md:col-span-3"><SoonCard p={p} /></div>)}
         </div>
       </main>
     </div>
