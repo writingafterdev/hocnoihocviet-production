@@ -21,11 +21,11 @@
 :root {
   /* ---- Font families ---- */
   --font-sans:        'Inter Variable', 'Inter', ui-sans-serif, system-ui, sans-serif;   /* primary UI everywhere (brand 2026) */
-  --font-sans-market:  'DM Sans', ui-sans-serif, system-ui, sans-serif;          /* landing / growth pages */
-  --font-serif:       'Lora', Georgia, serif;                                   /* editorial body, pull quotes, marketing display */
-  --font-heading:     'Newsreader', 'Lora', serif;                              /* Reading-module article headlines */
-  --font-display:     'NewYorker', 'Newsreader', serif;                         /* Reading-module masthead / large editorial moments — use sparingly */
-  --font-mono:        'Be Vietnam Pro', ui-sans-serif, system-ui, sans-serif;    /* EXPERIMENT: was 'JetBrains Mono' — swapped to test a non-monospace label/metadata voice */
+  --font-sans-market:  'Inter Variable', 'Inter', ui-sans-serif, system-ui, sans-serif;   /* one font everywhere (brand 2026) */          /* landing / growth pages */
+  --font-serif:       'Inter Variable', 'Inter', ui-sans-serif, system-ui, sans-serif;   /* one font everywhere (brand 2026) */                                   /* editorial body, pull quotes, marketing display */
+  --font-heading:     'Inter Variable', 'Inter', ui-sans-serif, system-ui, sans-serif;   /* one font everywhere (brand 2026) */                              /* Reading-module article headlines */
+  --font-display:     'Inter Variable', 'Inter', ui-sans-serif, system-ui, sans-serif;   /* one font everywhere (brand 2026) */                         /* Reading-module masthead / large editorial moments — use sparingly */
+  --font-mono:        'Inter Variable', 'Inter', ui-sans-serif, system-ui, sans-serif;   /* one font everywhere (brand 2026) */    /* EXPERIMENT: was 'JetBrains Mono' — swapped to test a non-monospace label/metadata voice */
 
   /* ---- Scale (major third, 1.25x) ---- */
   --text-xs:   0.75rem;   /* 12px */
