@@ -2,11 +2,8 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useEffect, useState } from 'react';
-import { PanelLeft } from 'lucide-react';
 import { Logo } from '@/components/brand/Logo';
 import { HookSidebar } from '@/components/ui/hook-sidebar';
-import { cn } from '@/lib/utils';
 import { UserMenu } from './UserMenu';
 
 /** One group of the sidebar: a small heading and its pages. `match` tells which pages count as being inside an item. */
@@ -24,51 +21,37 @@ const GROUPS: Group[] = [
 ];
 
 const inside = (path: string, base: string) => path === base || path.startsWith(base + '/');
-const KEY = 'hnhv-sidebar';
-/** The workspaces need every pixel, so the sidebar starts closed there. */
+/** The workspaces (drill, chains, essay) need every pixel, so they go without the sidebar and keep their own back links. */
 const WORKSPACE = ['/prove', '/write'];
 
 /**
- * The app's left sidebar (Rare UI's hook sidebar): logo on top, the groups with a dashed rail that hooks to the current
- * page, the account at the bottom. It can be folded away; the choice is remembered per kind of page.
+ * The app's left sidebar (Rare UI's hook sidebar): the brand as the first heading with the home page under it, then
+ * the groups with a dashed rail that hooks to the current page, the account at the bottom.
  */
 export function AppSidebar({ children }: { children: React.ReactNode }) {
   const path = usePathname();
   const workspace = WORKSPACE.some((b) => inside(path, b));
-  const [stored, setStored] = useState<Record<string, boolean>>({});
-  useEffect(() => { try { setStored(JSON.parse(localStorage.getItem(KEY) || '{}')); } catch { /* private mode */ } }, []);
-  const kind = workspace ? 'workspace' : 'page';
-  const open = stored[kind] ?? !workspace;
-  const toggle = () => {
-    const next = { ...stored, [kind]: !open };
-    setStored(next);
-    try { localStorage.setItem(KEY, JSON.stringify(next)); } catch { /* private mode */ }
-  };
 
   return (
     <div className="flex min-h-screen bg-white">
-      <aside aria-label="Thanh bên" className={cn('sticky top-0 hidden h-screen shrink-0 flex-col bg-white transition-[width] duration-200 md:flex', open ? 'w-56' : 'w-0 overflow-hidden')}>
-        <div className="flex w-56 flex-1 flex-col gap-6 overflow-y-auto pb-6 pl-12 pr-3 pt-[70px]">
-          {GROUPS.map((g, k) => {
-            const value = g.items.findIndex((it) => it.match.some((m) => inside(path, m)));
-            return (
-              <div key={k}>
-                {/* The brand is the first heading, with the home page under it, just like Task 2 and its pages. */}
-                {k === 0 && <Link href="/home" aria-label="hocnoihocviet · Trang chủ" className="mb-3 block"><Logo /></Link>}
-                <HookSidebar label={g.label} items={g.items} value={value} color="var(--brand-tomato)" />
-              </div>
-            );
-          })}
-        </div>
-        <div className="flex h-16 w-56 shrink-0 items-center pl-12 pr-3"><UserMenu placement="up" /></div>
-      </aside>
-      <div className="relative min-w-0 flex-1">
-        <button type="button" onClick={toggle} aria-label={open ? 'Ẩn thanh bên' : 'Hiện thanh bên'} aria-pressed={open}
-          className="absolute left-3 top-3 z-30 hidden size-8 items-center justify-center rounded-lg text-ink-soft transition-colors hover:bg-paper-2 hover:text-ink md:flex">
-          <PanelLeft className="size-[18px]" />
-        </button>
-        {children}
-      </div>
+      {!workspace && (
+        <aside aria-label="Thanh bên" className="sticky top-0 hidden h-screen w-[208px] shrink-0 flex-col bg-white md:flex">
+          <div className="flex flex-1 flex-col gap-6 overflow-y-auto pb-6 pl-12 pr-2 pt-[70px]">
+            {GROUPS.map((g, k) => {
+              const value = g.items.findIndex((it) => it.match.some((m) => inside(path, m)));
+              return (
+                <div key={k}>
+                  {/* The brand is the first heading, with the home page under it, just like Task 2 and its pages. */}
+                  {k === 0 && <Link href="/home" aria-label="hocnoihocviet · Trang chủ" className="mb-3 block"><Logo /></Link>}
+                  <HookSidebar label={g.label} items={g.items} value={value} color="var(--brand-tomato)" className="whitespace-nowrap" />
+                </div>
+              );
+            })}
+          </div>
+          <div className="flex h-16 shrink-0 items-center pl-12 pr-2"><UserMenu placement="up" /></div>
+        </aside>
+      )}
+      <div className="min-w-0 flex-1">{children}</div>
     </div>
   );
 }
