@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import type { LegalDoc } from '@/content/legal';
 
-const ink = '#141413', mute = '#5C5C56', soft = '#77776F', line = '#E6E4DC';
+const ink = '#171717', mute = '#525252', soft = '#737373', line = '#E6E4DC';
 
 /** A public page (no sign-in) showing a policy in Vietnamese, then in English. */
 export function LegalPage({ doc }: { doc: LegalDoc }) {

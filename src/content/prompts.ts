@@ -621,15 +621,15 @@ export const findPrompt = (id: string): Prompt | null => BY_ID.get(id) || null;
 
 /** Topic → illustration shown on library cards (no per-prompt photos). */
 export const TOPIC_ILLUSTRATION: Record<Topic, string> = {
-  'Education': 'il-study',
-  'Environment': 'il-knowledge',
-  'Work and Careers': 'il-achievement',
-  'Government & Criminal Justice': 'il-review',
-  'Science and Technology': 'il-thinking',
-  'Health': 'il-progress',
-  'Entertainment': 'il-announce',
-  'Society and Culture': 'il-conversation',
-  'Economics': 'il-grammar',
-  'Other Topics': 'il-brainstorm',
-  'Travel and Transportation': 'il-time',
+  'Education': 'person-studying-different-sciences',
+  'Environment': 'woman-with-laptop-sitting-on-planet-earth',
+  'Work and Careers': 'person-with-archery-bow-hitting-bullseye',
+  'Government & Criminal Justice': 'guard-with-shield-and-key-protecting-private-information',
+  'Science and Technology': 'scientists-conducting-experiment-in-a-lab',
+  'Health': 'employee-meditating-among-work-tasks-work-life-balance',
+  'Entertainment': 'man-hosting-online-live-stream',
+  'Society and Culture': 'earth-with-chat-bubbles-for-global-communication',
+  'Economics': 'hands-holding-different-charts',
+  'Other Topics': 'woman-brainstorming-and-choosing-ideas',
+  'Travel and Transportation': 'woman-seated-by-a-plane-window',
 };

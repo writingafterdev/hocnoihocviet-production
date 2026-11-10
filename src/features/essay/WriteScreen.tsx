@@ -82,12 +82,12 @@ function CommentBone() {
 function ReviewBone() {
   return (
     <>
-      <section aria-hidden="true" style={{ flexShrink: 0, borderRadius: 18, border: '1px solid ' + CL.border, background: '#fff', overflow: 'hidden' }}>
+      <section aria-hidden="true" style={{ flexShrink: 0, borderRadius: 12, border: '1px solid ' + CL.border, background: '#fff', overflow: 'hidden' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '16px 18px 14px' }}>
           <Bone w={64} h={44} r={10} />
           <span style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 8 }}><Bone /><Bone w="88%" /><Bone w="60%" /></span>
         </div>
-        <div style={{ display: 'flex', gap: 2, padding: '6px 6px 0', background: '#F3F3F1', borderTop: '1px solid ' + CL.ink1 }}>
+        <div style={{ display: 'flex', gap: 2, padding: '6px 6px 0', background: '#F5F5F5', borderTop: '1px solid ' + CL.ink1 }}>
           {CRITERIA.map(([id], k) => (
             <span key={id} style={{ flex: 1, borderRadius: '12px 12px 0 0', background: k === 0 ? '#fff' : 'transparent', padding: '12px 0 13px', display: 'flex', justifyContent: 'center' }}><Bone w={52} h={14} r={999} /></span>
           ))}
@@ -96,7 +96,7 @@ function ReviewBone() {
           <Bone w="76%" h={10} /><Bone /><Bone w="94%" /><Bone w="58%" h={10} /><Bone w="82%" />
         </div>
       </section>
-      <span role="status" style={{ fontFamily: CL.sans, fontSize: 10.5, fontWeight: 700, letterSpacing: '0.11em', textTransform: 'uppercase', color: CL.ink5 }}>Đang chấm bài…</span>
+      <span role="status" style={{ fontFamily: CL.sans, fontSize: 12, fontWeight: 500, color: CL.ink5 }}>Đang chấm bài…</span>
       <CommentBone /><CommentBone /><CommentBone />
     </>
   );
@@ -294,7 +294,7 @@ export function WriteScreen({ prompt, chains, setChains, essay, setEssay, toolba
         open={chat || !!review || sending}
         main={
         <main className="co-col co-write3" style={{ minWidth: 0 }}>
-          <aside aria-label="Dàn bài" style={{ minHeight: 0, display: 'flex', flexDirection: 'column', borderRadius: 18, border: '1px solid ' + CL.border, background: '#fff', overflow: 'hidden' }}>
+          <aside aria-label="Dàn bài" style={{ minHeight: 0, display: 'flex', flexDirection: 'column', borderRadius: 12, border: '1px solid ' + CL.border, background: '#fff', overflow: 'hidden' }}>
             <div style={{ padding: '18px 20px 16px', borderBottom: '1px solid ' + CL.ink1, display: 'flex', flexDirection: 'column', gap: 8 }}>
               <span style={{ display: 'flex', justifyContent: 'space-between' }}><ClLabel>Đề bài</ClLabel><ClLabel>40 phút</ClLabel></span>
               <p style={{ margin: 0, fontFamily: CL.sans, fontSize: 14, fontStyle: 'italic', lineHeight: 1.6, color: CL.ink8 }}>{prompt.text}</p>
@@ -309,7 +309,7 @@ export function WriteScreen({ prompt, chains, setChains, essay, setEssay, toolba
               <div style={{ borderRadius: 10, border: '1px dashed ' + CL.ink2, padding: '9px 12px', fontFamily: CL.sans, fontSize: 12, color: CL.ink4 }}>Kết bài · không cần mạch</div>
             </div>
           </aside>
-          <section style={{ minHeight: 0, display: 'flex', flexDirection: 'column', borderRadius: 18, border: '1px solid ' + CL.border, background: '#fff', overflow: 'hidden' }}>
+          <section style={{ minHeight: 0, display: 'flex', flexDirection: 'column', borderRadius: 12, border: '1px solid ' + CL.border, background: '#fff', overflow: 'hidden' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 14, minHeight: 56, padding: '0 24px', borderBottom: '1px solid ' + CL.ink1, background: CL.panel }}>
               <ClLabel color={CL.ink}>Bài viết</ClLabel>
               <span style={{ fontFamily: CL.sans, fontSize: 12, color: CL.ink5 }}>{editing ? '' : 'Bấm chỗ tô màu để xem nhận xét.'}{stale && editing ? 'Bạn đã sửa bài, nộp lại để chấm bản mới.' : ''}</span>
@@ -327,7 +327,7 @@ export function WriteScreen({ prompt, chains, setChains, essay, setEssay, toolba
               <div className="cl-scroll" style={{ height: '100%', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 14 }}>
           {sending && !scores && <ReviewBone />}
           {panel && scores && (
-            <section style={{ flexShrink: 0, borderRadius: 18, border: '1px solid ' + CL.border, background: '#fff', overflow: 'hidden' }}>
+            <section style={{ flexShrink: 0, borderRadius: 12, border: '1px solid ' + CL.border, background: '#fff', overflow: 'hidden' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '16px 18px 14px' }}>
                 <span style={{ fontFamily: CL.serif, fontSize: 42, fontWeight: 500, lineHeight: 1, color: CL.ink }}>{bandText(scores.band, true)}</span>
                 {panel.rescore
@@ -346,7 +346,7 @@ export function WriteScreen({ prompt, chains, setChains, essay, setEssay, toolba
                   ))}
                 </div>
               )}
-              <div role="tablist" aria-label="Tiêu chí" style={{ display: 'flex', gap: 2, padding: '6px 6px 0', background: '#F3F3F1', borderTop: '1px solid ' + CL.ink1 }}>
+              <div role="tablist" aria-label="Tiêu chí" style={{ display: 'flex', gap: 2, padding: '6px 6px 0', background: '#F5F5F5', borderTop: '1px solid ' + CL.ink1 }}>
                 {CRITERIA.map(([id]) => {
                   const st = CRITERION_STYLE[id], on = tab === id, v = scores[id as 'tr'], was = essay.prevScores?.[id as 'tr'];
                   return (
@@ -380,7 +380,7 @@ export function WriteScreen({ prompt, chains, setChains, essay, setEssay, toolba
             </section>
           )}
           {panel && (panel.loading?.includes(tab)
-            ? <><span role="status" style={{ fontFamily: CL.sans, fontSize: 10.5, fontWeight: 700, letterSpacing: '0.11em', textTransform: 'uppercase', color: CL.ink5 }}>Đang viết nhận xét…</span><CommentBone /><CommentBone /></>
+            ? <><span role="status" style={{ fontFamily: CL.sans, fontSize: 12, fontWeight: 500, color: CL.ink5 }}>Đang viết nhận xét…</span><CommentBone /><CommentBone /></>
             : <ClLabel>{tabNotes.length ? tabNotes.length + ' nhận xét' : 'Không có nhận xét'}</ClLabel>)}
           {panel && tabNotes.map((note) => {
             const on = active === note, st = CRITERION_STYLE[note.crit];
@@ -400,7 +400,7 @@ export function WriteScreen({ prompt, chains, setChains, essay, setEssay, toolba
             );
           })}
           {review && !sending && !editing && fixable && (
-            <section style={{ marginTop: 'auto', flexShrink: 0, borderRadius: 18, border: '1px solid ' + CL.ink, background: '#fff', padding: '13px 16px', display: 'flex', alignItems: 'center', gap: 12 }}>
+            <section style={{ marginTop: 'auto', flexShrink: 0, borderRadius: 12, border: '1px solid ' + CL.ink, background: '#fff', padding: '13px 16px', display: 'flex', alignItems: 'center', gap: 12 }}>
               <span style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 3 }}>
                 <ClLabel color={CL.ink}>{essay.fix ? 'Sửa ý và mạch · ' + (tasks.length - essay.fix.solved.length) + ' việc' : 'Sửa ý và mạch'}</ClLabel>
                 <span style={{ fontFamily: CL.sans, fontSize: 12, lineHeight: 1.45, color: CL.ink6 }}>Task Response và Coherence, từng chỗ một.</span>

@@ -22,7 +22,7 @@ export function ArticleCard({ image, title, excerpt, author, hasAudio, onClick }
       <div style={{ paddingTop: 16 }}>
         <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: 20, lineHeight: 1.2, letterSpacing: '-0.01em', color: 'var(--text-primary)', margin: '0 0 8px' }}>{title}</h3>
         <p style={{ fontFamily: 'var(--font-serif)', fontSize: 14, lineHeight: 1.5, color: 'var(--text-secondary)', margin: '0 0 16px' }}>{excerpt}</p>
-        <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--text-primary)' }}>By {author || 'The Editors'}</span>
+        <span style={{ fontSize: 12, fontWeight: 500, color: 'var(--text-primary)' }}>By {author || 'The Editors'}</span>
       </div>
     </div>
   );

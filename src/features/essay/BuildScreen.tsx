@@ -63,7 +63,7 @@ function BodyCard({ prompt, chain, num, canDelete, onChange, onDelete, check, on
       <div style={box(isMine, !!value.trim())}>
         <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <ClLabel color={isMine ? CL.ink : CL.ink5}>{which === 'start' ? 'Điểm đầu' : 'Điểm cuối'}{isMine ? ' · bạn viết' : ''}</ClLabel>
-          {!isMine && <span style={{ borderRadius: 5, padding: '2px 6px', background: '#E4F5FA', color: '#17667A', fontFamily: CL.sans, fontSize: 9.5, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' }}>Gợi ý từ đề</span>}
+          {!isMine && <span style={{ borderRadius: 5, padding: '2px 6px', background: '#E4F5FA', color: '#17667A', fontFamily: CL.sans, fontSize: 12, fontWeight: 500 }}>Gợi ý từ đề</span>}
         </span>
         <textarea className="co-ta" value={value} rows={1} autoFocus={isMine && !value} aria-label={which === 'start' ? 'Điểm đầu' : 'Điểm cuối'} placeholder={isMine ? info.ph : ''}
           onChange={(e) => setEnd(which, e.target.value)} onFocus={onFocus}
@@ -74,15 +74,15 @@ function BodyCard({ prompt, chain, num, canDelete, onChange, onDelete, check, on
   };
 
   return (
-    <section onFocusCapture={onFocus} style={{ flexShrink: 0, borderRadius: 18, border: '1px solid ' + CL.border, background: '#fff', overflow: 'hidden' }}>
+    <section onFocusCapture={onFocus} style={{ flexShrink: 0, borderRadius: 12, border: '1px solid ' + CL.border, background: '#fff', overflow: 'hidden' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, minHeight: 56, padding: '0 14px 0 22px', borderBottom: '1px solid ' + CL.ink1 }}>
         <span style={{ fontFamily: CL.sans, fontSize: 14.5, fontWeight: 600, color: CL.ink }}>Thân bài {num}</span>
-        <span style={{ borderRadius: 999, background: '#F1F1EE', color: CL.ink7, padding: '4px 12px', fontFamily: CL.sans, fontSize: 11.5, fontWeight: 600, whiteSpace: 'nowrap' }}>{multi ? CL_CIRC[q.n - 1] + ' ' : ''}{info.chip}</span>
+        <span style={{ borderRadius: 999, background: '#F5F5F5', color: CL.ink7, padding: '4px 12px', fontFamily: CL.sans, fontSize: 11.5, fontWeight: 600, whiteSpace: 'nowrap' }}>{multi ? CL_CIRC[q.n - 1] + ' ' : ''}{info.chip}</span>
         {tone && (
           <button type="button" className="cl-btn" onClick={() => onChange({ ...chain, tone: chain.tone === 'cost' ? 'benefit' : 'cost' })} title="Đổi lợi ích / tác hại"
             style={{ borderRadius: 999, padding: '4px 12px', background: chain.tone === 'cost' ? CL.redSoft : CL.mintSoft, color: chain.tone === 'cost' ? CL.redText : CL.greenText, fontFamily: CL.sans, fontSize: 11.5, fontWeight: 600 }}>{chain.tone === 'cost' ? 'Tác hại' : 'Lợi ích'} ⇄</button>
         )}
-        <span style={{ marginLeft: 'auto', borderRadius: 5, padding: '3px 8px', background: chain.built && filled ? CL.mintSoft : '#F1F1EE', color: chain.built && filled ? CL.greenText : CL.ink6, fontFamily: CL.sans, fontSize: 11, fontWeight: 600 }}>{status}</span>
+        <span style={{ marginLeft: 'auto', borderRadius: 5, padding: '3px 8px', background: chain.built && filled ? CL.mintSoft : '#F5F5F5', color: chain.built && filled ? CL.greenText : CL.ink6, fontFamily: CL.sans, fontSize: 11, fontWeight: 600 }}>{status}</span>
         {canDelete && <button type="button" className="cl-btn cl-del" onClick={onDelete} aria-label={'Xoá thân bài ' + num} style={{ width: 30, height: 30, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', color: CL.ink3 }}><ClIcon name="trash" size={14} /></button>}
       </div>
 
@@ -157,7 +157,7 @@ export function BuildScreen({ prompt, chains, setChains, checks, setCheck, toolb
         open={chat || notesOn}
         main={
         <main className="co-col cl-scroll" style={{ minWidth: 0, overflowY: 'auto', gap: 16, paddingBottom: 24 }}>
-          <section style={{ flexShrink: 0, borderRadius: 18, border: '1px solid ' + CL.border, background: '#fff', padding: '18px 24px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <section style={{ flexShrink: 0, borderRadius: 12, border: '1px solid ' + CL.border, background: '#fff', padding: '18px 24px', display: 'flex', flexDirection: 'column', gap: 8 }}>
             <span style={{ display: 'flex', justifyContent: 'space-between' }}><ClLabel>Writing Task 2</ClLabel><ClLabel>40 phút</ClLabel></span>
             <p style={{ margin: 0, fontFamily: CL.sans, fontSize: 15, fontStyle: 'italic', lineHeight: 1.6, color: CL.ink8 }}>{prompt.text}</p>
           </section>

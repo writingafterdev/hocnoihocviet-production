@@ -175,7 +175,7 @@ export function ChainEditor(p: ChainEditorProps) {
       <li style={{ display: 'flex', gap: 18, minHeight: 44 }}>
         <Rail center={CENTER.add} track={false} dot={<span style={{ width: DOT, height: DOT, borderRadius: 999, border: '1.5px dashed ' + CL.ink3, background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', color: CL.ink4 }}><ClIcon name="plus" size={9} /></span>} />
         <div style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 6, padding: '6px 0' }}>
-          <button type="button" className="cl-btn" onClick={p.onHint} disabled={p.asking} style={{ ...miniBtn, border: '1px dashed #D9BE66', background: CL.yellowSoft, color: CL.yellowText, opacity: p.asking ? 0.6 : 1 }}>{p.asking ? 'Đang nghĩ…' : 'Bí? Gợi ý'}</button>
+          <button type="button" className="cl-btn" onClick={p.onHint} disabled={p.asking} style={{ ...miniBtn, border: '1px dashed #77A1DD', background: CL.yellowSoft, color: CL.yellowText, opacity: p.asking ? 0.6 : 1 }}>{p.asking ? 'Đang nghĩ…' : 'Bí? Gợi ý'}</button>
           {p.helper && <span style={{ marginLeft: 6, fontFamily: CL.sans, fontSize: 11.5, lineHeight: 1.4, color: CL.ink4 }}>{p.helper}</span>}
         </div>
       </li>
@@ -183,8 +183,8 @@ export function ChainEditor(p: ChainEditorProps) {
       {p.hint && (
         <li key={p.hint.q} style={{ display: 'flex', gap: 18, paddingBottom: 8 }}>
           <Rail center={CENTER.sugg} track={false} dot={<span style={{ width: DOT, height: DOT, borderRadius: 999, border: '2px dashed #B5B5AE', background: '#fff' }} />} />
-          <div className="co-unfold" style={{ flex: 1, minWidth: 0, borderRadius: 12, border: '1.5px dashed #D9BE66', background: '#FFFCF0', padding: '10px 14px', display: 'flex', flexDirection: 'column', gap: 4 }}>
-            <span style={{ fontFamily: CL.sans, fontSize: 13, fontWeight: 700, lineHeight: 1.45, color: '#7B4D10' }}>{p.hint.q}</span>
+          <div className="co-unfold" style={{ flex: 1, minWidth: 0, borderRadius: 12, border: '1.5px dashed #77A1DD', background: '#FFFCF0', padding: '10px 14px', display: 'flex', flexDirection: 'column', gap: 4 }}>
+            <span style={{ fontFamily: CL.sans, fontSize: 13, fontWeight: 700, lineHeight: 1.45, color: '#B33A1A' }}>{p.hint.q}</span>
             {p.hint.why && <span style={{ fontFamily: CL.sans, fontSize: 11.5, lineHeight: 1.45, color: CL.ink4 }}>{p.hint.why}</span>}
             <span style={{ display: 'flex', gap: 6, marginTop: 6, flexWrap: 'wrap' }}>
               <button type="button" className="cl-btn cl-add" onClick={() => { addStep(); p.onCloseHint(); }} style={{ ...miniBtn, borderColor: '#EBDDA8', color: CL.yellowText }}>Trả lời ở bước mới</button>
@@ -199,7 +199,7 @@ export function ChainEditor(p: ChainEditorProps) {
         <Rail last center={CENTER.end} ok={green} dot={<span style={{ width: 9, height: 9, borderRadius: 2, background: '#B8862B', boxShadow: '0 0 0 4px #fff' }} />} />
         <div style={{ flex: 1, minWidth: 0, padding: '6px 10px', display: 'flex', flexDirection: 'column', gap: 4 }}>
           <ClLabel>{p.endLabel}</ClLabel>
-          {p.endNode ?? <span style={{ fontFamily: CL.sans, fontSize: 15, fontWeight: 600, lineHeight: 1.5, color: '#8A5A12' }}>{p.end}</span>}
+          {p.endNode ?? <span style={{ fontFamily: CL.sans, fontSize: 15, fontWeight: 600, lineHeight: 1.5, color: '#B33A1A' }}>{p.end}</span>}
           {green && (
             <span className="co-pop" style={{ alignSelf: 'flex-start', marginTop: 8, display: 'inline-flex', alignItems: 'center', gap: 6, borderRadius: 999, background: CL.mintSoft, color: CL.greenText, padding: '4px 12px', fontFamily: CL.sans, fontSize: 12, fontWeight: 600 }}>
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path className="co-tick" d="M5 12l5 5 9-10" /></svg>Mạch đi liền

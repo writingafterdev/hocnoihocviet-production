@@ -13,7 +13,7 @@ const DEFAULT_ITEMS: NavItem[] = [
 /** NavDock — floating pill navigation with an active-item fill. */
 export function NavDock({ items = DEFAULT_ITEMS, activeId = 'feed', onSelect }: { items?: NavItem[]; activeId?: string; onSelect?: (id: string) => void }) {
   return (
-    <div style={{ display: 'inline-flex', alignItems: 'center', gap: 4, background: 'var(--gray-0)', border: '1px solid var(--gray-200)', borderRadius: 16, padding: 6, boxShadow: 'var(--shadow-nav)' }}>
+    <div style={{ display: 'inline-flex', alignItems: 'center', gap: 4, background: 'var(--gray-0)', border: '1px solid var(--gray-200)', borderRadius: 12, padding: 6, boxShadow: 'var(--shadow-nav)' }}>
       {items.map((item) => {
         const isActive = item.id === activeId;
         return (

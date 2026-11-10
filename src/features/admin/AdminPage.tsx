@@ -44,7 +44,7 @@ function Stat({ label, value, tone, children }: { label: string; value: string; 
     <div className="adm-card" style={{ padding: '22px 24px' }}>
       <div className="adm-label">{label}</div>
       <div className="adm-num" style={{ marginTop: 12, fontSize: 36, fontWeight: 700, letterSpacing: '-0.03em', lineHeight: 1, color: tone }}>{value}</div>
-      <div style={{ marginTop: 14, display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 8, fontSize: 13, color: '#5C5C56' }}>{children}</div>
+      <div style={{ marginTop: 14, display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 8, fontSize: 13, color: '#525252' }}>{children}</div>
     </div>
   );
 }
@@ -99,11 +99,11 @@ export function AdminPage() {
   };
 
   if (state === 'missing') {
-    return <div style={{ minHeight: '100vh', background: '#fff', display: 'grid', placeItems: 'center', fontFamily: 'var(--font-sans)', color: '#77776F' }}>Không tìm thấy trang này.</div>;
+    return <div style={{ minHeight: '100vh', background: '#fff', display: 'grid', placeItems: 'center', fontFamily: 'var(--font-sans)', color: '#737373' }}>Không tìm thấy trang này.</div>;
   }
   const head = <PageHeader />;
   if (state !== 'ready' || !ov) {
-    return <div className="adm" style={{ minHeight: '100vh', background: '#fff' }}>{head}<p style={{ maxWidth: 1200, margin: '0 auto', padding: '8px 40px', fontSize: 14, color: state === 'error' ? '#8B3A35' : '#77776F' }} role={state === 'error' ? 'alert' : undefined}>{state === 'error' ? 'Không tải được số liệu. Thử tải lại trang.' : 'Đang tải…'}</p></div>;
+    return <div className="adm" style={{ minHeight: '100vh', background: '#fff' }}>{head}<p style={{ maxWidth: 1200, margin: '0 auto', padding: '8px 40px', fontSize: 14, color: state === 'error' ? '#B33A1A' : '#737373' }} role={state === 'error' ? 'alert' : undefined}>{state === 'error' ? 'Không tải được số liệu. Thử tải lại trang.' : 'Đang tải…'}</p></div>;
   }
 
   const peak = Math.max(10, ...ov.series.map((s) => s.total));
@@ -123,7 +123,7 @@ export function AdminPage() {
         <section id="tong-quan" style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
           <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-end', justifyContent: 'space-between', gap: 20 }}>
             <div>
-              <p className="adm-label" style={{ margin: '0 0 8px', letterSpacing: '.2em', color: '#857F70' }}>Quản trị · {dateLine(ov.generatedAt)}</p>
+              <p className="adm-label" style={{ margin: '0 0 8px', letterSpacing: '.2em', color: '#737373' }}>Quản trị · {dateLine(ov.generatedAt)}</p>
               <h1 style={{ margin: 0, fontFamily: 'var(--font-sans)', fontSize: 38, fontWeight: 700, letterSpacing: '-0.03em', lineHeight: 1.05 }}>Tổng quan</h1>
               <p style={{ margin: '12px 0 0', fontSize: 15, lineHeight: 1.6, color: '#716D63', maxWidth: 560 }}>Học viên, lượt dùng AI, lỗi và nội dung, cập nhật lúc <span className="adm-num">{hhmm(ov.generatedAt)}</span>.</p>
             </div>
@@ -132,7 +132,7 @@ export function AdminPage() {
               <button type="button" className="adm-btn icon" aria-label="Tải lại số liệu" onClick={refresh}><Icon><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" /><path d="M21 3v5h-5" /><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" /><path d="M8 16H3v5" /></Icon></button>
             </div>
           </div>
-          <nav className="adm-tabs" aria-label="Các mục quản trị" style={{ display: 'flex', flexWrap: 'wrap', gap: 6, paddingTop: 16, borderTop: '1px solid #ECECEA' }}>
+          <nav className="adm-tabs" aria-label="Các mục quản trị" style={{ display: 'flex', flexWrap: 'wrap', gap: 6, paddingTop: 16, borderTop: '1px solid #F0F0F0' }}>
             <a href="#tong-quan">Tổng quan</a><a href="#ai">Dùng AI</a><a href="#hoc-vien">Học viên</a><a href="#noi-dung">Nội dung</a>
           </nav>
         </section>
@@ -148,7 +148,7 @@ export function AdminPage() {
           <Stat label="Lượt dùng AI hôm nay" value={num(ov.today.uses)}>
             <span><span className="adm-num">{num(ov.today.tokens)}</span> token (chưa gồm chấm bài)</span>
           </Stat>
-          <Stat label="Lỗi AI trong 24 giờ" value={num(ov.errors.total24h)} tone={ov.errors.total24h ? '#D5452E' : undefined}>
+          <Stat label="Lỗi AI trong 24 giờ" value={num(ov.errors.total24h)} tone={ov.errors.total24h ? '#D2401B' : undefined}>
             {errCodes.length ? errCodes.map(([c, n]) => <span key={c} className="adm-pill bad">{c} ×{n}</span>) : <span className="adm-pill ok">Không có lỗi</span>}
           </Stat>
         </section>
@@ -158,25 +158,25 @@ export function AdminPage() {
             <div className="adm-card" style={{ padding: '22px 24px 20px' }}>
               <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'baseline', justifyContent: 'space-between', gap: 8 }}>
                 <h2 className="adm-h2">Lượt dùng AI theo ngày</h2>
-                <span style={{ fontSize: 13, color: '#77776F' }}>Cao nhất <span className="adm-num">{peak}</span> lượt · hôm nay tính đến <span className="adm-num">{hhmm(ov.generatedAt)}</span></span>
+                <span style={{ fontSize: 13, color: '#737373' }}>Cao nhất <span className="adm-num">{peak}</span> lượt · hôm nay tính đến <span className="adm-num">{hhmm(ov.generatedAt)}</span></span>
               </div>
               <div role="img" aria-label={'Lượt dùng AI mỗi ngày trong ' + days + ' ngày'} style={{ position: 'relative', height: 200, marginTop: 24 }}>
                 {grid.map((g) => (
-                  <div key={g.v} style={{ position: 'absolute', left: 0, right: 0, bottom: g.bottom, borderTop: '1px solid #ECECEA' }}>
-                    <span className="adm-num" style={{ position: 'absolute', left: 0, bottom: 3, fontSize: 11, color: '#9A9A93' }}>{g.v}</span>
+                  <div key={g.v} style={{ position: 'absolute', left: 0, right: 0, bottom: g.bottom, borderTop: '1px solid #F0F0F0' }}>
+                    <span className="adm-num" style={{ position: 'absolute', left: 0, bottom: 3, fontSize: 11, color: '#A3A3A3' }}>{g.v}</span>
                   </div>
                 ))}
                 <div style={{ position: 'absolute', left: 36, right: 0, top: 0, bottom: 0, display: 'flex', alignItems: 'flex-end', gap: days > 14 ? 3 : 6 }}>
                   {ov.series.map((s, i) => (
                     <div key={s.day} style={{ flex: '1 1 0', minWidth: 0, height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-end', gap: 6 }}>
-                      {days <= 14 && <span className="adm-num" style={{ fontSize: 11, color: '#5C5C56' }}>{s.total}</span>}
-                      <div title={s.day + ': ' + s.total} style={{ width: '100%', maxWidth: 40, height: Math.round((s.total / ymax) * plot), minHeight: s.total ? 2 : 0, background: i === ov.series.length - 1 ? '#1FA97A' : '#62DAB1', borderRadius: '6px 6px 0 0' }} />
+                      {days <= 14 && <span className="adm-num" style={{ fontSize: 11, color: '#525252' }}>{s.total}</span>}
+                      <div title={s.day + ': ' + s.total} style={{ width: '100%', maxWidth: 40, height: Math.round((s.total / ymax) * plot), minHeight: s.total ? 2 : 0, background: i === ov.series.length - 1 ? '#2D881A' : '#77A1DD', borderRadius: '6px 6px 0 0' }} />
                     </div>
                   ))}
                 </div>
               </div>
               <div aria-hidden="true" style={{ display: 'flex', gap: days > 14 ? 3 : 6, margin: '8px 0 0 36px' }}>
-                {ov.series.map((s, i) => <span key={s.day} className="adm-num" style={{ flex: '1 1 0', minWidth: 0, textAlign: 'center', fontSize: 11, color: '#77776F', overflow: 'hidden' }}>{days <= 14 || i % 3 === 0 || i === ov.series.length - 1 ? s.day.slice(8).replace(/^0/, '') + '/' + s.day.slice(5, 7).replace(/^0/, '') : ''}</span>)}
+                {ov.series.map((s, i) => <span key={s.day} className="adm-num" style={{ flex: '1 1 0', minWidth: 0, textAlign: 'center', fontSize: 11, color: '#737373', overflow: 'hidden' }}>{days <= 14 || i % 3 === 0 || i === ov.series.length - 1 ? s.day.slice(8).replace(/^0/, '') + '/' + s.day.slice(5, 7).replace(/^0/, '') : ''}</span>)}
               </div>
             </div>
 
@@ -185,7 +185,7 @@ export function AdminPage() {
               <div style={{ overflowX: 'auto' }}>
                 <table style={{ width: '100%', minWidth: 640, borderCollapse: 'collapse', fontSize: 14 }}>
                   <thead>
-                    <tr style={{ background: '#F4F4F2' }}>
+                    <tr style={{ background: '#F5F5F5' }}>
                       <th className="adm-th" scope="col" style={{ textAlign: 'left', padding: '12px 24px' }}>Tính năng</th>
                       <th className="adm-th" scope="col" style={{ textAlign: 'right', padding: '12px 16px' }}>Lượt</th>
                       <th className="adm-th" scope="col" style={{ textAlign: 'right', padding: '12px 16px' }}>Token vào / ra</th>
@@ -194,10 +194,10 @@ export function AdminPage() {
                   </thead>
                   <tbody>
                     {ov.features.map((f) => (
-                      <tr key={f.kind} className="adm-row" style={{ borderTop: '1px solid #ECECEA' }}>
+                      <tr key={f.kind} className="adm-row" style={{ borderTop: '1px solid #F0F0F0' }}>
                         <th scope="row" style={{ textAlign: 'left', padding: '14px 24px', fontWeight: 600 }}>{KIND_NAME[f.kind]}<div className="adm-sub">{f.limit} lượt mỗi người mỗi ngày</div></th>
                         <td className="adm-num" style={{ textAlign: 'right', padding: '14px 16px' }}>{num(f.uses)}</td>
-                        <td className="adm-num" style={{ textAlign: 'right', padding: '14px 16px', color: '#5C5C56' }}>{f.tokensIn + f.tokensOut ? num(f.tokensIn) + ' / ' + num(f.tokensOut) : '—'}</td>
+                        <td className="adm-num" style={{ textAlign: 'right', padding: '14px 16px', color: '#525252' }}>{f.tokensIn + f.tokensOut ? num(f.tokensIn) + ' / ' + num(f.tokensOut) : '—'}</td>
                         <td style={{ padding: '14px 16px' }}>
                           <div className={'adm-bar' + (f.atLimit ? ' red' : '')}><i style={{ width: (f.students ? Math.max(f.atLimit ? 4 : 0, Math.round((f.atLimit / f.students) * 100)) : 0) + '%' }} /></div>
                           <div className="adm-sub" style={{ marginTop: 6 }}><span className="adm-num">{f.atLimit}</span> / <span className="adm-num">{f.students}</span> học viên đã dùng</div>
@@ -227,13 +227,13 @@ export function AdminPage() {
                 <ul style={{ listStyle: 'none', margin: '14px 0 0', padding: 0 }}>
                   {ov.errors.recent.map((e) => (
                     <li key={e.code + (e.route || '')} className="adm-li" style={{ alignItems: 'flex-start' }}>
-                      <span className="adm-num" style={{ flexShrink: 0, fontSize: 12, color: '#77776F', paddingTop: 3 }}>{dayOf(e.last) === dayOf(Date.now()) ? hhmm(e.last) : dm(e.last)}</span>
+                      <span className="adm-num" style={{ flexShrink: 0, fontSize: 12, color: '#737373', paddingTop: 3 }}>{dayOf(e.last) === dayOf(Date.now()) ? hhmm(e.last) : dm(e.last)}</span>
                       <span style={{ flexGrow: 1, minWidth: 0, fontSize: 14, fontWeight: 500 }}>{ERROR_NAME[e.code] || e.code}<div className="adm-sub" style={{ overflowWrap: 'anywhere' }}>{(e.route || 'không rõ') + (e.detail ? ' · ' + e.detail : '')}</div></span>
                       <span className={'adm-pill ' + (e.code === 'bad_output' ? 'warn' : 'bad')}>×{e.n}</span>
                     </li>
                   ))}
                 </ul>
-              ) : <p style={{ margin: '14px 0 0', fontSize: 14, color: '#5C5C56' }}>Chưa có lỗi nào trong 7 ngày qua.</p>}
+              ) : <p style={{ margin: '14px 0 0', fontSize: 14, color: '#525252' }}>Chưa có lỗi nào trong 7 ngày qua.</p>}
               <p className="adm-sub" style={{ margin: '14px 0 0', lineHeight: 1.5 }}>Lỗi vượt giới hạn CPU của Worker không ghi được ở đây. Xem trong Cloudflare, mục Logs.</p>
             </div>
           </div>
@@ -245,7 +245,7 @@ export function AdminPage() {
               <h2 className="adm-h2" style={{ flexGrow: 1 }}>Học viên</h2>
               <label style={{ position: 'relative', flex: '0 1 280px', minWidth: 200, display: 'block' }}>
                 <span className="adm-sr">Tìm học viên</span>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#77776F" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ position: 'absolute', left: 12, top: 12 }}><circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" /></svg>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#737373" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ position: 'absolute', left: 12, top: 12 }}><circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" /></svg>
                 <input className="adm-field" type="search" placeholder="Tìm theo tên hoặc email" value={q} onChange={(e) => { setQ(e.target.value); setOffset(0); }} style={{ width: '100%', paddingLeft: 36 }} />
               </label>
               <label style={{ display: 'block', flex: '0 0 190px' }}>
@@ -258,30 +258,30 @@ export function AdminPage() {
             </div>
             <div style={{ overflowX: 'auto' }}>
               <div role="table" aria-label="Danh sách học viên" style={{ minWidth: 820, fontSize: 14 }}>
-                <div role="row" style={{ display: 'grid', gridTemplateColumns: COLS, alignItems: 'center', background: '#F4F4F2' }}>
+                <div role="row" style={{ display: 'grid', gridTemplateColumns: COLS, alignItems: 'center', background: '#F5F5F5' }}>
                   {th('Học viên', { paddingLeft: 24 })}{th('Hoạt động gần nhất')}{th('Bài đã chấm', { textAlign: 'right' })}{th('Soát mạch', { textAlign: 'right' })}{th('Từ đã lưu', { textAlign: 'right' })}{th('Lượt chấm hôm nay', { paddingRight: 24 })}
                 </div>
                 {sp && sp.items.map((s) => (
-                  <div key={s.id} role="row" className="adm-row" style={{ display: 'grid', gridTemplateColumns: COLS, alignItems: 'center', borderTop: '1px solid #ECECEA' }}>
+                  <div key={s.id} role="row" className="adm-row" style={{ display: 'grid', gridTemplateColumns: COLS, alignItems: 'center', borderTop: '1px solid #F0F0F0' }}>
                     <div role="rowheader" style={{ padding: '14px 16px 14px 24px', display: 'flex', alignItems: 'center', gap: 12, minWidth: 0 }}>
-                      <span aria-hidden="true" style={{ flexShrink: 0, width: 36, height: 36, borderRadius: 999, background: '#F4F4F2', display: 'grid', placeItems: 'center', fontSize: 12, fontWeight: 600, color: '#44443F' }}>{s.name.trim().split(/\s+/).slice(-2).map((w) => w[0]).join('').toUpperCase()}</span>
+                      <span aria-hidden="true" style={{ flexShrink: 0, width: 36, height: 36, borderRadius: 999, background: '#F5F5F5', display: 'grid', placeItems: 'center', fontSize: 12, fontWeight: 600, color: '#404040' }}>{s.name.trim().split(/\s+/).slice(-2).map((w) => w[0]).join('').toUpperCase()}</span>
                       <span style={{ minWidth: 0 }}><span style={{ fontWeight: 600, overflowWrap: 'anywhere' }}>{s.name}</span><div className="adm-sub">{s.email}</div></span>
                     </div>
-                    <div role="cell" style={{ padding: '14px 16px', color: '#5C5C56' }}>{since(s.lastActive)}</div>
+                    <div role="cell" style={{ padding: '14px 16px', color: '#525252' }}>{since(s.lastActive)}</div>
                     <div role="cell" className="adm-num" style={{ padding: '14px 16px', textAlign: 'right' }}>{s.essays}</div>
                     <div role="cell" className="adm-num" style={{ padding: '14px 16px', textAlign: 'right' }}>{s.chains}</div>
                     <div role="cell" className="adm-num" style={{ padding: '14px 16px', textAlign: 'right' }}>{s.vocab}</div>
                     <div role="cell" style={{ padding: '14px 24px 14px 16px', display: 'flex', alignItems: 'center', gap: 10 }}>
                       <div className={'adm-bar' + (s.usedToday >= (sp.limit || 5) ? ' red' : '')} style={{ flexGrow: 1 }}><i style={{ width: Math.min(100, (s.usedToday / (sp.limit || 5)) * 100) + '%' }} /></div>
-                      <span className="adm-num" style={{ fontSize: 12, color: '#77776F' }}>{s.usedToday}/{sp.limit || 5}</span>
+                      <span className="adm-num" style={{ fontSize: 12, color: '#737373' }}>{s.usedToday}/{sp.limit || 5}</span>
                     </div>
                   </div>
                 ))}
-                {sp && !sp.items.length && <div style={{ padding: '28px 24px', borderTop: '1px solid #ECECEA', fontSize: 14, color: '#77776F' }}>Không có học viên nào khớp.</div>}
-                {!sp && <div style={{ padding: '28px 24px', borderTop: '1px solid #ECECEA', fontSize: 14, color: '#77776F' }}>Đang tải…</div>}
+                {sp && !sp.items.length && <div style={{ padding: '28px 24px', borderTop: '1px solid #F0F0F0', fontSize: 14, color: '#737373' }}>Không có học viên nào khớp.</div>}
+                {!sp && <div style={{ padding: '28px 24px', borderTop: '1px solid #F0F0F0', fontSize: 14, color: '#737373' }}>Đang tải…</div>}
               </div>
             </div>
-            <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '14px 24px', borderTop: '1px solid #ECECEA', fontSize: 13, color: '#77776F' }}>
+            <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '14px 24px', borderTop: '1px solid #F0F0F0', fontSize: 13, color: '#737373' }}>
               <span>{sp && sp.total ? <>Hiện <span className="adm-num">{offset + 1}–{offset + sp.items.length}</span> trên <span className="adm-num">{sp.total}</span> học viên</> : 'Không có học viên'}</span>
               <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <button type="button" className="adm-btn sm" disabled={offset === 0} onClick={() => setOffset(Math.max(0, offset - PAGE))}>Trang trước</button>
@@ -296,30 +296,30 @@ export function AdminPage() {
           <div className="adm-card" style={{ flex: '1 1 480px', minWidth: 0, padding: '22px 24px' }}>
             <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'baseline', justifyContent: 'space-between', gap: 8 }}>
               <h2 className="adm-h2">Bài mẫu Chép mẫu</h2>
-              <span style={{ fontSize: 13, color: '#77776F' }}><span className="adm-num">{ov.content.samplesHave}</span> trên <span className="adm-num">{ov.content.promptsTotal}</span> đề đã có</span>
+              <span style={{ fontSize: 13, color: '#737373' }}><span className="adm-num">{ov.content.samplesHave}</span> trên <span className="adm-num">{ov.content.promptsTotal}</span> đề đã có</span>
             </div>
             <div className="adm-bar green" style={{ height: 8, marginTop: 18 }}><i style={{ width: (ov.content.promptsTotal ? (ov.content.samplesHave / ov.content.promptsTotal) * 100 : 0) + '%' }} /></div>
             <div style={{ marginTop: 24, display: 'flex', flexDirection: 'column', gap: 16 }}>
               {ov.content.byCategory.map((c) => (
                 <div key={c.category}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, fontSize: 13, marginBottom: 6 }}><span>{c.category}</span><span className="adm-num" style={{ color: '#77776F' }}>{c.have} / {c.total}</span></div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, fontSize: 13, marginBottom: 6 }}><span>{c.category}</span><span className="adm-num" style={{ color: '#737373' }}>{c.have} / {c.total}</span></div>
                   <div className="adm-bar"><i style={{ width: (c.total ? (c.have / c.total) * 100 : 0) + '%' }} /></div>
                 </div>
               ))}
             </div>
-            <p style={{ margin: '24px 0 0', fontSize: 13, color: '#77776F' }}>{missing > 0 ? <>Còn <span className="adm-num">{missing}</span> đề chưa có bài mẫu.</> : 'Mọi đề đã có bài mẫu.'}</p>
+            <p style={{ margin: '24px 0 0', fontSize: 13, color: '#737373' }}>{missing > 0 ? <>Còn <span className="adm-num">{missing}</span> đề chưa có bài mẫu.</> : 'Mọi đề đã có bài mẫu.'}</p>
           </div>
           <div className="adm-card" style={{ flex: '1 1 320px', minWidth: 0, padding: '22px 24px' }}>
             <h2 className="adm-h2">Vòng Sửa bài</h2>
             <div style={{ marginTop: 16, display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 16 }}>
-              <div><div className="adm-num" style={{ fontSize: 32, lineHeight: 1, fontWeight: 700, letterSpacing: '-0.03em' }}>{ov.loop.resubmitted}</div><div style={{ marginTop: 8, fontSize: 13, color: '#5C5C56' }}>bài nộp lại sau khi sửa</div></div>
-              <div><div className="adm-num" style={{ fontSize: 32, lineHeight: 1, fontWeight: 700, letterSpacing: '-0.03em', color: ov.loop.avgBandChange != null && ov.loop.avgBandChange > 0 ? '#1FA97A' : undefined }}>{ov.loop.avgBandChange == null ? '—' : (ov.loop.avgBandChange > 0 ? '+' : '') + String(ov.loop.avgBandChange).replace('.', ',')}</div><div style={{ marginTop: 8, fontSize: 13, color: '#5C5C56' }}>band thay đổi trung bình</div></div>
+              <div><div className="adm-num" style={{ fontSize: 32, lineHeight: 1, fontWeight: 700, letterSpacing: '-0.03em' }}>{ov.loop.resubmitted}</div><div style={{ marginTop: 8, fontSize: 13, color: '#525252' }}>bài nộp lại sau khi sửa</div></div>
+              <div><div className="adm-num" style={{ fontSize: 32, lineHeight: 1, fontWeight: 700, letterSpacing: '-0.03em', color: ov.loop.avgBandChange != null && ov.loop.avgBandChange > 0 ? '#2D881A' : undefined }}>{ov.loop.avgBandChange == null ? '—' : (ov.loop.avgBandChange > 0 ? '+' : '') + String(ov.loop.avgBandChange).replace('.', ',')}</div><div style={{ marginTop: 8, fontSize: 13, color: '#525252' }}>band thay đổi trung bình</div></div>
             </div>
-            <div style={{ height: 1, background: '#ECECEA', margin: '20px 0' }} />
+            <div style={{ height: 1, background: '#F0F0F0', margin: '20px 0' }} />
             <h3 className="adm-h2" style={{ fontSize: 14 }}>Từ đã lưu từ Dịch</h3>
             {ov.savedTopics.length ? (
               <div style={{ marginTop: 12, display: 'flex', flexWrap: 'wrap', gap: 8 }}>{ov.savedTopics.map((t) => <span key={t.topic} className="adm-pill idle">{t.topic} · {t.n}</span>)}</div>
-            ) : <p style={{ margin: '12px 0 0', fontSize: 13, color: '#77776F' }}>Chưa ai lưu từ nào.</p>}
+            ) : <p style={{ margin: '12px 0 0', fontSize: 13, color: '#737373' }}>Chưa ai lưu từ nào.</p>}
           </div>
         </section>
       </main>

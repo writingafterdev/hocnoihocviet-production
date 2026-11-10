@@ -63,11 +63,11 @@ export function TranslatorChat({ ideas = [], onClose, skill = 'task2' }: { ideas
   };
 
   return (
-    <section aria-label="Dịch" style={{ flex: '1 1 0', minHeight: 0, height: '100%', display: 'flex', flexDirection: 'column', borderRadius: 18, border: '1px solid ' + CL.border, background: '#fff', overflow: 'hidden' }}>
+    <section aria-label="Dịch" style={{ flex: '1 1 0', minHeight: 0, height: '100%', display: 'flex', flexDirection: 'column', borderRadius: 12, border: '1px solid ' + CL.border, background: '#fff', overflow: 'hidden' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, minHeight: 54, padding: '0 12px 0 20px', borderBottom: '1px solid ' + CL.ink1 }}>
         <span style={{ width: 8, height: 8, borderRadius: 999, background: CL.mint }} />
         <ClLabel color={CL.ink}>Dịch</ClLabel>
-        <span style={{ borderRadius: 999, background: '#F1F1EE', color: CL.ink7, padding: '3px 10px', fontFamily: CL.sans, fontSize: 11, fontWeight: 600, whiteSpace: 'nowrap' }}>Việt ⇄ Anh · tự nhận</span>
+        <span style={{ borderRadius: 999, background: '#F5F5F5', color: CL.ink7, padding: '3px 10px', fontFamily: CL.sans, fontSize: 11, fontWeight: 600, whiteSpace: 'nowrap' }}>Việt ⇄ Anh · tự nhận</span>
         <span style={{ marginLeft: 'auto', display: 'flex', gap: 2 }}>
           {msgs.length > 0 && <button type="button" className="cl-btn cl-link" onClick={() => setMsgs([])} style={{ ...chipBtn, padding: '5px 8px' }}>Xoá</button>}
           {onClose && <button type="button" className="cl-btn cl-link" onClick={onClose} style={{ ...chipBtn, padding: '5px 8px' }}>Ẩn</button>}
@@ -87,7 +87,7 @@ export function TranslatorChat({ ideas = [], onClose, skill = 'task2' }: { ideas
         )}
         {msgs.map((m) => (
           <div key={m.id} style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            <div style={{ alignSelf: 'flex-end', maxWidth: '85%', borderRadius: '16px 16px 4px 16px', background: '#F1F1EE', padding: '9px 13px', fontFamily: CL.sans, fontSize: 13.5, lineHeight: 1.5, color: CL.ink8, whiteSpace: 'pre-wrap' }}>{m.source}</div>
+            <div style={{ alignSelf: 'flex-end', maxWidth: '85%', borderRadius: '16px 16px 4px 16px', background: '#F5F5F5', padding: '9px 13px', fontFamily: CL.sans, fontSize: 13.5, lineHeight: 1.5, color: CL.ink8, whiteSpace: 'pre-wrap' }}>{m.source}</div>
             <div style={{ alignSelf: 'flex-start', maxWidth: '92%', display: 'flex', gap: 9 }}>
               <span style={{ flexShrink: 0, width: 24, height: 24, borderRadius: 8, background: CL.mint, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontFamily: CL.sans, fontSize: 9.5, fontWeight: 700, color: CL.ink }}>{m.dir === 'vi-en' ? 'EN' : 'VI'}</span>
               <div style={{ minWidth: 0, display: 'flex', flexDirection: 'column', gap: 4 }}>
@@ -113,7 +113,7 @@ export function TranslatorChat({ ideas = [], onClose, skill = 'task2' }: { ideas
       </div>
 
       <div style={{ padding: '10px 12px 12px' }}>
-        <div className="cl-askbox" style={{ display: 'flex', alignItems: 'flex-end', gap: 8, borderRadius: 16, border: '1px solid ' + CL.ink2, background: CL.panel, padding: '7px 7px 7px 14px' }}>
+        <div className="cl-askbox" style={{ display: 'flex', alignItems: 'flex-end', gap: 8, borderRadius: 12, border: '1px solid ' + CL.ink2, background: CL.panel, padding: '7px 7px 7px 14px' }}>
           <textarea className="co-ta" value={text} onChange={(e) => setText(e.target.value)} maxLength={MAX} rows={1} placeholder="Nhắn để dịch…" aria-label="Văn bản cần dịch"
             onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) { e.preventDefault(); send(); } }}
             style={{ flex: 1, minWidth: 0, maxHeight: 120, resize: 'none', border: 'none', outline: 'none', background: 'transparent', padding: '6px 0', fontFamily: CL.sans, fontSize: 13.5, lineHeight: 1.5, color: CL.ink8 }} />

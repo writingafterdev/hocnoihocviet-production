@@ -49,7 +49,7 @@ export const CRITERIA: [string, string][] = [['tr', 'Task Response'], ['cc', 'Co
 
 /** Per criterion: short code, underline/bar colour, soft background and text colour. */
 export const CRITERION_STYLE: Record<string, { short: string; line: string; soft: string; fg: string }> = {
-  tr: { short: 'TR', line: '#D5452E', soft: '#FADAD4', fg: '#8B3A35' },
+  tr: { short: 'TR', line: '#D2401B', soft: '#FADAD4', fg: '#B33A1A' },
   cc: { short: 'CC', line: '#2F6FDB', soft: '#DFE9FB', fg: '#1E4FA8' },
   lr: { short: 'LR', line: '#3B9B5A', soft: '#DDF2E3', fg: '#276B3E' },
   gra: { short: 'GRA', line: '#6A4BC4', soft: '#E6DFFA', fg: '#4B3596' },

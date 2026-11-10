@@ -25,21 +25,22 @@ export function ClIcon({ name, size = 14, color = 'currentColor' }: { name: Icon
 
 /** Small uppercase tracked label. */
 export function ClLabel({ children, color = CL.ink5, style }: { children: ReactNode; color?: string; style?: CSSProperties }) {
-  return <span style={{ fontFamily: CL.sans, fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.16em', color, ...style }}>{children}</span>;
+  return <span style={{ fontFamily: CL.sans, fontSize: 12, fontWeight: 500, color, ...style }}>{children}</span>;
 }
 
 /** Lens chip (With/Without, Scope, Khả thi…). */
 export function ClTag({ kind }: { kind: string }) {
   const s = CL_KIND_STYLE[kind] || CL_KIND_STYLE['Khả thi'];
-  return <span style={{ borderRadius: 5, padding: '4px 8px', background: s.bg, color: s.fg, fontFamily: CL.sans, fontSize: 9.5, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', whiteSpace: 'nowrap' }}>{kind}</span>;
+  return <span style={{ borderRadius: 999, padding: '2px 8px', background: s.bg, color: s.fg, fontFamily: CL.sans, fontSize: 12, fontWeight: 500, whiteSpace: 'nowrap' }}>{kind}</span>;
 }
 
 /** Shared uppercase button style for workspace toolbars. */
 export const toolbarBtn = (on: boolean): CSSProperties => ({
-  borderRadius: 5, border: '1px solid ' + (on ? CL.ink : CL.ink2), background: '#fff', color: on ? CL.ink : CL.ink6,
-  fontFamily: CL.sans, fontSize: 10.5, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', padding: '8px 12px',
+  display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6, height: 36, borderRadius: 8, border: 'none',
+  background: on ? '#F5F5F5' : '#fff', color: on ? CL.ink : CL.ink7, boxShadow: '0 0 0 1px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.05)',
+  fontFamily: CL.sans, fontSize: 14, fontWeight: 500, padding: '0 12px', whiteSpace: 'nowrap',
 });
 
 export const backLinkStyle: CSSProperties = {
-  display: 'inline-flex', alignItems: 'center', gap: 8, fontFamily: CL.sans, fontSize: 10.5, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.11em', color: CL.ink5,
+  display: 'inline-flex', alignItems: 'center', gap: 6, fontFamily: CL.sans, fontSize: 13, fontWeight: 500, color: CL.ink5,
 };

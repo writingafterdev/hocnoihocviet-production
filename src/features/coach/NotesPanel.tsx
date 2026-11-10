@@ -15,7 +15,7 @@ export function NotesPanel({ result, fresh, active, onPick, onClose }: { result:
     </div>
   );
   return (
-    <section aria-label="Nhận xét" style={{ flex: '1 1 0', minHeight: 0, height: '100%', display: 'flex', flexDirection: 'column', borderRadius: 18, border: '1px solid ' + CL.border, background: '#fff', overflow: 'hidden' }}>
+    <section aria-label="Nhận xét" style={{ flex: '1 1 0', minHeight: 0, height: '100%', display: 'flex', flexDirection: 'column', borderRadius: 12, border: '1px solid ' + CL.border, background: '#fff', overflow: 'hidden' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, minHeight: 54, padding: '0 12px 0 20px', borderBottom: '1px solid ' + CL.ink1 }}>
         <ClLabel color={CL.ink}>Nhận xét</ClLabel>
         {!fresh && <span style={{ fontFamily: CL.sans, fontSize: 11.5, color: CL.ink4 }}>· bạn đã sửa mạch, kiểm tra lại để xem nhận xét mới</span>}

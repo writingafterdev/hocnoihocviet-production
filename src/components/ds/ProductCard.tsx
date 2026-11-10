@@ -33,7 +33,7 @@ export function ProductCard({ pillar = 'reading', badge, eyebrow, title, descrip
       tabIndex={onClick ? 0 : undefined}
       onKeyDown={onClick ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onClick(); } } : undefined}
       style={{
-        background: color, borderRadius: 16, padding: '28px 26px 24px',
+        background: color, borderRadius: 12, padding: '28px 26px 24px',
         display: 'flex', flexDirection: 'column', minHeight: 260,
         color: 'var(--gray-900)', position: 'relative', cursor: onClick ? 'pointer' : 'default',
         boxShadow: 'var(--shadow-card-rest)',
@@ -42,8 +42,7 @@ export function ProductCard({ pillar = 'reading', badge, eyebrow, title, descrip
       {badge && (
         <span style={{
           position: 'absolute', top: 20, right: 20, background: 'var(--gray-900)', color: 'var(--gray-0)',
-          fontFamily: 'var(--font-sans)', fontSize: 10, fontWeight: 600, letterSpacing: '0.12em',
-          textTransform: 'uppercase', padding: '6px 12px', borderRadius: 6,
+          fontFamily: 'var(--font-sans)', fontSize: 12, fontWeight: 600, padding: '6px 12px', borderRadius: 6,
         }}>{badge}</span>
       )}
       {illustration && (
@@ -52,7 +51,7 @@ export function ProductCard({ pillar = 'reading', badge, eyebrow, title, descrip
         </div>
       )}
       {eyebrow && (
-        <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, fontWeight: 500, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'rgba(0,0,0,0.5)', marginBottom: 12 }}>
+        <div style={{ fontFamily: 'var(--font-mono)', fontSize: 12, fontWeight: 500, color: 'rgba(0,0,0,0.5)', marginBottom: 12 }}>
           {eyebrow}
         </div>
       )}

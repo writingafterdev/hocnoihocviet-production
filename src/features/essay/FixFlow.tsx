@@ -46,8 +46,8 @@ type SetEssay = (fn: (e: EssayState) => EssayState) => void;
 type Fix = NonNullable<EssayState['fix']>;
 
 const pill = { display: 'inline-flex', alignItems: 'center', minHeight: 30, borderRadius: 999, padding: '0 12px', background: CL.ink, fontFamily: CL.sans, fontSize: 12, fontWeight: 600, color: '#fff' } as const;
-const back = { fontFamily: CL.sans, fontSize: 10.5, fontWeight: 700, letterSpacing: '0.11em', textTransform: 'uppercase', color: CL.ink5 } as const;
-const card = { borderRadius: 18, border: '1px solid ' + CL.border, background: '#fff' } as const;
+const back = { fontFamily: CL.sans, fontSize: 12, fontWeight: 500, color: CL.ink5 } as const;
+const card = { borderRadius: 12, border: '1px solid ' + CL.border, background: '#fff' } as const;
 
 function Bar({ left, right }: { left: ReactNode; right: ReactNode }) {
   return (
@@ -150,7 +150,7 @@ export function FixView({ prompt, chains, sections, essay, setEssay, tasks, chai
           <section style={{ ...card, flexShrink: 0, background: CL.panel, padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: 8 }}>
             <span style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
               <ClLabel>Câu hỏi gợi mở</ClLabel>
-              <span style={{ borderRadius: 5, padding: '3px 7px', background: st.soft, fontFamily: CL.sans, fontSize: 9.5, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: st.fg }}>{st.short}</span>
+              <span style={{ borderRadius: 5, padding: '3px 7px', background: st.soft, fontFamily: CL.sans, fontSize: 12, fontWeight: 500, color: st.fg }}>{st.short}</span>
               <span style={{ marginLeft: 'auto', fontFamily: CL.sans, fontSize: 11.5, color: CL.ink5 }}>{task.title}</span>
             </span>
             <span style={{ fontFamily: CL.sans, fontSize: 17, fontWeight: 600, lineHeight: 1.45, color: CL.ink }}>{task.ask[0]}</span>
@@ -185,12 +185,12 @@ export function FixView({ prompt, chains, sections, essay, setEssay, tasks, chai
                 </div>
               )}
               {checked && !ok && (task.plan ? verdict && !verdict.solved && (
-                <div role="status" className="co-unfold" style={{ display: 'flex', flexDirection: 'column', gap: 6, borderRadius: 10, background: '#F3F3F1', padding: '10px 14px', fontFamily: CL.sans, fontSize: 13, lineHeight: 1.5, color: CL.ink7 }}>
+                <div role="status" className="co-unfold" style={{ display: 'flex', flexDirection: 'column', gap: 6, borderRadius: 10, background: '#F5F5F5', padding: '10px 14px', fontFamily: CL.sans, fontSize: 13, lineHeight: 1.5, color: CL.ink7 }}>
                   <span>Chưa được: {verdict.reply}</span>
                   {verdict.ask && <b style={{ fontSize: 14, color: CL.ink }}>{verdict.ask}</b>}
                 </div>
               ) : (
-                <div role="status" className="co-unfold" style={{ borderRadius: 10, background: '#F3F3F1', padding: '10px 14px', fontFamily: CL.sans, fontSize: 13, lineHeight: 1.5, color: CL.ink7 }}>
+                <div role="status" className="co-unfold" style={{ borderRadius: 10, background: '#F5F5F5', padding: '10px 14px', fontFamily: CL.sans, fontSize: 13, lineHeight: 1.5, color: CL.ink7 }}>
                   {text.includes(task.item.quote!) ? 'Chưa được: câu cũ vẫn còn nguyên. Đọc lại câu hỏi ở trên rồi sửa thẳng chỗ tô màu.' : 'Gần rồi, nhưng đoạn đang ngắn đi. Thêm ý trả lời câu hỏi thay vì chỉ xoá câu cũ.'}
                 </div>
               ))}

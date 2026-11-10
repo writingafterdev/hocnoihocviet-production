@@ -81,17 +81,17 @@ export function AttemptWorkspace({ attemptId }: { attemptId: string }) {
       <div style={{ height: '100vh', background: '#fff', display: 'flex', flexDirection: 'column' }}>
         <WorkspaceHeader />
         {status === 'error' && (
-          <main style={{ maxWidth: 520, margin: '96px auto 0', padding: '0 24px', fontFamily: 'var(--font-sans)', color: '#141413' }}>
+          <main style={{ maxWidth: 520, margin: '96px auto 0', padding: '0 24px', fontFamily: 'var(--font-sans)', color: '#171717' }}>
             <h1 style={{ fontSize: 22, fontWeight: 600, margin: '0 0 10px' }}>Chưa tải được bài viết</h1>
-            <p style={{ fontSize: 14.5, lineHeight: 1.6, color: '#5C5C56', margin: '0 0 24px' }}>Có thể mạng đang chập chờn. Bài của bạn vẫn được lưu trên máy chủ.</p>
-            <button type="button" onClick={() => location.reload()} style={{ height: 42, padding: '0 18px', borderRadius: 10, border: 'none', background: '#141413', color: '#fff', fontSize: 13.5, fontWeight: 600, cursor: 'pointer' }}>Tải lại</button>
+            <p style={{ fontSize: 14.5, lineHeight: 1.6, color: '#525252', margin: '0 0 24px' }}>Có thể mạng đang chập chờn. Bài của bạn vẫn được lưu trên máy chủ.</p>
+            <button type="button" onClick={() => location.reload()} style={{ height: 42, padding: '0 18px', borderRadius: 10, border: 'none', background: '#171717', color: '#fff', fontSize: 13.5, fontWeight: 600, cursor: 'pointer' }}>Tải lại</button>
           </main>
         )}
         {status === 'missing' && (
-          <main style={{ maxWidth: 520, margin: '96px auto 0', padding: '0 24px', fontFamily: 'var(--font-sans)', color: '#141413' }}>
+          <main style={{ maxWidth: 520, margin: '96px auto 0', padding: '0 24px', fontFamily: 'var(--font-sans)', color: '#171717' }}>
             <h1 style={{ fontSize: 22, fontWeight: 600, margin: '0 0 10px' }}>Không tìm thấy bài viết này</h1>
-            <p style={{ fontSize: 14.5, lineHeight: 1.6, color: '#5C5C56', margin: '0 0 24px' }}>Bài này không có trong tài khoản của bạn. Có thể bạn đang đăng nhập bằng một tài khoản Google khác.</p>
-            <Link href="/writing" style={{ display: 'inline-flex', alignItems: 'center', height: 42, padding: '0 18px', borderRadius: 10, background: '#141413', color: '#fff', fontSize: 13.5, fontWeight: 600 }}>Về thư viện đề</Link>
+            <p style={{ fontSize: 14.5, lineHeight: 1.6, color: '#525252', margin: '0 0 24px' }}>Bài này không có trong tài khoản của bạn. Có thể bạn đang đăng nhập bằng một tài khoản Google khác.</p>
+            <Link href="/writing" style={{ display: 'inline-flex', alignItems: 'center', height: 42, padding: '0 18px', borderRadius: 10, background: '#171717', color: '#fff', fontSize: 13.5, fontWeight: 600 }}>Về thư viện đề</Link>
           </main>
         )}
       </div>
@@ -117,7 +117,7 @@ export function AttemptWorkspace({ attemptId }: { attemptId: string }) {
   return (
     <div style={{ height: '100vh', background: '#fff', display: 'flex', flexDirection: 'column' }}>
       <WorkspaceHeader status={
-        <button type="button" className="cl-btn" disabled={save !== 'failed'} onClick={() => persist(attempt)} aria-live="polite" style={{ fontFamily: 'var(--font-sans)', fontSize: 12, fontWeight: 500, color: save === 'failed' ? '#8B3A35' : '#9A9A93', cursor: save === 'failed' ? 'pointer' : 'default' }}>{SAVE_LABEL[save === 'failed' ? 'failed' : contentKey(attempt) !== savedKey.current ? 'saving' : 'saved']}</button>
+        <button type="button" className="cl-btn" disabled={save !== 'failed'} onClick={() => persist(attempt)} aria-live="polite" style={{ fontFamily: 'var(--font-sans)', fontSize: 12, fontWeight: 500, color: save === 'failed' ? '#B33A1A' : '#A3A3A3', cursor: save === 'failed' ? 'pointer' : 'default' }}>{SAVE_LABEL[save === 'failed' ? 'failed' : contentKey(attempt) !== savedKey.current ? 'saving' : 'saved']}</button>
       } />
       <div style={{ flex: 1, minHeight: 0 }}>
         {view === 'chains' ? (

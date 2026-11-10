@@ -32,7 +32,7 @@ function Pager({ page, pages, onPage }: { page: number; pages: number; onPage: (
       {edge('Trang trước', page - 1, page > 0, true)}
       <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, flexWrap: 'wrap', justifyContent: 'center' }}>
         {pageList(page, pages).map((n, k) => n === '…'
-          ? <span key={'e' + k} aria-hidden="true" style={{ padding: '0 4px', fontFamily: 'var(--font-sans)', fontSize: 16, color: '#141413' }}>…</span>
+          ? <span key={'e' + k} aria-hidden="true" style={{ padding: '0 4px', fontFamily: 'var(--font-sans)', fontSize: 16, color: '#171717' }}>…</span>
           : <button key={n} type="button" aria-current={n === page ? 'page' : undefined} aria-label={'Trang ' + (n + 1)} onClick={() => onPage(n)} style={{ minWidth: 40, height: 40, background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'var(--font-sans)', fontSize: 17, fontWeight: 700, color: n === page ? '#1AA83A' : '#8A8A85' }}>{n + 1}</button>)}
       </span>
       {edge('Trang sau', page + 1, page < pages - 1, false)}
@@ -47,7 +47,7 @@ const questionTypes = (p: Prompt) => p.questions.map((x) => (p.questions.length 
 function Filter({ title, options, selected, onToggle }: { title: string; options: readonly string[]; selected: string[]; onToggle: (v: string) => void }) {
   return (
     <fieldset style={{ marginBottom: 32, border: 'none', padding: 0, minWidth: 0 }}>
-      <legend style={{ fontFamily: 'var(--font-sans)', fontSize: 18, fontWeight: 600, color: '#141413', marginBottom: 20, padding: 0 }}>{title}</legend>
+      <legend style={{ fontFamily: 'var(--font-sans)', fontSize: 18, fontWeight: 600, color: '#171717', marginBottom: 20, padding: 0 }}>{title}</legend>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
         {options.map((opt) => {
           const on = selected.includes(opt);
@@ -71,25 +71,25 @@ function PromptCard({ prompt, onWrite }: { prompt: Prompt; onWrite: () => void }
   const [hover, setHover] = useState(false);
   const layer = (on: boolean): React.CSSProperties => ({ transition: 'opacity .32s ' + EASE + ', transform .42s ' + EASE, opacity: on ? 1 : 0, transform: on ? 'none' : 'translateY(6px)', pointerEvents: on ? 'auto' : 'none' });
   return (
-    <article onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)} onFocus={() => setHover(true)} onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setHover(false); }} style={{ position: 'relative', display: 'grid', borderRadius: 14, background: '#fff', boxShadow: hover ? '0 8px 24px rgba(0,0,0,0.06), 0 0 0 1px rgba(0,0,0,0.06)' : '0 1px 4px rgba(0,0,0,0.04), 0 0 0 1px rgba(0,0,0,0.04)', transform: hover ? 'translateY(-2px)' : 'none', transition: 'box-shadow .35s ' + EASE + ', transform .35s ' + EASE, overflow: 'hidden', minHeight: 156 }}>
+    <article onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)} onFocus={() => setHover(true)} onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setHover(false); }} style={{ position: 'relative', display: 'grid', borderRadius: 10, background: '#fff', boxShadow: hover ? '0 8px 24px rgba(0,0,0,0.06), 0 0 0 1px rgba(0,0,0,0.06)' : '0 1px 4px rgba(0,0,0,0.04), 0 0 0 1px rgba(0,0,0,0.04)', transform: hover ? 'translateY(-2px)' : 'none', transition: 'box-shadow .35s ' + EASE + ', transform .35s ' + EASE, overflow: 'hidden', minHeight: 156 }}>
       <div aria-hidden={hover} style={{ gridArea: '1/1', display: 'flex', padding: 12, ...layer(!hover) }}>
-        <div style={{ width: 136, height: 132, borderRadius: 7, background: '#FFF6DA', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <img src={'/assets/illustrations/' + TOPIC_ILLUSTRATION[prompt.topic] + '.svg'} alt="" style={{ width: 64, height: 64, objectFit: 'contain' }} />
+        <div style={{ width: 136, height: 132, borderRadius: 8, background: '#F5F5F5', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <img src={'/illustrations/' + TOPIC_ILLUSTRATION[prompt.topic] + '.svg'} alt="" style={{ width: 112, height: 112, objectFit: 'contain', mixBlendMode: 'multiply' }} />
         </div>
         <div style={{ flex: 1, padding: '4px 16px' }}>
           <div style={{ display: 'flex', gap: 8, marginBottom: 10, flexWrap: 'wrap' }}>
-            <span style={{ borderRadius: 4, background: '#F4F4F2', padding: '4px 8px', fontFamily: 'var(--font-mono)', fontSize: 9, fontWeight: 600, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#5C5C56' }}>{prompt.category}</span>
-            <span style={{ borderRadius: 4, background: '#DCF5EC', padding: '4px 8px', fontFamily: 'var(--font-mono)', fontSize: 9, fontWeight: 600, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#167A59' }}>{prompt.topic}</span>
+            <span style={{ borderRadius: 4, background: '#F5F5F5', padding: '4px 8px', fontFamily: 'var(--font-mono)', fontSize: 12, fontWeight: 600, color: '#525252' }}>{prompt.category}</span>
+            <span style={{ borderRadius: 4, background: '#EDF7EA', padding: '4px 8px', fontFamily: 'var(--font-mono)', fontSize: 12, fontWeight: 600, color: '#167A59' }}>{prompt.topic}</span>
           </div>
-          <p style={{ fontFamily: 'var(--font-sans)', fontSize: 14, fontWeight: 500, lineHeight: 1.55, color: '#141413', margin: 0 }}>{prompt.text}</p>
-          <p style={{ fontFamily: 'var(--font-sans)', fontSize: 11.5, fontWeight: 600, color: '#77776F', margin: '10px 0 0' }}>{questionTypes(prompt)}</p>
+          <p style={{ fontFamily: 'var(--font-sans)', fontSize: 14, fontWeight: 500, lineHeight: 1.55, color: '#171717', margin: 0 }}>{prompt.text}</p>
+          <p style={{ fontFamily: 'var(--font-sans)', fontSize: 11.5, fontWeight: 600, color: '#737373', margin: '10px 0 0' }}>{questionTypes(prompt)}</p>
         </div>
       </div>
       <div style={{ gridArea: '1/1', display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: '16px 20px', ...layer(hover) }}>
-        <p style={{ fontFamily: 'var(--font-sans)', fontSize: 14, fontWeight: 500, lineHeight: 1.6, color: '#141413', margin: 0 }}>{prompt.text}</p>
-        <div style={{ borderTop: '1px solid #ECECEA', paddingTop: 12, marginTop: 12 }}>
+        <p style={{ fontFamily: 'var(--font-sans)', fontSize: 14, fontWeight: 500, lineHeight: 1.6, color: '#171717', margin: 0 }}>{prompt.text}</p>
+        <div style={{ borderTop: '1px solid #F0F0F0', paddingTop: 12, marginTop: 12 }}>
           {/* Still reachable by keyboard at rest; focusing it reveals this layer. */}
-          <button type="button" onClick={onWrite} className="cl-primary" style={{ width: '100%', minHeight: 40, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, borderRadius: 7, border: '1px solid #141413', background: '#141413', cursor: 'pointer', transition: 'opacity .2s' }}>
+          <button type="button" onClick={onWrite} className="cl-primary" style={{ width: '100%', minHeight: 40, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, borderRadius: 7, border: '1px solid #171717', background: '#171717', cursor: 'pointer', transition: 'opacity .2s' }}>
             <span style={{ fontFamily: 'var(--font-sans)', fontSize: 11.5, fontWeight: 600, color: '#fff' }}>Viết bài</span>
           </button>
         </div>
@@ -112,20 +112,16 @@ export function PromptLibrary() {
   return (
     <div style={{ minHeight: '100vh', background: '#FFFFFF' }}>
       <PageHeader />
-      <div style={{ maxWidth: 1200, margin: '0 auto', padding: '10px 32px 96px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 40 }}>
-          <Link href="/home" style={{ fontFamily: 'var(--font-sans)', fontSize: 13, fontWeight: 500, color: '#857F70' }}>← Trang chủ</Link>
-          <Link href="/attempts" style={{ fontFamily: 'var(--font-sans)', fontSize: 13, fontWeight: 600, color: '#141413' }}>Bài đã viết →</Link>
-        </div>
+      <div style={{ maxWidth: 1200, margin: '0 auto', padding: '22px 32px 96px' }}>
 
         <div style={{ display: 'flex', alignItems: 'flex-start', flexWrap: 'wrap', gap: 24, marginBottom: 48 }}>
-          <div style={{ width: 80, height: 80, borderRadius: 18, background: '#FFE17B', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-            <img src="/assets/illustrations/il-study.svg" style={{ width: 40, height: 40, objectFit: 'contain' }} alt="" />
+          <div style={{ width: 96, height: 96, borderRadius: 12, background: '#FFF0EB', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <img src="/illustrations/person-typing-essay-on-laptop-digital-writing-or-blogging.svg" style={{ width: 84, height: 84, objectFit: 'contain', mixBlendMode: 'multiply' }} alt="" />
           </div>
           <div style={{ paddingTop: 4 }}>
-            <p style={{ fontFamily: 'var(--font-mono)', fontSize: 10, fontWeight: 500, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#857F70', margin: '0 0 12px' }}>Nghị luận xã hội</p>
-            <h1 style={{ fontFamily: 'var(--font-sans)', fontSize: 32, fontWeight: 600, letterSpacing: '-0.01em', color: '#141413', margin: '0 0 8px' }}>Thư viện đề thi</h1>
-            <p style={{ fontFamily: 'var(--font-sans)', fontSize: 15, color: 'rgba(133,127,112,0.8)', maxWidth: 560, lineHeight: 1.6, margin: 0 }}>Chọn một đề bài để luyện tập. Chúng mình sẽ mô phỏng lại cấu trúc lập luận của bạn và chỉ ra chính xác lỗ hổng trong logic.</p>
+            <p style={{ fontFamily: 'var(--font-mono)', fontSize: 12, fontWeight: 500, color: '#737373', margin: '0 0 12px' }}>Nghị luận xã hội</p>
+            <h1 style={{ fontFamily: 'var(--font-sans)', fontSize: 32, fontWeight: 600, letterSpacing: '-0.01em', color: '#171717', margin: '0 0 8px' }}>Thư viện đề thi</h1>
+            <p style={{ fontFamily: 'var(--font-sans)', fontSize: 15, color: '#737373', maxWidth: 560, lineHeight: 1.6, margin: 0 }}>Chọn một đề bài để luyện tập. Chúng mình sẽ mô phỏng lại cấu trúc lập luận của bạn và chỉ ra chính xác lỗ hổng trong logic.</p>
           </div>
         </div>
 
@@ -134,15 +130,15 @@ export function PromptLibrary() {
         <div className="pl-grid" style={{ display: 'flex', alignItems: 'flex-start', gap: 32 }}>
           <aside style={{ width: 260, flexShrink: 0 }}>
             <div style={{ marginBottom: 32 }}>
-              <div id="task-label" style={{ fontFamily: 'var(--font-sans)', fontSize: 18, fontWeight: 600, color: '#141413', marginBottom: 16 }}>Phần thi</div>
-              <div role="tablist" aria-labelledby="task-label" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 4, padding: 4, borderRadius: 10, background: '#F4F4F2' }}>
+              <div id="task-label" style={{ fontFamily: 'var(--font-sans)', fontSize: 18, fontWeight: 600, color: '#171717', marginBottom: 16 }}>Phần thi</div>
+              <div role="tablist" aria-labelledby="task-label" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 4, padding: 4, borderRadius: 10, background: '#F5F5F5' }}>
                 {([['task2', 'Task 2'], ['task1', 'Task 1']] as const).map(([id, label]) => {
                   // Task 1 has no prompts or writing flow yet.
                   const soon = id === 'task1';
                   return (
-                    <button key={id} type="button" role="tab" aria-selected={task === id} aria-disabled={soon} disabled={soon} title={soon ? 'Task 1 sắp ra mắt' : undefined} onClick={() => { setTask(id); setCats([]); setTopics([]); setPage(0); }} style={{ height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, borderRadius: 7, border: 'none', cursor: soon ? 'not-allowed' : 'pointer', background: task === id ? '#fff' : 'transparent', boxShadow: task === id ? '0 1px 3px rgba(0,0,0,0.08)' : 'none', fontFamily: 'var(--font-sans)', fontSize: 14, fontWeight: 600, color: task === id ? '#141413' : soon ? '#B5B2A8' : '#857F70' }}>
+                    <button key={id} type="button" role="tab" aria-selected={task === id} aria-disabled={soon} disabled={soon} title={soon ? 'Task 1 sắp ra mắt' : undefined} onClick={() => { setTask(id); setCats([]); setTopics([]); setPage(0); }} style={{ height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, borderRadius: 7, border: 'none', cursor: soon ? 'not-allowed' : 'pointer', background: task === id ? '#fff' : 'transparent', boxShadow: task === id ? '0 1px 3px rgba(0,0,0,0.08)' : 'none', fontFamily: 'var(--font-sans)', fontSize: 14, fontWeight: 600, color: task === id ? '#171717' : soon ? '#B5B2A8' : '#737373' }}>
                       {label}
-                      {soon && <span style={{ borderRadius: 4, background: '#ECEAE4', padding: '1px 5px', fontSize: 9.5, fontWeight: 700, letterSpacing: '0.04em', color: '#857F70' }}>SẮP CÓ</span>}
+                      {soon && <span style={{ borderRadius: 4, background: '#ECEAE4', padding: '1px 5px', fontSize: 9.5, fontWeight: 700, letterSpacing: '0.04em', color: '#737373' }}>SẮP CÓ</span>}
                     </button>
                   );
                 })}
@@ -154,13 +150,13 @@ export function PromptLibrary() {
             {task === 'task2' && <Filter title="Chủ đề" options={TOPICS_TASK2} selected={topics} onToggle={(v) => toggle(topics, setTopics, v)} />}
           </aside>
           <div style={{ flex: 1, minWidth: 0, width: '100%', display: 'flex', flexDirection: 'column', gap: 12 }}>
-            {filtered.length > 0 && <p style={{ fontFamily: 'var(--font-sans)', fontSize: 13, color: '#857F70', margin: '0 0 4px' }}>{filtered.length} đề</p>}
+            {filtered.length > 0 && <p style={{ fontFamily: 'var(--font-sans)', fontSize: 13, color: '#737373', margin: '0 0 4px' }}>{filtered.length} đề</p>}
             {filtered.slice(page * PAGE, (page + 1) * PAGE).map((p) => <PromptCard key={p.id} prompt={p} onWrite={() => setModalPrompt(p)} />)}
             {filtered.length > PAGE && <Pager page={page} pages={Math.ceil(filtered.length / PAGE)} onPage={(n) => { setPage(n); window.scrollTo({ top: 0 }); document.querySelector('main')?.scrollTo({ top: 0 }); }} />}
             {filtered.length === 0 && (
-              <div style={{ borderRadius: 14, border: '1px dashed #DAD8D2', padding: '48px 24px', textAlign: 'center' }}>
-                <p style={{ fontFamily: 'var(--font-sans)', fontSize: 15, fontWeight: 600, color: '#141413', margin: '0 0 6px' }}>{task === 'task1' ? 'Đề Task 1 đang được soạn' : 'Không có đề nào khớp bộ lọc'}</p>
-                <p style={{ fontFamily: 'var(--font-sans)', fontSize: 13, color: '#857F70', margin: 0 }}>{task === 'task1' ? 'Trong lúc chờ, bạn có thể luyện từ vựng Task 1 ở trang chủ.' : 'Thử bỏ bớt một vài lựa chọn.'}</p>
+              <div style={{ borderRadius: 10, border: '1px dashed #E5E5E5', padding: '48px 24px', textAlign: 'center' }}>
+                <p style={{ fontFamily: 'var(--font-sans)', fontSize: 15, fontWeight: 600, color: '#171717', margin: '0 0 6px' }}>{task === 'task1' ? 'Đề Task 1 đang được soạn' : 'Không có đề nào khớp bộ lọc'}</p>
+                <p style={{ fontFamily: 'var(--font-sans)', fontSize: 13, color: '#737373', margin: 0 }}>{task === 'task1' ? 'Trong lúc chờ, bạn có thể luyện từ vựng Task 1 ở trang chủ.' : 'Thử bỏ bớt một vài lựa chọn.'}</p>
               </div>
             )}
           </div>

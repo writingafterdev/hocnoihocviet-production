@@ -33,7 +33,7 @@ export function SourceBadge({ source }: { source: string }) {
   return (
     <span style={{
       display: 'inline-flex', alignItems: 'center', padding: '6px 12px',
-      fontFamily: 'var(--font-sans)', fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase',
+      fontFamily: 'var(--font-sans)', fontSize: 12, fontWeight: 500,
       borderRadius: 'var(--radius-full)', background: 'var(--ink-50)', color: 'var(--text-primary)',
     }}>
       {SOURCE_LABELS[source] || source}

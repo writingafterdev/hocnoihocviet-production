@@ -32,21 +32,21 @@ export function UserMenu({ placement = 'down' }: { placement?: 'down' | 'up' }) 
   }, [open]);
 
   if (isPending) return <span style={{ width: 40, height: 40 }} />;
-  if (!data) return <Link href="/login" style={{ fontFamily: 'var(--font-sans)', fontSize: 13.5, fontWeight: 600, color: '#141413' }}>Đăng nhập</Link>;
+  if (!data) return <Link href="/login" style={{ fontFamily: 'var(--font-sans)', fontSize: 13.5, fontWeight: 600, color: '#171717' }}>Đăng nhập</Link>;
 
   // Cast: better-auth's inferred type collapses with strictNullChecks off.
   const user = (data as unknown as { user: unknown }).user as { name: string; email: string; image?: string | null };
-  const item: React.CSSProperties = { display: 'block', width: '100%', textAlign: 'left', padding: '10px 14px', borderRadius: 8, fontFamily: 'var(--font-sans)', fontSize: 13.5, color: '#141413', background: 'none', border: 'none', cursor: 'pointer' };
+  const item: React.CSSProperties = { display: 'block', width: '100%', textAlign: 'left', padding: '10px 14px', borderRadius: 8, fontFamily: 'var(--font-sans)', fontSize: 13.5, color: '#171717', background: 'none', border: 'none', cursor: 'pointer' };
   return (
     <div ref={ref} style={{ position: 'relative' }}>
       <button type="button" onClick={() => setOpen(!open)} aria-haspopup="menu" aria-expanded={open} aria-label="Tài khoản" style={{ width: 40, height: 40, padding: 0, border: 'none', borderRadius: 9999, background: 'var(--brand-blue-soft)', overflow: 'hidden', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--font-sans)', fontSize: 12, fontWeight: 600, color: 'var(--brand-blue-deep)' }}>
         {user.image ? <img src={user.image} alt="" referrerPolicy="no-referrer" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : initials(user.name || user.email)}
       </button>
       {open && (
-        <div role="menu" style={{ position: 'absolute', ...(placement === 'up' ? { left: 0, bottom: 'calc(100% + 8px)' } : { right: 0, top: 'calc(100% + 8px)' }), zIndex: 60, width: 240, padding: 6, borderRadius: 14, border: '1px solid #E6E4DE', background: '#fff', boxShadow: 'var(--shadow-ambient-high)' }}>
-          <div style={{ padding: '10px 14px 12px', borderBottom: '1px solid #ECECEA', marginBottom: 6 }}>
-            <div style={{ fontFamily: 'var(--font-sans)', fontSize: 13.5, fontWeight: 600, color: '#141413', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user.name}</div>
-            <div style={{ fontFamily: 'var(--font-sans)', fontSize: 12, color: '#77776F', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user.email}</div>
+        <div role="menu" style={{ position: 'absolute', ...(placement === 'up' ? { left: 0, bottom: 'calc(100% + 8px)' } : { right: 0, top: 'calc(100% + 8px)' }), zIndex: 60, width: 240, padding: 6, borderRadius: 10, border: '1px solid #E5E5E5', background: '#fff', boxShadow: 'var(--shadow-ambient-high)' }}>
+          <div style={{ padding: '10px 14px 12px', borderBottom: '1px solid #F0F0F0', marginBottom: 6 }}>
+            <div style={{ fontFamily: 'var(--font-sans)', fontSize: 13.5, fontWeight: 600, color: '#171717', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user.name}</div>
+            <div style={{ fontFamily: 'var(--font-sans)', fontSize: 12, color: '#737373', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user.email}</div>
           </div>
           <Link role="menuitem" href="/attempts" onClick={() => setOpen(false)} className="cl-rv" style={item}>Bài đã viết</Link>
           {admin && <Link role="menuitem" href="/admin" onClick={() => setOpen(false)} className="cl-rv" style={item}>Quản trị</Link>}

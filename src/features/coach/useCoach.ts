@@ -86,7 +86,7 @@ export function useCoach(promptId: string, chain: ChainIn, initial?: CheckResult
 }
 
 export const NOTE_STYLE: Record<ChainNote['type'], { label: string; bg: string; fg: string }> = {
-  jump: { label: 'Nhảy bước', bg: '#FBE4E0', fg: '#8B3A35' },
+  jump: { label: 'Nhảy bước', bg: '#FFF0EB', fg: '#B33A1A' },
   trait: { label: 'Thêm đặc điểm', bg: '#E4F5FA', fg: '#17667A' },
-  detail: { label: 'Thêm chi tiết', bg: '#FFF6DA', fg: '#765A00' },
+  detail: { label: 'Thêm chi tiết', bg: '#EEF3FC', fg: '#2F62C4' },
 };

@@ -3,8 +3,6 @@ import type { ButtonHTMLAttributes, CSSProperties, ReactNode } from 'react';
 const BASE: CSSProperties = {
   fontFamily: 'var(--font-sans)',
   fontWeight: 500,
-  letterSpacing: '0.04em',
-  textTransform: 'uppercase',
   border: 'none',
   cursor: 'pointer',
   display: 'inline-flex',

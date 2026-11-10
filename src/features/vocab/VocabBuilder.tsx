@@ -19,13 +19,13 @@ const VB = {
 };
 
 function VbLabel({ children, color = VB.ink3, style }: { children: ReactNode; color?: string; style?: React.CSSProperties }) {
-  return <span style={{ fontFamily: VB.label, fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.14em', color, ...style }}>{children}</span>;
+  return <span style={{ fontFamily: VB.label, fontSize: 12, fontWeight: 600, color, ...style }}>{children}</span>;
 }
 
 /** Bold the phrase (or its first word's stem) inside an example sentence. */
 function Example({ text, phrase }: { text: string; phrase: string }) {
   const i = text.toLowerCase().indexOf(phrase.toLowerCase());
-  const mark: React.CSSProperties = { fontWeight: 500, color: VB.ink, background: 'linear-gradient(transparent 62%, #DCF5EC 62%)' };
+  const mark: React.CSSProperties = { fontWeight: 500, color: VB.ink, background: 'linear-gradient(transparent 62%, #EDF7EA 62%)' };
   if (i >= 0) return <span>{text.slice(0, i)}<b style={mark}>{text.slice(i, i + phrase.length)}</b>{text.slice(i + phrase.length)}</span>;
   const key = phrase.replace(/^(a|an|the|be)\s+/i, '').split(/\s+/)[0].toLowerCase().slice(0, 4);
   return <span>{text.split(/(\s+)/).map((w, k) => (w.toLowerCase().replace(/[^a-z]/g, '').startsWith(key) ? <b key={k} style={mark}>{w}</b> : w))}</span>;
@@ -39,14 +39,13 @@ const speak = (t: string) => {
 function Landing({ savedCount, onOpen, onBack }: { savedCount: (sk: VocabSkill) => number; onOpen: (id: VocabSkill['id']) => void; onBack: () => void }) {
   return (
     <main style={{ maxWidth: 1120, margin: '0 auto', padding: '8px 32px 60px', fontFamily: VB.sans, color: VB.ink }}>
-      <button type="button" onClick={onBack} style={{ border: 'none', background: 'transparent', cursor: 'pointer', fontFamily: VB.sans, fontSize: 13, fontWeight: 500, color: '#857F70', padding: 0, marginBottom: 28 }}>← Trang chủ</button>
       <section style={{ display: 'flex', alignItems: 'flex-start', gap: 32, borderBottom: '1px solid rgba(0,0,0,0.1)', paddingBottom: 36 }}>
         <div style={{ display: 'flex', alignItems: 'flex-start', gap: 24 }}>
-          <div style={{ width: 88, height: 88, borderRadius: 18, background: VB.yellow, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-            <img src="/assets/illustrations/il-knowledge.svg" style={{ width: 52, height: 52, objectFit: 'contain' }} alt="" />
+          <div style={{ width: 96, height: 96, borderRadius: 12, background: '#EDF7EA', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <img src="/illustrations/person-studying-different-sciences.svg" style={{ width: 84, height: 84, objectFit: 'contain', mixBlendMode: 'multiply' }} alt="" />
           </div>
           <div style={{ paddingTop: 4 }}>
-            <p style={{ fontFamily: VB.label, fontSize: 11, fontWeight: 600, letterSpacing: '0.2em', textTransform: 'uppercase', color: '#857F70', margin: '0 0 8px' }}>Vocabulary</p>
+            <p style={{ fontFamily: VB.label, fontSize: 12, fontWeight: 600, color: '#737373', margin: '0 0 8px' }}>Vocabulary</p>
             <h1 style={{ fontSize: 38, fontWeight: 700, letterSpacing: '-0.03em', lineHeight: 1, margin: '0 0 14px' }}>Học từ vựng</h1>
             <p style={{ fontSize: 15, lineHeight: 1.6, color: '#716D63', maxWidth: 560, margin: 0 }}>Chọn kỹ năng, chọn chủ đề, rồi viết lại đoạn mẫu dùng chính những từ đó. Học từ để dùng, không phải để thuộc.</p>
           </div>
@@ -58,20 +57,16 @@ function Landing({ savedCount, onOpen, onBack }: { savedCount: (sk: VocabSkill) 
           {VB_SKILLS.map((sk) => {
             const words = sk.topics.reduce((n, t) => n + t.items.length, 0);
             return (
-              <button type="button" key={sk.id} className="cl-btn vb-product" onClick={() => onOpen(sk.id)} style={{ textAlign: 'left', cursor: 'pointer', display: 'flex', flexDirection: 'column', minHeight: 380, borderRadius: 18, padding: '24px 22px 20px', background: sk.pillar, color: VB.ink }}>
-                <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-                  <span style={{ borderRadius: 8, background: 'rgba(255,255,255,0.45)', padding: '5px 10px', fontSize: 11, fontWeight: 600 }}>{words} cụm</span>
+              <button type="button" key={sk.id} onClick={() => onOpen(sk.id)} className="group flex cursor-pointer flex-col overflow-hidden rounded-xl bg-white text-left shadow-ring transition-shadow duration-150 hover:shadow-ring-hover focus-visible:shadow-[0_0_0_2px_var(--brand-blue-deep)] focus-visible:outline-none">
+                <div className="relative grid h-48 w-full place-items-center" style={{ background: sk.pillar }}>
+                  <img src={sk.ill} alt="" className="h-40 w-auto object-contain mix-blend-multiply transition-transform duration-300 group-hover:scale-[1.03]" />
+                  <span className="absolute right-3 top-3 rounded-full bg-white px-2 py-0.5 text-xs font-medium text-ink-soft">{words} cụm</span>
                 </div>
-                <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '12px 0' }}>
-                  <img src={sk.ill} style={{ width: 108, height: 108, objectFit: 'contain' }} alt="" />
-                </div>
-                <div>
-                  <h3 style={{ fontSize: 20, fontWeight: 700, letterSpacing: '-0.03em', lineHeight: 1.1, margin: '0 0 8px' }}>{sk.title}</h3>
-                  <p style={{ fontSize: 13, lineHeight: 1.5, color: 'rgba(0,0,0,0.65)', margin: '0 0 16px', minHeight: 50 }}>{sk.desc}</p>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: 14, borderTop: '1px solid rgba(0,0,0,0.15)' }}>
-                    <span style={{ fontSize: 13, fontWeight: 600 }}>{sk.topics.length} chủ đề{savedCount(sk) ? ' · ' + savedCount(sk) + ' đã lưu' : ''}</span>
-                    <span aria-hidden="true">→</span>
-                  </div>
+                <div className="flex flex-1 flex-col gap-1.5 px-5 pb-5 pt-4">
+                  <span className="text-xs font-medium text-ink-soft">{sk.eyebrow}</span>
+                  <h3 className="m-0 text-lg font-semibold tracking-[-0.02em] text-ink">{sk.title}</h3>
+                  <p className="m-0 text-sm leading-[1.55] text-ink-soft">{sk.desc}</p>
+                  <span className="mt-auto pt-3 text-[13px] font-medium text-blue-deep">{sk.topics.length} chủ đề{savedCount(sk) ? ' · ' + savedCount(sk) + ' đã lưu' : ''} ›</span>
                 </div>
               </button>
             );
@@ -150,7 +145,7 @@ function SavedList({ skill, items, loaded, onTopic, onDelete, onEnrich }: { skil
     <button key={id} type="button" className="cl-btn" aria-pressed={topic === id} onClick={() => setTopic(id)} style={{ borderRadius: 999, border: '1px solid ' + (topic === id ? VB.ink : VB.border), background: topic === id ? VB.ink : '#fff', color: topic === id ? '#fff' : VB.ink2, padding: '5px 11px', fontFamily: VB.sans, fontSize: 12.5, fontWeight: 600, whiteSpace: 'nowrap' }}>{label} <span style={{ opacity: 0.7 }}>{n}</span></button>
   );
   return (
-    <section style={{ minWidth: 0, borderRadius: 16, border: '1px solid ' + VB.border, background: '#fff', overflow: 'hidden' }}>
+    <section style={{ minWidth: 0, borderRadius: 12, border: '1px solid ' + VB.border, background: '#fff', overflow: 'hidden' }}>
       <div style={{ display: 'flex', alignItems: 'flex-end', gap: 20, flexWrap: 'wrap', padding: '22px 24px 16px' }}>
         <div style={{ flex: 1, minWidth: 240 }}>
           <VbLabel>Đã lưu</VbLabel>
@@ -199,21 +194,21 @@ function CheckBox({ on, label, onClick }: { on: boolean; label: string; onClick:
 /** One phrase in the list: the phrase, its meaning, its word type and whether it has been practised. Click to see it in full. */
 function PhraseRow({ item, selected, focused, practiced, onSelect, onFocus }: { item: VocabItem; selected: boolean; focused: boolean; practiced: number; onSelect: () => void; onFocus: () => void }) {
   return (
-    <li className="vb-row" onClick={onFocus} aria-current={focused || undefined} style={{ display: 'grid', gridTemplateColumns: '28px minmax(0,1fr) auto', alignItems: 'center', gap: 12, padding: '12px 12px 12px 10px', borderRadius: 12, cursor: 'pointer', background: focused ? '#F9FAFC' : 'transparent', transition: 'background-color .2s' }}>
+    <li className="vb-row" onClick={onFocus} aria-current={focused || undefined} style={{ display: 'grid', gridTemplateColumns: '28px minmax(0,1fr) auto', alignItems: 'center', gap: 12, padding: '12px 12px 12px 10px', borderRadius: 12, cursor: 'pointer', background: focused ? '#FAFAFA' : 'transparent', transition: 'background-color .2s' }}>
       <span onClick={(e) => e.stopPropagation()}><CheckBox on={selected} label={'Chọn ' + item.en} onClick={onSelect} /></span>
       <span style={{ minWidth: 0 }}>
         <span style={{ display: 'block', fontFamily: 'var(--font-serif)', fontSize: 17, fontWeight: 500, lineHeight: 1.35, color: VB.ink, overflowWrap: 'anywhere' }}>{item.en}</span>
         <span style={{ display: 'block', marginTop: 2, fontFamily: VB.sans, fontSize: 13, lineHeight: 1.45, color: VB.ink3 }}>{item.vi}</span>
       </span>
       <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-        <span style={{ borderRadius: 999, background: '#F1F1EE', padding: '3px 9px', fontFamily: VB.sans, fontSize: 11, fontWeight: 600, color: VB.ink2, whiteSpace: 'nowrap' }}>{item.pos}</span>
+        <span style={{ borderRadius: 999, background: '#F5F5F5', padding: '3px 9px', fontFamily: VB.sans, fontSize: 11, fontWeight: 600, color: VB.ink2, whiteSpace: 'nowrap' }}>{item.pos}</span>
         <span title={practiced ? 'Đã luyện ' + practiced + ' lần' : 'Chưa luyện'} style={{ width: 8, height: 8, borderRadius: 999, background: practiced ? VB.success : VB.strong }} />
       </span>
     </li>
   );
 }
 
-const cardLabel: React.CSSProperties = { fontFamily: VB.sans, fontSize: 10, fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase', color: VB.ink3 };
+const cardLabel: React.CSSProperties = { fontFamily: VB.sans, fontSize: 12, fontWeight: 500, color: VB.ink3 };
 
 /** The focused phrase in full: pronunciation, meaning, usage notes, collocations and examples. */
 function PhraseCard({ item }: { item: VocabItem }) {
@@ -235,7 +230,7 @@ function PhraseCard({ item }: { item: VocabItem }) {
       {item.colls.length > 0 && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           <span style={cardLabel}>Hay đi với</span>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>{item.colls.map((c) => <span key={c} style={{ borderRadius: 8, background: VB.yellowSoft, color: '#765A00', padding: '5px 10px', fontFamily: 'var(--font-serif)', fontSize: 14, lineHeight: 1.4 }}>{c}</span>)}</div>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>{item.colls.map((c) => <span key={c} style={{ borderRadius: 8, background: VB.yellowSoft, color: '#2F62C4', padding: '5px 10px', fontFamily: 'var(--font-serif)', fontSize: 14, lineHeight: 1.4 }}>{c}</span>)}</div>
         </div>
       )}
       {item.ex.length > 0 && (
@@ -406,7 +401,7 @@ export function VocabBuilder({ onBack }: { onBack: () => void }) {
 
   return shell(
     <div style={{ maxWidth: 1440, margin: '0 auto', padding: '0 40px 24px', fontFamily: VB.sans, color: VB.ink }}>
-      <button type="button" className="cl-btn cl-link" onClick={() => { setSkillId(null); setTopicId(null); }} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, marginBottom: 14, fontFamily: VB.sans, fontSize: 10.5, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.11em', color: VB.ink3 }}><ArrowLeft size={13} strokeWidth={2} />Từ vựng</button>
+      <button type="button" className="cl-btn cl-link" onClick={() => { setSkillId(null); setTopicId(null); }} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, marginBottom: 14, fontFamily: VB.sans, fontSize: 12, fontWeight: 500, color: VB.ink3 }}><ArrowLeft size={13} strokeWidth={2} />Từ vựng</button>
       <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-end', justifyContent: 'space-between', gap: 16, marginBottom: 18 }}>
         <div>
           <span style={cardLabel}>{skill.eyebrow}</span>
@@ -421,8 +416,8 @@ export function VocabBuilder({ onBack }: { onBack: () => void }) {
 
       {isSaved ? <SavedList skill={skill} items={mine.filter((m) => m.skill === skill.id)} loaded={mineLoaded} onTopic={changeTopic} onDelete={deleteMine} onEnrich={enrichMine} /> : (
         <div className="vb-grid" style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) 440px', gap: 22, alignItems: 'start' }}>
-          <section aria-label="Danh sách cụm từ" style={{ minWidth: 0, borderRadius: 18, border: '1px solid ' + VB.border, background: '#fff' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 18px', borderBottom: '1px solid ' + VB.line, borderRadius: '18px 18px 0 0', background: '#F9FAFC', fontSize: 12.5, color: VB.ink3 }}>
+          <section aria-label="Danh sách cụm từ" style={{ minWidth: 0, borderRadius: 12, border: '1px solid ' + VB.border, background: '#fff' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 18px', borderBottom: '1px solid ' + VB.line, borderRadius: '18px 18px 0 0', background: '#FAFAFA', fontSize: 12.5, color: VB.ink3 }}>
               <span style={{ display: 'inline-flex', alignItems: 'center', gap: 10, fontWeight: 600, color: VB.ink2 }}>
                 <CheckBox on={allPicked} label="Chọn tất cả" onClick={() => setSel((s) => ({ ...s, [key]: allPicked ? [] : rows.map((r) => r.it.en) }))} />Chọn tất cả
               </span>
@@ -435,21 +430,21 @@ export function VocabBuilder({ onBack }: { onBack: () => void }) {
             ) : (
               <div style={{ padding: '40px 24px 48px', fontSize: 14, color: VB.ink3 }}>Chủ đề này chưa có cụm nào.</div>
             )}
-            <div style={{ position: 'sticky', bottom: 12, margin: '0 6px 6px', display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap', borderRadius: 14, border: '1px solid ' + VB.border, background: '#fff', padding: '10px 10px 10px 18px', boxShadow: '0 10px 30px rgba(20,20,19,.10)' }}>
-              <span style={{ fontSize: 13, color: n > MAX_TICK ? '#8B3A35' : VB.ink3 }}>{n ? <><b style={{ color: VB.ink, fontWeight: 600 }}>{label.split(' · ')[0]}</b>{label.includes(' · ') ? ' · ' + label.split(' · ')[1] : ''}</> : label}</span>
+            <div style={{ position: 'sticky', bottom: 12, margin: '0 6px 6px', display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap', borderRadius: 10, border: '1px solid ' + VB.border, background: '#fff', padding: '10px 10px 10px 18px', boxShadow: '0 10px 30px rgba(20,20,19,.10)' }}>
+              <span style={{ fontSize: 13, color: n > MAX_TICK ? '#B33A1A' : VB.ink3 }}>{n ? <><b style={{ color: VB.ink, fontWeight: 600 }}>{label.split(' · ')[0]}</b>{label.includes(' · ') ? ' · ' + label.split(' · ')[1] : ''}</> : label}</span>
               {n > 0 && <button type="button" className="cl-btn cl-link" onClick={() => setSel((s) => ({ ...s, [key]: [] }))} style={{ fontSize: 12, fontWeight: 600, color: VB.ink3, textDecoration: 'underline', textUnderlineOffset: 3 }}>Bỏ chọn</button>}
-              {note && <span role="alert" style={{ flexBasis: '100%', order: 3, fontSize: 12, color: '#8B3A35' }}>{note}</span>}
+              {note && <span role="alert" style={{ flexBasis: '100%', order: 3, fontSize: 12, color: '#B33A1A' }}>{note}</span>}
               <button type="button" className="cl-btn cl-primary" disabled={!rows.length || making} onClick={() => go()} style={{ marginLeft: 'auto', display: 'inline-flex', alignItems: 'center', gap: 8, height: 38, borderRadius: 10, background: VB.ink, color: '#fff', padding: '0 16px', fontFamily: VB.sans, fontSize: 12.5, fontWeight: 700, opacity: !rows.length || making ? 0.5 : 1 }}>{making ? 'Đang tạo đoạn…' : 'Ôn ' + Math.min(n || Math.min(4, rows.length), MAX_TICK) + ' cụm →'}</button>
             </div>
           </section>
           {focused && (
-            <aside aria-live="polite" className="vb-detail" style={{ position: 'sticky', top: 16, minWidth: 0, borderRadius: 18, border: '1px solid ' + VB.border, background: '#fff', overflow: 'hidden' }}>
+            <aside aria-live="polite" className="vb-detail" style={{ position: 'sticky', top: 16, minWidth: 0, borderRadius: 12, border: '1px solid ' + VB.border, background: '#fff', overflow: 'hidden' }}>
               <PhraseCard item={focused} />
             </aside>
           )}
         </div>
       )}
-      <style>{'.vb-row:hover{background:#FBFBFA}.vb-say:hover{border-color:#141413!important;color:#141413!important}.vb-card-in>*{animation:vb-rise .45s cubic-bezier(.22,1,.36,1) both}.vb-card-in>*:nth-child(2){animation-delay:.04s}.vb-card-in>*:nth-child(3){animation-delay:.08s}.vb-card-in>*:nth-child(4){animation-delay:.12s}.vb-card-in>*:nth-child(5){animation-delay:.16s}.vb-list{animation:vb-rise .45s cubic-bezier(.22,1,.36,1)}@keyframes vb-rise{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}@media (max-width:980px){.vb-grid{grid-template-columns:minmax(0,1fr)!important}.vb-detail{position:static!important}}@media (prefers-reduced-motion:reduce){.vb-card-in>*,.vb-list{animation:none!important}}'}</style>
+      <style>{'.vb-row:hover{background:#FBFBFA}.vb-say:hover{border-color:#171717!important;color:#171717!important}.vb-card-in>*{animation:vb-rise .45s cubic-bezier(.22,1,.36,1) both}.vb-card-in>*:nth-child(2){animation-delay:.04s}.vb-card-in>*:nth-child(3){animation-delay:.08s}.vb-card-in>*:nth-child(4){animation-delay:.12s}.vb-card-in>*:nth-child(5){animation-delay:.16s}.vb-list{animation:vb-rise .45s cubic-bezier(.22,1,.36,1)}@keyframes vb-rise{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}@media (max-width:980px){.vb-grid{grid-template-columns:minmax(0,1fr)!important}.vb-detail{position:static!important}}@media (prefers-reduced-motion:reduce){.vb-card-in>*,.vb-list{animation:none!important}}'}</style>
     </div>
   );
 }

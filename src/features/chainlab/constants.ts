@@ -2,8 +2,9 @@ import type { Level, Lens, Shape } from './types';
 
 /** Writing-workbench palette (ink track + brand softs). */
 export const CL = {
-  ink: '#141413', ink8: '#2B2B29', ink7: '#44443F', ink6: '#5C5C56', ink5: '#77776F', ink4: '#9A9A93', ink3: '#BDBDB7', ink2: '#DEDEDA', ink1: '#ECECEA',
-  border: '#D6D6D0', mint: '#62DAB1', green: '#1FA97A', mintSoft: '#DCF5EC', greenText: '#17664F', yellowSoft: '#FFF6DA', yellowText: '#765A00', red: '#D5452E', redSoft: '#FBE4E0', redText: '#8B3A35', panel: '#F9FAFC', cream: '#FAF9F5',
+  // Brand 2026: neutral greys, blue and tomato as primaries, leaf for "done". (Names kept so every screen follows.)
+  ink: '#171717', ink8: '#262626', ink7: '#404040', ink6: '#525252', ink5: '#737373', ink4: '#A3A3A3', ink3: '#D4D4D4', ink2: '#E5E5E5', ink1: '#F0F0F0',
+  border: 'rgba(0,0,0,0.1)', mint: '#77A1DD', green: '#2D881A', mintSoft: '#EDF7EA', greenText: '#2D6E1E', yellowSoft: '#EEF3FC', yellowText: '#2F62C4', red: '#D2401B', redSoft: '#FFF0EB', redText: '#B33A1A', panel: '#FAFAFA', cream: '#FAFAFA',
   sans: 'var(--font-sans)', serif: 'var(--font-serif)',
 };
 
@@ -20,20 +21,20 @@ export const CL_LENSES: Lens[] = [
 /** The two types of a cause chain. Each one's question is what the chain answers. */
 export const CL_LEVELS: { kind: Level; q: string; bg: string; fg: string }[] = [
   { kind: 'Cá nhân', q: 'Ở mức cá nhân: người trong cuộc chọn gì, và vì sao họ thấy lựa chọn đó hợp lý?', bg: '#E4F5FA', fg: '#1F6E8C' },
-  { kind: 'Hệ thống', q: 'Ở mức hệ thống: kinh tế, công nghệ, văn hoá nào đứng sau tất cả?', bg: '#FFEEDA', fg: '#7B4D10' },
+  { kind: 'Hệ thống', q: 'Ở mức hệ thống: kinh tế, công nghệ, văn hoá nào đứng sau tất cả?', bg: '#FFF0EB', fg: '#B33A1A' },
 ];
 export const CL_LEVEL_LENSES: Lens[] = CL_LEVELS.map((l) => ({ kind: l.kind, q: l.q }));
 
 export const CL_KIND_STYLE: Record<string, { bg: string; fg: string }> = {
   'With/Without': { bg: '#E4F5FA', fg: '#17667A' },
   'Scope': { bg: CL.yellowSoft, fg: CL.yellowText },
-  'Khả thi': { bg: '#F1F1EE', fg: CL.ink7 },
+  'Khả thi': { bg: '#F5F5F5', fg: CL.ink7 },
   'Dài hạn': { bg: CL.mintSoft, fg: CL.greenText },
-  'Quy mô': { bg: '#FFEEDA', fg: '#7B4D10' },
+  'Quy mô': { bg: '#FFF0EB', fg: '#B33A1A' },
   'Cá nhân': { bg: '#E4F5FA', fg: '#17667A' },
   // Older saved findings may carry these two kinds; they are no longer offered.
   'Môi trường': { bg: CL.mintSoft, fg: CL.greenText },
-  'Thể chế': { bg: '#FFEEDA', fg: '#7B4D10' },
+  'Thể chế': { bg: '#FFF0EB', fg: '#B33A1A' },
   'Hệ thống': { bg: CL.yellowSoft, fg: CL.yellowText },
 };
 

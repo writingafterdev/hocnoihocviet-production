@@ -174,9 +174,9 @@ const VB_SP_TOPICS: VocabTopic[] = [
 ];
 
 export const VB_SKILLS: VocabSkill[] = [
-  { id: 'task2', pillar: 'var(--brand-yellow, #FFE17C)', soft: 'var(--brand-yellow-soft, #FFF6DA)', ill: '/assets/illustrations/il-writing.svg', icon: 'pen', eyebrow: 'Writing Task 2', title: 'Từ vựng Task 2', desc: 'Từ và collocation theo chủ đề nghị luận: giáo dục, môi trường, công nghệ…', topics: VB_T2_TOPICS },
-  { id: 'task1', pillar: 'var(--brand-orange, #FFB760)', soft: 'var(--brand-orange-soft, #FFEEDA)', ill: '/assets/illustrations/il-progress.svg', icon: 'chart', eyebrow: 'Writing Task 1', title: 'Từ vựng Task 1', desc: 'Ngôn ngữ mô tả xu hướng, so sánh số liệu, quy trình và bản đồ.', topics: VB_T1_TOPICS },
-  { id: 'speaking', pillar: 'var(--brand-sky, #97DBEC)', soft: 'var(--brand-sky-soft, #E4F5FA)', ill: '/assets/illustrations/il-conversation.svg', icon: 'message', eyebrow: 'Speaking', title: 'Từ vựng Speaking', desc: 'Cụm tự nhiên cho Part 1, 2, 3: sở thích, quê nhà, công việc…', topics: VB_SP_TOPICS },
+  { id: 'task2', pillar: '#FFF0EB', soft: '#FFF0EB', ill: '/illustrations/person-typing-essay-on-laptop-digital-writing-or-blogging.svg', icon: 'pen', eyebrow: 'Writing Task 2', title: 'Từ vựng Task 2', desc: 'Từ và collocation theo chủ đề nghị luận: giáo dục, môi trường, công nghệ…', topics: VB_T2_TOPICS },
+  { id: 'task1', pillar: '#EEF3FC', soft: '#EEF3FC', ill: '/illustrations/hands-holding-different-charts.svg', icon: 'chart', eyebrow: 'Writing Task 1', title: 'Từ vựng Task 1', desc: 'Ngôn ngữ mô tả xu hướng, so sánh số liệu, quy trình và bản đồ.', topics: VB_T1_TOPICS },
+  { id: 'speaking', pillar: '#EDF7EA', soft: '#EDF7EA', ill: '/illustrations/woman-answering-questions-on-a-podium.svg', icon: 'message', eyebrow: 'Speaking', title: 'Từ vựng Speaking', desc: 'Cụm tự nhiên cho Part 1, 2, 3: sở thích, quê nhà, công việc…', topics: VB_SP_TOPICS },
 ];
 
 /**

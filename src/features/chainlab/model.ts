@@ -57,7 +57,7 @@ export interface StatusChip { label: string; bg: string; fg: string }
 export function verdictStatus(chain: Chain): StatusChip {
   const bases = chain.split ? chain.split.branches.map((b) => b.side || null) : [chain.side || null];
   const fs = chain.findings.filter((f) => !f.empty && f.side);
-  if (!fs.length && !(chain.split && bases.some(Boolean))) return { label: 'Chưa thử', bg: '#F1F1EE', fg: CL.ink5 };
+  if (!fs.length && !(chain.split && bases.some(Boolean))) return { label: 'Chưa thử', bg: '#F5F5F5', fg: CL.ink5 };
   const clash = fs.some((f) => (f.target === 'all' || !chain.split ? bases : [bases[f.target as number]]).some((s) => s && s !== f.side)) || (chain.split && new Set(bases.filter(Boolean)).size > 1);
   return clash ? { label: 'Phụ thuộc "nếu"', bg: CL.yellowSoft, fg: CL.yellowText } : { label: 'Giữ hướng', bg: CL.mintSoft, fg: CL.greenText };
 }
@@ -81,7 +81,7 @@ export function chainStatus(spec: PromptSpec, chain: Chain): StatusChip {
     const n = filledSteps(chain);
     return n >= 2 ? { label: 'Đã xong', bg: CL.mintSoft, fg: CL.greenText } : n === 1 ? { label: 'Đang viết', bg: CL.yellowSoft, fg: CL.yellowText } : { label: 'Chưa viết', bg: CL.redSoft, fg: CL.redText };
   }
-  return chain.findings.length || chain.split ? { label: 'Đã thử', bg: CL.mintSoft, fg: CL.greenText } : { label: 'Chưa thử', bg: '#F1F1EE', fg: CL.ink5 };
+  return chain.findings.length || chain.split ? { label: 'Đã thử', bg: CL.mintSoft, fg: CL.greenText } : { label: 'Chưa thử', bg: '#F5F5F5', fg: CL.ink5 };
 }
 
 /** Review flags on a chain that the student has not fixed or dismissed yet. */

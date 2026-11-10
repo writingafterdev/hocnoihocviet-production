@@ -25,7 +25,7 @@ export function MiniChain({ prompt, chain, num, first = true, last = true, onMov
     <div ref={ref} onClick={onOpen} style={{ flexShrink: 0, cursor: onOpen ? 'pointer' : 'default', borderRadius: 12, border: '1px solid ' + (focused ? CL.ink4 : CL.ink2), background: '#fff', overflow: 'hidden', transition: 'border-color .25s' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 10px 10px 14px', borderBottom: '1px solid ' + CL.ink1, background: hit && hit.at == null ? hit.bg : focused ? CL.panel : '#fff', transition: 'background-color .25s' }}>
         <span style={{ fontFamily: CL.sans, fontSize: 13, fontWeight: 600, color: CL.ink }}>Thân bài {num}</span>
-        <span style={{ borderRadius: 999, background: '#F1F1EE', padding: '2px 9px', fontFamily: CL.sans, fontSize: 10.5, fontWeight: 600, color: CL.ink6 }}>{KIND_ASK[kindOf(prompt, chain)].chip}</span>
+        <span style={{ borderRadius: 999, background: '#F5F5F5', padding: '2px 9px', fontFamily: CL.sans, fontSize: 10.5, fontWeight: 600, color: CL.ink6 }}>{KIND_ASK[kindOf(prompt, chain)].chip}</span>
         {onMove && <span onClick={(e) => e.stopPropagation()} style={{ marginLeft: 'auto', display: 'flex', gap: 4 }}>{arrowBtn(-1, first)}{arrowBtn(1, last)}</span>}
       </div>
       {!built && (
@@ -40,7 +40,7 @@ export function MiniChain({ prompt, chain, num, first = true, last = true, onMov
           return (
             <li key={k} style={{ position: 'relative', display: 'flex', gap: 10, alignItems: 'baseline', padding: '4px 6px', borderRadius: 6, background: shownAt === k ? hit!.bg : 'transparent', transition: 'background-color .2s' }}>
               <span style={{ position: 'relative', top: 1, width: 9, height: 9, flexShrink: 0, borderRadius: isEnd ? 2 : 999, background: isStart ? CL.green : isEnd ? '#B8862B' : CL.ink3, boxShadow: '0 0 0 3px ' + (shownAt === k ? hit!.bg : '#fff') }} />
-              <span style={{ fontFamily: isEnd ? CL.sans : CL.serif, fontSize: 13, fontWeight: isEnd ? 600 : 400, lineHeight: 1.5, color: isEnd ? '#8A5A12' : isStart ? CL.ink8 : CL.ink6 }}>{s || '—'}</span>
+              <span style={{ fontFamily: isEnd ? CL.sans : CL.serif, fontSize: 13, fontWeight: isEnd ? 600 : 400, lineHeight: 1.5, color: isEnd ? '#B33A1A' : isStart ? CL.ink8 : CL.ink6 }}>{s || '—'}</span>
             </li>
           );
         })}

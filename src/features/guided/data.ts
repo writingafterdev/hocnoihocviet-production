@@ -28,34 +28,34 @@ export interface GuidedSample {
 
 export const GW_TOOL_STYLE: Record<string, { bg: string; fg: string }> = {
   'Nêu vấn đề': { bg: '#E6ECF3', fg: '#33475E' },
-  'Lập trường': { bg: '#141413', fg: '#FFFFFF' },
-  'Nhượng bộ': { bg: '#FBE4E0', fg: '#8B3A35' },
-  'Gắn kết & Bản sắc': { bg: '#FFEEDA', fg: '#7B4D10' },
-  'Mắt xích': { bg: '#F1F1EE', fg: '#44443F' },
-  'Tác động': { bg: '#DCF5EC', fg: '#17664F' },
+  'Lập trường': { bg: '#171717', fg: '#FFFFFF' },
+  'Nhượng bộ': { bg: '#FFF0EB', fg: '#B33A1A' },
+  'Gắn kết & Bản sắc': { bg: '#FFF0EB', fg: '#B33A1A' },
+  'Mắt xích': { bg: '#F5F5F5', fg: '#404040' },
+  'Tác động': { bg: '#EDF7EA', fg: '#2D6E1E' },
   'Khả thi': { bg: '#EEE9FB', fg: '#5A3FB0' },
   'With/Without': { bg: '#E4F5FA', fg: '#17667A' },
-  'Nối về': { bg: '#FFF6DA', fg: '#765A00' },
+  'Nối về': { bg: '#EEF3FC', fg: '#2F62C4' },
   // The book's sentence labels (SAMPLE essays): what the sentence does, then which Phase 2 tool it uses.
   'Đề hỏi gì': { bg: '#E6ECF3', fg: '#33475E' },
-  'Mạch': { bg: '#F1F1EE', fg: '#44443F' },
-  'Scope': { bg: '#FFF6DA', fg: '#765A00' },
-  'Dài hạn': { bg: '#DCF5EC', fg: '#17664F' },
-  'Quy mô': { bg: '#FFEEDA', fg: '#7B4D10' },
-  'Phản biện': { bg: '#FBE4E0', fg: '#8B3A35' },
+  'Mạch': { bg: '#F5F5F5', fg: '#404040' },
+  'Scope': { bg: '#EEF3FC', fg: '#2F62C4' },
+  'Dài hạn': { bg: '#EDF7EA', fg: '#2D6E1E' },
+  'Quy mô': { bg: '#FFF0EB', fg: '#B33A1A' },
+  'Phản biện': { bg: '#FFF0EB', fg: '#B33A1A' },
 };
 
 /** Style for a tool label; combined labels ("Phản biện + With/Without") take the first one's colours. */
 export const toolStyle = (tool: string) => GW_TOOL_STYLE[tool] || GW_TOOL_STYLE[(tool || '').split(' + ')[0]] || GW_TOOL_STYLE['Mắt xích'];
 
-export const GW_VOCAB_STYLE: VocabStyle = { bg: '#FFF6DA', fg: '#765A00', hl: '#FFE17C' };
+export const GW_VOCAB_STYLE: VocabStyle = { bg: '#EEF3FC', fg: '#2F62C4', hl: '#DCE7F7' };
 // One colour per vocab item in a set, so each phrase keeps its colour on its chip, its bar and its highlight.
 export const GW_VOCAB_PALETTE: VocabStyle[] = [
   { bg: '#E4F5FA', fg: '#17667A', hl: '#BFE7F3' },
-  { bg: '#FFEEDA', fg: '#7B4D10', hl: '#FFD9AE' },
-  { bg: '#DCF5EC', fg: '#17664F', hl: '#B5EBD7' },
-  { bg: '#FBE4E0', fg: '#8B3A35', hl: '#F6C9C0' },
-  { bg: '#FFF6DA', fg: '#765A00', hl: '#FFE17C' },
+  { bg: '#FFF0EB', fg: '#B33A1A', hl: '#FFD9AE' },
+  { bg: '#EDF7EA', fg: '#2D6E1E', hl: '#B5EBD7' },
+  { bg: '#FFF0EB', fg: '#B33A1A', hl: '#F6C9C0' },
+  { bg: '#EEF3FC', fg: '#2F62C4', hl: '#DCE7F7' },
   { bg: '#E6ECF3', fg: '#33475E', hl: '#C9D6E6' },
 ];
 

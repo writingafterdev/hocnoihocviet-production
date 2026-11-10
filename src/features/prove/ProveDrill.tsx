@@ -22,7 +22,7 @@ const reducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)'
 const ROLL_MS = 1900;
 
 export function kindChip(s: Pick<Statement, 'kind' | 'tone'>) {
-  if (s.kind === 'cause') return { label: KIND_LABEL.cause, bg: '#FFEEDA', fg: '#7B4D10' };
+  if (s.kind === 'cause') return { label: KIND_LABEL.cause, bg: '#FFF0EB', fg: '#B33A1A' };
   if (s.kind === 'solution') return { label: KIND_LABEL.solution, bg: '#E4F5FA', fg: '#17667A' };
   return s.tone === 'cost' ? { label: 'Tác động · hại', bg: CL.redSoft, fg: CL.redText } : { label: 'Tác động · lợi', bg: CL.mintSoft, fg: CL.greenText };
 }
@@ -33,7 +33,7 @@ const sentenceStyle: React.CSSProperties = { margin: 0, fontFamily: CL.serif, fo
 const MARK = {
   start: { title: 'Điểm đầu', fg: CL.greenText, bg: CL.mintSoft, delay: '.15s' },
   who: { title: 'Stakeholder', fg: '#17667A', bg: '#E4F5FA', delay: '.45s' },
-  end: { title: 'Điểm cuối', fg: '#8A5A12', bg: CL.yellowSoft, delay: '.75s' },
+  end: { title: 'Điểm cuối', fg: '#B33A1A', bg: CL.yellowSoft, delay: '.75s' },
 } as const;
 
 /** The statement with its start (mint), stakeholder (sky) and end (yellow) highlighted; `still` skips the highlighter sweep. */
@@ -171,13 +171,13 @@ export function ProveDrill() {
           open={chat || notesOn}
           main={
             <main className="co-col" style={{ minWidth: 0 }}>
-              <section style={{ flex: '1 1 0', minHeight: 0, display: 'flex', flexDirection: 'column', borderRadius: 18, border: '1px solid ' + CL.border, background: '#fff', overflow: 'hidden' }}>
+              <section style={{ flex: '1 1 0', minHeight: 0, display: 'flex', flexDirection: 'column', borderRadius: 12, border: '1px solid ' + CL.border, background: '#fff', overflow: 'hidden' }}>
                 {s && chip && prompt ? (
                   <>
                     <div style={{ padding: '22px 34px 20px', borderBottom: '1px solid ' + CL.ink1, display: 'flex', flexDirection: 'column', gap: 12 }}>
                       <span style={{ display: 'flex', alignItems: 'center', gap: 10, perspective: 400 }}>
                         <ClLabel>Chứng minh câu này</ClLabel>
-                        <span key={s.id} className={landed ? 'co-flip' : ''} style={{ display: 'inline-block', borderRadius: 5, padding: '4px 8px', background: chip.bg, color: chip.fg, fontFamily: CL.sans, fontSize: 9.5, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' }}>{chip.label}</span>
+                        <span key={s.id} className={landed ? 'co-flip' : ''} style={{ display: 'inline-block', borderRadius: 5, padding: '4px 8px', background: chip.bg, color: chip.fg, fontFamily: CL.sans, fontSize: 12, fontWeight: 500 }}>{chip.label}</span>
                       </span>
                       {reel ? (
                         <div className={'co-reel-win' + (reel.settled ? ' settled' : '')} style={{ height: reel.settled ? reel.endH : reel.startH }}>
@@ -217,7 +217,7 @@ export function ProveDrill() {
             <>
               <SidePanel on={notesOn} grow={3}>
                 {coach.checking || !shownResult
-                  ? <section style={{ height: '100%', borderRadius: 18, border: '1px solid ' + CL.border, background: '#fff', padding: '18px 20px', display: 'flex', flexDirection: 'column', gap: 10 }}><ClLabel color={CL.ink}>Nhận xét</ClLabel><span style={{ fontFamily: CL.sans, fontSize: 12.5, color: CL.ink4 }}>Đang đọc mạch…</span></section>
+                  ? <section style={{ height: '100%', borderRadius: 12, border: '1px solid ' + CL.border, background: '#fff', padding: '18px 20px', display: 'flex', flexDirection: 'column', gap: 10 }}><ClLabel color={CL.ink}>Nhận xét</ClLabel><span style={{ fontFamily: CL.sans, fontSize: 12.5, color: CL.ink4 }}>Đang đọc mạch…</span></section>
                   : <NotesPanel result={shownResult} fresh={coach.fresh} active={active} onPick={setActive} onClose={() => setNotesOpen(false)} />}
               </SidePanel>
               <SidePanel on={chat} grow={2} top={notesOn}>

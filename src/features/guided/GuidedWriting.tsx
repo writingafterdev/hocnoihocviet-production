@@ -10,7 +10,7 @@ const vStyle = (seg: Segment, k: number) => (seg.vocabStyle && seg.vocabStyle[k]
 
 function ToolChip({ tool, small }: { tool: string; small?: boolean }) {
   const s = toolStyle(tool);
-  return <span style={{ display: 'inline-block', borderRadius: 5, padding: small ? '2px 6px' : '4px 8px', background: s.bg, color: s.fg, fontFamily: CL.sans, fontSize: small ? 9 : 9.5, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', whiteSpace: 'nowrap', verticalAlign: 'middle' }}>{tool}</span>;
+  return <span style={{ display: 'inline-block', borderRadius: 5, padding: small ? '2px 6px' : '4px 8px', background: s.bg, color: s.fg, fontFamily: CL.sans, fontSize: small ? 9 : 9.5, fontWeight: 500, whiteSpace: 'nowrap', verticalAlign: 'middle' }}>{tool}</span>;
 }
 
 /** A sentence's chip(s): the tool it uses (essays) or the vocab items it practises (vocab mode). `hidden` shows the Vietnamese instead of the answer. */
@@ -27,12 +27,12 @@ function SegChips({ seg, small, hidden }: { seg: Segment; small?: boolean; hidde
 function barColor(seg: Segment) {
   if (seg.vocab) {
     // A linking sentence in a practice paragraph may use none of the ticked phrases.
-    if (!seg.vocab.length) return '#ECECEA';
+    if (!seg.vocab.length) return '#F0F0F0';
     const c = seg.vocab.map((_, k) => vStyle(seg, k).hl);
     return c.length > 1 ? 'linear-gradient(90deg,' + c.map((x, k) => x + ' ' + (k * 100 / c.length) + '%,' + x + ' ' + ((k + 1) * 100 / c.length) + '%').join(',') + ')' : c[0];
   }
   const ts = toolStyle(seg.tool);
-  return ts.fg === '#FFFFFF' ? '#FFE17C' : ts.bg;
+  return ts.fg === '#FFFFFF' ? '#DCE7F7' : ts.bg;
 }
 
 /** A finished sentence in the left column, with its key phrase(s) highlighted. */
@@ -97,7 +97,7 @@ export function GuidedWriting({ sample = GW_SAMPLES.charity, onBack, backLabel =
   const next = (revealed: boolean) => { if (revealed) setShown((s) => [...s, cur]); setCur((c) => c + 1); };
   const submit = () => { if (all) next(false); else { setShake(true); setTimeout(() => setShake(false), 400); } };
   const restart = () => { setCur(0); setShown([]); };
-  const card = { borderRadius: 18, border: '1px solid ' + CL.border, background: '#fff' };
+  const card = { borderRadius: 12, border: '1px solid ' + CL.border, background: '#fff' };
 
   return (
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column', maxWidth: 1710, margin: '0 auto', padding: '12px 40px 16px' }}>
