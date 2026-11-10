@@ -8,7 +8,7 @@ import { signOut, useSession } from '@/lib/auth-client';
 const initials = (name: string) => name.trim().split(/\s+/).slice(-2).map((w) => w[0]).join('').toUpperCase();
 
 /** Avatar (Google photo or initials) with "Bài đã viết" and "Đăng xuất". Shows a login link when signed out. */
-export function UserMenu() {
+export function UserMenu({ placement = 'down' }: { placement?: 'down' | 'up' }) {
   const router = useRouter();
   const { data, isPending } = useSession();
   const [open, setOpen] = useState(false);
@@ -43,7 +43,7 @@ export function UserMenu() {
         {user.image ? <img src={user.image} alt="" referrerPolicy="no-referrer" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : initials(user.name || user.email)}
       </button>
       {open && (
-        <div role="menu" style={{ position: 'absolute', right: 0, top: 'calc(100% + 8px)', zIndex: 60, width: 240, padding: 6, borderRadius: 14, border: '1px solid #E6E4DE', background: '#fff', boxShadow: 'var(--shadow-ambient-high)' }}>
+        <div role="menu" style={{ position: 'absolute', ...(placement === 'up' ? { left: 0, bottom: 'calc(100% + 8px)' } : { right: 0, top: 'calc(100% + 8px)' }), zIndex: 60, width: 240, padding: 6, borderRadius: 14, border: '1px solid #E6E4DE', background: '#fff', boxShadow: 'var(--shadow-ambient-high)' }}>
           <div style={{ padding: '10px 14px 12px', borderBottom: '1px solid #ECECEA', marginBottom: 6 }}>
             <div style={{ fontFamily: 'var(--font-sans)', fontSize: 13.5, fontWeight: 600, color: '#141413', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user.name}</div>
             <div style={{ fontFamily: 'var(--font-sans)', fontSize: 12, color: '#77776F', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user.email}</div>
