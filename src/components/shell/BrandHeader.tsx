@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import type { ReactNode } from 'react';
 import { Logo } from '@/components/brand/Logo';
+import { AppNav } from './AppNav';
 import { UserMenu } from './UserMenu';
 
 /** The brand mark + lowercase wordmark on the left, user avatar on the right. Shared by every signed-in screen. */
@@ -18,11 +19,13 @@ export function BrandBar({ avatar = true, href = '/home', status }: { avatar?: b
   );
 }
 
-/** Header for scrolling pages (home, library, vocab). */
+/** Header for scrolling pages (home, library, vocab): logo, the main navigation in the middle, the avatar. */
 export function PageHeader({ avatar = true }: { avatar?: boolean }) {
   return (
-    <header className="sticky top-0 z-20 flex h-14 items-center border-b border-line bg-white/90 px-6 backdrop-blur">
-      <BrandBar avatar={avatar} />
+    <header className="sticky top-0 z-20 grid h-16 grid-cols-[1fr_auto_1fr] items-center border-b border-line bg-white/90 px-6 backdrop-blur">
+      <BrandBar avatar={false} />
+      <nav aria-label="Điều hướng chính" className="hidden md:block"><AppNav /></nav>
+      <div className="flex justify-end">{avatar && <UserMenu />}</div>
     </header>
   );
 }

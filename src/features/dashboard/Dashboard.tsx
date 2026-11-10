@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { ChevronRight } from 'lucide-react';
 import { Illustration } from '@/components/brand/Illustration';
 import { Badge } from '@/components/ui/badge';
+import { AppCredits } from '@/components/shell/AppCredits';
 import { PageHeader } from '@/components/shell/BrandHeader';
 import { cn } from '@/lib/utils';
 
@@ -81,6 +82,7 @@ export function Dashboard() {
           {LIVE.map((p) => <div key={p.id} className="grid md:col-span-2"><ProductCard p={p} /></div>)}
           {SOON.map((p) => <div key={p.id} className="grid md:col-span-3"><SoonCard p={p} /></div>)}
         </div>
+        <footer className="pt-16"><AppCredits /></footer>
       </main>
     </div>
   );
