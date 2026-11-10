@@ -211,4 +211,4 @@ export function ChainEditor(p: ChainEditorProps) {
   );
 }
 
-export const miniBtn: React.CSSProperties = { display: 'inline-flex', alignItems: 'center', gap: 5, borderRadius: 5, border: '1px solid ' + CL.ink2, background: '#fff', color: CL.ink6, fontFamily: CL.sans, fontSize: 11, fontWeight: 600, padding: '5px 10px' };
+export const miniBtn: React.CSSProperties = { display: 'inline-flex', alignItems: 'center', gap: 5, height: 30, borderRadius: 8, border: 'none', boxShadow: '0 0 0 1px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.05)', background: '#fff', color: CL.ink7, fontFamily: CL.sans, fontSize: 13, fontWeight: 500, padding: '0 10px', cursor: 'pointer', whiteSpace: 'nowrap' };

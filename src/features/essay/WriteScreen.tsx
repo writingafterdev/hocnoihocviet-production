@@ -400,7 +400,7 @@ export function WriteScreen({ prompt, chains, setChains, essay, setEssay, toolba
             );
           })}
           {review && !sending && !editing && fixable && (
-            <section style={{ marginTop: 'auto', flexShrink: 0, borderRadius: 12, border: '1px solid ' + CL.ink, background: '#fff', padding: '13px 16px', display: 'flex', alignItems: 'center', gap: 12 }}>
+            <section style={{ marginTop: 'auto', flexShrink: 0, borderRadius: 12, border: 'none', boxShadow: '0 0 0 1px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.05)', background: '#fff', padding: '13px 16px', display: 'flex', alignItems: 'center', gap: 12 }}>
               <span style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 3 }}>
                 <ClLabel color={CL.ink}>{essay.fix ? 'Sửa ý và mạch · ' + (tasks.length - essay.fix.solved.length) + ' việc' : 'Sửa ý và mạch'}</ClLabel>
                 <span style={{ fontFamily: CL.sans, fontSize: 12, lineHeight: 1.45, color: CL.ink6 }}>Task Response và Coherence, từng chỗ một.</span>

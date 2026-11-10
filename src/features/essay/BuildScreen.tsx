@@ -118,7 +118,7 @@ function BodyCard({ prompt, chain, num, canDelete, onChange, onDelete, check, on
             <button type="button" className="cl-btn cl-link" onClick={() => onChange({ ...chain, built: false })} style={{ ...miniBtn, border: 'none', background: 'transparent', color: CL.ink5 }}>Đổi hai đầu</button>
             {coach.result && !coach.fresh && <span style={{ fontFamily: CL.sans, fontSize: 11.5, color: CL.ink4 }}>Bạn đã sửa mạch sau lần kiểm tra trước.</span>}
             <button type="button" className="cl-btn cl-add" onClick={() => { onFocus(); onPick(null); coach.runCheck(); }} disabled={!filled || coach.checking || coach.fresh}
-              style={{ ...miniBtn, marginLeft: 'auto', borderColor: CL.ink, color: CL.ink, opacity: !filled || coach.checking || coach.fresh ? 0.4 : 1 }}>{coach.checking ? 'Đang kiểm tra…' : coach.result ? 'Kiểm tra lại' : 'Kiểm tra mạch'}</button>
+              style={{ ...miniBtn, marginLeft: 'auto', color: CL.ink, opacity: !filled || coach.checking || coach.fresh ? 0.4 : 1 }}>{coach.checking ? 'Đang kiểm tra…' : coach.result ? 'Kiểm tra lại' : 'Kiểm tra mạch'}</button>
           </div>
         </>
       )}
