@@ -324,7 +324,7 @@ export function WriteScreen({ prompt, chains, setChains, essay, setEssay, toolba
         side={
           <>
             <SidePanel on={(!!review || sending) && !chat} grow={3}>
-              <div className="cl-scroll" style={{ height: '100%', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 14 }}>
+              <div className="cl-scroll" style={{ height: '100%', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 14, padding: '2px 2px 4px' }}>
           {sending && !scores && <ReviewBone />}
           {panel && scores && (
             <section style={{ flexShrink: 0, borderRadius: 12, border: '1px solid ' + CL.border, background: '#fff', overflow: 'hidden' }}>
