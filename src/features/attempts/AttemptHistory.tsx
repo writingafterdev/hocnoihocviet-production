@@ -32,7 +32,7 @@ export function AttemptHistory() {
   return (
     <div style={{ minHeight: '100%', background: '#fff' }}>
       <PageHeader />
-      <main style={{ maxWidth: 960, margin: '0 auto', padding: '22px 32px 96px', fontFamily: 'var(--font-sans)', color: '#171717' }}>
+      <main style={{ maxWidth: 960, margin: '0 auto', padding: '40px 32px 96px', fontFamily: 'var(--font-sans)', color: '#171717' }}>
         <h1 style={{ fontSize: 32, fontWeight: 600, letterSpacing: '-0.01em', margin: '0 0 8px' }}>Bài đã viết</h1>
         <p style={{ fontSize: 15, color: '#737373', margin: '0 0 20px' }}>Mỗi lần bạn bắt đầu một đề là một bài. Mở lại để viết tiếp hoặc xem nhận xét.</p>
         <button type="button" onClick={openSample} disabled={opening} style={{ display: 'flex', alignItems: 'center', gap: 14, width: '100%', textAlign: 'left', borderRadius: 10, border: 'none', boxShadow: '0 0 0 1px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.05)', background: '#fff', padding: '14px 20px', margin: '0 0 28px', cursor: 'pointer', fontFamily: 'inherit', color: '#171717' }}>

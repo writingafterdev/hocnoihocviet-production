@@ -38,7 +38,7 @@ const speak = (t: string) => {
 /** Landing: one card per skill. */
 function Landing({ savedCount, onOpen, onBack }: { savedCount: (sk: VocabSkill) => number; onOpen: (id: VocabSkill['id']) => void; onBack: () => void }) {
   return (
-    <main style={{ maxWidth: 1120, margin: '0 auto', padding: '8px 32px 60px', fontFamily: VB.sans, color: VB.ink }}>
+    <main style={{ maxWidth: 1120, margin: '0 auto', padding: '36px 32px 60px', fontFamily: VB.sans, color: VB.ink }}>
       <section style={{ display: 'flex', alignItems: 'flex-start', gap: 32, borderBottom: '1px solid rgba(0,0,0,0.1)', paddingBottom: 36 }}>
         <div style={{ display: 'flex', alignItems: 'flex-start', gap: 24 }}>
           <div style={{ width: 96, height: 96, borderRadius: 12, background: '#EDF7EA', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
