@@ -36,7 +36,7 @@ export function AppSidebar({ children }: { children: React.ReactNode }) {
     <div className="flex min-h-screen bg-white">
       {!workspace && (
         <aside aria-label="Thanh bên" className="sticky top-0 hidden h-screen w-[208px] shrink-0 flex-col bg-white md:flex">
-          <div className="flex flex-1 flex-col gap-6 overflow-y-auto pb-6 pl-12 pr-2 pt-[70px]">
+          <div className="flex flex-1 flex-col gap-6 overflow-y-auto pb-6 pl-12 pr-2 pt-[var(--content-top,70px)]">
             {GROUPS.map((g, k) => {
               const value = g.items.findIndex((it) => it.match.some((m) => inside(path, m)));
               return (

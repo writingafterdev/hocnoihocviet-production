@@ -1,11 +1,11 @@
 'use client';
 
 import Link from 'next/link';
+import { useLayoutEffect, useRef } from 'react';
 import { ChevronRight } from 'lucide-react';
 import { Illustration } from '@/components/brand/Illustration';
 import { Badge } from '@/components/ui/badge';
 import { AppCredits } from '@/components/shell/AppCredits';
-import { PageHeader } from '@/components/shell/BrandHeader';
 import { cn } from '@/lib/utils';
 
 const SOON = [
@@ -68,13 +68,25 @@ function SoonCard({ p }: { p: (typeof SOON)[number] }) {
   );
 }
 
-/** App home: Task 2 as the big card on the left, vocabulary beside it, what's coming below. */
+/**
+ * App home: Task 2 as the big card on the left, vocabulary beside it, what's coming below. The grid is centred
+ * vertically; it tells the sidebar where its top is (--content-top) so the brand lines up with the top of the cards.
+ */
 export function Dashboard() {
+  const grid = useRef<HTMLDivElement>(null);
+  useLayoutEffect(() => {
+    const root = document.documentElement;
+    const place = () => { if (grid.current) root.style.setProperty('--content-top', Math.round(grid.current.getBoundingClientRect().top + window.scrollY) + 'px'); };
+    place();
+    window.addEventListener('resize', place);
+    const watch = new ResizeObserver(place);
+    if (grid.current) watch.observe(grid.current);
+    return () => { window.removeEventListener('resize', place); watch.disconnect(); root.style.removeProperty('--content-top'); };
+  }, []);
   return (
     <div className="min-h-screen bg-white text-ink">
-      <PageHeader />
-      <main className="mx-auto w-full max-w-[1200px] pb-10 pl-4 pr-6 pt-[22px]">
-        <div className="grid grid-cols-1 gap-5 md:grid-cols-6">
+      <main className="mx-auto flex min-h-screen w-full max-w-[1200px] flex-col justify-center py-10 pl-4 pr-6">
+        <div ref={grid} className="grid grid-cols-1 gap-5 md:grid-cols-6">
           <div className="grid md:col-span-4"><Task2Card /></div>
           <div className="grid md:col-span-2"><VocabCard /></div>
           {SOON.map((p) => <div key={p.id} className="grid md:col-span-3"><SoonCard p={p} /></div>)}
