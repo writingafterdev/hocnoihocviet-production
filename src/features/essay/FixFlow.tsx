@@ -45,7 +45,7 @@ const passes = (t: FixTask, text: string, before: string) => !text.includes(t.it
 type SetEssay = (fn: (e: EssayState) => EssayState) => void;
 type Fix = NonNullable<EssayState['fix']>;
 
-const pill = { display: 'inline-flex', alignItems: 'center', minHeight: 30, borderRadius: 999, padding: '0 12px', background: CL.ink, fontFamily: CL.sans, fontSize: 12, fontWeight: 600, color: '#fff' } as const;
+const pill = { display: 'inline-flex', alignItems: 'center', minHeight: 30, borderRadius: 999, padding: '0 12px', background: '#EEF3FC', fontFamily: CL.sans, fontSize: 12, fontWeight: 600, color: '#2F62C4' } as const;
 const back = { fontFamily: CL.sans, fontSize: 12, fontWeight: 500, color: CL.ink5 } as const;
 const card = { borderRadius: 12, border: '1px solid ' + CL.border, background: '#fff' } as const;
 

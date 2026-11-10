@@ -89,7 +89,7 @@ function PromptCard({ prompt, onWrite }: { prompt: Prompt; onWrite: () => void }
         <p style={{ fontFamily: 'var(--font-sans)', fontSize: 14, fontWeight: 500, lineHeight: 1.6, color: '#171717', margin: 0 }}>{prompt.text}</p>
         <div style={{ borderTop: '1px solid #F0F0F0', paddingTop: 12, marginTop: 12 }}>
           {/* Still reachable by keyboard at rest; focusing it reveals this layer. */}
-          <button type="button" onClick={onWrite} className="cl-primary" style={{ width: '100%', minHeight: 40, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, borderRadius: 7, border: '1px solid #171717', background: '#171717', cursor: 'pointer', transition: 'opacity .2s' }}>
+          <button type="button" onClick={onWrite} className="cl-primary" style={{ width: '100%', minHeight: 40, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, borderRadius: 7, border: 'none', background: '#2F62C4', cursor: 'pointer', transition: 'opacity .2s' }}>
             <span style={{ fontFamily: 'var(--font-sans)', fontSize: 11.5, fontWeight: 600, color: '#fff' }}>Viết bài</span>
           </button>
         </div>

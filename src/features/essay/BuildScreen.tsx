@@ -97,7 +97,7 @@ function BodyCard({ prompt, chain, num, canDelete, onChange, onDelete, check, on
             </div>
           </div>
           <div style={{ borderTop: '1px solid ' + CL.ink1, background: CL.panel, padding: '12px 22px', display: 'flex', alignItems: 'center', gap: 10 }}>
-            <button type="button" className="cl-btn cl-primary" onClick={build} disabled={!ready} style={{ ...miniBtn, marginLeft: 'auto', border: 'none', background: CL.ink, color: '#fff', opacity: ready ? 1 : 0.3 }}>Dựng mạch ↵</button>
+            <button type="button" className="cl-btn cl-primary" onClick={build} disabled={!ready} style={{ ...miniBtn, marginLeft: 'auto', border: 'none', background: '#2F62C4', color: '#fff', opacity: ready ? 1 : 0.3 }}>Dựng mạch ↵</button>
           </div>
         </>
       ) : (

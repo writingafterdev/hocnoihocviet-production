@@ -146,7 +146,7 @@ export function GuidedWriting({ sample = GW_SAMPLES.charity, onBack, backLabel =
               <ClLabel color={CL.ink}>Xong bài</ClLabel>
               <p style={{ margin: 0, fontFamily: CL.sans, fontSize: 14, lineHeight: 1.6, color: CL.ink7 }}>Bạn đã viết lại đủ {flat.length} câu{shown.length ? ', có ' + shown.length + ' câu xem đáp án' : ''}. {flat.some((x) => x.vocab) ? 'Đọc lại đoạn văn bên trái, để ý các cụm từ được tô màu.' : 'Đọc lại bài bên trái, để ý mỗi câu đang làm việc gì qua các chip.'}</p>
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                {onNext && <button type="button" className="cl-btn cl-primary" onClick={onNext} style={{ height: 40, borderRadius: 12, background: CL.ink, color: '#fff', fontFamily: CL.sans, fontSize: 13, fontWeight: 600, padding: '0 20px' }}>{nextLabel || 'Tiếp'}</button>}
+                {onNext && <button type="button" className="cl-btn cl-primary" onClick={onNext} style={{ height: 40, borderRadius: 12, background: '#2F62C4', color: '#fff', fontFamily: CL.sans, fontSize: 13, fontWeight: 600, padding: '0 20px' }}>{nextLabel || 'Tiếp'}</button>}
                 <button type="button" className="cl-btn" onClick={restart} style={{ height: 40, borderRadius: 12, border: '1px solid ' + CL.ink2, background: onNext ? '#fff' : CL.ink, color: onNext ? CL.ink : '#fff', fontFamily: CL.sans, fontSize: 13, fontWeight: 600, padding: '0 20px' }}>Làm lại từ đầu</button>
               </div>
             </section>
@@ -185,7 +185,7 @@ export function GuidedWriting({ sample = GW_SAMPLES.charity, onBack, backLabel =
                   <button type="button" className="cl-btn cl-link" onClick={() => setShowAll(!showAll)} style={{ fontFamily: CL.sans, fontSize: 12, fontWeight: 600, color: CL.ink5, padding: '6px 4px' }}>{showAll ? 'Ẩn đáp án' : 'Hiện đáp án'}</button>
                   {showAll && !all && <button type="button" className="cl-btn cl-link" onClick={() => next(true)} style={{ fontFamily: CL.sans, fontSize: 12, fontWeight: 600, color: CL.ink5, padding: '6px 4px' }}>Bỏ qua câu này</button>}
                   <span style={{ marginLeft: 'auto', fontFamily: CL.sans, fontSize: 11, color: CL.ink4 }}>Enter để nộp</span>
-                  <button type="button" className="cl-btn cl-primary" onClick={submit} style={{ height: 40, borderRadius: 12, background: CL.ink, color: '#fff', fontFamily: CL.sans, fontSize: 13, fontWeight: 600, padding: '0 20px', opacity: all ? 1 : 0.4 }}>Câu tiếp</button>
+                  <button type="button" className="cl-btn cl-primary" onClick={submit} style={{ height: 40, borderRadius: 12, background: '#2F62C4', color: '#fff', fontFamily: CL.sans, fontSize: 13, fontWeight: 600, padding: '0 20px', opacity: all ? 1 : 0.4 }}>Câu tiếp</button>
                 </div>
               </section>
 

@@ -54,7 +54,7 @@ export function Login({ dev = false }: { dev?: boolean }) {
       <div className="login-brand" style={{ display: 'flex', flexDirection: 'column', padding: '28px 48px 40px', borderRight: '1px solid ' + line, background: '#F4F2EB' }}>
         <span style={{ fontWeight: 600, fontSize: 18, letterSpacing: '-0.02em' }}>hocnoihocviet</span>
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 36, maxWidth: 480, padding: '48px 0' }}>
-          <h1 style={{ margin: 0, fontFamily: 'var(--font-serif)', fontWeight: 500, fontSize: 44, lineHeight: 1.08, letterSpacing: '-0.025em', textWrap: 'balance' }}>Mỗi bài viết bắt đầu từ một <i>mạch</i> ý.</h1>
+          <h1 style={{ margin: 0, fontFamily: 'var(--font-sans)', fontWeight: 600, fontSize: 44, lineHeight: 1.08, letterSpacing: '-0.025em', textWrap: 'balance' }}>Mỗi bài viết bắt đầu từ một <i>mạch</i> ý.</h1>
           <div style={{ position: 'relative' }}>
             <div style={{ borderRadius: 12, border: '1px solid #E1DFD7', background: '#fff', overflow: 'hidden' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 18px', borderBottom: '1px solid #EFEDE6' }}>
@@ -83,7 +83,7 @@ export function Login({ dev = false }: { dev?: boolean }) {
         <Link href="/home" style={{ alignSelf: 'flex-start', minHeight: 40, display: 'inline-flex', alignItems: 'center', fontSize: 13.5, color: mute }}>← Trang chủ</Link>
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', width: '100%', maxWidth: 360, margin: '0 auto' }}>
           <span style={lbl}>Chào mừng trở lại</span>
-          <h2 style={{ margin: '14px 0 12px', fontFamily: 'var(--font-serif)', fontWeight: 500, fontSize: 36, letterSpacing: '-0.02em' }}>Đăng nhập</h2>
+          <h2 style={{ margin: '14px 0 12px', fontFamily: 'var(--font-sans)', fontWeight: 600, fontSize: 36, letterSpacing: '-0.02em' }}>Đăng nhập</h2>
           <p style={{ margin: '0 0 32px', fontSize: 15, lineHeight: 1.6, color: mute }}>Dùng tài khoản Google để tiếp tục. Không cần mật khẩu.</p>
           {failure && (
             <p role="alert" style={{ margin: '0 0 16px', padding: '10px 14px', borderRadius: 10, background: '#FFF0EB', color: '#B33A1A', fontSize: 13.5, lineHeight: 1.5 }}>
