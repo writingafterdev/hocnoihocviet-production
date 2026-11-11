@@ -70,15 +70,16 @@ function SoonCard({ p }: { p: (typeof SOON)[number] }) {
 /** App home: Task 2 as the big card on the left, vocabulary beside it, what's coming below; centred in the page. */
 export function Dashboard() {
   return (
-    <div className="min-h-full bg-white text-ink">
-      <div className="mx-auto flex min-h-full w-full max-w-[1200px] flex-col justify-center px-6 py-10">
+    <div className="relative flex min-h-full flex-col bg-white text-ink">
+      {/* The grid alone is centred, so the space above and below it is equal; the credit sits inside the bottom margin. */}
+      <div className="mx-auto flex w-full max-w-[1200px] flex-1 flex-col justify-center px-6 py-14">
         <div className="grid grid-cols-1 gap-5 md:grid-cols-6">
           <div className="grid md:col-span-4"><Task2Card /></div>
           <div className="grid md:col-span-2"><VocabCard /></div>
           {SOON.map((p) => <div key={p.id} className="grid md:col-span-3"><SoonCard p={p} /></div>)}
         </div>
-        <footer className="pt-10"><AppCredits /></footer>
       </div>
+      <footer className="absolute inset-x-0 bottom-4"><AppCredits /></footer>
     </div>
   );
 }
