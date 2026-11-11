@@ -2,18 +2,60 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useLayoutEffect, useRef, useState } from 'react';
 import { Checkbox } from '@/components/base/checkbox/checkbox';
 import { Pagination } from '@/components/base/pagination/pagination';
 import { Button } from '@/components/base/buttons/button';
 import { RiShuffleLine } from '@remixicon/react';
 import { PageHeader } from '@/components/shell/BrandHeader';
+import { sfx } from '@/lib/sfx';
 import { ModePickerModal } from './ModePickerModal';
 import { CATEGORIES_TASK1, CATEGORIES_TASK2, PROMPTS, TOPIC_ILLUSTRATION, TOPICS_TASK2, type Prompt, type Task } from '@/content/prompts';
 import { startFreeAttempt } from '../attempts/start';
 
 const EASE = 'cubic-bezier(.16,1,.3,1)';
 const PAGE = 20;
+
+
+const ROLL_MS = 2200;
+const ROW_H = 104;
+const shuffle = <T,>(xs: T[]) => { const a = [...xs]; for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+
+/** "Đề ngẫu nhiên": other prompts spin past in a window, slow down and settle on the chosen one, then `onDone` opens it. */
+function RandomReel({ target, others, onDone }: { target: Prompt; others: string[]; onDone: () => void }) {
+  const reelRef = useRef<HTMLDivElement>(null);
+  const [landed, setLanded] = useState(false);
+  const items = [...others, target.text];
+  useLayoutEffect(() => {
+    const el = reelRef.current;
+    if (!el) return;
+    const dist = ROW_H * (items.length - 1);
+    sfx.roll(ROLL_MS);
+    const a = el.animate([
+      { transform: 'translateY(0)', filter: 'blur(0px)' },
+      { transform: 'translateY(' + -dist * 0.2 + 'px)', filter: 'blur(1.4px)', offset: 0.25 },
+      { transform: 'translateY(' + -dist * 0.85 + 'px)', filter: 'blur(1px)', offset: 0.72 },
+      { transform: 'translateY(' + -dist + 'px)', filter: 'blur(0px)' },
+    ], { duration: ROLL_MS, easing: 'cubic-bezier(.4,0,.2,1)', fill: 'forwards' });
+    a.onfinish = () => { setLanded(true); sfx.pop(); setTimeout(onDone, 650); };
+    return () => a.cancel();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  return (
+    <div role="status" aria-live="polite" style={{ position: 'fixed', inset: 0, zIndex: 60, display: 'grid', placeItems: 'center', background: 'rgba(255,255,255,0.78)', backdropFilter: 'blur(4px)', padding: 24 }}>
+      <div className="co-rise" style={{ width: 'min(680px, 100%)', borderRadius: 12, background: '#fff', boxShadow: 'var(--shadow-ring-hover, 0 0 0 1px rgba(0,0,0,0.1))', padding: '22px 28px 26px' }}>
+        <span style={{ display: 'block', fontFamily: 'var(--font-sans)', fontSize: 12, fontWeight: 500, color: '#737373', marginBottom: 12 }}>{landed ? 'Đề của bạn' : 'Đang chọn đề…'}</span>
+        <div style={{ height: ROW_H, overflow: 'hidden', maskImage: 'linear-gradient(transparent, #000 18%, #000 82%, transparent)', WebkitMaskImage: 'linear-gradient(transparent, #000 18%, #000 82%, transparent)' }}>
+          <div ref={reelRef} style={{ willChange: 'transform' }}>
+            {items.map((t, k) => {
+              const last = k === items.length - 1;
+              return <p key={k} style={{ margin: 0, height: ROW_H, display: 'flex', alignItems: 'center', overflow: 'hidden', fontFamily: 'var(--font-sans)', fontSize: 16, lineHeight: 1.5, color: last && landed ? '#171717' : '#A3A3A3', transition: 'color .3s ease' }}><span style={{ display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{t}</span></p>;
+            })}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 /** 'Government & Criminal Justice' -> 'government-and-criminal-justice': the file name of the option's icon in /icons/filters. */
 const iconSlug = (label: string) => label.toLowerCase().replace(/&/g, 'and').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
@@ -79,9 +121,16 @@ export function PromptLibrary() {
   const [topics, setTopics] = useState<string[]>([]);
   const [modalPrompt, setModalPrompt] = useState<Prompt | null>(null);
   const [page, setPage] = useState(0);
+  const [reel, setReel] = useState<{ target: Prompt; others: string[] } | null>(null);
   const toggle = (arr: string[], setArr: (a: string[]) => void, v: string) => { setArr(arr.includes(v) ? arr.filter((x) => x !== v) : [...arr, v]); setPage(0); };
   const filtered = PROMPTS.filter((p) => p.task === task && (cats.length === 0 || cats.includes(p.category)) && (topics.length === 0 || topics.includes(p.topic)));
 
+  const randomize = () => {
+    if (reel) return;
+    const target = filtered[Math.floor(Math.random() * filtered.length)];
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches || PROMPTS.length < 3) { setModalPrompt(target); return; }
+    setReel({ target, others: shuffle(PROMPTS.filter((p) => p.task === target.task && p.id !== target.id)).slice(0, 9).map((p) => p.text) });
+  };
   const pager = (className: string) => <Pagination className={className} previousLabel="Trang trước" nextLabel="Trang sau" aria-label="Chọn trang" page={page + 1} totalPages={Math.ceil(filtered.length / PAGE)} onChange={(n) => { setPage(n - 1); window.scrollTo({ top: 0 }); document.querySelector('main')?.scrollTo({ top: 0 }); }} />;
 
   return (
@@ -127,7 +176,7 @@ export function PromptLibrary() {
             {filtered.length > 0 && (
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, margin: '0 0 4px' }}>
                 <p style={{ fontFamily: 'var(--font-sans)', fontSize: 13, color: '#737373', margin: 0 }}>{filtered.length} đề</p>
-                <Button variant="secondary" size="small" leadingIcon={RiShuffleLine} onClick={() => setModalPrompt(filtered[Math.floor(Math.random() * filtered.length)])}>Đề ngẫu nhiên</Button>
+                <Button variant="secondary" size="small" leadingIcon={RiShuffleLine} onClick={randomize} disabled={!!reel}>Đề ngẫu nhiên</Button>
               </div>
             )}
             {filtered.length > PAGE && pager('mb-1')}
@@ -142,6 +191,7 @@ export function PromptLibrary() {
           </div>
         </div>
       </div>
+      {reel && <RandomReel target={reel.target} others={reel.others} onDone={() => { setModalPrompt(reel.target); setReel(null); }} />}
       {modalPrompt && <ModePickerModal prompt={modalPrompt} onClose={() => setModalPrompt(null)} onStart={async (mode) => router.push(mode === 'guided' ? '/writing/' + modalPrompt.id + '/guided' : await startFreeAttempt(modalPrompt))} onResume={(id) => router.push('/write/' + id + '/chains')} />}
     </div>
   );
