@@ -4,10 +4,15 @@ import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import { PageHeader } from '@/components/shell/BrandHeader';
 import './admin.css';
-import { Donut } from '@/components/charts/Donut';
-import { Gauge } from '@/components/charts/Gauge';
+import { Area } from '@/components/charts/area';
+import { AreaChart } from '@/components/charts/area-chart';
 import { ChartCard } from '@/components/charts/ChartCard';
-import { SmoothArea } from '@/components/charts/SmoothArea';
+import { Grid } from '@/components/charts/grid';
+import { HBars } from '@/components/charts/HBars';
+import { Ring } from '@/components/charts/ring';
+import { RingChart } from '@/components/charts/ring-chart';
+import { ChartTooltip } from '@/components/charts/tooltip';
+import { XAxis } from '@/components/charts/x-axis';
 
 const KIND_NAME: Record<string, string> = { essay: 'Chấm bài viết', chain: 'Kiểm tra mạch', hint: 'Gợi ý', translate: 'Dịch', vocab: 'Từ vựng' };
 const ERROR_NAME: Record<string, string> = { upstream: 'Nhà cung cấp AI báo lỗi', timeout: 'AI trả lời quá lâu', bad_output: 'AI trả về kết quả lỗi', refused: 'AI từ chối nội dung', not_configured: 'AI chưa được bật' };
@@ -163,7 +168,12 @@ export function AdminPage() {
                 <span style={{ fontSize: 13, color: '#737373' }}>Cao nhất <span className="adm-num">{peak}</span> lượt · hôm nay tính đến <span className="adm-num">{hhmm(ov.generatedAt)}</span></span>
               </div>
               <div style={{ marginTop: 12 }}>
-                <SmoothArea height={240} unit=" lượt" data={ov.series.map((s) => ({ label: s.day.slice(5).replace('-', '/'), value: s.total, note: s.day.slice(5).replace('-', '/') }))} />
+                <AreaChart data={ov.series.map((x) => ({ date: new Date(x.day + 'T00:00:00'), 'Lượt dùng AI': x.total }))} xDataKey="date" aspectRatio="3.2 / 1" margin={{ top: 16, right: 16, bottom: 28, left: 16 }}>
+                  <Grid horizontal />
+                  <Area dataKey="Lượt dùng AI" fill="var(--chart-1)" stroke="var(--chart-1)" />
+                  <XAxis />
+                  <ChartTooltip />
+                </AreaChart>
               </div>
             </div>
 
@@ -199,11 +209,19 @@ export function AdminPage() {
 
           <div style={{ flex: '1 1 340px', minWidth: 0, display: 'flex', flexDirection: 'column', gap: 16 }}>
             <ChartCard eyebrow="Nội dung" title="Bài mẫu đã có">
-              <Gauge value={ov.content.samplesHave} max={Math.max(1, ov.content.promptsTotal)} label={ov.content.samplesHave + ' / ' + ov.content.promptsTotal} sub={missing > 0 ? 'còn thiếu ' + missing + ' bài mẫu' : 'đã đủ bài mẫu'} color="#2D881A" />
+              <div className="relative mx-auto w-full max-w-[260px]">
+                <RingChart size={260} strokeWidth={18} baseInnerRadius={70} data={[{ label: 'Bài mẫu', value: ov.content.samplesHave, maxValue: Math.max(1, ov.content.promptsTotal), color: 'var(--chart-3)' }]}>
+                  <Ring index={0} showGlow={false} />
+                </RingChart>
+                <div className="pointer-events-none absolute inset-0 grid place-content-center text-center">
+                  <div className="text-[30px] font-semibold leading-none tracking-[-0.02em] text-ink tabular-nums">{ov.content.samplesHave} / {ov.content.promptsTotal}</div>
+                  <div className="mt-1 text-xs text-ink-soft">{missing > 0 ? 'còn thiếu ' + missing + ' bài mẫu' : 'đã đủ bài mẫu'}</div>
+                </div>
+              </div>
             </ChartCard>
             {ov.features.some((f) => f.uses > 0) && (
               <ChartCard eyebrow="Hôm nay" title="Lượt dùng theo tính năng">
-                <Donut size={170} centre={num(ov.today.uses)} sub="lượt" data={ov.features.filter((f) => f.uses > 0).map((f) => ({ name: KIND_NAME[f.kind] || f.kind, value: f.uses }))} />
+                <HBars items={ov.features.filter((f) => f.uses > 0).map((f) => ({ label: KIND_NAME[f.kind] || f.kind, value: f.uses, text: num(f.uses) }))} />
               </ChartCard>
             )}
 

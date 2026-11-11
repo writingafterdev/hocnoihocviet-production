@@ -7,6 +7,7 @@ import { Logo } from '@/components/brand/Logo';
 import { NavIcon } from '@/components/brand/NavIcon';
 import { HookSidebar } from '@/components/ui/hook-sidebar';
 import { cn } from '@/lib/utils';
+import { OnboardingDialog } from './OnboardingDialog';
 import { UserMenu } from './UserMenu';
 
 /** One group of the sidebar: a small heading and its pages. `match` tells which pages count as being inside an item. */
@@ -120,6 +121,7 @@ export function AppSidebar({ children }: { children: React.ReactNode }) {
         </aside>
         <main className="relative min-h-0 min-w-0 flex-1 overflow-y-auto">{children}</main>
       </div>
+      <OnboardingDialog />
     </div>
   );
 }
