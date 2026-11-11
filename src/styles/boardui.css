@@ -1,0 +1,105 @@
+/* BoardUI: its tokens, plus the two pieces of its stylesheet the installed components use (checkbox tick, skeleton sheen). */
+@import "./theme.css";
+
+/* Re-tint BoardUI's accent (checkbox, tabs, selection...) to the brand blue. */
+:root {
+  --color-accent-50: #EEF3FC;
+  --color-accent-100: #E1EAF9;
+  --color-accent-200: #C7D8F3;
+  --color-accent-300: #9DBBE8;
+  --color-accent-400: #77A1DD;
+  --color-accent-500: #4A7BD0;
+  --color-accent-600: #2F62C4;
+  --color-accent-700: #2453AE;
+  --color-accent-800: #1F4488;
+  --color-accent-900: #1B3869;
+  --color-accent-950: #11213F;
+}
+
+/* Checkbox tick: draws the stroke on like it's being ticked by hand.
+ * The path sets pathLength=1 so the dash math is resolution-independent. */
+@keyframes check-draw {
+  from {
+    stroke-dashoffset: 1;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+.animate-check-draw {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: check-draw 200ms cubic-bezier(0.65, 0, 0.35, 1) forwards;
+}
+@media (prefers-reduced-motion: reduce) {
+  .animate-check-draw {
+    animation: none;
+    stroke-dashoffset: 0;
+  }
+}
+
+/* Skeleton (components/base/skeleton): a sheen sweeping each placeholder,
+ * drawn in layers like the loaders. A crisp 2px line leads, a tight glow
+ * trails it and a wide bloom trails that, all anchored to the sheen's
+ * leading edge so nothing soft runs ahead of the line. The sweep takes
+ * 60% of the cycle and rests off the block for the rest. RTL mirrors it.
+ * Position comes from the component's classes (relative or absolute): an
+ * unlayered position here would beat Tailwind's layered utilities. */
+.bui-skeleton {
+  --bui-skeleton-line: rgb(255 255 255 / 0.9);
+  --bui-skeleton-glow: rgb(255 255 255 / 0.55);
+  --bui-skeleton-bloom: rgb(255 255 255 / 0.35);
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.dark .bui-skeleton {
+  --bui-skeleton-line: rgb(255 255 255 / 0.2);
+  --bui-skeleton-glow: rgb(255 255 255 / 0.08);
+  --bui-skeleton-bloom: rgb(255 255 255 / 0.04);
+}
+
+.bui-skeleton::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(90deg, transparent, var(--bui-skeleton-line)) right / 2px 100% no-repeat,
+    linear-gradient(90deg, transparent, var(--bui-skeleton-glow)) right / 72px 100% no-repeat,
+    linear-gradient(90deg, transparent, var(--bui-skeleton-bloom)) right / 240px 100% no-repeat;
+  translate: -100% 0;
+  animation: bui-skeleton-sheen 2.2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+.bui-skeleton:dir(rtl)::after {
+  scale: -1 1;
+  animation-direction: reverse;
+}
+
+@keyframes bui-skeleton-sheen {
+  0% {
+    translate: -100% 0;
+  }
+
+  60%,
+  100% {
+    translate: 100% 0;
+  }
+}
+
+@keyframes bui-skeleton-pulse {
+  50% {
+    opacity: 0.55;
+  }
+}
+
+/* No sweep under reduced motion; the block breathes instead. */
+@media (prefers-reduced-motion: reduce) {
+  .bui-skeleton::after {
+    display: none;
+  }
+
+  .bui-skeleton {
+    animation: bui-skeleton-pulse 2s ease-in-out infinite;
+  }
+}

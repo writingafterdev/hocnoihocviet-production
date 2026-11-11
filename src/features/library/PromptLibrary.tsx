@@ -3,7 +3,8 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
-import { Check, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Checkbox } from '@/components/base/checkbox/checkbox';
+import { Pagination } from '@/components/base/pagination/pagination';
 import { PageHeader } from '@/components/shell/BrandHeader';
 import { ModePickerModal } from './ModePickerModal';
 import { CATEGORIES_TASK1, CATEGORIES_TASK2, PROMPTS, TOPIC_ILLUSTRATION, TOPICS_TASK2, type Prompt, type Task } from '@/content/prompts';
@@ -12,35 +13,6 @@ import { startFreeAttempt } from '../attempts/start';
 const EASE = 'cubic-bezier(.16,1,.3,1)';
 const PAGE = 20;
 
-/** Page numbers with the first, the last and the neighbours of the current page; "…" fills the gaps. */
-function pageList(page: number, pages: number): (number | '…')[] {
-  if (pages <= 7) return Array.from({ length: pages }, (_, i) => i);
-  if (page < 4) return [0, 1, 2, 3, 4, 5, '…', pages - 1];
-  if (page > pages - 5) return [0, '…', ...Array.from({ length: 6 }, (_, i) => pages - 6 + i)];
-  return [0, '…', page - 1, page, page + 1, '…', pages - 1];
-}
-
-function Pager({ page, pages, onPage }: { page: number; pages: number; onPage: (n: number) => void }) {
-  const edge = (label: string, to: number, ok: boolean, left: boolean) => (
-    <button type="button" disabled={!ok} onClick={() => onPage(to)} style={{ display: 'inline-flex', alignItems: 'center', gap: 12, background: 'none', border: 'none', padding: '8px 4px', cursor: ok ? 'pointer' : 'default', fontFamily: 'var(--font-sans)', fontSize: 16, fontWeight: 700, color: ok ? '#8A8A85' : '#D4D4D0' }}>
-      {left && <ChevronLeft size={18} strokeWidth={2} />}{label}{!left && <ChevronRight size={18} strokeWidth={2} />}
-    </button>
-  );
-  return (
-    <nav aria-label="Chọn trang" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', marginTop: 20, padding: '0 8px' }}>
-      {edge('Trang trước', page - 1, page > 0, true)}
-      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, flexWrap: 'wrap', justifyContent: 'center' }}>
-        {pageList(page, pages).map((n, k) => n === '…'
-          ? <span key={'e' + k} aria-hidden="true" style={{ padding: '0 4px', fontFamily: 'var(--font-sans)', fontSize: 16, color: '#171717' }}>…</span>
-          : <button key={n} type="button" aria-current={n === page ? 'page' : undefined} aria-label={'Trang ' + (n + 1)} onClick={() => onPage(n)} style={{ minWidth: 40, height: 40, background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'var(--font-sans)', fontSize: 17, fontWeight: 700, color: n === page ? '#1AA83A' : '#8A8A85' }}>{n + 1}</button>)}
-      </span>
-      {edge('Trang sau', page + 1, page < pages - 1, false)}
-    </nav>
-  );
-}
-
-
-/** "① Nguyên nhân · ② Giải pháp" */
 /** 'Government & Criminal Justice' -> 'government-and-criminal-justice': the file name of the option's icon in /icons/filters. */
 const iconSlug = (label: string) => label.toLowerCase().replace(/&/g, 'and').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 
@@ -52,15 +24,13 @@ function Filter({ title, options, selected, onToggle }: { title: string; options
         {options.map((opt) => {
           const on = selected.includes(opt);
           return (
-            <label key={opt} style={{ display: 'flex', alignItems: 'flex-start', gap: 14, cursor: 'pointer' }}>
-              <input type="checkbox" checked={on} onChange={() => onToggle(opt)} style={{ position: 'absolute', opacity: 0, width: 1, height: 1 }} />
-              <span aria-hidden="true" style={{ width: 20, height: 20, borderRadius: 6, border: '1.5px solid rgba(44,51,56,0.2)', background: on ? '#2c3338' : '#fff', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff' }}>
-                {on && <Check size={12} strokeWidth={3} />}
+            <Checkbox key={opt} isSelected={on} onChange={() => onToggle(opt)} className="items-center">
+              <span className="flex items-center gap-3">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={'/icons/filters/' + iconSlug(opt) + '.png'} alt="" width={24} height={24} draggable={false} onError={(e) => { e.currentTarget.style.display = 'none'; }} style={{ flexShrink: 0 }} />
+                <span style={{ fontFamily: 'var(--font-sans)', fontSize: 15, fontWeight: 500, color: 'rgba(44,51,56,0.8)', lineHeight: 1.3 }}>{opt}</span>
               </span>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={'/icons/filters/' + iconSlug(opt) + '.png'} alt="" width={24} height={24} draggable={false} onError={(e) => { e.currentTarget.style.display = 'none'; }} style={{ flexShrink: 0, marginTop: -2 }} />
-              <span style={{ fontFamily: 'var(--font-sans)', fontSize: 15, fontWeight: 500, color: 'rgba(44,51,56,0.8)', lineHeight: 1.3 }}>{opt}</span>
-            </label>
+            </Checkbox>
           );
         })}
       </div>
@@ -152,7 +122,7 @@ export function PromptLibrary() {
           <div style={{ flex: 1, minWidth: 0, width: '100%', display: 'flex', flexDirection: 'column', gap: 12 }}>
             {filtered.length > 0 && <p style={{ fontFamily: 'var(--font-sans)', fontSize: 13, color: '#737373', margin: '0 0 4px' }}>{filtered.length} đề</p>}
             {filtered.slice(page * PAGE, (page + 1) * PAGE).map((p) => <PromptCard key={p.id} prompt={p} onWrite={() => setModalPrompt(p)} />)}
-            {filtered.length > PAGE && <Pager page={page} pages={Math.ceil(filtered.length / PAGE)} onPage={(n) => { setPage(n); window.scrollTo({ top: 0 }); document.querySelector('main')?.scrollTo({ top: 0 }); }} />}
+            {filtered.length > PAGE && <Pagination className="mt-5" previousLabel="Trang trước" nextLabel="Trang sau" aria-label="Chọn trang" page={page + 1} totalPages={Math.ceil(filtered.length / PAGE)} onChange={(n) => { setPage(n - 1); window.scrollTo({ top: 0 }); document.querySelector('main')?.scrollTo({ top: 0 }); }} />}
             {filtered.length === 0 && (
               <div style={{ borderRadius: 10, border: '1px dashed #E5E5E5', padding: '48px 24px', textAlign: 'center' }}>
                 <p style={{ fontFamily: 'var(--font-sans)', fontSize: 15, fontWeight: 600, color: '#171717', margin: '0 0 6px' }}>{task === 'task1' ? 'Đề Task 1 đang được soạn' : 'Không có đề nào khớp bộ lọc'}</p>

@@ -4,6 +4,8 @@ import { ArrowLeft, Check, Trash2, Volume2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState, type ReactNode } from 'react';
 import { PageHeader } from '@/components/shell/BrandHeader';
+import { Checkbox } from '@/components/base/checkbox/checkbox';
+import { SegmentedControl, SegmentedControlItem } from '@/components/base/segmented-control/segmented-control';
 import { GW_VOCAB_PALETTE, type GuidedSample } from '../guided/data';
 import { GuidedWriting } from '../guided/GuidedWriting';
 import { AI_ERROR_TEXT, AiRequestError, postAi } from '../ai/request';
@@ -194,11 +196,7 @@ function SavedList({ skill, items, loaded, onTopic, onDelete, onEnrich }: { skil
 }
 
 function CheckBox({ on, label, onClick }: { on: boolean; label: string; onClick: () => void }) {
-  return (
-    <button type="button" className="cl-btn vb-check" role="checkbox" aria-checked={on} aria-label={label} onClick={onClick} style={{ width: 20, height: 20, borderRadius: 6, border: '1.5px solid ' + (on ? '#2F62C4' : VB.strong), background: on ? '#2F62C4' : '#fff', color: '#fff', display: 'grid', placeItems: 'center' }}>
-      {on && <Check size={13} strokeWidth={3} />}
-    </button>
-  );
+  return <Checkbox isSelected={on} onChange={onClick} aria-label={label} />;
 }
 
 /** One phrase in the list: the phrase, its meaning, its word type and whether it has been practised. Click to see it in full. */
@@ -403,14 +401,11 @@ export function VocabBuilder({ onBack }: { onBack: () => void }) {
   const done = rows.filter((r) => count[r.it.en]).length;
   const allPicked = picked.length === rows.length && rows.length > 0;
   const focused = rows.find((r) => r.it.en === focus[key])?.it || rows[0]?.it || null;
-  const pill = (id: string, name: string, n: number) => {
-    const on = topicId === id;
-    return (
-      <button key={id} type="button" className="cl-btn vb-pill" onClick={() => setTopicId(id)} aria-pressed={on} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, minHeight: 34, borderRadius: 999, padding: '0 14px', border: 'none', boxShadow: on ? 'none' : '0 0 0 1px rgba(0,0,0,0.1)', background: on ? '#EEF3FC' : '#fff', color: on ? '#2F62C4' : VB.ink2, fontFamily: VB.sans, fontSize: 12.5, fontWeight: 600, transition: 'background-color .25s, color .25s, border-color .25s' }}>
-        {name}<span style={{ fontSize: 11, fontWeight: 500, color: on ? 'rgba(47,98,196,.7)' : VB.ink4 }}>{n}</span>
-      </button>
-    );
-  };
+  const pill = (id: string, name: string, n: number) => (
+    <SegmentedControlItem key={id} id={id}>
+      {name}<span style={{ marginLeft: 8, fontSize: 11, fontWeight: 500, opacity: 0.6 }}>{n}</span>
+    </SegmentedControlItem>
+  );
   const n = picked.length;
   const label = n > MAX_TICK ? 'Tối đa ' + MAX_TICK + ' cụm; sẽ dùng ' + MAX_TICK + ' cụm đầu' : n > 6 ? 'Đã chọn ' + n + ' cụm · chia thành vài đoạn' : n ? 'Đã chọn ' + n + ' cụm' : 'Chưa chọn cụm nào. Ôn ngay 4 cụm bạn ít luyện nhất.';
 
@@ -426,10 +421,10 @@ export function VocabBuilder({ onBack }: { onBack: () => void }) {
           <h1 style={{ margin: '6px 0 0', fontFamily: 'var(--font-sans)', fontSize: 32, fontWeight: 600, letterSpacing: '-0.02em', lineHeight: 1.15, textWrap: 'balance' }}>{isSaved ? 'Từ đã lưu' : topic.name}<span style={{ color: VB.ink3 }}> · {isSaved ? skill.title : topic.vi}</span></h1>
           </div>
         </div>
-        <div role="group" aria-label="Chủ đề" style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+        <SegmentedControl aria-label="Chủ đề" selectedKeys={[topicId]} onSelectionChange={(keys) => { const k = [...keys][0]; if (k !== undefined) setTopicId(String(k)); }}>
           {pill('saved', 'Đã lưu', savedCount(skill))}
           {skill.topics.map((x) => pill(x.id, x.name, x.items.length))}
-        </div>
+        </SegmentedControl>
       </div>
 
       {isSaved ? <SavedList skill={skill} items={mine.filter((m) => m.skill === skill.id)} loaded={mineLoaded} onTopic={changeTopic} onDelete={deleteMine} onEnrich={enrichMine} /> : (
