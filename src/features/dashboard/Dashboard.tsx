@@ -24,12 +24,12 @@ const Cta = ({ children, className }: { children: React.ReactNode; className?: s
 /** Task 2: the lead card. Words and the button sit together, centred beside the drawing, on one tint. */
 function Task2Card() {
   return (
-    <Link href="/writing" className={cn('group relative flex min-h-[360px] flex-col overflow-hidden rounded-xl bg-tomato-soft shadow-ring t-card-hover hover:shadow-ring-hover md:flex-row', focusRing)}>
+    <Link href="/writing" className={cn('group relative flex h-full min-h-[400px] flex-col overflow-hidden rounded-xl bg-tomato-soft shadow-ring t-card-hover hover:shadow-ring-hover md:flex-row', focusRing)}>
       <div className="relative z-10 flex flex-col justify-center gap-3 p-10 md:w-[46%]">
         <Badge variant="blue" className="w-fit bg-white">Beta</Badge>
         <span className="mt-1 text-xs font-medium text-ink-soft">Writing · IELTS</span>
-        <h2 className="m-0 text-[48px] font-semibold leading-none tracking-[-0.03em] text-ink">Task 2</h2>
-        <p className="m-0 max-w-[38ch] text-[15px] leading-[1.6] text-ink/75">Từ một câu khởi động đến cả bài viết: dựng mạch cho từng thân bài, viết, rồi nhận điểm theo bốn tiêu chí của giám khảo.</p>
+        <h2 className="m-0 whitespace-nowrap text-[clamp(40px,3.4vw,60px)] font-semibold leading-none tracking-[-0.03em] text-ink">Task 2</h2>
+        <p className="m-0 max-w-[38ch] text-base leading-[1.6] text-ink/75">Từ một câu khởi động đến cả bài viết: dựng mạch cho từng thân bài, viết, rồi nhận điểm theo bốn tiêu chí của giám khảo.</p>
         <Cta className="mt-3">Bắt đầu</Cta>
       </div>
       <div className="relative min-h-64 flex-1">
@@ -42,9 +42,9 @@ function Task2Card() {
 /** Vocabulary: the same tint-all-over treatment (leaf), stacked because the card is narrower. */
 function VocabCard() {
   return (
-    <Link href="/vocab" className={cn('group flex min-h-[360px] flex-col overflow-hidden rounded-xl bg-leaf-soft shadow-ring t-card-hover hover:shadow-ring-hover', focusRing)}>
+    <Link href="/vocab" className={cn('group flex h-full min-h-[400px] flex-col overflow-hidden rounded-xl bg-leaf-soft shadow-ring t-card-hover hover:shadow-ring-hover', focusRing)}>
       <div className="relative grid flex-1 place-items-center px-6 pt-6">
-        <Illustration name="person-studying-different-sciences" className="h-44 w-auto transition-transform duration-[var(--duration-slow)] ease-[var(--ease-smooth-out)] group-hover:scale-[1.03]" />
+        <Illustration name="person-studying-different-sciences" className="h-[min(15rem,34vh)] w-auto transition-transform duration-[var(--duration-slow)] ease-[var(--ease-smooth-out)] group-hover:scale-[1.03]" />
         <Badge variant="blue" className="absolute left-4 top-4 bg-white">Beta</Badge>
       </div>
       <div className="flex flex-col gap-2 p-6 pt-4">
@@ -60,9 +60,9 @@ function VocabCard() {
 /** Something not open yet: a slim card in colour (not greyed out), with the drawing on the left and a small status chip. */
 function SoonCard({ p }: { p: (typeof SOON)[number] }) {
   return (
-    <div aria-disabled="true" className={cn('flex min-h-[168px] overflow-hidden rounded-xl shadow-ring', p.tint)}>
+    <div aria-disabled="true" className={cn('flex h-full min-h-[190px] overflow-hidden rounded-xl shadow-ring', p.tint)}>
       <div className="grid w-44 shrink-0 place-items-center">
-        <Illustration name={p.illustration} className="h-28 w-auto" />
+        <Illustration name={p.illustration} className="h-36 w-auto" />
       </div>
       <div className="flex flex-1 flex-col justify-center gap-1.5 py-5 pr-6">
         <span className="text-xs font-medium text-ink-soft">{p.tag}</span>
@@ -79,14 +79,14 @@ export function Dashboard() {
   return (
     <div className="relative flex min-h-full flex-col bg-white text-ink">
       {/* The grid alone is centred, so the space above and below it is equal; the credit sits inside the bottom margin. */}
-      <div className="mx-auto flex w-full max-w-[1200px] flex-1 flex-col justify-center px-6 py-14">
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-6">
+      <div className="mx-auto flex w-full max-w-[1560px] flex-1 flex-col px-8 pb-6 pt-8">
+        <div className="grid flex-1 grid-cols-1 gap-4 md:grid-cols-6 md:grid-rows-[minmax(400px,1fr)_auto]">
           <div className="grid md:col-span-4"><Task2Card /></div>
           <div className="grid md:col-span-2"><VocabCard /></div>
           {SOON.map((p) => <div key={p.id} className="grid md:col-span-3"><SoonCard p={p} /></div>)}
         </div>
       </div>
-      <footer className="absolute inset-x-0 bottom-4"><AppCredits /></footer>
+      <footer className="shrink-0 pb-4"><AppCredits /></footer>
     </div>
   );
 }
