@@ -10,6 +10,8 @@ export interface Segment {
   en: string;
   vi: string;
   tool?: string;
+  /** What this sentence says in this essay (stakeholder, idea), shown beside the move label. */
+  ctx?: string;
   /** Phrase inside `en` highlighted once revealed (essay mode). */
   mark?: string;
   vocab?: string[];

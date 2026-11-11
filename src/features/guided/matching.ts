@@ -1,5 +1,7 @@
 /** Word matching for Chép mẫu: how much of the target sentence the student has typed correctly. */
 
+import RANK_LIST from './word-rank.json';
+
 export const norm = (w: string) => w.toLowerCase().replace(/[’']/g, "'").replace(/[^a-z0-9'/-]/g, '');
 export const words = (t: string) => t.split(/\s+/).filter(Boolean);
 
@@ -32,3 +34,22 @@ export function wordStates(target: string, typed: string): WordState[] {
   }
   return st;
 }
+
+
+/**
+ * How many letters to show for a word that is still hidden: one for everyday words, two for less common ones, three for rare ones,
+ * so a rare word does not stop the student mid-sentence. Rank comes from a spoken-English frequency list (the 12,000 most common words);
+ * anything outside it that is long enough counts as rare.
+ */
+const RANK = new Map<string, number>((RANK_LIST as string[]).map((w, i) => [w, i]));
+export function hintLetters(word: string): number {
+  const w = norm(word).replace(/[^a-z]/g, '');
+  if (w.length < 5) return 1;
+  const r = RANK.get(w);
+  if (r !== undefined && r < 5000) return 1;
+  if (r !== undefined) return 2;
+  return w.length >= 6 ? 3 : 2;
+}
+
+/** The hint for a hidden word, with more letters for rarer words. */
+export const hint = (w: string) => partial(w, hintLetters(w));

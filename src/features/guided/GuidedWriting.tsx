@@ -4,18 +4,22 @@ import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
 import { CL } from '../chainlab/constants';
 import { backLinkStyle, ClIcon, ClLabel } from '../chainlab/ui/primitives';
 import { GW_SAMPLES, GW_VOCAB_STYLE, moveChip, type GuidedSample, type Segment } from './data';
-import { mask, norm, partial, wordStates, words as splitWords } from './matching';
+import { hint, hintLetters, mask, norm, partial, wordStates, words as splitWords } from './matching';
 
 const vStyle = (seg: Segment, k: number) => (seg.vocabStyle && seg.vocabStyle[k]) || GW_VOCAB_STYLE;
 
-function ToolChip({ tool, small }: { tool: string; small?: boolean }) {
+function ToolChip({ tool, ctx, small }: { tool: string; ctx?: string; small?: boolean }) {
   const m = moveChip(tool);
-  return <span style={{ display: 'inline-block', borderRadius: 6, padding: small ? '2px 7px' : '4px 9px', background: m.bg, color: m.fg, fontFamily: CL.sans, fontSize: small ? 11 : 12, fontWeight: 500, whiteSpace: 'nowrap', verticalAlign: 'middle' }}>{m.label}</span>;
+  return (
+    <span style={{ display: 'inline-block', maxWidth: '100%', borderRadius: 6, padding: small ? '2px 7px' : '4px 9px', background: m.bg, color: m.fg, fontFamily: CL.sans, fontSize: small ? 11 : 12, fontWeight: 500, lineHeight: 1.35, whiteSpace: ctx ? 'normal' : 'nowrap', verticalAlign: 'middle' }}>
+      <b style={{ fontWeight: 600 }}>{m.label}</b>{ctx ? <span style={{ opacity: 0.85 }}>{' · '}{ctx}</span> : null}
+    </span>
+  );
 }
 
 /** A sentence's chip(s): the tool it uses (essays) or the vocab items it practises (vocab mode). `hidden` shows the Vietnamese instead of the answer. */
 function SegChips({ seg, small, hidden }: { seg: Segment; small?: boolean; hidden?: boolean }) {
-  if (!seg.vocab) return <ToolChip tool={seg.tool} small={small} />;
+  if (!seg.vocab) return <ToolChip tool={seg.tool} ctx={seg.ctx} small={small} />;
   const list = hidden ? seg.vocab.map((v, k) => (seg.vocabVi && seg.vocabVi[k]) || mask(v)) : seg.vocab;
   return (
     <span style={{ display: 'inline-flex', flexWrap: 'wrap', gap: 4, verticalAlign: 'middle' }}>
@@ -174,7 +178,7 @@ export function GuidedWriting({ sample = GW_SAMPLES.charity, onBack, backLabel =
 
               <section className={shake ? 't-shake' : undefined} style={{ ...card, padding: '22px 24px' }}>
                 <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, marginBottom: 12 }}>
-                  <ClLabel>Câu mẫu · chữ cái đầu</ClLabel>
+                  <ClLabel>Câu mẫu · chữ cái đầu, từ khó gợi ý thêm</ClLabel>
                   <span style={{ marginLeft: 'auto', fontFamily: CL.sans, fontSize: 11.5, fontWeight: 600, color: all ? CL.greenText : CL.ink5 }}>{nOk}/{words.length} từ đúng</span>
                 </div>
                 <div style={{ height: 4, borderRadius: 999, background: CL.ink1, overflow: 'hidden', marginBottom: 14 }}><div style={{ width: (words.length ? nOk / words.length * 100 : 0) + '%', height: '100%', background: CL.mint, transition: 'width .2s' }} /></div>
@@ -183,7 +187,7 @@ export function GuidedWriting({ sample = GW_SAMPLES.charity, onBack, backLabel =
                     const st = states[i] || { s: null, n: 0 };
                     const peeked = showAll || peek.includes(i);
                     const role = roles[i];
-                    const text = st.s === 'ok' || peeked ? w : st.s === 'part' ? partial(w, st.n) : role ? (role.first ? w : partial(w, 2)) : mask(w);
+                    const text = st.s === 'ok' || peeked ? w : st.s === 'part' ? partial(w, st.n) : role ? (role.first ? w : partial(w, Math.max(2, hintLetters(w)))) : hint(w);
                     const look = st.s === 'ok' ? { bd: CL.mint, bg: CL.mintSoft, fg: CL.greenText }
                       : st.s === 'bad' ? { bd: '#F0C7BE', bg: CL.redSoft, fg: CL.redText }
                       : st.s === 'part' ? { bd: CL.ink4, bg: '#fff', fg: CL.ink8 }
