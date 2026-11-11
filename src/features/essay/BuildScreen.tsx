@@ -33,8 +33,8 @@ const arrow = (
 );
 
 const box = (dashed: boolean, filled: boolean): React.CSSProperties => ({
-  minWidth: 0, display: 'flex', flexDirection: 'column', gap: 6, padding: '12px 14px', borderRadius: 12,
-  ...(dashed ? { border: '1.5px dashed ' + (filled ? CL.ink5 : CL.ink3), background: '#fff' } : { border: '1px solid ' + CL.ink1, background: CL.panel }),
+  minWidth: 0, display: 'flex', flexDirection: 'column', gap: 6, padding: '12px 14px', borderRadius: 10,
+  ...(dashed ? { border: '1px solid ' + (filled ? 'var(--color-border-button-hover)' : 'var(--color-border-button-default)'), background: '#fff', boxShadow: 'var(--shadow-xs)' } : { border: '1px solid ' + CL.ink1, background: CL.panel }),
 });
 
 const fieldStyle: React.CSSProperties = { display: 'block', width: '100%', resize: 'none', border: 'none', outline: 'none', background: 'transparent', padding: 0, fontFamily: CL.serif, fontSize: 15, lineHeight: 1.55, color: CL.ink8 };
@@ -62,7 +62,7 @@ function BodyCard({ prompt, chain, num, canDelete, onChange, onDelete, check, on
     const isMine = which === mine;
     const value = which === 'start' ? start : end;
     return (
-      <div style={box(isMine, !!value.trim())}>
+      <div className={isMine ? 'cl-field' : undefined} style={box(isMine, !!value.trim())}>
         <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <ClLabel color={isMine ? CL.ink : CL.ink5}>{which === 'start' ? 'Điểm đầu' : 'Điểm cuối'}{isMine ? ' · bạn viết' : ''}</ClLabel>
           {!isMine && <span style={{ borderRadius: 5, padding: '2px 6px', background: '#E4F5FA', color: '#17667A', fontFamily: CL.sans, fontSize: 12, fontWeight: 500 }}>Gợi ý từ đề</span>}
@@ -171,7 +171,7 @@ export function BuildScreen({ prompt, chains, setChains, checks, setCheck, toolb
           ))}
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
             {prompt.questions.map((q) => (
-              <button key={q.n} type="button" className="cl-btn cl-add" onClick={() => add(q.n)} style={{ ...miniBtn, borderStyle: 'dashed', padding: '7px 12px' }}>
+              <button key={q.n} type="button" className="cl-btn cl-add" onClick={() => add(q.n)} style={{ ...miniBtn, height: 36, borderRadius: 10, border: '1px solid var(--color-border-button-default)', boxShadow: 'var(--shadow-xs)', padding: '0 12px', fontSize: 14, fontWeight: 500 }}>
                 <ClIcon name="plus" size={11} />Thêm thân bài{multi ? ' · ' + CL_CIRC[q.n - 1] + ' ' + KIND_ASK[kindOf(prompt, { q: q.n } as Chain)].chip.toLowerCase() : ''}
               </button>
             ))}

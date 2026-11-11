@@ -127,7 +127,7 @@ a:hover { color: #404040; }
 .cl-link:hover { color: #171717 !important; }
 .cl-lens:hover { border-color: #171717 !important; }
 .cl-word:hover { border-color: #171717 !important; background: #EEF3FC !important; }
-.cl-add:hover { border-color: #171717 !important; background: #FAFAFA !important; color: #171717 !important; }
+.cl-add:hover { border-color: var(--color-border-button-hover) !important; background: #F7F7F7 !important; color: #171717 !important; }
 /* Primary buttons: BoardUI's gradient (lighter on hover, darker on press), in the brand blue. */
 .cl-primary { @apply bg-button-primary button-press-motion; color: #fff; box-shadow: var(--shadow-xs); }
 .cl-primary:disabled { opacity: 1 !important; box-shadow: none; color: var(--color-button-primary-disabled-foreground); }
@@ -262,3 +262,7 @@ a:hover { color: #404040; }
 }
 .pro-ring-in { display: inline-flex; padding: 2px; border-radius: calc(var(--pro-r) - 2px); background: #fff; }
 @media (prefers-reduced-motion: reduce) { .pro-ring, .pro-ring::before { animation: none; } }
+
+/* Text fields: solid border, soft blue ring on focus (BoardUI input feel). */
+.cl-field { transition: border-color .15s ease, box-shadow .15s ease; }
+.cl-field:focus-within { border-color: var(--color-accent-500) !important; box-shadow: 0 0 0 3px rgba(47, 98, 196, .16) !important; }
