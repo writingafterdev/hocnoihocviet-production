@@ -15,6 +15,7 @@ import { topicsFor } from '@/lib/vocab-topics';
 import { groupPhrases, VB_SKILLS, type VocabItem, type VocabSkill, type VocabTopic } from './data';
 import { Chip } from '@/components/base/badges/chip';
 import { SkeletonText } from '@/components/base/skeleton/skeleton';
+import { ProBeam } from '@/components/ui/pro-beam';
 
 const VB = {
   head: 'var(--ink-50)', border: 'var(--ink-200)', line: 'var(--ink-100)', strong: 'var(--ink-300)',
@@ -278,6 +279,7 @@ export function VocabBuilder({ onBack }: { onBack: () => void }) {
   const [round, setRound] = useState(0);
   const [making, setMaking] = useState(false);
   const [note, setNote] = useState<string | null>(null);
+  useEffect(() => { if (note) toast.error(note); }, [note]);
   const [mine, setMine] = useState<MinePhrase[]>([]);
   const [mineLoaded, setMineLoaded] = useState(false);
   /** The phrase shown in full on the right, per topic. */
@@ -347,7 +349,6 @@ export function VocabBuilder({ onBack }: { onBack: () => void }) {
     setPractice({ sample: order[k].s, topic: order[k].t.name, phrases, groups, at }); setRound((r) => r + 1);
     return true;
   };
-  useEffect(() => { if (note) toast.error(note); }, [note]);
   const MAX_TICK = 30;
   // Nothing ticked: practise up to 4 phrases from this view, least-practised first.
   const choose = () => (picked.length ? picked : [...rows].sort((a, b) => (count[a.it.en] || 0) - (count[b.it.en] || 0)).slice(0, 4).map((r) => r.it.en)).slice(0, MAX_TICK);
@@ -449,7 +450,7 @@ export function VocabBuilder({ onBack }: { onBack: () => void }) {
             <div style={{ position: 'sticky', bottom: 12, margin: '0 6px 6px', display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap', borderRadius: 10, border: '1px solid ' + VB.border, background: '#fff', padding: '10px 10px 10px 18px', boxShadow: '0 10px 30px rgba(20,20,19,.10)' }}>
               <span style={{ fontSize: 13, color: n > MAX_TICK ? '#B33A1A' : VB.ink3 }}>{n ? <><b style={{ color: VB.ink, fontWeight: 600 }}>{label.split(' · ')[0]}</b>{label.includes(' · ') ? ' · ' + label.split(' · ')[1] : ''}</> : label}</span>
               {n > 0 && <button type="button" className="cl-btn cl-link" onClick={() => setSel((s) => ({ ...s, [key]: [] }))} style={{ fontSize: 12, fontWeight: 600, color: VB.ink3, textDecoration: 'underline', textUnderlineOffset: 3 }}>Bỏ chọn</button>}
-              <button type="button" className="cl-btn cl-primary" disabled={!rows.length || making} onClick={() => go()} style={{ marginLeft: 'auto', display: 'inline-flex', alignItems: 'center', gap: 8, height: 38, borderRadius: 10, color: '#fff', padding: '0 16px', fontFamily: VB.sans, fontSize: 12.5, fontWeight: 700, opacity: !rows.length || making ? 0.5 : 1 }}>{making ? 'Đang tạo đoạn…' : 'Ôn ' + Math.min(n || Math.min(4, rows.length), MAX_TICK) + ' cụm →'}</button>
+              <ProBeam className="ml-auto"><button type="button" className="cl-btn cl-primary" disabled={!rows.length || making} onClick={() => go()} style={{ marginLeft: 'auto', display: 'inline-flex', alignItems: 'center', gap: 8, height: 38, borderRadius: 10, color: '#fff', padding: '0 16px', fontFamily: VB.sans, fontSize: 12.5, fontWeight: 700, opacity: !rows.length || making ? 0.5 : 1 }}>{making ? 'Đang tạo đoạn…' : 'Ôn ' + Math.min(n || Math.min(4, rows.length), MAX_TICK) + ' cụm →'}</button></ProBeam>
             </div>
           </section>
           {focused && (
