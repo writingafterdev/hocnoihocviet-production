@@ -3,14 +3,14 @@
 import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
 import { CL } from '../chainlab/constants';
 import { backLinkStyle, ClIcon, ClLabel } from '../chainlab/ui/primitives';
-import { GW_SAMPLES, GW_VOCAB_STYLE, toolStyle, type GuidedSample, type Segment } from './data';
-import { mask, partial, wordStates, words as splitWords } from './matching';
+import { GW_SAMPLES, GW_VOCAB_STYLE, moveChip, type GuidedSample, type Segment } from './data';
+import { mask, norm, partial, wordStates, words as splitWords } from './matching';
 
 const vStyle = (seg: Segment, k: number) => (seg.vocabStyle && seg.vocabStyle[k]) || GW_VOCAB_STYLE;
 
 function ToolChip({ tool, small }: { tool: string; small?: boolean }) {
-  const s = toolStyle(tool);
-  return <span style={{ display: 'inline-block', borderRadius: 5, padding: small ? '2px 6px' : '4px 8px', background: s.bg, color: s.fg, fontFamily: CL.sans, fontSize: small ? 9 : 9.5, fontWeight: 500, whiteSpace: 'nowrap', verticalAlign: 'middle' }}>{tool}</span>;
+  const m = moveChip(tool);
+  return <span style={{ display: 'inline-block', borderRadius: 6, padding: small ? '2px 7px' : '4px 9px', background: m.bg, color: m.fg, fontFamily: CL.sans, fontSize: small ? 11 : 12, fontWeight: 500, whiteSpace: 'nowrap', verticalAlign: 'middle' }}>{m.label}</span>;
 }
 
 /** A sentence's chip(s): the tool it uses (essays) or the vocab items it practises (vocab mode). `hidden` shows the Vietnamese instead of the answer. */
@@ -31,8 +31,7 @@ function barColor(seg: Segment) {
     const c = seg.vocab.map((_, k) => vStyle(seg, k).hl);
     return c.length > 1 ? 'linear-gradient(90deg,' + c.map((x, k) => x + ' ' + (k * 100 / c.length) + '%,' + x + ' ' + ((k + 1) * 100 / c.length) + '%').join(',') + ')' : c[0];
   }
-  const ts = toolStyle(seg.tool);
-  return ts.fg === '#FFFFFF' ? '#DCE7F7' : ts.bg;
+  return moveChip(seg.tool).bar;
 }
 
 /** A finished sentence in the left column, with its key phrase(s) highlighted. */
@@ -89,6 +88,19 @@ export function GuidedWriting({ sample = GW_SAMPLES.charity, onBack, backLabel =
   const seg = flat[cur];
   const words = seg ? splitWords(seg.en) : [];
   const states = seg ? wordStates(seg.en, typed) : [];
+  // In vocab practice the phrases being learned get a stronger hint: the phrase's first word is shown in full and its other words with two letters.
+  const roles = useMemo(() => {
+    const out: ({ k: number; first: boolean } | null)[] = words.map(() => null);
+    if (!seg?.vocab) return out;
+    const T = words.map(norm);
+    seg.vocab.forEach((phrase, k) => {
+      const P = splitWords(phrase).map(norm);
+      for (let i = 0; i + P.length <= T.length; i++) {
+        if (P.every((w, j) => T[i + j] === w)) { P.forEach((_, j) => { out[i + j] = { k, first: j === 0 }; }); break; }
+      }
+    });
+    return out;
+  }, [seg]); // eslint-disable-line react-hooks/exhaustive-deps
   const nOk = states.filter((x) => x.s === 'ok').length;
   const all = seg && nOk === words.length;
 
@@ -170,10 +182,12 @@ export function GuidedWriting({ sample = GW_SAMPLES.charity, onBack, backLabel =
                   {words.map((w, i) => {
                     const st = states[i] || { s: null, n: 0 };
                     const peeked = showAll || peek.includes(i);
-                    const text = st.s === 'ok' || peeked ? w : st.s === 'part' ? partial(w, st.n) : mask(w);
+                    const role = roles[i];
+                    const text = st.s === 'ok' || peeked ? w : st.s === 'part' ? partial(w, st.n) : role ? (role.first ? w : partial(w, 2)) : mask(w);
                     const look = st.s === 'ok' ? { bd: CL.mint, bg: CL.mintSoft, fg: CL.greenText }
                       : st.s === 'bad' ? { bd: '#F0C7BE', bg: CL.redSoft, fg: CL.redText }
                       : st.s === 'part' ? { bd: CL.ink4, bg: '#fff', fg: CL.ink8 }
+                      : role && seg ? { bd: vStyle(seg, role.k).hl, bg: vStyle(seg, role.k).bg, fg: vStyle(seg, role.k).fg }
                       : { bd: CL.ink2, bg: '#fff', fg: peeked ? CL.ink8 : CL.ink4 };
                     return (
                       <button key={i} type="button" className="cl-btn" title={st.s === 'ok' ? '' : peeked ? 'Bấm để ẩn lại' : 'Bấm để xem từ này'} onClick={() => { if (st.s !== 'ok') setPeek((p) => (p.includes(i) ? p.filter((x) => x !== i) : [...p, i])); }} style={{ borderRadius: 7, border: '1px solid ' + look.bd, background: look.bg, padding: '5px 9px', fontFamily: CL.serif, fontSize: 14, color: look.fg, cursor: st.s === 'ok' ? 'default' : 'pointer', transition: 'background .15s, border-color .15s' }}>{text}</button>

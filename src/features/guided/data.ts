@@ -26,27 +26,42 @@ export interface GuidedSample {
   paragraphs: Segment[][];
 }
 
-export const GW_TOOL_STYLE: Record<string, { bg: string; fg: string }> = {
-  'Nêu vấn đề': { bg: '#E6ECF3', fg: '#33475E' },
-  'Lập trường': { bg: '#171717', fg: '#FFFFFF' },
-  'Nhượng bộ': { bg: '#FFF0EB', fg: '#B33A1A' },
-  'Gắn kết & Bản sắc': { bg: '#FFF0EB', fg: '#B33A1A' },
-  'Mắt xích': { bg: '#F5F5F5', fg: '#404040' },
-  'Tác động': { bg: '#EDF7EA', fg: '#2D6E1E' },
-  'Khả thi': { bg: '#EEE9FB', fg: '#5A3FB0' },
-  'With/Without': { bg: '#E4F5FA', fg: '#17667A' },
-  'Nối về': { bg: '#EEF3FC', fg: '#2F62C4' },
-  // The book's sentence labels (SAMPLE essays): what the sentence does, then which Phase 2 tool it uses.
-  'Đề hỏi gì': { bg: '#E6ECF3', fg: '#33475E' },
-  'Mạch': { bg: '#F5F5F5', fg: '#404040' },
-  'Scope': { bg: '#EEF3FC', fg: '#2F62C4' },
-  'Dài hạn': { bg: '#EDF7EA', fg: '#2D6E1E' },
-  'Quy mô': { bg: '#FFF0EB', fg: '#B33A1A' },
-  'Phản biện': { bg: '#FFF0EB', fg: '#B33A1A' },
+/**
+ * What a sentence is doing in the argument, in plain words (the old labels were book jargon: Scope, With/Without, Mắt xích).
+ * Four tints only: position (blue), reason (grey), result (green), counter (tomato).
+ */
+type Tone = 'position' | 'reason' | 'result' | 'counter';
+/** `bar` is the stronger tint used for the sentence's bar before it is revealed. */
+const TONE: Record<Tone, { bg: string; fg: string; bar: string }> = {
+  position: { bg: '#EEF3FC', fg: '#2F62C4', bar: '#D5E2F7' },
+  reason: { bg: '#F5F5F5', fg: '#404040', bar: '#E4E4E8' },
+  result: { bg: '#EDF7EA', fg: '#2D6E1E', bar: '#CFE8C7' },
+  counter: { bg: '#FFF0EB', fg: '#B33A1A', bar: '#FFD6C8' },
 };
+const MOVE: Record<string, { label: string; tone: Tone }> = {
+  'Nêu vấn đề': { label: 'Mở đề', tone: 'position' },
+  'Đề hỏi gì': { label: 'Nhắc lại câu hỏi', tone: 'position' },
+  'Lập trường': { label: 'Quan điểm của tôi', tone: 'position' },
+  'Nối về': { label: 'Quay lại luận điểm', tone: 'position' },
+  'Gắn kết & Bản sắc': { label: 'Lý do chính', tone: 'reason' },
+  'Mắt xích': { label: 'Giải thích tiếp', tone: 'reason' },
+  'Mạch': { label: 'Giải thích tiếp', tone: 'reason' },
+  'Scope': { label: 'Giới hạn phạm vi', tone: 'reason' },
+  'Quy mô': { label: 'Mức độ ảnh hưởng', tone: 'reason' },
+  'Khả thi': { label: 'Làm được không', tone: 'reason' },
+  'Tác động': { label: 'Kết quả', tone: 'result' },
+  'Dài hạn': { label: 'Về lâu dài', tone: 'result' },
+  'With/Without': { label: 'Nếu không thì', tone: 'result' },
+  'Nhượng bộ': { label: 'Thừa nhận bên kia', tone: 'counter' },
+  'Phản biện': { label: 'Phản bác', tone: 'counter' },
+};
+const moveOne = (t: string) => MOVE[t.trim()] || { label: t.trim(), tone: 'reason' as Tone };
 
-/** Style for a tool label; combined labels ("Phản biện + With/Without") take the first one's colours. */
-export const toolStyle = (tool: string) => GW_TOOL_STYLE[tool] || GW_TOOL_STYLE[(tool || '').split(' + ')[0]] || GW_TOOL_STYLE['Mắt xích'];
+/** The chip for a sentence's move; combined labels ("Phản biện + With/Without") read as "Phản bác + Nếu không có thì sao" in the first one's colour. */
+export const moveChip = (tool: string) => {
+  const parts = (tool || '').split(' + ').map(moveOne);
+  return { label: parts.map((x) => x.label).join(' + ') || 'Giải thích tiếp', ...TONE[(parts[0] || { tone: 'reason' as Tone }).tone] };
+};
 
 export const GW_VOCAB_STYLE: VocabStyle = { bg: '#EEF3FC', fg: '#2F62C4', hl: '#DCE7F7' };
 // One colour per vocab item in a set, so each phrase keeps its colour on its chip, its bar and its highlight.
