@@ -231,6 +231,7 @@ export function AuthCard({
         <TitleHeading className="text-title-2-medium text-text-primary">
           {title ?? copy.title}
         </TitleHeading>
+        {description === "" ? null : (
         <p className="text-body-regular text-text-secondary">
           {description ??
             (verify && email ? (
@@ -243,6 +244,7 @@ export function AuthCard({
               copy.description
             ))}
         </p>
+        )}
       </div>
 
       <form onSubmit={submit} className="mt-6 flex flex-col gap-4">

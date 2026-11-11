@@ -51,9 +51,8 @@ export function Login({ dev = false }: { dev?: boolean }) {
         providers={['google']}
         providerLabel={() => 'Tiếp tục với Google'}
         onProvider={() => { if (!busy) google(); }}
-        logo={<span className="text-lg font-semibold tracking-[-0.02em] text-ink">hocnoihocviet</span>}
         title="Đăng nhập"
-        description="Đăng nhập bằng email sẽ sớm có. Hiện tại hãy dùng Google để tiếp tục, lần đầu đăng nhập cũng là tạo tài khoản."
+        description=""
         footnote={<>Khi tiếp tục, bạn đồng ý với <Link href="/terms" className="underline">Điều khoản</Link> và <Link href="/privacy" className="underline">Chính sách quyền riêng tư</Link>.</>}
       >
         {failure && <p role="alert" className={alert}>Chưa mở được trang đăng nhập Google. Chi tiết: <code>{failure}</code></p>}
