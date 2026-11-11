@@ -18,14 +18,32 @@ const PAGE = 20;
 
 
 const ROLL_MS = 2200;
-const ROW_H = 104;
+const ROW_H = 156;
 const shuffle = <T,>(xs: T[]) => { const a = [...xs]; for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
 
-/** "Đề ngẫu nhiên": other prompts spin past in a window, slow down and settle on the chosen one, then `onDone` opens it. */
-function RandomReel({ target, others, onDone }: { target: Prompt; others: string[]; onDone: () => void }) {
+/** A prompt as the library shows it at rest: the topic's drawing, the two tags and the text. Shared by the cards and the random reel. */
+function PromptFace({ prompt }: { prompt: Prompt }) {
+  return (
+    <div style={{ display: 'flex', padding: 12 }}>
+      <div style={{ width: 136, height: 132, borderRadius: 8, background: '#F5F5F5', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <img src={'/illustrations/' + TOPIC_ILLUSTRATION[prompt.topic] + '.svg'} alt="" style={{ width: 112, height: 112, objectFit: 'contain', mixBlendMode: 'multiply' }} />
+      </div>
+      <div style={{ flex: 1, minWidth: 0, padding: '4px 16px' }}>
+        <div style={{ display: 'flex', gap: 8, marginBottom: 10, flexWrap: 'wrap' }}>
+          <span style={{ borderRadius: 4, background: '#F5F5F5', padding: '4px 8px', fontFamily: 'var(--font-mono)', fontSize: 12, fontWeight: 600, color: '#525252' }}>{prompt.category}</span>
+          <span style={{ borderRadius: 4, background: '#EDF7EA', padding: '4px 8px', fontFamily: 'var(--font-mono)', fontSize: 12, fontWeight: 600, color: '#167A59' }}>{prompt.topic}</span>
+        </div>
+        <p style={{ fontFamily: 'var(--font-sans)', fontSize: 14, fontWeight: 500, lineHeight: 1.55, color: '#171717', margin: 0, display: '-webkit-box', WebkitLineClamp: 4, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{prompt.text}</p>
+      </div>
+    </div>
+  );
+}
+
+/** "Đề ngẫu nhiên": prompt cards spin past in a window, slow down and settle on the chosen one, then `onDone` opens it. */
+function RandomReel({ target, others, onDone }: { target: Prompt; others: Prompt[]; onDone: () => void }) {
   const reelRef = useRef<HTMLDivElement>(null);
   const [landed, setLanded] = useState(false);
-  const items = [...others, target.text];
+  const items = [...others, target];
   useLayoutEffect(() => {
     const el = reelRef.current;
     if (!el) return;
@@ -33,7 +51,7 @@ function RandomReel({ target, others, onDone }: { target: Prompt; others: string
     sfx.roll(ROLL_MS);
     const a = el.animate([
       { transform: 'translateY(0)', filter: 'blur(0px)' },
-      { transform: 'translateY(' + -dist * 0.2 + 'px)', filter: 'blur(1.4px)', offset: 0.25 },
+      { transform: 'translateY(' + -dist * 0.2 + 'px)', filter: 'blur(1.6px)', offset: 0.25 },
       { transform: 'translateY(' + -dist * 0.85 + 'px)', filter: 'blur(1px)', offset: 0.72 },
       { transform: 'translateY(' + -dist + 'px)', filter: 'blur(0px)' },
     ], { duration: ROLL_MS, easing: 'cubic-bezier(.4,0,.2,1)', fill: 'forwards' });
@@ -41,16 +59,11 @@ function RandomReel({ target, others, onDone }: { target: Prompt; others: string
     return () => a.cancel();
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
   return (
-    <div role="status" aria-live="polite" style={{ position: 'fixed', inset: 0, zIndex: 60, display: 'grid', placeItems: 'center', background: 'rgba(255,255,255,0.78)', backdropFilter: 'blur(4px)', padding: 24 }}>
-      <div className="co-rise" style={{ width: 'min(680px, 100%)', borderRadius: 12, background: '#fff', boxShadow: 'var(--shadow-ring-hover, 0 0 0 1px rgba(0,0,0,0.1))', padding: '22px 28px 26px' }}>
-        <span style={{ display: 'block', fontFamily: 'var(--font-sans)', fontSize: 12, fontWeight: 500, color: '#737373', marginBottom: 12 }}>{landed ? 'Đề của bạn' : 'Đang chọn đề…'}</span>
-        <div style={{ height: ROW_H, overflow: 'hidden', maskImage: 'linear-gradient(transparent, #000 18%, #000 82%, transparent)', WebkitMaskImage: 'linear-gradient(transparent, #000 18%, #000 82%, transparent)' }}>
-          <div ref={reelRef} style={{ willChange: 'transform' }}>
-            {items.map((t, k) => {
-              const last = k === items.length - 1;
-              return <p key={k} style={{ margin: 0, height: ROW_H, display: 'flex', alignItems: 'center', overflow: 'hidden', fontFamily: 'var(--font-sans)', fontSize: 16, lineHeight: 1.5, color: last && landed ? '#171717' : '#A3A3A3', transition: 'color .3s ease' }}><span style={{ display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{t}</span></p>;
-            })}
-          </div>
+    <div role="status" aria-live="polite" style={{ position: 'fixed', inset: 0, zIndex: 60, display: 'grid', placeContent: 'center', gap: 12, background: 'rgba(255,255,255,0.8)', backdropFilter: 'blur(4px)', padding: 24 }}>
+      <span style={{ textAlign: 'center', fontFamily: 'var(--font-sans)', fontSize: 13, fontWeight: 500, color: '#737373' }}>{landed ? 'Đề của bạn' : 'Đang chọn đề…'}</span>
+      <div className="co-rise" style={{ width: 'min(860px, calc(100vw - 48px))', height: ROW_H, overflow: 'hidden', borderRadius: 12, background: '#fff', boxShadow: landed ? '0 0 0 2px var(--brand-blue-deep), 0 8px 24px rgba(0,0,0,0.08)' : '0 0 0 1px rgba(0,0,0,0.1), 0 2px 8px rgba(0,0,0,0.05)', transition: 'box-shadow var(--duration-medium) var(--ease-smooth-out)' }}>
+        <div ref={reelRef} style={{ willChange: 'transform' }}>
+          {items.map((it, k) => <div key={k} style={{ height: ROW_H, overflow: 'hidden' }}><PromptFace prompt={it} /></div>)}
         </div>
       </div>
     </div>
@@ -121,7 +134,7 @@ export function PromptLibrary() {
   const [topics, setTopics] = useState<string[]>([]);
   const [modalPrompt, setModalPrompt] = useState<Prompt | null>(null);
   const [page, setPage] = useState(0);
-  const [reel, setReel] = useState<{ target: Prompt; others: string[] } | null>(null);
+  const [reel, setReel] = useState<{ target: Prompt; others: Prompt[] } | null>(null);
   const toggle = (arr: string[], setArr: (a: string[]) => void, v: string) => { setArr(arr.includes(v) ? arr.filter((x) => x !== v) : [...arr, v]); setPage(0); };
   const filtered = PROMPTS.filter((p) => p.task === task && (cats.length === 0 || cats.includes(p.category)) && (topics.length === 0 || topics.includes(p.topic)));
 
@@ -129,7 +142,7 @@ export function PromptLibrary() {
     if (reel) return;
     const target = filtered[Math.floor(Math.random() * filtered.length)];
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches || PROMPTS.length < 3) { setModalPrompt(target); return; }
-    setReel({ target, others: shuffle(PROMPTS.filter((p) => p.task === target.task && p.id !== target.id)).slice(0, 9).map((p) => p.text) });
+    setReel({ target, others: shuffle(PROMPTS.filter((p) => p.task === target.task && p.id !== target.id)).slice(0, 9) });
   };
   const pager = (className: string) => <Pagination className={className} previousLabel="Trang trước" nextLabel="Trang sau" aria-label="Chọn trang" page={page + 1} totalPages={Math.ceil(filtered.length / PAGE)} onChange={(n) => { setPage(n - 1); window.scrollTo({ top: 0 }); document.querySelector('main')?.scrollTo({ top: 0 }); }} />;
 
