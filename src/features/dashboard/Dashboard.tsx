@@ -8,60 +8,67 @@ import { AppCredits } from '@/components/shell/AppCredits';
 import { cn } from '@/lib/utils';
 
 const SOON = [
-  { id: 'speaking', tag: 'Speaking · Part 1–3', title: 'Luyện nói', description: 'Ngắt nghỉ, nhấn âm và độ dài câu trả lời.', illustration: 'woman-answering-questions-on-a-podium', note: 'Sắp ra mắt' },
-  { id: 'reading', tag: 'Reading · bài báo', title: 'Đọc báo', description: 'Bài từ The Economist, The New Yorker, The Atlantic.', illustration: 'woman-with-paper-document-thinking', note: 'Tạm đóng' },
+  { id: 'speaking', tag: 'Speaking · Part 1–3', title: 'Luyện nói', description: 'Ngắt nghỉ, nhấn âm và độ dài câu trả lời.', illustration: 'woman-answering-questions-on-a-podium', note: 'Sắp ra mắt', tint: 'bg-blue-soft' },
+  { id: 'reading', tag: 'Reading · bài báo', title: 'Đọc báo', description: 'Bài từ The Economist, The New Yorker, The Atlantic.', illustration: 'woman-with-paper-document-thinking', note: 'Tạm đóng', tint: 'bg-blush-soft' },
 ];
 
 const card = 'overflow-hidden rounded-xl bg-white shadow-ring';
+const focusRing = 'focus-visible:shadow-[0_0_0_2px_var(--brand-blue-deep)] focus-visible:outline-none';
+/** The same call to action on every card: a real button look (it is a span, the whole card is the link). */
+const Cta = ({ children, className }: { children: React.ReactNode; className?: string }) => (
+  <span className={cn('bg-button-primary inline-flex h-9 w-fit items-center gap-1 rounded-[10px] px-4 text-sm font-medium text-white shadow-xs', className)}>
+    {children}<ChevronRight className="size-4 transition-transform group-hover:translate-x-0.5" />
+  </span>
+);
 
-/** Task 2: the big card, tinted all over so there is no empty white. Words on the left, the drawing large on the right. */
+/** Task 2: the lead card. Words and the button sit together, centred beside the drawing, on one tint. */
 function Task2Card() {
   return (
-    <Link href="/writing" className="group relative flex min-h-[400px] flex-col overflow-hidden rounded-xl bg-tomato-soft shadow-ring t-card-hover hover:shadow-ring-hover focus-visible:shadow-[0_0_0_2px_var(--brand-blue-deep)] focus-visible:outline-none md:flex-row">
-      <div className="relative z-10 flex flex-col gap-2 p-8 md:w-[46%]">
-        <Badge variant="blue" className="mb-4 bg-white">Beta</Badge>
-        <span className="text-xs font-medium text-ink-soft">Writing · IELTS</span>
-        <h2 className="m-0 text-[44px] font-semibold leading-none tracking-[-0.03em] text-ink">Task 2</h2>
-        <p className="m-0 mt-1 max-w-[36ch] text-[15px] leading-[1.6] text-ink/70">Từ một câu khởi động đến cả bài viết: dựng mạch cho từng thân bài, viết, rồi nhận điểm theo bốn tiêu chí của giám khảo.</p>
-        <span className="mt-auto inline-flex items-center gap-0.5 pt-6 text-sm font-medium text-blue-deep">Bắt đầu <ChevronRight className="size-4 transition-transform group-hover:translate-x-0.5" /></span>
+    <Link href="/writing" className={cn('group relative flex min-h-[360px] flex-col overflow-hidden rounded-xl bg-tomato-soft shadow-ring t-card-hover hover:shadow-ring-hover md:flex-row', focusRing)}>
+      <div className="relative z-10 flex flex-col justify-center gap-3 p-10 md:w-[46%]">
+        <Badge variant="blue" className="w-fit bg-white">Beta</Badge>
+        <span className="mt-1 text-xs font-medium text-ink-soft">Writing · IELTS</span>
+        <h2 className="m-0 text-[48px] font-semibold leading-none tracking-[-0.03em] text-ink">Task 2</h2>
+        <p className="m-0 max-w-[38ch] text-[15px] leading-[1.6] text-ink/75">Từ một câu khởi động đến cả bài viết: dựng mạch cho từng thân bài, viết, rồi nhận điểm theo bốn tiêu chí của giám khảo.</p>
+        <Cta className="mt-3">Bắt đầu</Cta>
       </div>
       <div className="relative min-h-64 flex-1">
-        <Illustration name="person-typing-essay-on-laptop-digital-writing-or-blogging" className="absolute inset-0 m-auto h-[88%] w-[92%] transition-transform duration-[var(--duration-slow)] ease-[var(--ease-smooth-out)] group-hover:scale-[1.03]" />
+        <Illustration name="person-typing-essay-on-laptop-digital-writing-or-blogging" className="absolute inset-0 m-auto h-[86%] w-[90%] transition-transform duration-[var(--duration-slow)] ease-[var(--ease-smooth-out)] group-hover:scale-[1.03]" />
       </div>
     </Link>
   );
 }
 
-/** Vocabulary stays a card of its own. */
+/** Vocabulary: the same tint-all-over treatment (leaf), stacked because the card is narrower. */
 function VocabCard() {
   return (
-    <Link href="/vocab" className={cn(card, 'group flex flex-col t-card-hover hover:shadow-ring-hover focus-visible:shadow-[0_0_0_2px_var(--brand-blue-deep)] focus-visible:outline-none')}>
-      <div className="relative grid h-60 place-items-center bg-leaf-soft">
-        <Illustration name="person-studying-different-sciences" className="h-48 w-auto transition-transform duration-[var(--duration-slow)] ease-[var(--ease-smooth-out)] group-hover:scale-[1.03]" />
-        <Badge variant="blue" className="absolute left-3 top-3">Beta</Badge>
+    <Link href="/vocab" className={cn('group flex min-h-[360px] flex-col overflow-hidden rounded-xl bg-leaf-soft shadow-ring t-card-hover hover:shadow-ring-hover', focusRing)}>
+      <div className="relative grid flex-1 place-items-center px-6 pt-6">
+        <Illustration name="person-studying-different-sciences" className="h-44 w-auto transition-transform duration-[var(--duration-slow)] ease-[var(--ease-smooth-out)] group-hover:scale-[1.03]" />
+        <Badge variant="blue" className="absolute left-4 top-4 bg-white">Beta</Badge>
       </div>
-      <div className="flex flex-1 flex-col gap-2 px-5 pb-5 pt-4">
+      <div className="flex flex-col gap-2 p-6 pt-4">
         <span className="text-xs font-medium text-ink-soft">Từ vựng · theo chủ đề</span>
-        <h2 className="m-0 text-xl font-semibold tracking-[-0.02em] text-ink">Từ vựng</h2>
-        <p className="m-0 text-[15px] leading-[1.55] text-ink-soft">Cụm từ cho Task 1, Task 2 và Speaking, kèm đoạn văn để luyện dùng ngay.</p>
-        <span className="mt-auto inline-flex items-center gap-0.5 pt-2.5 text-[13px] font-medium text-blue-deep">Bắt đầu <ChevronRight className="size-4 transition-transform group-hover:translate-x-0.5" /></span>
+        <h2 className="m-0 text-2xl font-semibold tracking-[-0.02em] text-ink">Từ vựng</h2>
+        <p className="m-0 text-[15px] leading-[1.55] text-ink/70">Cụm từ cho Task 1, Task 2 và Speaking, kèm đoạn văn để luyện dùng ngay.</p>
+        <Cta className="mt-2">Bắt đầu</Cta>
       </div>
     </Link>
   );
 }
 
-/** Something not open yet: a wide, quiet card with the drawing on the left. */
+/** Something not open yet: a slim card in colour (not greyed out), with the drawing on the left and a small status chip. */
 function SoonCard({ p }: { p: (typeof SOON)[number] }) {
   return (
-    <div aria-disabled="true" className={cn(card, 'flex')}>
-      <div className="grid w-48 shrink-0 place-items-center bg-paper-2">
-        <Illustration name={p.illustration} className="h-32 w-auto opacity-60 grayscale" />
+    <div aria-disabled="true" className={cn('flex min-h-[168px] overflow-hidden rounded-xl shadow-ring', p.tint)}>
+      <div className="grid w-44 shrink-0 place-items-center">
+        <Illustration name={p.illustration} className="h-28 w-auto" />
       </div>
-      <div className="flex flex-1 flex-col gap-2 px-5 py-5">
+      <div className="flex flex-1 flex-col justify-center gap-1.5 py-5 pr-6">
         <span className="text-xs font-medium text-ink-soft">{p.tag}</span>
         <h2 className="m-0 text-lg font-semibold tracking-[-0.02em] text-ink">{p.title}</h2>
-        <p className="m-0 text-[15px] leading-[1.55] text-ink-soft">{p.description}</p>
-        <Badge variant="secondary" className="mt-auto">{p.note}</Badge>
+        <p className="m-0 text-sm leading-[1.5] text-ink/70">{p.description}</p>
+        <Badge variant="secondary" className="mt-1.5 w-fit bg-white">{p.note}</Badge>
       </div>
     </div>
   );
@@ -73,7 +80,7 @@ export function Dashboard() {
     <div className="relative flex min-h-full flex-col bg-white text-ink">
       {/* The grid alone is centred, so the space above and below it is equal; the credit sits inside the bottom margin. */}
       <div className="mx-auto flex w-full max-w-[1200px] flex-1 flex-col justify-center px-6 py-14">
-        <div className="grid grid-cols-1 gap-5 md:grid-cols-6">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-6">
           <div className="grid md:col-span-4"><Task2Card /></div>
           <div className="grid md:col-span-2"><VocabCard /></div>
           {SOON.map((p) => <div key={p.id} className="grid md:col-span-3"><SoonCard p={p} /></div>)}
