@@ -141,12 +141,23 @@ export function GuidedWriting({ sample = GW_SAMPLES.charity, onBack, backLabel =
                 {p.map((s, si) => {
                   const k = flat.findIndex((x) => x.pi === pi && x.si === si);
                   if (k < cur) return <span key={si} style={{ opacity: shown.includes(k) ? 0.7 : 1 }}><Revealed seg={s} /></span>;
+                  if (!s.vocab) {
+                    const m = moveChip(s.tool);
+                    return (
+                      <span key={si} title={k === cur ? 'Câu đang viết' : ''} style={{ display: 'flex', alignItems: 'stretch', gap: 10, margin: '0 0 6px', padding: '6px 10px 6px 0', borderRadius: 8, background: k === cur ? '#F5F5F5' : 'transparent', fontFamily: CL.sans }}>
+                        <span style={{ width: 3, borderRadius: 2, background: m.bar, flexShrink: 0, marginLeft: 6 }} />
+                        <span style={{ display: 'flex', flexDirection: 'column', gap: 1, minWidth: 0 }}>
+                          <span style={{ fontSize: 11, fontWeight: 600, color: m.fg, lineHeight: 1.4 }}>{m.label}</span>
+                          <span style={{ fontSize: 12.5, lineHeight: 1.45, color: k === cur ? '#171717' : '#737373' }}>{s.ctx || ''}</span>
+                        </span>
+                      </span>
+                    );
+                  }
                   const w = Math.max(30, Math.min(100, s.en.length / 2.2));
                   return (
                     <span key={si} title={k === cur ? 'Câu đang viết' : ''} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, width: w + '%', margin: '0 8px 6px 0', verticalAlign: 'middle' }}>
-                      {!s.vocab && <SegChips seg={s} small hidden />}
                       <span style={{ flex: 1, minWidth: 24, height: 10, borderRadius: 999, background: barColor(s), boxShadow: k === cur ? '0 0 0 2px ' + CL.ink : 'none' }} />
-                      {s.vocab && <SegChips seg={s} small hidden />}
+                      <SegChips seg={s} small hidden />
                     </span>
                   );
                 })}
