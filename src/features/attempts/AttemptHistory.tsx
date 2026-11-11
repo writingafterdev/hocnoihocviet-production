@@ -83,7 +83,7 @@ export function AttemptHistory() {
                   <p style={{ margin: 'auto 0 0', paddingTop: 10, fontSize: 12, color: '#737373' }}>{a.chains.length} thân bài · {words} từ · lưu {date(a.updatedAt)}</p>
                 </div>
                 {/* The score fills the card's whole height, like the picture does on the left. */}
-                <div style={{ width: 132, flexShrink: 0, borderRadius: 8, background: band != null ? '#EEF3FC' : '#F5F5F5', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 2, textAlign: 'center', padding: 8 }}>
+                <div style={{ width: 132, flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 2, textAlign: 'center', padding: 8 }}>
                   {band != null ? (
                     <span style={{ fontSize: 34, fontWeight: 600, letterSpacing: '-0.02em', lineHeight: 1, color: '#2F62C4', fontVariantNumeric: 'tabular-nums' }}>{band.toFixed(1)}</span>
                   ) : <span style={{ fontSize: 13, fontWeight: 600, color: '#737373' }}>{words ? 'Chưa nộp' : 'Đang dựng mạch'}</span>}
