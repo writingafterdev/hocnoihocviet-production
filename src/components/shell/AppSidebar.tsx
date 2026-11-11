@@ -7,7 +7,6 @@ import { Logo } from '@/components/brand/Logo';
 import { NavIcon } from '@/components/brand/NavIcon';
 import { HookSidebar } from '@/components/ui/hook-sidebar';
 import { cn } from '@/lib/utils';
-import { OnboardingDialog } from './OnboardingDialog';
 import { UserMenu } from './UserMenu';
 
 /** One group of the sidebar: a small heading and its pages. `match` tells which pages count as being inside an item. */
@@ -22,7 +21,6 @@ const GROUPS: Group[] = [
   ] },
   { label: 'Từ vựng', items: [{ label: 'Từ vựng theo chủ đề', href: '/vocab', match: ['/vocab'], icon: <NavIcon name="vocab" /> }] },
   { label: 'Của bạn', items: [
-    { label: 'Tiến độ', href: '/progress', match: ['/progress'], icon: <NavIcon name="progress" /> },
     { label: 'Bài đã viết', href: '/attempts', match: ['/attempts'], icon: <NavIcon name="essays" /> },
   ] },
 ];
@@ -39,7 +37,6 @@ function titleOf(path: string): { section?: string; page: string } {
   if (inside(path, '/writing')) return { section: 'Task 2', page: 'Thư viện đề' };
   if (inside(path, '/write')) return { section: 'Task 2', page: 'Luyện viết' };
   if (inside(path, '/vocab')) return { page: 'Từ vựng' };
-  if (inside(path, '/progress')) return { page: 'Tiến độ' };
   if (inside(path, '/attempts')) return { page: 'Bài đã viết' };
   if (inside(path, '/admin')) return { page: 'Quản trị' };
   return { page: 'Trang chủ' };
@@ -121,7 +118,6 @@ export function AppSidebar({ children }: { children: React.ReactNode }) {
         </aside>
         <main className="relative min-h-0 min-w-0 flex-1 overflow-y-auto">{children}</main>
       </div>
-      <OnboardingDialog />
     </div>
   );
 }
