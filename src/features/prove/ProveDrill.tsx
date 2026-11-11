@@ -29,6 +29,8 @@ import { ProBeam } from '@/components/ui/pro-beam';
 const shuffle = <T,>(xs: T[]) => { const a = [...xs]; for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
 /** A brand drawing for each kind of statement: why (a question), what it does (charts), what to do (brainstorm). */
 const DRAWING: Record<string, string> = { cause: 'man-sitting-on-question-mark-and-thinking', impact: 'hands-holding-different-charts', solution: 'woman-brainstorming-and-choosing-ideas' };
+/** The question in the empty first step: one everyday question about the real person and thing in this chain (never the answer). */
+const firstQuestion = (start: string, who?: string) => 'Mỗi ngày, ' + (who ? '“' + who + '”' : 'ai') + ' gặp “' + start + '” ở đâu, lúc nào?';
 const reducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 const ROLL_MS = 1900;
 
@@ -281,6 +283,7 @@ export function ProveDrill() {
                         notes={notes} active={active} onPick={(k) => { setActive(k); setNotesOpen(true); }}
                         hint={coach.hint} asking={coach.asking} onHint={coach.askHint} onCloseHint={coach.closeHint}
                         helper={helper} checking={coach.checking} clean={clean} bank={bank}
+                        firstQuestion={firstQuestion(s.start, s.stakeholder)}
                       />
                     </div>
                     {clean && !rolling && (

@@ -36,6 +36,8 @@ export interface ChainEditorProps {
   clean?: boolean;
   /** English phrases for the whole chain (drill only): tapping one adds it to the step being edited. */
   bank?: BankPhrase[];
+  /** The question shown in the empty first step (a question about this chain, not a generic prompt). */
+  firstQuestion?: string;
 }
 
 const reduced = () => typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -171,7 +173,7 @@ export function ChainEditor(p: ChainEditorProps) {
           <Rail center={CENTER.step} jump={jumpAt(i)} dot={plainDot(s.trim() ? CL.ink3 : CL.ink2)} track={!!s.trim()} ok={green} />
           <div className={'co-content' + tinted(i)} style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'flex-start', gap: 8, padding: '6px 10px', margin: '2px 0', borderRadius: 10, ...tint(i), transition: 'background-color .3s' }}>
             <textarea ref={(el) => { refs.current[i] = el; }} className="co-ta" value={s} rows={1} aria-label={'Bước ' + (i + 1)}
-              placeholder={i === 0 ? 'Bước đầu tiên: điểm đầu chạm tới ai, ra sao?' : 'Bước tiếp theo…'}
+              placeholder={i === 0 ? p.firstQuestion || 'Điểm đầu chạm tới ai, ra sao?' : 'Rồi chuyện gì xảy ra tiếp?'}
               onFocus={() => { lastStep.current = i; }}
               onChange={(e) => edit(i, e.target.value)}
               onKeyDown={(e) => {
