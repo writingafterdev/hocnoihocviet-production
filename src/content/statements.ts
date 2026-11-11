@@ -20,11 +20,13 @@ export interface Statement {
   start: string;
   end: string;
   stakeholder: string;
+  /** The question shown in the empty first step: one everyday question about this chain's real people and things (never the answer). */
+  ask: string;
 }
 
 export const KIND_LABEL: Record<StatementKind, string> = { cause: 'Nguyên nhân', impact: 'Tác động', solution: 'Giải pháp' };
 
-type Raw = Omit<Statement, 'start' | 'end' | 'stakeholder'>;
+type Raw = Omit<Statement, 'start' | 'end' | 'stakeholder' | 'ask'>;
 
 const RAW: Raw[] = [
   { id: 'c-city-traffic', promptId: 'city-traffic', kind: 'cause',
@@ -108,7 +110,42 @@ export function sentenceParts(s: string): { text: string; mark: Mark | null }[] 
 const part = (s: string, mark: Mark) => sentenceParts(s).find((x) => x.mark === mark)?.text || '';
 const cap = (x: string) => x.charAt(0).toUpperCase() + x.slice(1);
 
-export const STATEMENTS: Statement[] = RAW.map((r) => ({ ...r, start: cap(part(r.sentence, 'start')), end: cap(part(r.sentence, 'end')), stakeholder: part(r.sentence, 'who') }));
+
+/** First-step questions, written by hand (no AI call): about the real person and thing, answerable from everyday life, never the answer itself. */
+const ASK: Record<string, string> = {
+  'c-city-traffic': 'Một anh nhân viên văn phòng thu nhập trung bình thấy khoản vay mua xe chỉ còn vài trăm nghìn mỗi tháng: cách đi làm của anh ấy thay đổi thế nào?',
+  'c-declining-bicycle': 'Mỗi sáng, một nhân viên văn phòng sống ở rìa thành phố cần đi làm quãng đường dài bao nhiêu và mất mấy tiếng?',
+  'c-anti-social': 'Chiều tối, khi cả bố và mẹ còn ở công ty, một bạn tuổi teen ở nhà làm gì và gặp ai?',
+  'c-weight-fitness': 'Từ lúc tan làm đến lúc đi ngủ, một bạn trẻ hay đặt đồ ăn qua app đi lại và vận động vào những lúc nào?',
+  'c-throwaway': 'Khi chiếc tai nghe hỏng mà mua mới gần bằng tiền sửa, một gia đình bình thường sẽ nghĩ gì?',
+  'c-science-students': 'Một bạn sắp tốt nghiệp cấp ba đặt bảng lương khởi điểm của các ngành cạnh nhau thì bạn ấy nghĩ gì về ngành khoa học?',
+  'c-elderly-care': 'Một người con vừa nhận việc ở thành phố lớn, cách nhà bố mẹ cả trăm cây số: cuối tuần của anh ấy sẽ ra sao?',
+  'c-food-waste': 'Một gia đình đứng trước kệ rau mua hai tặng một ở siêu thị thì họ nghĩ gì khi bỏ thêm vào giỏ?',
+  'c-rural-to-city': 'Một bạn lớp 12 ở quê trúng tuyển đại học nằm hoàn toàn ở thành phố thì nhà bạn ấy phải chuẩn bị gì?',
+  'c-living-alone': 'Một bạn mới đi làm được vài tháng xem giá thuê căn studio nhỏ thì so với lương, bạn ấy thấy điều gì?',
+  'i-working-from-home': 'Một người mẹ có con nhỏ, mỗi sáng ở nhà thay vì đi làm: quãng thời gian từng mất trên đường được chị ấy dùng vào việc gì?',
+  'i-online-courses': 'Một nhân viên làm việc ở thị trấn nhỏ, cách trường đại học hàng giờ xe: học online thì buổi tối của anh ấy thay đổi thế nào?',
+  'i-smoking-ban': 'Trước khi có lệnh cấm, một nhân viên quán bar hít thở không khí như thế nào suốt một ca làm?',
+  'i-paternity-leave': 'Ba giờ sáng, em bé khóc đòi bú: nếu bố đang nghỉ phép có lương thì đêm đó của hai vợ chồng diễn ra thế nào?',
+  'i-community-service': 'Một học sinh cấp ba đi làm tình nguyện ở bệnh viện sẽ gặp những người lớn nào, và họ làm gì ngay trước mắt em?',
+  'i-cheaper-travel': 'Khi du khách vào khu phố cổ nhiều gấp đôi, một chủ nhà trong khu đó sẽ làm gì với căn nhà của mình?',
+  'i-long-hours': 'Một nhân viên văn phòng về tới nhà lúc 8 giờ tối sau ngày làm dài: anh ấy còn sức làm gì trong buổi tối đó?',
+  'i-children-tv': 'Một bé tiểu học xem ti vi hai tiếng mỗi chiều: hai tiếng đó vốn dành cho việc gì?',
+  'i-credit-cards': 'Một sinh viên vừa được tặng thẻ tín dụng ở cổng trường thì lần mua món đồ đắt tiền đầu tiên diễn ra thế nào?',
+  'i-ai-workers': 'Một nhân viên hành chính ngoài 50 tuổi nhập liệu và làm báo cáo mỗi ngày: phần việc nào của chị ấy phần mềm có thể làm thay?',
+  's-obesity': 'Một bạn tuổi teen quen mua nước ngọt mỗi ngày ở cổng trường: nếu giá tăng gấp đôi thì bạn ấy làm gì?',
+  's-car-ban': 'Sáng thứ Hai, khi xe riêng bị cấm vào trung tâm, một người sống ở ngoại ô cần gì để tới chỗ làm?',
+  's-global-environment': 'Chính phủ một nước nghèo muốn xây điện mặt trời thì họ vấp phải khó khăn nào về tiền?',
+  's-growing-cities': 'Một bạn mới tốt nghiệp nhận việc ở quận trung tâm: mỗi tháng tiền thuê nhà ăn mất bao nhiêu phần lương của bạn ấy?',
+  's-imported-food': 'Một người nông dân trồng rau ở ngoại thành hiện bán rau cho ai, và người đó trả giá thế nào?',
+  's-young-and-old': 'Một buổi chiều ở viện dưỡng lão, một cụ ngoài tám mươi tuổi thường làm gì?',
+  's-older-workers': 'Một người 52 tuổi nộp đơn vào công ty: nhà tuyển dụng nhìn vào kỹ năng nào của chị ấy rồi do dự?',
+  's-why-imported': 'Đứng trước kệ rau củ, một người mua hàng muốn biết rau nào tươi hơn thì họ nhìn vào đâu?',
+  's-money-management': 'Một bạn vừa ra trường nhận lương tháng đầu tiên: bạn ấy chi tiền vào những việc gì trong tuần đầu?',
+  's-household-rubbish': 'Mỗi tuần, túi rác của một gia đình chứa những gì nhiều nhất?',
+};
+
+export const STATEMENTS: Statement[] = RAW.map((r) => ({ ...r, start: cap(part(r.sentence, 'start')), end: cap(part(r.sentence, 'end')), stakeholder: part(r.sentence, 'who'), ask: ASK[r.id] || '' }));
 
 export const plainSentence = (s: string) => sentenceParts(s).map((p) => p.text).join('');
 export const findStatement = (id: string) => STATEMENTS.find((s) => s.id === id) || null;
