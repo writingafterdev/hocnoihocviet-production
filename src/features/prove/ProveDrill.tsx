@@ -10,6 +10,7 @@ import { WorkspaceHeader } from '@/components/shell/BrandHeader';
 import { findPrompt } from '@/content/prompts';
 import { KIND_LABEL, sentenceParts, plainSentence, STATEMENTS, type Statement, type StatementKind } from '@/content/statements';
 import { cn } from '@/lib/utils';
+import { toast } from '@/components/ui/toast';
 import { SignedOutError } from '../attempts/store';
 import { startFromStatement } from '../attempts/start';
 import { CL } from '../chainlab/constants';
@@ -118,6 +119,8 @@ export function ProveDrill() {
   const prompt = s ? findPrompt(s.promptId) : null;
   const coach = useCoach(s?.promptId || '', { kind: s?.kind || 'impact', tone: s?.tone || null, start: s?.start || '', end: s?.end || '', steps, sentence: s ? plainSentence(s.sentence) : '', stakeholder: s?.stakeholder });
   const rolling = !!reel;
+  useEffect(() => { if (coach.error) toast.error(coach.error); }, [coach.error]);
+  useEffect(() => { if (openError) toast.error(openError); }, [openError]);
 
   // Sounds: on by default, muted with the speaker button (remembered).
   const [sound, setSound] = useState(true);
@@ -226,7 +229,6 @@ export function ProveDrill() {
             <span style={{ fontFamily: CL.sans, fontSize: 12.5, color: CL.ink5 }}>Đã chứng minh <b key={done} className={done ? 'co-bump' : ''} style={{ color: CL.ink, fontSize: 15, marginLeft: 4, fontVariantNumeric: 'tabular-nums' }}>{done}</b></span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            {coach.error && <span role="alert" style={{ fontFamily: CL.sans, fontSize: 12, color: CL.redText, marginRight: 4 }}>{coach.error}</span>}
             {s && <button type="button" className="cl-btn" onClick={backToPick} disabled={rolling} style={{ ...toolbarBtn(false), opacity: rolling ? 0.5 : 1 }}>Đổi loại</button>}
             <button type="button" className="cl-btn" onClick={() => go(false)} disabled={rolling || !s} style={{ ...toolbarBtn(false), opacity: rolling || !s ? 0.5 : 1 }}><span className={'co-dice' + (rolling ? ' on' : '')} aria-hidden="true">⟳</span> Đổi câu</button>
             <button type="button" className="cl-btn" onClick={toggleSound} aria-pressed={sound} aria-label={sound ? 'Tắt âm thanh' : 'Bật âm thanh'} title={sound ? 'Tắt âm thanh' : 'Bật âm thanh'} style={{ ...toolbarBtn(false), width: 36, padding: 0, color: sound ? CL.ink7 : CL.ink4 }}>{sound ? <Volume2 size={16} strokeWidth={1.75} /> : <VolumeX size={16} strokeWidth={1.75} />}</button>
@@ -284,7 +286,7 @@ export function ProveDrill() {
                     )}
                     {checked && !rolling && (
                       <div className="co-rise" style={{ borderTop: '1px solid ' + CL.ink1, background: CL.panel, padding: '12px 22px', display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-                        {openError && <span role="alert" style={{ fontFamily: CL.sans, fontSize: 12, color: CL.redText }}>{openError}</span>}
+                        
                         <button type="button" className="cl-btn cl-add" onClick={writeEssay} disabled={opening} style={{ marginLeft: 'auto', display: 'inline-flex', alignItems: 'center', gap: 6, borderRadius: 5, border: '1px solid ' + CL.ink, background: '#fff', color: CL.ink, padding: '6px 12px', fontFamily: CL.sans, fontSize: 12, fontWeight: 600 }}>{opening ? 'Đang tạo bài…' : 'Viết cả bài cho đề này'}<ClIcon name="right" size={12} /></button>
                       </div>
                     )}

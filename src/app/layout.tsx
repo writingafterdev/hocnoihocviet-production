@@ -3,6 +3,7 @@ import type { Metadata } from 'next';
 import '@fontsource-variable/inter';
 import '@fontsource-variable/inter/standard-italic.css';
 import './globals.css';
+import { Toaster } from '@/components/ui/toast';
 
 export const metadata: Metadata = {
   title: 'hocnoihocviet',
@@ -13,7 +14,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="vi">
-      <body>{children}</body>
+      <body>{children}<Toaster position="bottom-right" /></body>
     </html>
   );
 }
