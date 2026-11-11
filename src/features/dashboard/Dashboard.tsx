@@ -17,7 +17,7 @@ const card = 'overflow-hidden rounded-xl bg-white shadow-ring';
 /** Task 2: the big card, tinted all over so there is no empty white. Words on the left, the drawing large on the right. */
 function Task2Card() {
   return (
-    <Link href="/writing" className="group relative flex min-h-[400px] flex-col overflow-hidden rounded-xl bg-tomato-soft shadow-ring transition-shadow duration-150 hover:shadow-ring-hover focus-visible:shadow-[0_0_0_2px_var(--brand-blue-deep)] focus-visible:outline-none md:flex-row">
+    <Link href="/writing" className="group relative flex min-h-[400px] flex-col overflow-hidden rounded-xl bg-tomato-soft shadow-ring t-card-hover hover:shadow-ring-hover focus-visible:shadow-[0_0_0_2px_var(--brand-blue-deep)] focus-visible:outline-none md:flex-row">
       <div className="relative z-10 flex flex-col gap-2 p-8 md:w-[46%]">
         <Badge variant="blue" className="mb-4 bg-white">Beta</Badge>
         <span className="text-xs font-medium text-ink-soft">Writing · IELTS</span>
@@ -26,7 +26,7 @@ function Task2Card() {
         <span className="mt-auto inline-flex items-center gap-0.5 pt-6 text-sm font-medium text-blue-deep">Bắt đầu <ChevronRight className="size-4 transition-transform group-hover:translate-x-0.5" /></span>
       </div>
       <div className="relative min-h-64 flex-1">
-        <Illustration name="person-typing-essay-on-laptop-digital-writing-or-blogging" className="absolute inset-0 m-auto h-[88%] w-[92%] transition-transform duration-300 group-hover:scale-[1.03]" />
+        <Illustration name="person-typing-essay-on-laptop-digital-writing-or-blogging" className="absolute inset-0 m-auto h-[88%] w-[92%] transition-transform duration-[var(--duration-slow)] ease-[var(--ease-smooth-out)] group-hover:scale-[1.03]" />
       </div>
     </Link>
   );
@@ -35,9 +35,9 @@ function Task2Card() {
 /** Vocabulary stays a card of its own. */
 function VocabCard() {
   return (
-    <Link href="/vocab" className={cn(card, 'group flex flex-col transition-shadow duration-150 hover:shadow-ring-hover focus-visible:shadow-[0_0_0_2px_var(--brand-blue-deep)] focus-visible:outline-none')}>
+    <Link href="/vocab" className={cn(card, 'group flex flex-col t-card-hover hover:shadow-ring-hover focus-visible:shadow-[0_0_0_2px_var(--brand-blue-deep)] focus-visible:outline-none')}>
       <div className="relative grid h-60 place-items-center bg-leaf-soft">
-        <Illustration name="person-studying-different-sciences" className="h-48 w-auto transition-transform duration-300 group-hover:scale-[1.03]" />
+        <Illustration name="person-studying-different-sciences" className="h-48 w-auto transition-transform duration-[var(--duration-slow)] ease-[var(--ease-smooth-out)] group-hover:scale-[1.03]" />
         <Badge variant="blue" className="absolute left-3 top-3">Beta</Badge>
       </div>
       <div className="flex flex-1 flex-col gap-2 px-5 pb-5 pt-4">

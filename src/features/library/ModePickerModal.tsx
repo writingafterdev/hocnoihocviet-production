@@ -52,18 +52,21 @@ export function ModePickerModal({ prompt, onClose, onStart, onResume }: { prompt
   const [mode, setMode] = useState<WritingMode>('free');
   const [last, setLast] = useState<Attempt | null>(null);
   const [starting, setStarting] = useState(false);
+  const [closing, setClosing] = useState(false);
+  // Closing plays the quicker scale-down before the modal unmounts.
+  const close = () => { if (closing) return; setClosing(true); setTimeout(onClose, 150); };
   useEffect(() => { attemptStore.listForPrompt(prompt.id).then((list) => setLast(list[0] || null)); }, [prompt.id]);
   useEffect(() => {
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') close(); };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [onClose]);
+  }, [onClose, closing]); // eslint-disable-line react-hooks/exhaustive-deps
   return (
-    <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(20,20,19,.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50, padding: 24 }}>
-      <div role="dialog" aria-modal="true" aria-labelledby="mode-title" onClick={(e) => e.stopPropagation()} style={{ width: '100%', maxWidth: 640, background: '#fff', borderRadius: 20, padding: '28px 28px 24px', boxShadow: '0 24px 60px rgba(20,20,19,.25)' }}>
+    <div onClick={close} className={'t-modal-back' + (closing ? ' is-closing' : '')} style={{ position: 'fixed', inset: 0, background: 'rgba(20,20,19,.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50, padding: 24 }}>
+      <div role="dialog" aria-modal="true" aria-labelledby="mode-title" className="t-modal" onClick={(e) => e.stopPropagation()} style={{ width: '100%', maxWidth: 640, background: '#fff', borderRadius: 20, padding: '28px 28px 24px', boxShadow: '0 24px 60px rgba(20,20,19,.25)' }}>
         <div style={{ display: 'flex', alignItems: 'flex-start', gap: 16, marginBottom: 22 }}>
           <p style={{ flex: 1, fontFamily: 'var(--font-sans)', fontSize: 17, fontWeight: 600, lineHeight: 1.4, color: '#171717', margin: 0 }}>{prompt.text}</p>
-          <button type="button" onClick={onClose} aria-label="Đóng" style={{ cursor: 'pointer', width: 28, height: 28, borderRadius: 999, border: '1px solid #E5E5E5', background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#6E6B64', flexShrink: 0, padding: 0 }}><X size={14} strokeWidth={2.5} /></button>
+          <button type="button" onClick={close} aria-label="Đóng" style={{ cursor: 'pointer', width: 28, height: 28, borderRadius: 999, border: '1px solid #E5E5E5', background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#6E6B64', flexShrink: 0, padding: 0 }}><X size={14} strokeWidth={2.5} /></button>
         </div>
         <p id="mode-title" style={{ fontFamily: 'var(--font-sans)', fontSize: 15, fontWeight: 600, color: '#171717', margin: '0 0 14px' }}>Chọn chế độ làm bài</p>
         <div role="radiogroup" aria-labelledby="mode-title" style={{ display: 'flex', flexWrap: 'wrap', gap: 14, marginBottom: 22 }}>

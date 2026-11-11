@@ -45,7 +45,7 @@ function ToggleIcon({ open }: { open: boolean }) {
   return (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true" focusable="false" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" className="shrink-0">
       <path d="M21.25 6.72v10.56a2.97 2.97 0 0 1-2.97 2.97H5.72a2.97 2.97 0 0 1-2.97-2.97V6.72a2.97 2.97 0 0 1 2.97-2.97h12.56a2.97 2.97 0 0 1 2.97 2.97" />
-      <path d="M6.25 7.25v9.5" style={{ transform: open ? 'translateX(1px)' : 'translateX(10.5px)', transition: 'transform 200ms ease-out' }} />
+      <path d="M6.25 7.25v9.5" style={{ transform: open ? 'translateX(1px)' : 'translateX(10.5px)', transition: 'transform var(--duration-fast) var(--ease-smooth-out)' }} />
     </svg>
   );
 }
@@ -87,7 +87,7 @@ export function AppSidebar({ children }: { children: React.ReactNode }) {
     <div className="flex h-screen flex-col bg-white">
       {/* Top: the brand cell (as wide as the sidebar), then the bar. */}
       <header className="flex h-14 shrink-0 border-b border-line">
-        <div style={{ width: open ? SIDEBAR_W : 0 }} className={cn('hidden shrink-0 items-center overflow-hidden transition-[width] duration-200 ease-out md:flex', open && 'border-r border-line')}>
+        <div style={{ width: open ? SIDEBAR_W : 0 }} className={cn('hidden shrink-0 items-center overflow-hidden transition-[width] duration-[var(--duration-fast)] ease-[var(--ease-smooth-out)] md:flex', open && 'border-r border-line')}>
           <div className="flex w-[232px] shrink-0 items-center justify-between pl-4 pr-3">
             <Link href="/home" aria-label="hocnoihocviet · Trang chủ" className="flex items-center"><Logo /></Link>
             {toggleBtn}
@@ -103,7 +103,7 @@ export function AppSidebar({ children }: { children: React.ReactNode }) {
       </header>
       <div className="flex min-h-0 flex-1">
         <aside aria-label="Thanh bên" aria-hidden={!open} inert={!open} style={{ width: open ? SIDEBAR_W : 0 }}
-          className={cn('hidden shrink-0 flex-col overflow-hidden bg-white transition-[width] duration-200 ease-out md:flex', open && 'border-r border-line')}>
+          className={cn('hidden shrink-0 flex-col overflow-hidden bg-white transition-[width] duration-[var(--duration-fast)] ease-[var(--ease-smooth-out)] md:flex', open && 'border-r border-line')}>
           <div className="flex h-full w-[232px] shrink-0 flex-col">
             <div className="flex flex-1 flex-col gap-5 overflow-y-auto px-3 py-4">
               {GROUPS.map((g, k) => {

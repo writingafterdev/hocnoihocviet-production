@@ -95,7 +95,7 @@ export function GuidedWriting({ sample = GW_SAMPLES.charity, onBack, backLabel =
   useEffect(() => { setTyped(''); setPeek([]); setShowAll(false); if (taRef.current) taRef.current.focus(); }, [cur]);
   useEffect(() => { if (done && onFinish) onFinish(); }, [done]); // eslint-disable-line react-hooks/exhaustive-deps
   const next = (revealed: boolean) => { if (revealed) setShown((s) => [...s, cur]); setCur((c) => c + 1); };
-  const submit = () => { if (all) next(false); else { setShake(true); setTimeout(() => setShake(false), 400); } };
+  const submit = () => { if (all) next(false); else { setShake(true); setTimeout(() => setShake(false), 300); } };
   const restart = () => { setCur(0); setShown([]); };
   const card = { borderRadius: 12, border: '1px solid ' + CL.border, background: '#fff' };
 
@@ -160,7 +160,7 @@ export function GuidedWriting({ sample = GW_SAMPLES.charity, onBack, backLabel =
                 <p style={{ margin: 0, fontFamily: CL.sans, fontSize: 19, fontWeight: 600, lineHeight: 1.5, color: CL.ink, textWrap: 'pretty' }}>{seg.vi}</p>
               </section>
 
-              <section style={{ ...card, padding: '22px 24px', transform: shake ? 'translateX(4px)' : 'none', transition: 'transform .1s' }}>
+              <section className={shake ? 't-shake' : undefined} style={{ ...card, padding: '22px 24px' }}>
                 <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, marginBottom: 12 }}>
                   <ClLabel>Câu mẫu · chữ cái đầu</ClLabel>
                   <span style={{ marginLeft: 'auto', fontFamily: CL.sans, fontSize: 11.5, fontWeight: 600, color: all ? CL.greenText : CL.ink5 }}>{nOk}/{words.length} từ đúng</span>

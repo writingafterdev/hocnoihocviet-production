@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactNode, useLayoutEffect } from 'react';
 import type { Prompt } from '@/content/prompts';
 import { SignedOutError, type EssayState } from '../attempts/store';
 import { AI_ERROR_TEXT, AiRequestError } from '../ai/request';
@@ -129,6 +129,18 @@ export function WriteScreen({ prompt, chains, setChains, essay, setEssay, toolba
   const [tab, setTab] = useState('tr');
   /** What the feedback panel shows: the review, or while grading, what has arrived so far (null = all skeleton). */
   const panel = sending ? live : review;
+  // The white tab behind the active criterion slides to the new one (transitions.dev "Tabs sliding").
+  const tabsRef = useRef<HTMLDivElement>(null);
+  const [ind, setInd] = useState<{ left: number; width: number } | null>(null);
+  useLayoutEffect(() => {
+    const list = tabsRef.current;
+    if (!list) return;
+    const measure = () => { const el = list.querySelector<HTMLElement>('[aria-selected="true"]'); if (el) setInd({ left: el.offsetLeft, width: el.offsetWidth }); };
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(list);
+    return () => ro.disconnect();
+  }, [tab, panel]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Timer: runs while the student is writing.
   const tick = useRef(setEssay);
@@ -349,12 +361,13 @@ export function WriteScreen({ prompt, chains, setChains, essay, setEssay, toolba
                   ))}
                 </div>
               )}
-              <div role="tablist" aria-label="Tiêu chí" style={{ display: 'flex', gap: 2, padding: '6px 6px 0', background: '#F5F5F5', borderTop: '1px solid ' + CL.ink1 }}>
+              <div ref={tabsRef} role="tablist" aria-label="Tiêu chí" style={{ position: 'relative', display: 'flex', gap: 2, padding: '6px 6px 0', background: '#F5F5F5', borderTop: '1px solid ' + CL.ink1 }}>
+                {ind && <span aria-hidden="true" className="t-tabs-slide" style={{ position: 'absolute', top: 6, bottom: 0, left: ind.left, width: ind.width, background: '#fff', borderRadius: '12px 12px 0 0' }} />}
                 {CRITERIA.map(([id]) => {
                   const st = CRITERION_STYLE[id], on = tab === id, v = scores[id as 'tr'], was = essay.prevScores?.[id as 'tr'];
                   return (
                     <button key={id} type="button" role="tab" aria-selected={on} className="cl-btn" onClick={() => { setTab(id); setActive(null); }}
-                      style={{ flex: 1, borderRadius: '12px 12px 0 0', background: on ? '#fff' : 'transparent', padding: '10px 4px 11px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, fontFamily: CL.sans, fontSize: 13, fontWeight: on ? 700 : 500, color: on ? CL.ink : CL.ink6, transition: 'background-color .2s' }}>
+                      style={{ position: 'relative', zIndex: 1, flex: 1, borderRadius: '12px 12px 0 0', background: 'transparent', padding: '10px 4px 11px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, fontFamily: CL.sans, fontSize: 13, fontWeight: on ? 700 : 500, color: on ? CL.ink : CL.ink6, transition: 'background-color .2s' }}>
                       {st.short}
                       <span style={{ display: 'inline-flex', alignItems: 'center', gap: 2, borderRadius: 6, background: st.soft, padding: '2px 9px', fontSize: 12.5, fontWeight: 700, color: st.fg, fontVariantNumeric: 'tabular-nums' }}>
                         {bandText(v)}{was != null && v > was && <span style={{ fontSize: 10.5 }} title={'Trước: ' + bandText(was)}>↑</span>}

@@ -31,7 +31,7 @@ export function NotesPanel({ result, fresh, active, onPick, onClose }: { result:
           const st = NOTE_STYLE[n.type];
           const on = active === k && fresh;
           return (
-            <button key={k} type="button" className="cl-btn co-slidein" disabled={!fresh} onClick={() => onPick(on ? null : k)} aria-pressed={on}
+            <button key={k} type="button" className="cl-btn t-reveal" disabled={!fresh} onClick={() => onPick(on ? null : k)} aria-pressed={on}
               style={{ textAlign: 'left', display: 'flex', flexDirection: 'column', gap: 7, padding: '12px 14px', borderRadius: 12, border: '1px solid ' + CL.ink1, background: on ? CL.panel : '#fff', transition: 'background-color .2s', ['--d' as string]: (0.3 + k * 0.16).toFixed(2) + 's' }}>
               <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <span style={{ minWidth: 22, height: 20, padding: '0 6px', borderRadius: 5, background: st.bg, color: st.fg, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontFamily: CL.sans, fontSize: 10.5, fontWeight: 700 }}>{k + 1}</span>

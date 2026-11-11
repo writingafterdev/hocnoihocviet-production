@@ -126,7 +126,7 @@ export function FixView({ prompt, chains, sections, essay, setEssay, tasks, chai
           <button type="button" className="cl-btn cl-link" onClick={() => setFix({ view: 'paused' })} style={back}>← Về bài chấm</button>
           <span style={pill}>Sửa ý và mạch</span>
           <span style={{ display: 'flex', gap: 6 }}>
-            {tasks.map((t, k) => <span key={t.item.key} style={{ width: k === step ? 22 : 8, height: 8, borderRadius: 999, background: fix.solved.includes(t.item.key) ? CL.green : k === step ? CL.ink : CL.ink2, transition: 'width .3s, background-color .3s' }} />)}
+            {tasks.map((t, k) => <span key={t.item.key} style={{ width: k === step ? 22 : 8, height: 8, borderRadius: 999, background: fix.solved.includes(t.item.key) ? CL.green : k === step ? '#2F62C4' : CL.ink2, transition: 'width var(--duration-fast) var(--ease-smooth-out), background-color var(--duration-fast) var(--ease-smooth-out)' }} />)}
           </span>
           <span style={{ fontFamily: CL.sans, fontSize: 12.5, color: CL.ink5 }}>Việc <b style={{ color: CL.ink }}>{step + 1}</b> / {tasks.length}</span>
         </>}
@@ -208,9 +208,9 @@ export function FixView({ prompt, chains, sections, essay, setEssay, tasks, chai
           {tasks.map((t, k) => {
             const done = fix.solved.includes(t.item.key), on = k === step;
             return (
-              <button key={t.item.key} type="button" className="cl-btn" onClick={() => go(k)} aria-current={on || undefined}
-                style={{ textAlign: 'left', display: 'flex', gap: 10, alignItems: 'flex-start', borderRadius: 12, border: '1px solid ' + (on ? CL.ink : CL.ink1), background: '#fff', padding: '12px 14px', transition: 'border-color .2s' }}>
-                <span style={{ flexShrink: 0, width: 22, height: 22, borderRadius: 999, background: done ? CL.mintSoft : on ? CL.ink : CL.ink1, color: done ? CL.greenText : on ? '#fff' : CL.ink6, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: CL.sans, fontSize: 11, fontWeight: 700 }}>{done ? '✓' : k + 1}</span>
+              <button key={t.item.key} type="button" className="cl-btn t-reveal" onClick={() => go(k)} aria-current={on || undefined}
+                style={{ ['--d' as string]: k * 40 + 'ms', textAlign: 'left', display: 'flex', gap: 10, alignItems: 'flex-start', borderRadius: 12, border: '1px solid ' + (on ? '#2F62C4' : CL.ink1), background: '#fff', padding: '12px 14px', transition: 'border-color var(--duration-fast) var(--ease-smooth-out)' } as React.CSSProperties}>
+                <span style={{ flexShrink: 0, width: 22, height: 22, borderRadius: 999, background: done ? CL.mintSoft : on ? '#2F62C4' : CL.ink1, color: done ? CL.greenText : on ? '#fff' : CL.ink6, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: CL.sans, fontSize: 11, fontWeight: 700 }}>{done ? '✓' : k + 1}</span>
                 <span style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
                   <span style={{ fontFamily: CL.sans, fontSize: 13, fontWeight: 600, color: CL.ink }}>{t.title}</span>
                   <span style={{ fontFamily: CL.sans, fontSize: 11.5, color: CL.ink5 }}>{sections.find((s) => s.id === t.item.sectionId)?.label} · {CRITERION_STYLE[t.crit].short}</span>

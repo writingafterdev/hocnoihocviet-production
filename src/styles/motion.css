@@ -1,0 +1,74 @@
+/* Motion for the whole app: the transitions.dev token scale (https://transitions.dev, free licence: use freely, do not
+ * redistribute the library) and the few recipes the app uses. Reference the tokens as var(--duration-*), var(--ease-*)... */
+:root {
+  /* ── Motion tokens — shared scale ──────────────────────────────
+     Reference these with var(--…) anywhere in your project. The
+     transitions below ship literal values so each snippet works on
+     its own; `transitions refine` maps hardcoded values back to
+     these tokens. */
+  /* Durations */
+  --duration-stagger: 40ms;  /* per-item stagger offset */
+  --duration-micro: 80ms;  /* tooltip/path delay, shake segment, large stagger */
+  --duration-quick: 150ms;  /* modal/dropdown close, text swap, tooltip appear */
+  --duration-fast: 250ms;  /* icon swap, dropdown/modal open, tabs sliding, page slide */
+  --duration-medium: 350ms;  /* panel close, toast close */
+  --duration-slow: 400ms;  /* panel open, skeleton content reveal, input clear */
+  --duration-very-slow: 500ms;  /* emphasis moments, badge appear, text reveal, success check */
+  /* Easings */
+  --ease-smooth-out: cubic-bezier(0.22, 1, 0.36, 1);  /* modal/dropdown/panel open + close, page slide, resize, position change */
+  --ease-in-out: ease-in-out;  /* icon swap, text swap, text reveal, skeleton reveal */
+  --ease-out: ease-out;  /* tooltip open / close */
+  --ease-linear: linear;  /* shimmer, skeleton pulse, spinner */
+  --ease-bounce: cubic-bezier(0.34, 1.36, 0.64, 1);  /* badge pop open */
+  --ease-bounce-strong: cubic-bezier(0.34, 3.85, 0.64, 1);  /* bouncy hover-out (avatar return) */
+  /* Distances */
+  --distance-micro: 4px;  /* text swap */
+  --distance-small: 6px;  /* error shake (small segment) */
+  --distance-base: 8px;  /* badge diagonal reveal, page slide, error shake (large segment) */
+  --distance-medium: 12px;  /* text reveal */
+  --distance-large: 30px;  /* check badge appear */
+  /* Scales */
+  --scale-large: 0.96;  /* modal open / close */
+  --scale-medium: 0.97;  /* dropdown open */
+  --scale-small: 0.98;  /* tooltip open */
+  --scale-tiny: 0.99;  /* dropdown close */
+  /* Blur */
+  --blur-small: 2px;  /* panel reveal, icon swap, text swap, skeleton reveal, number pop-in */
+  --blur-medium: 3px;  /* page slide, text reveal */
+  --blur-large: 8px;  /* success check open */
+}
+
+/* Modal open / close (transitions.dev "Modal"): scales up from 0.96 and fades; closes quicker. */
+.t-modal-back { animation: t-fade-in var(--duration-fast) var(--ease-smooth-out) both; }
+.t-modal-back.is-closing { animation: t-fade-out var(--duration-quick) var(--ease-smooth-out) both; pointer-events: none; }
+.t-modal { transform-origin: center; animation: t-modal-in var(--duration-fast) var(--ease-smooth-out) both; will-change: transform, opacity; }
+.t-modal-back.is-closing .t-modal { animation: t-modal-out var(--duration-quick) var(--ease-smooth-out) both; }
+@keyframes t-fade-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes t-fade-out { from { opacity: 1; } to { opacity: 0; } }
+@keyframes t-modal-in { from { opacity: 0; transform: scale(var(--scale-large)); } to { opacity: 1; transform: none; } }
+@keyframes t-modal-out { from { opacity: 1; transform: none; } to { opacity: 0; transform: scale(var(--scale-large)); } }
+
+/* Error state shake (transitions.dev "Error state shake"): right, left, overshoot, settle in 280ms. */
+.t-shake { animation: t-shake 280ms linear; }
+@keyframes t-shake {
+  0%     { transform: translateX(0);    animation-timing-function: var(--ease-smooth-out); }
+  28.57% { transform: translateX(var(--distance-small));        animation-timing-function: var(--ease-smooth-out); }
+  57.14% { transform: translateX(calc(var(--distance-small) * -1)); animation-timing-function: var(--ease-smooth-out); }
+  78.57% { transform: translateX(4px);  animation-timing-function: var(--ease-smooth-out); }
+  100%   { transform: translateX(0); }
+}
+
+/* Texts reveal / appear (transitions.dev "Texts reveal"): a blurred rise; set --d for a stagger. */
+.t-reveal { animation: t-reveal var(--duration-very-slow) var(--ease-smooth-out) var(--d, 0s) both; }
+@keyframes t-reveal { from { opacity: 0; transform: translateY(var(--distance-medium)); filter: blur(var(--blur-medium)); } to { opacity: 1; transform: none; filter: blur(0); } }
+
+/* Tabs sliding (transitions.dev "Tabs sliding"): the indicator travels to the active tab. */
+.t-tabs-slide { transition: left var(--duration-fast) var(--ease-smooth-out), width var(--duration-fast) var(--ease-smooth-out); }
+
+/* Card hover (shared by the home and vocab cards): a small lift and a ring that deepens. */
+.t-card-hover { transition: transform var(--duration-fast) var(--ease-smooth-out), box-shadow var(--duration-fast) var(--ease-smooth-out); }
+@media (hover: hover) { .t-card-hover:hover { transform: translateY(-2px); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .t-modal-back, .t-modal, .t-modal-back.is-closing, .t-shake, .t-reveal, .t-tabs-slide, .t-card-hover { animation: none !important; transition: none !important; transform: none !important; }
+}

@@ -85,7 +85,7 @@ function Filter({ title, options, selected, onToggle }: { title: string; options
 /** Prompt card: image + tags at rest; on hover it crossfades to the full prompt and a "Viết bài" button. */
 function PromptCard({ prompt, onWrite }: { prompt: Prompt; onWrite: () => void }) {
   const [hover, setHover] = useState(false);
-  const layer = (on: boolean): React.CSSProperties => ({ transition: 'opacity .32s ' + EASE + ', transform .42s ' + EASE, opacity: on ? 1 : 0, transform: on ? 'none' : 'translateY(6px)', pointerEvents: on ? 'auto' : 'none' });
+  const layer = (on: boolean): React.CSSProperties => ({ transition: 'opacity var(--duration-medium) var(--ease-smooth-out), transform var(--duration-slow) var(--ease-smooth-out)', opacity: on ? 1 : 0, transform: on ? 'none' : 'translateY(6px)', pointerEvents: on ? 'auto' : 'none' });
   return (
     <article onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)} onFocus={() => setHover(true)} onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setHover(false); }} style={{ position: 'relative', display: 'grid', borderRadius: 10, background: '#fff', boxShadow: hover ? '0 8px 24px rgba(0,0,0,0.06), 0 0 0 1px rgba(0,0,0,0.06)' : '0 1px 4px rgba(0,0,0,0.04), 0 0 0 1px rgba(0,0,0,0.04)', transform: hover ? 'translateY(-2px)' : 'none', transition: 'box-shadow .35s ' + EASE + ', transform .35s ' + EASE, overflow: 'hidden', minHeight: 156 }}>
       <div aria-hidden={hover} style={{ gridArea: '1/1', display: 'flex', padding: 12, ...layer(!hover) }}>

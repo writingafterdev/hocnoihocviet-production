@@ -73,9 +73,9 @@ function Landing({ savedCount, onOpen, onBack }: { savedCount: (sk: VocabSkill) 
           {VB_SKILLS.map((sk) => {
             const words = sk.topics.reduce((n, t) => n + t.items.length, 0);
             return (
-              <button type="button" key={sk.id} onClick={() => onOpen(sk.id)} className="group m-0 flex cursor-pointer flex-col overflow-hidden rounded-xl border-0 bg-white p-0 text-left font-[inherit] shadow-ring transition-shadow duration-150 hover:shadow-ring-hover focus-visible:shadow-[0_0_0_2px_var(--brand-blue-deep)] focus-visible:outline-none">
+              <button type="button" key={sk.id} onClick={() => onOpen(sk.id)} className="group m-0 flex cursor-pointer flex-col overflow-hidden rounded-xl border-0 bg-white p-0 text-left font-[inherit] shadow-ring t-card-hover hover:shadow-ring-hover focus-visible:shadow-[0_0_0_2px_var(--brand-blue-deep)] focus-visible:outline-none">
                 <div className="relative grid h-48 w-full place-items-center" style={{ background: sk.pillar }}>
-                  <img src={sk.ill} alt="" className="h-40 w-auto object-contain mix-blend-multiply transition-transform duration-300 group-hover:scale-[1.03]" />
+                  <img src={sk.ill} alt="" className="h-40 w-auto object-contain mix-blend-multiply transition-transform duration-[var(--duration-slow)] ease-[var(--ease-smooth-out)] group-hover:scale-[1.03]" />
                   <span className="absolute right-3 top-3 rounded-md bg-white px-2 py-0.5 text-xs font-medium text-ink-soft">{words} cụm</span>
                 </div>
                 <div className="flex flex-1 flex-col gap-1.5 px-5 pb-5 pt-4">
