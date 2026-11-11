@@ -188,6 +188,7 @@ export function PromptLibrary() {
             {filtered.length > 0 && (
               <>
                 <p style={{ fontFamily: 'var(--font-sans)', fontSize: 13, color: '#737373', margin: '0 0 4px' }}>{filtered.length} đề</p>
+                {filtered.length > PAGE && pager('mb-1')}
                 {/* The random pick is a small card of its own, in the same style as the prompts below it. */}
                 <button type="button" onClick={randomize} disabled={!!reel} className="pl-card t-card-hover" style={{ display: 'flex', alignItems: 'center', gap: 16, padding: 12, textAlign: 'left', fontFamily: 'var(--font-sans)', color: '#171717', background: '#fff', border: 'none', cursor: 'pointer', borderRadius: 12, boxShadow: '0 0 0 1px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.05)' }}>
                   <div style={{ width: 136, height: 72, borderRadius: 8, background: '#F5F5F5', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -201,7 +202,6 @@ export function PromptLibrary() {
                 </button>
               </>
             )}
-            {filtered.length > PAGE && pager('mb-1')}
             {filtered.slice(page * PAGE, (page + 1) * PAGE).map((p) => <PromptCard key={p.id} prompt={p} onWrite={() => setModalPrompt(p)} />)}
             {filtered.length > PAGE && pager('mt-5')}
             {filtered.length === 0 && (
