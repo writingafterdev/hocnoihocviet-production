@@ -128,7 +128,9 @@ a:hover { color: #404040; }
 .cl-lens:hover { border-color: #171717 !important; }
 .cl-word:hover { border-color: #171717 !important; background: #EEF3FC !important; }
 .cl-add:hover { border-color: #171717 !important; background: #FAFAFA !important; color: #171717 !important; }
-.cl-primary:hover { opacity: .82; }
+/* Primary buttons: BoardUI's gradient (lighter on hover, darker on press), in the brand blue. */
+.cl-primary { @apply bg-button-primary button-press-motion; color: #fff; box-shadow: var(--shadow-xs); }
+.cl-primary:disabled { opacity: 1 !important; box-shadow: none; color: var(--color-button-primary-disabled-foreground); }
 /* Things that appear (a chain switched to, a cell's question, a panel) rise in softly. */
 @keyframes cl-rise { from { opacity: 0; } to { opacity: 1; } }
 .cl-rise { animation: cl-rise .3s ease both; }

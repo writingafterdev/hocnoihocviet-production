@@ -46,7 +46,7 @@ export function AttemptHistory() {
             <img src="/illustrations/woman-with-paper-document-thinking.svg" alt="" style={{ width: 140, height: 140, objectFit: 'contain', mixBlendMode: 'multiply', marginBottom: 12 }} />
             <p style={{ fontSize: 15, fontWeight: 600, margin: '0 0 6px' }}>Chưa có bài nào</p>
             <p style={{ fontSize: 13, color: '#737373', margin: '0 0 18px' }}>Chọn một đề trong thư viện để bắt đầu.</p>
-            <Link href="/writing" style={{ display: 'inline-flex', alignItems: 'center', height: 36, padding: '0 14px', borderRadius: 8, background: '#2F62C4', boxShadow: '0 0 0 1px #2453AE', color: '#fff', fontSize: 14, fontWeight: 500 }}>Mở thư viện đề</Link>
+            <Link href="/writing" className="cl-primary" style={{ display: 'inline-flex', alignItems: 'center', height: 36, padding: '0 14px', borderRadius: 8, color: '#fff', fontSize: 14, fontWeight: 500 }}>Mở thư viện đề</Link>
           </div>
         )}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>

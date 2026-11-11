@@ -36,8 +36,8 @@ export function ClTag({ kind }: { kind: string }) {
 
 /** Shared uppercase button style for workspace toolbars. */
 export const toolbarBtn = (on: boolean): CSSProperties => ({
-  display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6, height: 36, borderRadius: 8, border: 'none',
-  background: on ? '#F5F5F5' : '#fff', color: on ? CL.ink : CL.ink7, boxShadow: '0 0 0 1px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.05)',
+  display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6, height: 36, borderRadius: 10,
+  background: on ? '#F5F5F5' : '#fff', color: on ? CL.ink : CL.ink7, border: '1px solid var(--color-border-button-default)', boxShadow: 'var(--shadow-xs)',
   fontFamily: CL.sans, fontSize: 14, fontWeight: 500, padding: '0 12px', whiteSpace: 'nowrap',
 });
 

@@ -446,7 +446,7 @@ export function VocabBuilder({ onBack }: { onBack: () => void }) {
               <span style={{ fontSize: 13, color: n > MAX_TICK ? '#B33A1A' : VB.ink3 }}>{n ? <><b style={{ color: VB.ink, fontWeight: 600 }}>{label.split(' · ')[0]}</b>{label.includes(' · ') ? ' · ' + label.split(' · ')[1] : ''}</> : label}</span>
               {n > 0 && <button type="button" className="cl-btn cl-link" onClick={() => setSel((s) => ({ ...s, [key]: [] }))} style={{ fontSize: 12, fontWeight: 600, color: VB.ink3, textDecoration: 'underline', textUnderlineOffset: 3 }}>Bỏ chọn</button>}
               {note && <span role="alert" style={{ flexBasis: '100%', order: 3, fontSize: 12, color: '#B33A1A' }}>{note}</span>}
-              <button type="button" className="cl-btn cl-primary" disabled={!rows.length || making} onClick={() => go()} style={{ marginLeft: 'auto', display: 'inline-flex', alignItems: 'center', gap: 8, height: 38, borderRadius: 10, background: '#2F62C4', color: '#fff', padding: '0 16px', fontFamily: VB.sans, fontSize: 12.5, fontWeight: 700, opacity: !rows.length || making ? 0.5 : 1 }}>{making ? 'Đang tạo đoạn…' : 'Ôn ' + Math.min(n || Math.min(4, rows.length), MAX_TICK) + ' cụm →'}</button>
+              <button type="button" className="cl-btn cl-primary" disabled={!rows.length || making} onClick={() => go()} style={{ marginLeft: 'auto', display: 'inline-flex', alignItems: 'center', gap: 8, height: 38, borderRadius: 10, color: '#fff', padding: '0 16px', fontFamily: VB.sans, fontSize: 12.5, fontWeight: 700, opacity: !rows.length || making ? 0.5 : 1 }}>{making ? 'Đang tạo đoạn…' : 'Ôn ' + Math.min(n || Math.min(4, rows.length), MAX_TICK) + ' cụm →'}</button>
             </div>
           </section>
           {focused && (
