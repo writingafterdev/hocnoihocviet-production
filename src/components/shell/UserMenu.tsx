@@ -42,7 +42,7 @@ export function UserMenu({ placement = 'down' }: { placement?: 'down' | 'up' }) 
   const item: React.CSSProperties = { display: 'block', width: '100%', textAlign: 'left', padding: '10px 14px', borderRadius: 8, fontFamily: 'var(--font-sans)', fontSize: 13.5, color: '#171717', background: 'none', border: 'none', cursor: 'pointer' };
   return (
     <div ref={ref} style={{ position: 'relative' }}>
-      <ProBeam radius={9999}>
+      <ProBeam radius={18}>
       <button type="button" onClick={() => setOpen(!open)} aria-haspopup="menu" aria-expanded={open} aria-label="Tài khoản" style={{ width: 40, height: 40, padding: 0, border: 'none', borderRadius: 9999, background: 'var(--brand-blue-soft)', overflow: 'hidden', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--font-sans)', fontSize: 12, fontWeight: 600, color: 'var(--brand-blue-deep)' }}>
         {user.image ? <img src={user.image} alt="" referrerPolicy="no-referrer" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : initials(user.name || user.email)}
       </button>

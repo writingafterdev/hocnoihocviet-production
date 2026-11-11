@@ -244,3 +244,21 @@ a:hover { color: #404040; }
   .co-tick { stroke-dashoffset: 0; }
   .co-scan, .co-trail, .co-sweep { display: none; }
 }
+
+
+/* Pro ring: a rainbow that travels around the element, with a blurred copy behind as a glow. */
+@property --pro-a { syntax: '<angle>'; inherits: false; initial-value: 0deg; }
+@keyframes pro-spin { to { --pro-a: 360deg; } }
+.pro-ring {
+  --pro-r: 14px;
+  position: relative; isolation: isolate; display: inline-flex; flex-shrink: 0; padding: 2px; border-radius: var(--pro-r);
+  background: conic-gradient(from var(--pro-a), #FF5C33, #FFC73C, #2D881A, #00B8D9, #2F62C4, #8B5CF6, #FF4FA3, #FF5C33);
+  animation: pro-spin 2.6s linear infinite;
+}
+.pro-ring::before {
+  content: ''; position: absolute; inset: -3px; z-index: -1; border-radius: calc(var(--pro-r) + 3px);
+  background: conic-gradient(from var(--pro-a), #FF5C33, #FFC73C, #2D881A, #00B8D9, #2F62C4, #8B5CF6, #FF4FA3, #FF5C33);
+  filter: blur(9px); opacity: .7; animation: pro-spin 2.6s linear infinite;
+}
+.pro-ring-in { display: inline-flex; padding: 2px; border-radius: calc(var(--pro-r) - 2px); background: #fff; }
+@media (prefers-reduced-motion: reduce) { .pro-ring, .pro-ring::before { animation: none; } }
