@@ -151,7 +151,7 @@ export function PromptLibrary() {
         <div style={{ borderBottom: '1px solid rgba(0,0,0,0.1)', marginBottom: 24 }} />
 
         <div className="pl-grid" style={{ display: 'flex', alignItems: 'flex-start', gap: 32 }}>
-          <aside style={{ width: 260, flexShrink: 0 }}>
+          <aside className="cl-scroll" style={{ width: 260, flexShrink: 0, position: 'sticky', top: 24, alignSelf: 'flex-start', maxHeight: 'calc(100vh - 104px)', overflowY: 'auto' }}>
             <div style={{ marginBottom: 32 }}>
               <div id="task-label" style={{ fontFamily: 'var(--font-sans)', fontSize: 18, fontWeight: 600, color: '#171717', marginBottom: 16 }}>Phần thi</div>
               <div role="tablist" aria-labelledby="task-label" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 4, padding: 4, borderRadius: 10, background: '#F5F5F5' }}>

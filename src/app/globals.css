@@ -237,7 +237,7 @@ a:hover { color: #404040; }
 
 @media (max-width: 900px) {
   .pl-grid { flex-direction: column; }
-  .pl-grid > aside { width: 100% !important; }
+  .pl-grid > aside { width: 100% !important; position: static !important; max-height: none !important; overflow: visible !important; }
 }
 
 /* Coach screens (Chứng minh nhanh, ① Dựng mạch, ② Viết bài) */
