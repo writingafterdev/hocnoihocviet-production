@@ -62,7 +62,7 @@ export function UserMenu({ placement = 'down', variant = 'avatar' }: { placement
       </ProBeam>
       )}
       {open && (
-        <div role="menu" style={{ position: 'absolute', ...(placement === 'up' ? { left: 0, bottom: 'calc(100% + 8px)' } : { right: 0, top: 'calc(100% + 8px)' }), zIndex: 60, width: 240, padding: 6, borderRadius: 10, border: '1px solid #E5E5E5', background: '#fff', boxShadow: 'var(--shadow-ambient-high)' }}>
+        <div role="menu" style={{ position: 'absolute', ...(placement === 'up' ? { left: 0, bottom: 'calc(100% + 8px)' } : { right: 0, top: 'calc(100% + 8px)' }), zIndex: 60, width: variant === 'row' ? '100%' : 240, padding: 6, borderRadius: 10, border: '1px solid #E5E5E5', background: '#fff', boxShadow: 'var(--shadow-ambient-high)' }}>
           <div style={{ padding: '10px 14px 12px', borderBottom: '1px solid #F0F0F0', marginBottom: 6 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontFamily: 'var(--font-sans)', fontSize: 13.5, fontWeight: 600, color: '#171717' }}>
               <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user.name}</span>

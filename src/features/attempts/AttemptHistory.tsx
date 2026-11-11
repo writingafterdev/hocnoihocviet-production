@@ -53,7 +53,7 @@ export function AttemptHistory() {
         )}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           {/* The worked sample first: the same card as the prompts in the library. */}
-          <button type="button" onClick={openSample} disabled={opening} className="pl-card t-card-hover" style={{ display: 'flex', padding: 12, textAlign: 'left', fontFamily: 'inherit', color: '#171717', background: '#fff', border: 'none', cursor: 'pointer', borderRadius: 12, boxShadow: '0 0 0 1px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.05)' }}>
+          <button type="button" onClick={openSample} disabled={opening} className="pl-card" style={{ display: 'flex', padding: 12, textAlign: 'left', fontFamily: 'inherit', color: '#171717', background: '#fff', border: 'none', cursor: 'pointer', borderRadius: 12, boxShadow: '0 0 0 1px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.05)' }}>
             <div style={{ width: 136, height: 96, borderRadius: 8, background: '#F5F5F5', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <img src="/illustrations/cv-of-a-perfect-candidate.svg" alt="" style={{ width: 84, height: 84, objectFit: 'contain', mixBlendMode: 'multiply' }} />
             </div>
@@ -70,7 +70,7 @@ export function AttemptHistory() {
             const band = a.essay.review?.scores.band;
             const href = '/write/' + a.id + (words ? '/essay' : '/chains');
             return (
-              <Link key={a.id} href={href} className="pl-card t-card-hover" style={{ display: 'flex', alignItems: 'stretch', padding: 12, borderRadius: 12, boxShadow: '0 0 0 1px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.05)', color: '#171717', background: '#fff' }}>
+              <Link key={a.id} href={href} className="pl-card" style={{ display: 'flex', alignItems: 'stretch', padding: 12, borderRadius: 12, boxShadow: '0 0 0 1px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.05)', color: '#171717', background: '#fff' }}>
                 <div style={{ width: 136, minHeight: 132, borderRadius: 8, background: '#F5F5F5', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <img src={'/illustrations/' + TOPIC_ILLUSTRATION[p.topic] + '.svg'} alt="" style={{ width: 112, height: 112, objectFit: 'contain', mixBlendMode: 'multiply' }} />
                 </div>
