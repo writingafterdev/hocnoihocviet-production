@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation';
 import { useLayoutEffect, useRef, useState } from 'react';
 import { Checkbox } from '@/components/base/checkbox/checkbox';
 import { Pagination } from '@/components/base/pagination/pagination';
-import { Button } from '@/components/base/buttons/button';
 import { RiShuffleLine } from '@remixicon/react';
 import { PageHeader } from '@/components/shell/BrandHeader';
 import { sfx } from '@/lib/sfx';
@@ -187,10 +186,20 @@ export function PromptLibrary() {
           </aside>
           <div style={{ flex: 1, minWidth: 0, width: '100%', display: 'flex', flexDirection: 'column', gap: 12 }}>
             {filtered.length > 0 && (
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, margin: '0 0 4px' }}>
-                <p style={{ fontFamily: 'var(--font-sans)', fontSize: 13, color: '#737373', margin: 0 }}>{filtered.length} đề</p>
-                <Button variant="secondary" size="small" leadingIcon={RiShuffleLine} onClick={randomize} disabled={!!reel}>Đề ngẫu nhiên</Button>
-              </div>
+              <>
+                <p style={{ fontFamily: 'var(--font-sans)', fontSize: 13, color: '#737373', margin: '0 0 4px' }}>{filtered.length} đề</p>
+                {/* The random pick is a small card of its own, in the same style as the prompts below it. */}
+                <button type="button" onClick={randomize} disabled={!!reel} className="pl-card t-card-hover" style={{ display: 'flex', alignItems: 'center', gap: 16, padding: 12, textAlign: 'left', fontFamily: 'var(--font-sans)', color: '#171717', background: '#fff', border: 'none', cursor: 'pointer', borderRadius: 12, boxShadow: '0 0 0 1px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.05)' }}>
+                  <div style={{ width: 136, height: 72, borderRadius: 8, background: '#F5F5F5', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <img src="/illustrations/scuba-diver-opening-treasure-chest-of-opportunities.svg" alt="" style={{ width: 64, height: 64, objectFit: 'contain', mixBlendMode: 'multiply' }} />
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <p style={{ margin: 0, fontSize: 14, fontWeight: 600, lineHeight: 1.4 }}>Đề ngẫu nhiên</p>
+                    <p style={{ margin: '2px 0 0', fontSize: 13, color: '#737373', lineHeight: 1.4 }}>Để mình chọn một đề cho bạn, theo bộ lọc đang chọn.</p>
+                  </div>
+                  <RiShuffleLine size={20} style={{ flexShrink: 0, marginRight: 8, color: '#525252' }} />
+                </button>
+              </>
             )}
             {filtered.length > PAGE && pager('mb-1')}
             {filtered.slice(page * PAGE, (page + 1) * PAGE).map((p) => <PromptCard key={p.id} prompt={p} onWrite={() => setModalPrompt(p)} />)}
