@@ -42,7 +42,7 @@ export function Login({ dev = false }: { dev?: boolean }) {
     if (r.error) { setBusy(false); setFailure(r.error.message || 'dev login failed'); } else router.replace(next);
   };
   return (
-    <div className="flex min-h-screen flex-col items-center bg-white px-6 py-6 text-ink">
+    <div className="flex min-h-screen flex-col items-center bg-blue-soft px-6 py-6 text-ink">
       <Link href="/home" className="inline-flex min-h-10 items-center gap-1 self-start text-[13.5px] text-ink-soft hover:text-ink">← Trang chủ</Link>
       <div className="relative my-auto w-full max-w-[400px] pt-16">
       <img src="/illustrations/student-walking-with-thought-bubble-backpack.svg" alt="" draggable={false} className="pointer-events-none absolute right-3 top-0 z-10 h-36 w-auto select-none" />
