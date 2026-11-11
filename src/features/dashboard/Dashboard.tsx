@@ -18,7 +18,9 @@ const ITEMS: Item[] = [
 const focusRing = 'focus-visible:shadow-[0_0_0_2px_var(--brand-blue-deep)] focus-visible:outline-none';
 
 /** Every card the same: a meta line with the status on the right, the title, one line, then skill chips. */
-function Card({ p }: { p: Item }) {
+function Card({ p: item }: { p: Item }) {
+  const off = !item.href;
+  const p = off ? { ...item, tint: 'bg-neutral-100', ink: 'text-ink-soft' } : item;
   const body = (
     <>
       <div className="flex min-w-0 flex-1 flex-col p-5">
@@ -33,14 +35,14 @@ function Card({ p }: { p: Item }) {
         </div>
       </div>
       <div className={cn('grid w-40 shrink-0 place-items-center', p.tint)}>
-        <Illustration name={p.art} className="h-32 w-auto" />
+        <Illustration name={p.art} className={cn('h-32 w-auto', off && 'grayscale opacity-60')} />
       </div>
     </>
   );
   const cls = 'group flex min-h-[188px] overflow-hidden rounded-xl bg-white shadow-ring';
   return p.href
     ? <Link href={p.href} className={cn(cls, 'hover:shadow-ring-hover', focusRing)}>{body}</Link>
-    : <div aria-disabled="true" className={cls}>{body}</div>;
+    : <div aria-disabled="true" className={cn(cls, 'cursor-not-allowed bg-neutral-50 opacity-70')}>{body}</div>;
 }
 
 /** App home: the same card for everything, two to a row. */
