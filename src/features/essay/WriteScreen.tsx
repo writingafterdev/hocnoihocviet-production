@@ -14,6 +14,8 @@ import { bandText, CRITERIA, markStyle, CRITERION_STYLE, draftsKey, requestEssay
 import { DiffView, fixTasks, FixView } from './FixFlow';
 import { planFix, rescore } from './fix-api';
 import { MiniChain } from './MiniChain';
+import { Skeleton } from '@/components/base/skeleton/skeleton';
+import { AiStatus } from '@/components/ui/ai-status';
 
 export interface WriteProps {
   prompt: Prompt;
@@ -65,7 +67,7 @@ function Marked({ text, notes, active, onPick }: { text: string; notes: Note[]; 
 }
 
 /** A grey block that shimmers: stands in for text that is on its way. */
-const Bone = ({ w = '100%', h = 11, r }: { w?: number | string; h?: number; r?: number }) => <span className="co-skel" style={{ width: w, height: h, ...(r ? { borderRadius: r } : {}) }} />;
+const Bone = ({ w = '100%', h = 11, r }: { w?: number | string; h?: number; r?: number }) => <Skeleton shape="text" style={{ width: w, height: h, ...(r ? { borderRadius: r } : {}) }} />;
 
 /** A comment card that hasn't arrived yet: title, quote, two lines of text. */
 function CommentBone() {
@@ -96,7 +98,7 @@ function ReviewBone() {
           <Bone w="76%" h={10} /><Bone /><Bone w="94%" /><Bone w="58%" h={10} /><Bone w="82%" />
         </div>
       </section>
-      <span role="status" style={{ fontFamily: CL.sans, fontSize: 12, fontWeight: 500, color: CL.ink5 }}>Đang chấm bài…</span>
+      <AiStatus state="analyzing" states={{ analyzing: { label: 'Đang chấm bài', active: true } }} className="text-[13px]" />
       <CommentBone /><CommentBone /><CommentBone />
     </>
   );

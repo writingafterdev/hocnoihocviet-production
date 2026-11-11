@@ -22,6 +22,8 @@ import { TranslatorChat } from '../coach/TranslatorChat';
 import { useCoach } from '../coach/useCoach';
 import { primaryBtn } from '../coach/ui';
 import { Chip } from '@/components/base/badges/chip';
+import { AnimatedCounter } from '@/components/ui/animated-counter';
+import { AiStatus } from '@/components/ui/ai-status';
 
 const shuffle = <T,>(xs: T[]) => { const a = [...xs]; for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
 /** A brand drawing for each kind of statement: why (a question), what it does (charts), what to do (brainstorm). */
@@ -227,7 +229,7 @@ export function ProveDrill() {
             <Link href="/home" className="cl-link" style={backLinkStyle}><ClIcon name="left" size={14} />Trang chủ</Link>
             <Chip variant="subtle" color="blue">Chứng minh nhanh</Chip>
             <span style={{ width: 1, height: 18, background: CL.ink2 }} />
-            <span style={{ fontFamily: CL.sans, fontSize: 12.5, color: CL.ink5 }}>Đã chứng minh <b key={done} className={done ? 'co-bump' : ''} style={{ color: CL.ink, fontSize: 15, marginLeft: 4, fontVariantNumeric: 'tabular-nums' }}>{done}</b></span>
+            <span style={{ fontFamily: CL.sans, fontSize: 12.5, color: CL.ink5 }}>Đã chứng minh <AnimatedCounter value={done} className="ml-1 text-[15px] font-bold text-ink" /></span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             {s && <button type="button" className="cl-btn" onClick={backToPick} disabled={rolling} style={{ ...toolbarBtn(false), opacity: rolling ? 0.5 : 1 }}>Đổi loại</button>}
@@ -302,7 +304,7 @@ export function ProveDrill() {
             <>
               <SidePanel on={notesOn} grow={3}>
                 {coach.checking || !shownResult
-                  ? <section style={{ height: '100%', borderRadius: 12, border: '1px solid ' + CL.border, background: '#fff', padding: '18px 20px', display: 'flex', flexDirection: 'column', gap: 10 }}><ClLabel color={CL.ink}>Nhận xét</ClLabel><span style={{ fontFamily: CL.sans, fontSize: 12.5, color: CL.ink4 }}>Đang đọc mạch…</span></section>
+                  ? <section style={{ height: '100%', borderRadius: 12, border: '1px solid ' + CL.border, background: '#fff', padding: '18px 20px', display: 'flex', flexDirection: 'column', gap: 10 }}><ClLabel color={CL.ink}>Nhận xét</ClLabel><AiStatus state="analyzing" states={{ analyzing: { label: 'Đang đọc mạch', active: true } }} className="text-[13px]" /></section>
                   : <NotesPanel result={shownResult} fresh={coach.fresh} active={active} onPick={setActive} onClose={() => setNotesOpen(false)} />}
               </SidePanel>
               <SidePanel on={chat} grow={2} top={notesOn}>

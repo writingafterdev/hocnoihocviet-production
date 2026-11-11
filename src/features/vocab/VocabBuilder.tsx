@@ -14,6 +14,7 @@ import { SignedOutError } from '../attempts/store';
 import { topicsFor } from '@/lib/vocab-topics';
 import { groupPhrases, VB_SKILLS, type VocabItem, type VocabSkill, type VocabTopic } from './data';
 import { Chip } from '@/components/base/badges/chip';
+import { SkeletonText } from '@/components/base/skeleton/skeleton';
 
 const VB = {
   head: 'var(--ink-50)', border: 'var(--ink-200)', line: 'var(--ink-100)', strong: 'var(--ink-300)',
@@ -175,7 +176,7 @@ function SavedList({ skill, items, loaded, onTopic, onDelete, onEnrich }: { skil
         </div>
       )}
       {!loaded ? (
-        <div style={{ padding: '32px 24px 40px', borderTop: '1px solid ' + VB.line, fontFamily: VB.sans, fontSize: 14, color: VB.ink3 }}>Đang tải…</div>
+        <div style={{ padding: '32px 24px 40px', borderTop: '1px solid ' + VB.line, fontFamily: VB.sans, fontSize: 14, color: VB.ink3 }}><SkeletonText lines={4} lineClassName="h-5" /></div>
       ) : shown.length ? (
         <div className="cl-scroll" style={{ overflowX: 'auto' }}>
           <table style={{ width: '100%', minWidth: 1180, tableLayout: 'fixed', borderCollapse: 'collapse' }}>
