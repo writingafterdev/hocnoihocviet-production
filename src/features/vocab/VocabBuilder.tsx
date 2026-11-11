@@ -55,8 +55,8 @@ const TOPIC_DRAWING: Record<string, string> = {
 /** Landing: one card per skill. */
 function Landing({ savedCount, onOpen, onBack }: { savedCount: (sk: VocabSkill) => number; onOpen: (id: VocabSkill['id']) => void; onBack: () => void }) {
   return (
-    <main style={{ maxWidth: 1120, margin: '0 auto', padding: '36px 32px 36px', fontFamily: VB.sans, color: VB.ink }}>
-      <section style={{ display: 'flex', alignItems: 'flex-start', gap: 32, borderBottom: '1px solid rgba(0,0,0,0.1)', paddingBottom: 36 }}>
+    <main style={{ maxWidth: 1560, margin: '0 auto', padding: '24px 32px 24px', fontFamily: VB.sans, color: VB.ink }}>
+      <section style={{ display: 'flex', alignItems: 'flex-start', gap: 32, borderBottom: '1px solid rgba(0,0,0,0.1)', paddingBottom: 24 }}>
         <div style={{ display: 'flex', alignItems: 'flex-start', gap: 24 }}>
           <div style={{ width: 96, height: 96, borderRadius: 12, background: '#EDF7EA', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
             <img src="/illustrations/person-studying-different-sciences.svg" style={{ width: 84, height: 84, objectFit: 'contain', mixBlendMode: 'multiply' }} alt="" />
@@ -67,7 +67,7 @@ function Landing({ savedCount, onOpen, onBack }: { savedCount: (sk: VocabSkill) 
           </div>
         </div>
       </section>
-      <section style={{ paddingTop: 36 }}>
+      <section style={{ paddingTop: 24 }}>
         <h2 style={{ fontSize: 15, fontWeight: 700, letterSpacing: '-0.01em', margin: '0 0 22px' }}>Bộ từ vựng</h2>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 18 }}>
           {VB_SKILLS.map((sk) => {
@@ -415,7 +415,7 @@ export function VocabBuilder({ onBack }: { onBack: () => void }) {
   const label = n > MAX_TICK ? 'Tối đa ' + MAX_TICK + ' cụm; sẽ dùng ' + MAX_TICK + ' cụm đầu' : n > 6 ? 'Đã chọn ' + n + ' cụm · chia thành vài đoạn' : n ? 'Đã chọn ' + n + ' cụm' : 'Chưa chọn cụm nào. Ôn ngay 4 cụm bạn ít luyện nhất.';
 
   return shell(
-    <div style={{ maxWidth: 1440, margin: '0 auto', padding: '32px 40px 32px', fontFamily: VB.sans, color: VB.ink }}>
+    <div style={{ maxWidth: 1560, margin: '0 auto', padding: '24px 32px 24px', fontFamily: VB.sans, color: VB.ink }}>
       <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-end', justifyContent: 'space-between', gap: 16, marginBottom: 18 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
           <div style={{ width: 88, height: 88, borderRadius: 14, background: skill.pillar, display: 'grid', placeItems: 'center', flexShrink: 0 }}>

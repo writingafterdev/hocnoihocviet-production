@@ -136,9 +136,9 @@ export function PromptLibrary() {
   return (
     <div style={{ minHeight: '100%', background: '#FFFFFF' }}>
       <PageHeader />
-      <div style={{ maxWidth: 1200, margin: '0 auto', padding: '40px 32px 40px' }}>
+      <div style={{ maxWidth: 1560, margin: '0 auto', padding: '24px 32px 24px' }}>
 
-        <div style={{ display: 'flex', alignItems: 'flex-start', flexWrap: 'wrap', gap: 24, marginBottom: 48 }}>
+        <div style={{ display: 'flex', alignItems: 'flex-start', flexWrap: 'wrap', gap: 24, marginBottom: 24 }}>
           <div style={{ width: 96, height: 96, borderRadius: 12, background: '#FFF0EB', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
             <img src="/illustrations/person-typing-essay-on-laptop-digital-writing-or-blogging.svg" style={{ width: 84, height: 84, objectFit: 'contain', mixBlendMode: 'multiply' }} alt="" />
           </div>
@@ -148,7 +148,7 @@ export function PromptLibrary() {
           </div>
         </div>
 
-        <div style={{ borderBottom: '1px solid rgba(0,0,0,0.1)', marginBottom: 40 }} />
+        <div style={{ borderBottom: '1px solid rgba(0,0,0,0.1)', marginBottom: 24 }} />
 
         <div className="pl-grid" style={{ display: 'flex', alignItems: 'flex-start', gap: 32 }}>
           <aside style={{ width: 260, flexShrink: 0 }}>

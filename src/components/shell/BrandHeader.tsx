@@ -11,8 +11,8 @@ export function PageHeader() {
 export function WorkspaceHeader({ status }: { status?: ReactNode }) {
   // Takes no height: the status sits in the page's top padding, so the page's top and bottom gaps stay equal.
   return (
-    <header style={{ position: 'relative', width: '100%', maxWidth: 1710, margin: '0 auto', height: 0, flexShrink: 0 }}>
-      {status && <div style={{ position: 'absolute', top: 5, right: 40, lineHeight: '14px' }}>{status}</div>}
+    <header style={{ position: 'relative', width: '100%', maxWidth: 1560, margin: '0 auto', height: 0, flexShrink: 0 }}>
+      {status && <div style={{ position: 'absolute', top: 5, right: 32, lineHeight: '14px' }}>{status}</div>}
     </header>
   );
 }

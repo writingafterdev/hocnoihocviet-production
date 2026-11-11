@@ -79,7 +79,7 @@ export function Dashboard() {
   return (
     <div className="relative flex min-h-full flex-col bg-white text-ink">
       {/* The grid alone is centred, so the space above and below it is equal; the credit sits inside the bottom margin. */}
-      <div className="mx-auto flex w-full max-w-[1560px] flex-1 flex-col px-8 pb-6 pt-8">
+      <div className="mx-auto flex w-full max-w-[1560px] flex-1 flex-col px-8 pb-4 pt-6">
         <div className="grid flex-1 grid-cols-1 gap-4 md:grid-cols-6 md:grid-rows-[minmax(400px,1fr)_auto]">
           <div className="grid md:col-span-4"><Task2Card /></div>
           <div className="grid md:col-span-2"><VocabCard /></div>

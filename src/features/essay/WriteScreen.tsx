@@ -277,7 +277,7 @@ export function WriteScreen({ prompt, chains, setChains, essay, setEssay, toolba
     el?.querySelector('textarea')?.focus({ preventScroll: true });
   };
 
-  const shell = { height: '100%', display: 'flex', flexDirection: 'column', width: '100%', maxWidth: 1710, margin: '0 auto', padding: '24px 40px 24px' } as const;
+  const shell = { height: '100%', display: 'flex', flexDirection: 'column', width: '100%', maxWidth: 1560, margin: '0 auto', padding: '24px 32px 24px' } as const;
   if (essay.fix && essay.fix.view !== 'paused' && tasks.length) {
     return (
       <div style={shell}>

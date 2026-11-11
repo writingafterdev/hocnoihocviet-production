@@ -224,7 +224,7 @@ export function ProveDrill() {
   return (
     <div style={{ height: '100%', background: '#fff', display: 'flex', flexDirection: 'column' }}>
       <WorkspaceHeader />
-      <div style={{ flex: 1, minHeight: 0, width: '100%', maxWidth: 1710, margin: '0 auto', padding: '24px 40px 24px', display: 'flex', flexDirection: 'column' }}>
+      <div style={{ flex: 1, minHeight: 0, width: '100%', maxWidth: 1560, margin: '0 auto', padding: '24px 32px 24px', display: 'flex', flexDirection: 'column' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10, minHeight: 42, paddingBottom: 12 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 18 }}>
             <Link href="/home" className="cl-link" style={backLinkStyle}><ClIcon name="left" size={14} />Trang chủ</Link>

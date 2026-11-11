@@ -118,7 +118,7 @@ export function AdminPage() {
   return (
     <div className="adm" style={{ minHeight: '100%', background: '#fff' }}>
       {head}
-      <main style={{ maxWidth: 1200, margin: '0 auto', padding: '32px 40px 32px', display: 'flex', flexDirection: 'column', gap: 32 }}>
+      <main style={{ maxWidth: 1560, margin: '0 auto', padding: '24px 32px 24px', display: 'flex', flexDirection: 'column', gap: 32 }}>
 
         <section id="tong-quan" style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
           <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-end', justifyContent: 'space-between', gap: 20 }}>
