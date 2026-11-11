@@ -73,7 +73,7 @@ const cell = "flex size-8 shrink-0 items-center justify-center rounded-lg text-b
 /** Below this nav width, Previous/Next drop their labels and siblingCount
  *  clamps to 0 — the full-label, full-sibling layout starts clipping
  *  somewhere around 380–420px depending on totalPages' digit count. */
-const COMPACT_WIDTH = 420;
+const COMPACT_WIDTH = 560;
 
 function useIsCompact() {
   const ref = useRef<HTMLElement>(null);
@@ -125,7 +125,7 @@ export function Pagination({
         {isCompact ? undefined : previousLabel}
       </Button>
 
-      <ul className="flex min-w-0 items-center gap-0.5">
+      <ul className="m-0 flex min-w-0 list-none items-center gap-0.5 p-0">
         {pages.map((item, i) =>
           item === DOTS ? (
             <li
