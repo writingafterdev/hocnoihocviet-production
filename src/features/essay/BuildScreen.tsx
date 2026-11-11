@@ -13,6 +13,7 @@ import { primaryBtn } from '../coach/ui';
 import { useCoach, type CheckResult } from '../coach/useCoach';
 import { chainIn, endOf, hasTone, KIND_ASK, kindOf, middleOf, newBody, questionOf, startOf, withEnds, withMiddle } from './model';
 import { Chip } from '@/components/base/badges/chip';
+import { ProBeam } from '@/components/ui/pro-beam';
 
 export interface BuildProps {
   prompt: Prompt;
@@ -118,8 +119,8 @@ function BodyCard({ prompt, chain, num, canDelete, onChange, onDelete, check, on
           <div style={{ borderTop: '1px solid ' + CL.ink1, background: CL.panel, padding: '10px 22px', display: 'flex', alignItems: 'center', gap: 8 }}>
             <button type="button" className="cl-btn cl-link" onClick={() => onChange({ ...chain, built: false })} style={{ ...miniBtn, border: 'none', background: 'transparent', color: CL.ink5 }}>Đổi hai đầu</button>
             {coach.result && !coach.fresh && <span style={{ fontFamily: CL.sans, fontSize: 11.5, color: CL.ink4 }}>Bạn đã sửa mạch sau lần kiểm tra trước.</span>}
-            <button type="button" className="cl-btn cl-add" onClick={() => { onFocus(); onPick(null); coach.runCheck(); }} disabled={!filled || coach.checking || coach.fresh}
-              style={{ ...miniBtn, marginLeft: 'auto', color: CL.ink, opacity: !filled || coach.checking || coach.fresh ? 0.4 : 1 }}>{coach.checking ? 'Đang kiểm tra…' : coach.result ? 'Kiểm tra lại' : 'Kiểm tra mạch'}</button>
+            <ProBeam className="ml-auto"><button type="button" className="cl-btn cl-add" onClick={() => { onFocus(); onPick(null); coach.runCheck(); }} disabled={!filled || coach.checking || coach.fresh}
+              style={{ ...miniBtn, marginLeft: 'auto', color: CL.ink, opacity: !filled || coach.checking || coach.fresh ? 0.4 : 1 }}>{coach.checking ? 'Đang kiểm tra…' : coach.result ? 'Kiểm tra lại' : 'Kiểm tra mạch'}</button></ProBeam>
           </div>
         </>
       )}

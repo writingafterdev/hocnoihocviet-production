@@ -24,6 +24,7 @@ import { primaryBtn } from '../coach/ui';
 import { Chip } from '@/components/base/badges/chip';
 import { AnimatedCounter } from '@/components/ui/animated-counter';
 import { AiStatus } from '@/components/ui/ai-status';
+import { ProBeam } from '@/components/ui/pro-beam';
 
 const shuffle = <T,>(xs: T[]) => { const a = [...xs]; for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
 /** A brand drawing for each kind of statement: why (a question), what it does (charts), what to do (brainstorm). */
@@ -237,7 +238,7 @@ export function ProveDrill() {
             <button type="button" className="cl-btn" onClick={toggleSound} aria-pressed={sound} aria-label={sound ? 'Tắt âm thanh' : 'Bật âm thanh'} title={sound ? 'Tắt âm thanh' : 'Bật âm thanh'} style={{ ...toolbarBtn(false), width: 36, padding: 0, color: sound ? CL.ink7 : CL.ink4 }}>{sound ? <Volume2 size={16} strokeWidth={1.75} /> : <VolumeX size={16} strokeWidth={1.75} />}</button>
             <button type="button" className="cl-btn" onClick={() => setChat(!chat)} aria-pressed={chat} style={toolbarBtn(chat)}>Dịch</button>
             {!checked ? (
-              <button type="button" className="cl-btn cl-primary" onClick={check} disabled={!coach.filled || coach.checking || rolling} style={{ ...primaryBtn, opacity: coach.filled && !coach.checking && !rolling ? 1 : 0.35 }}>{coach.checking ? 'Đang kiểm tra…' : 'Kiểm tra'}</button>
+              <ProBeam><button type="button" className="cl-btn cl-primary" onClick={check} disabled={!coach.filled || coach.checking || rolling} style={{ ...primaryBtn, opacity: coach.filled && !coach.checking && !rolling ? 1 : 0.35 }}>{coach.checking ? 'Đang kiểm tra…' : 'Kiểm tra'}</button></ProBeam>
             ) : (
               <>
                 <button type="button" className="cl-btn" onClick={check} disabled={coach.fresh || coach.checking || !coach.filled} style={{ ...toolbarBtn(false), color: CL.ink, opacity: coach.fresh || coach.checking ? 0.4 : 1 }}>{coach.checking ? 'Đang kiểm tra…' : 'Kiểm tra lại'}</button>

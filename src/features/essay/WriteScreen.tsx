@@ -16,6 +16,7 @@ import { planFix, rescore } from './fix-api';
 import { MiniChain } from './MiniChain';
 import { Skeleton } from '@/components/base/skeleton/skeleton';
 import { AiStatus } from '@/components/ui/ai-status';
+import { ProBeam } from '@/components/ui/pro-beam';
 
 export interface WriteProps {
   prompt: Prompt;
@@ -287,8 +288,8 @@ export function WriteScreen({ prompt, chains, setChains, essay, setEssay, toolba
           {error && <span role="alert" style={{ fontFamily: CL.sans, fontSize: 12, color: CL.redText, marginRight: 4 }}>{error}</span>}
           <button type="button" className="cl-btn" onClick={() => setChat(!chat)} aria-pressed={chat} style={toolbarBtn(chat)}>Dịch</button>
           {editing
-            ? <button type="button" className="cl-btn cl-primary" onClick={submit} disabled={sending || !words} style={{ ...primaryBtn, opacity: sending || !words ? 0.4 : 1 }}>{sending ? 'Đang chấm…' : review ? 'Nộp lại' : 'Nộp bài'}</button>
-            : <button type="button" className="cl-btn cl-primary" onClick={startFix} disabled={planning} style={{ ...primaryBtn, opacity: planning ? 0.5 : 1 }}>{planning ? 'Đang chuẩn bị…' : essay.fix ? 'Tiếp tục sửa' : 'Sửa bài'}</button>}
+            ? <ProBeam><button type="button" className="cl-btn cl-primary" onClick={submit} disabled={sending || !words} style={{ ...primaryBtn, opacity: sending || !words ? 0.4 : 1 }}>{sending ? 'Đang chấm…' : review ? 'Nộp lại' : 'Nộp bài'}</button></ProBeam>
+            : <ProBeam><button type="button" className="cl-btn cl-primary" onClick={startFix} disabled={planning} style={{ ...primaryBtn, opacity: planning ? 0.5 : 1 }}>{planning ? 'Đang chuẩn bị…' : essay.fix ? 'Tiếp tục sửa' : 'Sửa bài'}</button></ProBeam>}
         </div>
       </div>
 
