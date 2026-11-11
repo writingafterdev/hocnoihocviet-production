@@ -253,14 +253,30 @@ a:hover { color: #404040; }
 .pro-ring {
   --pro-r: 14px;
   --pro-grad: conic-gradient(from var(--pro-a), #D3DFF4 0%, #D3DFF4 48%, #8FB0E6 62%, #6F7FEA 76%, #A878EA 88%, #EE86C4 96%, #D3DFF4 100%);
-  position: relative; isolation: isolate; display: inline-flex; flex-shrink: 0; padding: 2px; border-radius: var(--pro-r);
+  position: relative; isolation: isolate; display: inline-flex; flex-shrink: 0; padding: 1.5px; border-radius: var(--pro-r);
   background: var(--pro-grad); animation: pro-spin 3.4s linear infinite;
 }
 .pro-ring::before {
   content: ''; position: absolute; inset: -2px; z-index: -1; border-radius: calc(var(--pro-r) + 2px);
   background: var(--pro-grad); filter: blur(8px); opacity: .32; animation: pro-spin 3.4s linear infinite;
 }
-.pro-ring-in { display: inline-flex; padding: 2px; border-radius: calc(var(--pro-r) - 2px); background: #fff; }
+.pro-ring-in { display: inline-flex; padding: 2px; border-radius: calc(var(--pro-r) - 2px); background: transparent; }
+
+/* A Pro button itself: a deeper, richer royal blue with a glassy top edge, a coloured lift and a slow shine sweep. */
+@keyframes pro-shine { 0%, 55% { transform: translateX(-130%); } 100% { transform: translateX(130%); } }
+.pro-ring-in > .cl-primary {
+  overflow: hidden;
+  background-image: linear-gradient(180deg, #5C8CFF 0%, #3563E9 52%, #2A4FD0 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .45), inset 0 -1px 0 rgba(10, 30, 120, .25), 0 8px 18px -6px rgba(53, 99, 233, .6);
+  text-shadow: 0 1px 1px rgba(10, 30, 120, .35);
+}
+.pro-ring-in > .cl-primary:disabled { background-image: var(--gradient-button-primary-disabled); box-shadow: none; text-shadow: none; }
+.pro-ring-in > .cl-primary:not(:disabled)::after {
+  content: ''; position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(105deg, transparent 38%, rgba(255, 255, 255, .38) 50%, transparent 62%);
+  transform: translateX(-130%); animation: pro-shine 3.8s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) { .pro-ring-in > .cl-primary::after { animation: none; display: none; } }
 @media (prefers-reduced-motion: reduce) { .pro-ring, .pro-ring::before { animation: none; } }
 
 /* Text fields: solid border, soft blue ring on focus (BoardUI input feel). */
