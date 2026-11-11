@@ -20,7 +20,10 @@ const GROUPS: Group[] = [
     { label: 'Luyện viết', href: '/writing', match: ['/writing', '/write'], icon: <NavIcon name="write" /> },
   ] },
   { label: 'Từ vựng', items: [{ label: 'Từ vựng theo chủ đề', href: '/vocab', match: ['/vocab'], icon: <NavIcon name="vocab" /> }] },
-  { label: 'Của bạn', items: [{ label: 'Bài đã viết', href: '/attempts', match: ['/attempts'], icon: <NavIcon name="essays" /> }] },
+  { label: 'Của bạn', items: [
+    { label: 'Tiến độ', href: '/progress', match: ['/progress'], icon: <NavIcon name="progress" /> },
+    { label: 'Bài đã viết', href: '/attempts', match: ['/attempts'], icon: <NavIcon name="essays" /> },
+  ] },
 ];
 
 const inside = (path: string, base: string) => path === base || path.startsWith(base + '/');
@@ -35,6 +38,7 @@ function titleOf(path: string): { section?: string; page: string } {
   if (inside(path, '/writing')) return { section: 'Task 2', page: 'Thư viện đề' };
   if (inside(path, '/write')) return { section: 'Task 2', page: 'Luyện viết' };
   if (inside(path, '/vocab')) return { page: 'Từ vựng' };
+  if (inside(path, '/progress')) return { page: 'Tiến độ' };
   if (inside(path, '/attempts')) return { page: 'Bài đã viết' };
   if (inside(path, '/admin')) return { page: 'Quản trị' };
   return { page: 'Trang chủ' };

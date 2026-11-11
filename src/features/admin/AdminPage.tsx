@@ -4,6 +4,10 @@ import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import { PageHeader } from '@/components/shell/BrandHeader';
 import './admin.css';
+import { Donut } from '@/components/charts/Donut';
+import { Gauge } from '@/components/charts/Gauge';
+import { ChartCard } from '@/components/charts/ChartCard';
+import { SmoothArea } from '@/components/charts/SmoothArea';
 
 const KIND_NAME: Record<string, string> = { essay: 'Chấm bài viết', chain: 'Kiểm tra mạch', hint: 'Gợi ý', translate: 'Dịch', vocab: 'Từ vựng' };
 const ERROR_NAME: Record<string, string> = { upstream: 'Nhà cung cấp AI báo lỗi', timeout: 'AI trả lời quá lâu', bad_output: 'AI trả về kết quả lỗi', refused: 'AI từ chối nội dung', not_configured: 'AI chưa được bật' };
@@ -107,8 +111,6 @@ export function AdminPage() {
   }
 
   const peak = Math.max(10, ...ov.series.map((s) => s.total));
-  const ymax = Math.ceil(peak / 20) * 20, plot = 156;
-  const grid = [0, 1, 2, 3, 4].map((i) => ({ v: Math.round((ymax / 4) * i), bottom: Math.round(((ymax / 4) * i / ymax) * plot) }));
   const missing = ov.content.promptsTotal - ov.content.samplesHave;
   const errCodes = Object.entries(ov.errors.byCode).sort((a, b) => b[1] - a[1]);
   const totalPages = sp ? Math.max(1, Math.ceil(sp.total / PAGE)) : 1;
@@ -160,23 +162,8 @@ export function AdminPage() {
                 <h2 className="adm-h2">Lượt dùng AI theo ngày</h2>
                 <span style={{ fontSize: 13, color: '#737373' }}>Cao nhất <span className="adm-num">{peak}</span> lượt · hôm nay tính đến <span className="adm-num">{hhmm(ov.generatedAt)}</span></span>
               </div>
-              <div role="img" aria-label={'Lượt dùng AI mỗi ngày trong ' + days + ' ngày'} style={{ position: 'relative', height: 200, marginTop: 24 }}>
-                {grid.map((g) => (
-                  <div key={g.v} style={{ position: 'absolute', left: 0, right: 0, bottom: g.bottom, borderTop: '1px solid #F0F0F0' }}>
-                    <span className="adm-num" style={{ position: 'absolute', left: 0, bottom: 3, fontSize: 11, color: '#A3A3A3' }}>{g.v}</span>
-                  </div>
-                ))}
-                <div style={{ position: 'absolute', left: 36, right: 0, top: 0, bottom: 0, display: 'flex', alignItems: 'flex-end', gap: days > 14 ? 3 : 6 }}>
-                  {ov.series.map((s, i) => (
-                    <div key={s.day} style={{ flex: '1 1 0', minWidth: 0, height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-end', gap: 6 }}>
-                      {days <= 14 && <span className="adm-num" style={{ fontSize: 11, color: '#525252' }}>{s.total}</span>}
-                      <div title={s.day + ': ' + s.total} style={{ width: '100%', maxWidth: 40, height: Math.round((s.total / ymax) * plot), minHeight: s.total ? 2 : 0, background: i === ov.series.length - 1 ? '#2D881A' : '#77A1DD', borderRadius: '6px 6px 0 0' }} />
-                    </div>
-                  ))}
-                </div>
-              </div>
-              <div aria-hidden="true" style={{ display: 'flex', gap: days > 14 ? 3 : 6, margin: '8px 0 0 36px' }}>
-                {ov.series.map((s, i) => <span key={s.day} className="adm-num" style={{ flex: '1 1 0', minWidth: 0, textAlign: 'center', fontSize: 11, color: '#737373', overflow: 'hidden' }}>{days <= 14 || i % 3 === 0 || i === ov.series.length - 1 ? s.day.slice(8).replace(/^0/, '') + '/' + s.day.slice(5, 7).replace(/^0/, '') : ''}</span>)}
+              <div style={{ marginTop: 12 }}>
+                <SmoothArea height={240} unit=" lượt" data={ov.series.map((s) => ({ label: s.day.slice(5).replace('-', '/'), value: s.total, note: s.day.slice(5).replace('-', '/') }))} />
               </div>
             </div>
 
@@ -211,6 +198,15 @@ export function AdminPage() {
           </div>
 
           <div style={{ flex: '1 1 340px', minWidth: 0, display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <ChartCard eyebrow="Nội dung" title="Bài mẫu đã có">
+              <Gauge value={ov.content.samplesHave} max={Math.max(1, ov.content.promptsTotal)} label={ov.content.samplesHave + ' / ' + ov.content.promptsTotal} sub={missing > 0 ? 'còn thiếu ' + missing + ' bài mẫu' : 'đã đủ bài mẫu'} color="#2D881A" />
+            </ChartCard>
+            {ov.features.some((f) => f.uses > 0) && (
+              <ChartCard eyebrow="Hôm nay" title="Lượt dùng theo tính năng">
+                <Donut size={170} centre={num(ov.today.uses)} sub="lượt" data={ov.features.filter((f) => f.uses > 0).map((f) => ({ name: KIND_NAME[f.kind] || f.kind, value: f.uses }))} />
+              </ChartCard>
+            )}
+
             <div className="adm-card" style={{ padding: '22px 24px' }}>
               <h2 className="adm-h2">Sức khoẻ hệ thống</h2>
               <ul style={{ listStyle: 'none', margin: '14px 0 0', padding: 0 }}>
