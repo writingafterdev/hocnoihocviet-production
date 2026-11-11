@@ -5,6 +5,7 @@ import { Illustration } from '@/components/brand/Illustration';
 import { CL } from '../chainlab/constants';
 import { ClLabel } from '../chainlab/ui/primitives';
 import { AI_ERROR_TEXT, AiRequestError, postAi } from '../ai/request';
+import { Chip } from '@/components/base/badges/chip';
 
 type Dir = 'vi-en' | 'en-vi';
 interface Msg { id: number; dir: Dir; source: string; translation?: string; topic?: string; error?: string }
@@ -68,7 +69,7 @@ export function TranslatorChat({ ideas = [], onClose, skill = 'task2' }: { ideas
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, minHeight: 54, padding: '0 12px 0 20px', borderBottom: '1px solid ' + CL.ink1 }}>
         <span style={{ width: 8, height: 8, borderRadius: 999, background: CL.mint }} />
         <ClLabel color={CL.ink}>Dịch</ClLabel>
-        <span style={{ borderRadius: 999, background: '#F5F5F5', color: CL.ink7, padding: '3px 10px', fontFamily: CL.sans, fontSize: 11, fontWeight: 600, whiteSpace: 'nowrap' }}>Việt ⇄ Anh · tự nhận</span>
+        <Chip variant="caption" color="gray">Việt ⇄ Anh · tự nhận</Chip>
         <span style={{ marginLeft: 'auto', display: 'flex', gap: 2 }}>
           {msgs.length > 0 && <button type="button" className="cl-btn cl-link" onClick={() => setMsgs([])} style={{ ...chipBtn, padding: '5px 8px' }}>Xoá</button>}
           {onClose && <button type="button" className="cl-btn cl-link" onClick={onClose} style={{ ...chipBtn, padding: '5px 8px' }}>Ẩn</button>}
@@ -82,7 +83,7 @@ export function TranslatorChat({ ideas = [], onClose, skill = 'task2' }: { ideas
             <span style={{ fontFamily: CL.sans, fontSize: 13, lineHeight: 1.6, color: CL.ink5 }}>Gõ tiếng Việt hay tiếng Anh, mình dịch chiều còn lại.</span>
             {ideas.length > 0 && (
               <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: 6 }}>
-                {ideas.map((t) => <button key={t} type="button" className="cl-btn cl-add" onClick={() => send(t)} style={{ borderRadius: 999, border: '1px solid ' + CL.ink2, padding: '5px 12px', fontFamily: CL.sans, fontSize: 11.5, fontWeight: 600, color: CL.ink6 }}>{t}</button>)}
+                {ideas.map((t) => <button key={t} type="button" className="cl-btn cl-add" onClick={() => send(t)} style={{ borderRadius: 8, border: '1px solid ' + CL.ink2, padding: '5px 12px', fontFamily: CL.sans, fontSize: 11.5, fontWeight: 600, color: CL.ink6 }}>{t}</button>)}
               </div>
             )}
           </div>
@@ -120,7 +121,7 @@ export function TranslatorChat({ ideas = [], onClose, skill = 'task2' }: { ideas
             onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) { e.preventDefault(); send(); } }}
             style={{ flex: 1, minWidth: 0, maxHeight: 120, resize: 'none', border: 'none', outline: 'none', background: 'transparent', padding: '6px 0', fontFamily: CL.sans, fontSize: 13.5, lineHeight: 1.5, color: CL.ink8 }} />
           <button type="button" className="cl-btn cl-primary" onClick={() => send()} disabled={!text.trim() || pending} aria-label="Gửi"
-            style={{ flexShrink: 0, width: 32, height: 32, borderRadius: 999, background: CL.ink, color: '#fff', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', opacity: text.trim() && !pending ? 1 : 0.3 }}>
+            style={{ flexShrink: 0, width: 32, height: 32, borderRadius: 10, color: '#fff', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', opacity: text.trim() && !pending ? 1 : 0.3 }}>
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 19V5M5 12l7-7 7 7" /></svg>
           </button>
         </div>

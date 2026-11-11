@@ -353,7 +353,7 @@ export function WriteScreen({ prompt, chains, setChains, essay, setEssay, toolba
                     <button key={id} type="button" role="tab" aria-selected={on} className="cl-btn" onClick={() => { setTab(id); setActive(null); }}
                       style={{ flex: 1, borderRadius: '12px 12px 0 0', background: on ? '#fff' : 'transparent', padding: '10px 4px 11px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, fontFamily: CL.sans, fontSize: 13, fontWeight: on ? 700 : 500, color: on ? CL.ink : CL.ink6, transition: 'background-color .2s' }}>
                       {st.short}
-                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 2, borderRadius: 999, background: st.soft, padding: '2px 9px', fontSize: 12.5, fontWeight: 700, color: st.fg, fontVariantNumeric: 'tabular-nums' }}>
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 2, borderRadius: 6, background: st.soft, padding: '2px 9px', fontSize: 12.5, fontWeight: 700, color: st.fg, fontVariantNumeric: 'tabular-nums' }}>
                         {bandText(v)}{was != null && v > was && <span style={{ fontSize: 10.5 }} title={'Trước: ' + bandText(was)}>↑</span>}
                       </span>
                     </button>

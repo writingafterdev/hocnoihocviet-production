@@ -13,6 +13,7 @@ import { AI_ERROR_TEXT, AiRequestError, postAi } from '../ai/request';
 import { SignedOutError } from '../attempts/store';
 import { topicsFor } from '@/lib/vocab-topics';
 import { groupPhrases, VB_SKILLS, type VocabItem, type VocabSkill, type VocabTopic } from './data';
+import { Chip } from '@/components/base/badges/chip';
 
 const VB = {
   head: 'var(--ink-50)', border: 'var(--ink-200)', line: 'var(--ink-100)', strong: 'var(--ink-300)',
@@ -73,7 +74,7 @@ function Landing({ savedCount, onOpen, onBack }: { savedCount: (sk: VocabSkill) 
               <button type="button" key={sk.id} onClick={() => onOpen(sk.id)} className="group m-0 flex cursor-pointer flex-col overflow-hidden rounded-xl border-0 bg-white p-0 text-left font-[inherit] shadow-ring transition-shadow duration-150 hover:shadow-ring-hover focus-visible:shadow-[0_0_0_2px_var(--brand-blue-deep)] focus-visible:outline-none">
                 <div className="relative grid h-48 w-full place-items-center" style={{ background: sk.pillar }}>
                   <img src={sk.ill} alt="" className="h-40 w-auto object-contain mix-blend-multiply transition-transform duration-300 group-hover:scale-[1.03]" />
-                  <span className="absolute right-3 top-3 rounded-full bg-white px-2 py-0.5 text-xs font-medium text-ink-soft">{words} cụm</span>
+                  <span className="absolute right-3 top-3 rounded-md bg-white px-2 py-0.5 text-xs font-medium text-ink-soft">{words} cụm</span>
                 </div>
                 <div className="flex flex-1 flex-col gap-1.5 px-5 pb-5 pt-4">
                   <span className="text-xs font-medium text-ink-soft">{sk.eyebrow}</span>
@@ -155,7 +156,7 @@ function SavedList({ skill, items, loaded, onTopic, onDelete, onEnrich }: { skil
   items.forEach((it) => counts.set(it.topic, (counts.get(it.topic) || 0) + 1));
   const shown = items.filter((it) => (!topic || it.topic === topic) && (!q.trim() || (it.en + ' ' + it.vi).toLowerCase().includes(q.trim().toLowerCase())));
   const chip = (id: string, label: string, n: number) => (
-    <button key={id} type="button" className="cl-btn" aria-pressed={topic === id} onClick={() => setTopic(id)} style={{ borderRadius: 999, border: 'none', boxShadow: topic === id ? 'none' : '0 0 0 1px rgba(0,0,0,0.1)', background: topic === id ? '#EEF3FC' : '#fff', color: topic === id ? '#2F62C4' : VB.ink2, padding: '5px 11px', fontFamily: VB.sans, fontSize: 12.5, fontWeight: 600, whiteSpace: 'nowrap' }}>{label} <span style={{ opacity: 0.7 }}>{n}</span></button>
+    <button key={id} type="button" className="cl-btn" aria-pressed={topic === id} onClick={() => setTopic(id)} style={{ borderRadius: 8, border: 'none', boxShadow: topic === id ? 'none' : '0 0 0 1px rgba(0,0,0,0.1)', background: topic === id ? '#EEF3FC' : '#fff', color: topic === id ? '#2F62C4' : VB.ink2, padding: '5px 11px', fontFamily: VB.sans, fontSize: 12.5, fontWeight: 600, whiteSpace: 'nowrap' }}>{label} <span style={{ opacity: 0.7 }}>{n}</span></button>
   );
   return (
     <section style={{ minWidth: 0, borderRadius: 12, border: '1px solid ' + VB.border, background: '#fff', overflow: 'hidden' }}>
@@ -210,7 +211,7 @@ function PhraseRow({ item, selected, focused, practiced, onSelect, onFocus }: { 
         <span style={{ display: 'block', marginTop: 2, fontFamily: VB.sans, fontSize: 13, lineHeight: 1.45, color: VB.ink3 }}>{item.vi}</span>
       </span>
       <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-        <span style={{ borderRadius: 999, background: '#F5F5F5', padding: '3px 9px', fontFamily: VB.sans, fontSize: 11, fontWeight: 600, color: VB.ink2, whiteSpace: 'nowrap' }}>{item.pos}</span>
+        <Chip variant="caption" color="gray">{item.pos}</Chip>
         <span title={practiced ? 'Đã luyện ' + practiced + ' lần' : 'Chưa luyện'} style={{ width: 8, height: 8, borderRadius: 999, background: practiced ? VB.success : VB.strong }} />
       </span>
     </li>
@@ -232,7 +233,7 @@ function PhraseCard({ item, drawing, tint }: { item: VocabItem; drawing: string;
         <h2 style={{ margin: 0, fontFamily: 'var(--font-sans)', fontSize: 28, fontWeight: 600, letterSpacing: '-0.02em', lineHeight: 1.2, color: VB.ink, textWrap: 'balance' }}>{item.en}</h2>
         <span style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', fontFamily: VB.sans, fontSize: 13, color: VB.ink3 }}>
           {item.ipa}
-          <button type="button" className="cl-btn vb-say" onClick={() => speak(item.en)} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, borderRadius: 999, border: '1px solid ' + VB.border, padding: '4px 10px', fontFamily: VB.sans, fontSize: 12, fontWeight: 600, color: VB.ink2 }}><Volume2 size={13} strokeWidth={2} />Nghe</button>
+          <button type="button" className="cl-btn vb-say" onClick={() => speak(item.en)} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, borderRadius: 8, border: '1px solid ' + VB.border, padding: '4px 10px', fontFamily: VB.sans, fontSize: 12, fontWeight: 600, color: VB.ink2 }}><Volume2 size={13} strokeWidth={2} />Nghe</button>
         </span>
       </div>
       <div style={{ fontFamily: VB.sans, fontSize: 16, fontWeight: 600, color: VB.ink }}>{item.vi}</div>

@@ -31,7 +31,7 @@ export function ClLabel({ children, color = CL.ink5, style }: { children: ReactN
 /** Lens chip (With/Without, Scope, Khả thi…). */
 export function ClTag({ kind }: { kind: string }) {
   const s = CL_KIND_STYLE[kind] || CL_KIND_STYLE['Khả thi'];
-  return <span style={{ borderRadius: 999, padding: '2px 8px', background: s.bg, color: s.fg, fontFamily: CL.sans, fontSize: 12, fontWeight: 500, whiteSpace: 'nowrap' }}>{kind}</span>;
+  return <span style={{ borderRadius: 6, padding: '2px 8px', background: s.bg, color: s.fg, fontFamily: CL.sans, fontSize: 12, fontWeight: 500, whiteSpace: 'nowrap' }}>{kind}</span>;
 }
 
 /** Shared uppercase button style for workspace toolbars. */

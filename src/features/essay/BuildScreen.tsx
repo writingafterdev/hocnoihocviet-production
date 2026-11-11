@@ -12,6 +12,7 @@ import { TranslatorChat } from '../coach/TranslatorChat';
 import { primaryBtn } from '../coach/ui';
 import { useCoach, type CheckResult } from '../coach/useCoach';
 import { chainIn, endOf, hasTone, KIND_ASK, kindOf, middleOf, newBody, questionOf, startOf, withEnds, withMiddle } from './model';
+import { Chip } from '@/components/base/badges/chip';
 
 export interface BuildProps {
   prompt: Prompt;
@@ -77,12 +78,12 @@ function BodyCard({ prompt, chain, num, canDelete, onChange, onDelete, check, on
     <section onFocusCapture={onFocus} style={{ flexShrink: 0, borderRadius: 12, border: '1px solid ' + CL.border, background: '#fff', overflow: 'hidden' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, minHeight: 56, padding: '0 14px 0 22px', borderBottom: '1px solid ' + CL.ink1 }}>
         <span style={{ fontFamily: CL.sans, fontSize: 14.5, fontWeight: 600, color: CL.ink }}>Thân bài {num}</span>
-        <span style={{ borderRadius: 999, background: '#F5F5F5', color: CL.ink7, padding: '4px 12px', fontFamily: CL.sans, fontSize: 11.5, fontWeight: 600, whiteSpace: 'nowrap' }}>{multi ? CL_CIRC[q.n - 1] + ' ' : ''}{info.chip}</span>
+        <Chip variant="caption" color="gray">{multi ? CL_CIRC[q.n - 1] + ' ' : ''}{info.chip}</Chip>
         {tone && (
           <button type="button" className="cl-btn" onClick={() => onChange({ ...chain, tone: chain.tone === 'cost' ? 'benefit' : 'cost' })} title="Đổi lợi ích / tác hại"
-            style={{ borderRadius: 999, padding: '4px 12px', background: chain.tone === 'cost' ? CL.redSoft : CL.mintSoft, color: chain.tone === 'cost' ? CL.redText : CL.greenText, fontFamily: CL.sans, fontSize: 11.5, fontWeight: 600 }}>{chain.tone === 'cost' ? 'Tác hại' : 'Lợi ích'} ⇄</button>
+            style={{ padding: 0 }}><Chip variant="caption" color={chain.tone === 'cost' ? 'rose' : 'lime'}>{chain.tone === 'cost' ? 'Tác hại' : 'Lợi ích'} ⇄</Chip></button>
         )}
-        <span style={{ marginLeft: 'auto', borderRadius: 5, padding: '3px 8px', background: chain.built && filled ? CL.mintSoft : '#F5F5F5', color: chain.built && filled ? CL.greenText : CL.ink6, fontFamily: CL.sans, fontSize: 11, fontWeight: 600 }}>{status}</span>
+        <Chip className="ml-auto" variant="caption" color={chain.built && filled ? 'lime' : 'gray'}>{status}</Chip>
         {canDelete && <button type="button" className="cl-btn cl-del" onClick={onDelete} aria-label={'Xoá thân bài ' + num} style={{ width: 30, height: 30, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', color: CL.ink3 }}><ClIcon name="trash" size={14} /></button>}
       </div>
 
@@ -97,7 +98,7 @@ function BodyCard({ prompt, chain, num, canDelete, onChange, onDelete, check, on
             </div>
           </div>
           <div style={{ borderTop: '1px solid ' + CL.ink1, background: CL.panel, padding: '12px 22px', display: 'flex', alignItems: 'center', gap: 10 }}>
-            <button type="button" className="cl-btn cl-primary" onClick={build} disabled={!ready} style={{ ...miniBtn, marginLeft: 'auto', border: 'none', color: '#fff', opacity: ready ? 1 : 0.3 }}>Dựng mạch ↵</button>
+            <button type="button" className="cl-btn cl-primary" onClick={build} disabled={!ready} style={{ ...miniBtn, background: undefined, boxShadow: undefined, marginLeft: 'auto', border: 'none', color: '#fff', opacity: ready ? 1 : 0.3 }}>Dựng mạch ↵</button>
           </div>
         </>
       ) : (

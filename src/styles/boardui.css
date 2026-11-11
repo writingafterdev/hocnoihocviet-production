@@ -103,3 +103,10 @@
     animation: bui-skeleton-pulse 2s ease-in-out infinite;
   }
 }
+
+/* BoardUI's composite text styles (its typography file isn't used here; our one font is Inter). */
+@utility text-body-medium { font-size: 14px; line-height: 20px; font-weight: 500; }
+@utility text-body-regular { font-size: 14px; line-height: 20px; font-weight: 400; }
+@utility text-body-2-medium { font-size: 13px; line-height: 18px; font-weight: 500; }
+@utility text-caption-1-medium { font-size: 12px; line-height: 16px; font-weight: 500; letter-spacing: 0.15px; }
+@utility text-caption-1-semibold { font-size: 12px; line-height: 16px; font-weight: 600; letter-spacing: 0.15px; }

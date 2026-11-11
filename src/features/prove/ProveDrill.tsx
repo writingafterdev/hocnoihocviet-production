@@ -21,6 +21,7 @@ import { NotesPanel } from '../coach/NotesPanel';
 import { TranslatorChat } from '../coach/TranslatorChat';
 import { useCoach } from '../coach/useCoach';
 import { primaryBtn } from '../coach/ui';
+import { Chip } from '@/components/base/badges/chip';
 
 const shuffle = <T,>(xs: T[]) => { const a = [...xs]; for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
 /** A brand drawing for each kind of statement: why (a question), what it does (charts), what to do (brainstorm). */
@@ -62,7 +63,7 @@ const KINDS: { kind: StatementKind; note: string; bg: string }[] = [
   { kind: 'solution', note: 'Làm gì để giải quyết?', bg: 'bg-leaf-soft' },
 ];
 const TONES: { tone: 'benefit' | 'cost' | undefined; label: string }[] = [{ tone: 'benefit', label: 'Có lợi' }, { tone: 'cost', label: 'Có hại' }, { tone: undefined, label: 'Cả hai' }];
-const chipBtn = 'cursor-pointer rounded-full border-0 bg-paper-2 px-4 py-2 text-[13px] font-medium text-ink shadow-none transition-colors hover:bg-blue-soft hover:text-blue-deep';
+const chipBtn = 'cursor-pointer rounded-lg border-0 bg-paper-2 px-4 py-2 text-[13px] font-medium text-ink shadow-none transition-colors hover:bg-blue-soft hover:text-blue-deep';
 
 /** Step one: which kind of claim to prove. Impact asks one more question (good or bad); then the reel spins. */
 function KindPicker({ onPick }: { onPick: (kind?: StatementKind, tone?: 'benefit' | 'cost') => void }) {
@@ -224,7 +225,7 @@ export function ProveDrill() {
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10, minHeight: 42, paddingBottom: 12 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 18 }}>
             <Link href="/home" className="cl-link" style={backLinkStyle}><ClIcon name="left" size={14} />Trang chủ</Link>
-            <span style={{ display: 'inline-flex', alignItems: 'center', minHeight: 30, borderRadius: 999, padding: '0 12px', background: '#EEF3FC', color: '#2F62C4', fontFamily: CL.sans, fontSize: 12, fontWeight: 600 }}>Chứng minh nhanh</span>
+            <Chip variant="subtle" color="blue">Chứng minh nhanh</Chip>
             <span style={{ width: 1, height: 18, background: CL.ink2 }} />
             <span style={{ fontFamily: CL.sans, fontSize: 12.5, color: CL.ink5 }}>Đã chứng minh <b key={done} className={done ? 'co-bump' : ''} style={{ color: CL.ink, fontSize: 15, marginLeft: 4, fontVariantNumeric: 'tabular-nums' }}>{done}</b></span>
           </div>

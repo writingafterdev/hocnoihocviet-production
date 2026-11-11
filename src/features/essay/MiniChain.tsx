@@ -6,6 +6,7 @@ import type { Prompt } from '@/content/prompts';
 import { CL } from '../chainlab/constants';
 import type { Chain } from '../chainlab/types';
 import { endOf, KIND_ASK, kindOf, middleOf, startOf } from './model';
+import { Chip } from '@/components/base/badges/chip';
 
 /** The chain next to its paragraph: start, middle, end. A note about one step tints that step. */
 export function MiniChain({ prompt, chain, num, first = true, last = true, onMove, hit, focused, onOpen, chainsHref }: { prompt: Prompt; chain: Chain; num: number; first?: boolean; last?: boolean; onMove?: (d: -1 | 1) => void; hit: { at: number | null; bg: string } | null; focused: boolean; onOpen?: () => void; chainsHref: string }) {
@@ -25,7 +26,7 @@ export function MiniChain({ prompt, chain, num, first = true, last = true, onMov
     <div ref={ref} onClick={onOpen} style={{ flexShrink: 0, cursor: onOpen ? 'pointer' : 'default', borderRadius: 12, border: '1px solid ' + (focused ? CL.ink4 : CL.ink2), background: '#fff', overflow: 'hidden', transition: 'border-color .25s' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 10px 10px 14px', borderBottom: '1px solid ' + CL.ink1, background: hit && hit.at == null ? hit.bg : focused ? CL.panel : '#fff', transition: 'background-color .25s' }}>
         <span style={{ fontFamily: CL.sans, fontSize: 13, fontWeight: 600, color: CL.ink }}>Thân bài {num}</span>
-        <span style={{ borderRadius: 999, background: '#F5F5F5', padding: '2px 9px', fontFamily: CL.sans, fontSize: 10.5, fontWeight: 600, color: CL.ink6 }}>{KIND_ASK[kindOf(prompt, chain)].chip}</span>
+        <Chip variant="caption" color="gray">{KIND_ASK[kindOf(prompt, chain)].chip}</Chip>
         {onMove && <span onClick={(e) => e.stopPropagation()} style={{ marginLeft: 'auto', display: 'flex', gap: 4 }}>{arrowBtn(-1, first)}{arrowBtn(1, last)}</span>}
       </div>
       {!built && (

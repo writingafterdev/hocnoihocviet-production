@@ -12,7 +12,7 @@ export function StepNav({ steps, current }: { steps: Step[]; current: number }) 
     <nav aria-label="Các bước" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
       {steps.map((s, i) => {
         const on = i === current;
-        const st: React.CSSProperties = { display: 'inline-flex', alignItems: 'center', minHeight: 30, borderRadius: 999, padding: '0 12px', fontFamily: CL.sans, fontSize: 12, fontWeight: 600, whiteSpace: 'nowrap', textDecoration: 'none', border: 'none', boxShadow: on ? 'none' : '0 0 0 1px rgba(0,0,0,0.1)', background: on ? '#EEF3FC' : '#fff', color: on ? '#2F62C4' : CL.ink6 };
+        const st: React.CSSProperties = { display: 'inline-flex', alignItems: 'center', minHeight: 30, borderRadius: 8, padding: '0 12px', fontFamily: CL.sans, fontSize: 12, fontWeight: 600, whiteSpace: 'nowrap', textDecoration: 'none', border: 'none', boxShadow: on ? 'none' : '0 0 0 1px rgba(0,0,0,0.1)', background: on ? '#EEF3FC' : '#fff', color: on ? '#2F62C4' : CL.ink6 };
         return (
           <Fragment key={s.href}>
             {i > 0 && <span aria-hidden="true" style={{ width: 14, height: 1, background: CL.ink2 }} />}
