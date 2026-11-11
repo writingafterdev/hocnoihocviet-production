@@ -246,19 +246,19 @@ a:hover { color: #404040; }
 }
 
 
-/* Pro ring: a rainbow that travels around the element, with a blurred copy behind as a glow. */
+/* Pro ring: a soft blue ring with one comet of analogous colour (blue -> indigo -> violet -> pink, neighbours on the
+ * colour wheel from the button's own blue, so it harmonises), and a faint blurred copy behind as a glow. */
 @property --pro-a { syntax: '<angle>'; inherits: false; initial-value: 0deg; }
 @keyframes pro-spin { to { --pro-a: 360deg; } }
 .pro-ring {
   --pro-r: 14px;
+  --pro-grad: conic-gradient(from var(--pro-a), #D3DFF4 0%, #D3DFF4 48%, #8FB0E6 62%, #6F7FEA 76%, #A878EA 88%, #EE86C4 96%, #D3DFF4 100%);
   position: relative; isolation: isolate; display: inline-flex; flex-shrink: 0; padding: 2px; border-radius: var(--pro-r);
-  background: conic-gradient(from var(--pro-a), #FF5C33, #FFC73C, #2D881A, #00B8D9, #2F62C4, #8B5CF6, #FF4FA3, #FF5C33);
-  animation: pro-spin 2.6s linear infinite;
+  background: var(--pro-grad); animation: pro-spin 3.4s linear infinite;
 }
 .pro-ring::before {
-  content: ''; position: absolute; inset: -3px; z-index: -1; border-radius: calc(var(--pro-r) + 3px);
-  background: conic-gradient(from var(--pro-a), #FF5C33, #FFC73C, #2D881A, #00B8D9, #2F62C4, #8B5CF6, #FF4FA3, #FF5C33);
-  filter: blur(9px); opacity: .7; animation: pro-spin 2.6s linear infinite;
+  content: ''; position: absolute; inset: -2px; z-index: -1; border-radius: calc(var(--pro-r) + 2px);
+  background: var(--pro-grad); filter: blur(8px); opacity: .32; animation: pro-spin 3.4s linear infinite;
 }
 .pro-ring-in { display: inline-flex; padding: 2px; border-radius: calc(var(--pro-r) - 2px); background: #fff; }
 @media (prefers-reduced-motion: reduce) { .pro-ring, .pro-ring::before { animation: none; } }
