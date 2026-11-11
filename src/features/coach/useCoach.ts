@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { ChainCheckOut, ChainIn, ChainNote } from '@/lib/ai/chain-coach';
 import { SignedOutError } from '../attempts/store';
 import { AI_ERROR_TEXT, AiRequestError, postAi } from '../ai/request';
@@ -90,3 +90,23 @@ export const NOTE_STYLE: Record<ChainNote['type'], { label: string; bg: string; 
   trait: { label: 'Thêm đặc điểm', bg: '#E4F5FA', fg: '#17667A' },
   detail: { label: 'Thêm chi tiết', bg: '#EEF3FC', fg: '#2F62C4' },
 };
+
+export interface BankPhrase { en: string; vi: string }
+const bankCache = new Map<string, BankPhrase[]>();
+
+/** English phrases for a whole chain, asked once per start/end pair from its two ends. A failure just leaves the bank empty. */
+export function useVocabBank(promptId: string, chain: ChainIn, enabled = true) {
+  const key = promptId + '|' + chain.kind + '|' + chain.start + '|' + chain.end;
+  const [state, setState] = useState<{ key: string; phrases: BankPhrase[] }>({ key: '', phrases: [] });
+  useEffect(() => {
+    if (!enabled || !promptId || !chain.start || !chain.end) return;
+    const cached = bankCache.get(key);
+    if (cached) { setState({ key, phrases: cached }); return; }
+    let live = true;
+    postAi<{ phrases: BankPhrase[] }>('vocab-bank', { promptId, chain: { ...chain, steps: [] } })
+      .then((r) => { bankCache.set(key, r.phrases); if (live) setState({ key, phrases: r.phrases }); })
+      .catch(() => {});
+    return () => { live = false; };
+  }, [key, enabled]); // eslint-disable-line react-hooks/exhaustive-deps
+  return state.key === key ? state.phrases : [];
+}

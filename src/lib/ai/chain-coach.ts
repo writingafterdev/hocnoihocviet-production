@@ -8,7 +8,7 @@
 import type { Prompt } from '@/content/prompts';
 import { ask } from './claude';
 import { describePrompt } from './describe';
-import { CHECK_TASK, HINT_TASK } from './prompts';
+import { BANK_TASK, CHECK_TASK, HINT_TASK } from './prompts';
 
 export type ChainKind = 'cause' | 'impact' | 'solution';
 
@@ -72,6 +72,28 @@ export async function aiChainHint(userId: string, prompt: Prompt, chain: ChainIn
     input: describePrompt(prompt) + '\n\n' + text + prev,
   });
   return { q: (out.q || '').trim(), why: (out.why || '').trim() };
+}
+
+const BANK_SCHEMA = {
+  type: 'object', additionalProperties: false, required: ['phrases'],
+  properties: { phrases: { type: 'array', items: { type: 'object', additionalProperties: false, required: ['en', 'vi'], properties: { en: { type: 'string' }, vi: { type: 'string' } } } } },
+};
+
+export interface BankPhrase { en: string; vi: string }
+
+/** English phrases for the whole chain, from its two ends only (never per step). */
+export async function aiVocabBank(userId: string, prompt: Prompt, chain: ChainIn): Promise<{ phrases: BankPhrase[] }> {
+  const { text } = describeChain({ ...chain, steps: [] });
+  const out = await ask<{ phrases: BankPhrase[] }>({
+    userId, kind: 'hint', task: BANK_TASK, schema: BANK_SCHEMA, effort: 'low', maxTokens: 2000,
+    input: describePrompt(prompt) + '\n\n' + text,
+  });
+  const seen = new Set<string>();
+  const phrases = (out.phrases || [])
+    .map((x) => ({ en: String(x.en || '').trim().toLowerCase(), vi: String(x.vi || '').trim() }))
+    .filter((x) => x.en && x.en.length <= 40 && x.vi && !seen.has(x.en) && !!seen.add(x.en))
+    .slice(0, 8);
+  return { phrases };
 }
 
 export async function aiChainCheck(userId: string, prompt: Prompt, chain: ChainIn): Promise<ChainCheckOut> {

@@ -19,7 +19,7 @@ import { ChainEditor } from '../coach/ChainEditor';
 import { CoachGrid, SidePanel, useLast } from '../coach/CoachGrid';
 import { NotesPanel } from '../coach/NotesPanel';
 import { TranslatorChat } from '../coach/TranslatorChat';
-import { useCoach } from '../coach/useCoach';
+import { useCoach, useVocabBank } from '../coach/useCoach';
 import { primaryBtn } from '../coach/ui';
 import { Chip } from '@/components/base/badges/chip';
 import { AnimatedCounter } from '@/components/ui/animated-counter';
@@ -123,6 +123,7 @@ export function ProveDrill() {
   const prompt = s ? findPrompt(s.promptId) : null;
   const coach = useCoach(s?.promptId || '', { kind: s?.kind || 'impact', tone: s?.tone || null, start: s?.start || '', end: s?.end || '', steps, sentence: s ? plainSentence(s.sentence) : '', stakeholder: s?.stakeholder });
   const rolling = !!reel;
+  const bank = useVocabBank(s?.promptId || '', { kind: s?.kind || 'impact', tone: s?.tone || null, start: s?.start || '', end: s?.end || '', steps: [], stakeholder: s?.stakeholder }, !!s && !rolling);
   useEffect(() => { if (coach.error) toast.error(coach.error); }, [coach.error]);
   useEffect(() => { if (openError) toast.error(openError); }, [openError]);
 
@@ -279,7 +280,7 @@ export function ProveDrill() {
                         steps={steps} setSteps={setSteps}
                         notes={notes} active={active} onPick={(k) => { setActive(k); setNotesOpen(true); }}
                         hint={coach.hint} asking={coach.asking} onHint={coach.askHint} onCloseHint={coach.closeHint}
-                        helper={helper} checking={coach.checking} clean={clean}
+                        helper={helper} checking={coach.checking} clean={clean} bank={bank}
                       />
                     </div>
                     {clean && !rolling && (
