@@ -37,8 +37,10 @@ const weekStart = (t: number) => { const d = new Date(startOfDay(t)); d.setDate(
 const dm = (t: number) => { const d = new Date(t); return d.getDate() + '/' + (d.getMonth() + 1); };
 const avg = (xs: number[]) => (xs.length ? Math.round((xs.reduce((n, x) => n + x, 0) / xs.length) * 10) / 10 : 0);
 const DOW = ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'];
-/** Empty cell, then four steps of tomato. */
-const HEAT = ['#FFFFFF', '#FFE3D8', '#FFBFA6', '#FF8E6B', '#FF5C33'];
+/** Empty cell, then four steps of the brand blue. */
+/** Bars start at band 4, so a climb from 5.5 to 7 is visible instead of squashed against 9. */
+const FLOOR = 4;
+const HEAT = ['#E9EBF1', '#CFDDF3', '#A3BFEA', '#6E9ADC', '#2F62C4'];
 
 function Tile({ label, value, color }: { label: string; value: string; color?: string }) {
   return (
@@ -71,7 +73,7 @@ export function ProgressView({ data, onEditGoal }: { data: ProgressData; onEditG
     const buckets: { label: string; from: number; to: number }[] = [];
     if (period === 'week') for (let i = 7; i >= 0; i--) { const f = weekStart(now - i * 7 * DAY); buckets.push({ label: dm(f), from: f, to: f + 7 * DAY }); }
     else for (let i = 5; i >= 0; i--) { const d = new Date(new Date(now).getFullYear(), new Date(now).getMonth() - i, 1); buckets.push({ label: 'T' + (d.getMonth() + 1), from: d.getTime(), to: new Date(d.getFullYear(), d.getMonth() + 1, 1).getTime() }); }
-    return buckets.map((b) => { const v = avg(mine.filter((p) => p.t >= b.from && p.t < b.to).map((p) => p.band)); return { label: b.label, Band: v, Con: Math.max(0, Math.round((top - v) * 10) / 10) }; });
+    return buckets.map((b) => { const v = avg(mine.filter((p) => p.t >= b.from && p.t < b.to).map((p) => p.band)); return { label: b.label, Track: top - FLOOR, Band: v ? Math.max(0.2, v - FLOOR) : 0, Real: v }; });
   }, [mine, period, top]);
 
   const heat = useMemo(() => {
@@ -137,32 +139,30 @@ export function ProgressView({ data, onEditGoal }: { data: ProgressData; onEditG
       </section>
 
       <div className="grid gap-4 lg:grid-cols-3">
-        <ChartCard className="lg:col-span-2" art="person-running-up-the-stairs-by-drawing-and-creating-their-own-path-to-successs" eyebrow={SKILLS[skill].label + ' · band trung bình'} title="Bạn đã đi được bao xa"
+        <ChartCard tone="grey" className="lg:col-span-2" eyebrow={SKILLS[skill].label + ' · band trung bình, tính từ band 4'} title="Bạn đã đi được bao xa"
           delta={last && first && last.band !== first.band ? { text: String(Math.abs(Math.round((last.band - first.band) * 10) / 10)), up: last.band > first.band, note: 'so với bài đầu' } : undefined}
           right={<RangeSwitch<'week' | 'month'> label="Khoảng thời gian" options={[{ id: 'week', label: 'Tuần' }, { id: 'month', label: 'Tháng' }]} value={period} onChange={setPeriod} />}>
           {mine.length === 0 ? <p className="m-0 py-16 text-center text-sm text-ink-soft">{SKILLS[skill].label} chưa có bài nào được chấm.</p> : (
-            <div className="rounded-xl bg-blue-soft px-3 pt-2">
-              <BarChart data={bars} xDataKey="label" stacked barGap={0.55} aspectRatio="2.5 / 1" margin={{ top: 16, right: 8, bottom: 32, left: 8 }}>
-                <Grid horizontal />
-                <Bar dataKey="Band" fill="var(--chart-1)" lineCap="round" />
-                <Bar dataKey="Con" fill="#FFFFFF" lineCap="round" />
-                <BarXAxis />
-                <ChartTooltip rows={(p) => [{ color: 'var(--chart-1)', label: 'Band', value: p.Band ? bandText(p.Band as number, true) : 'chưa có bài' }]} />
-              </BarChart>
-            </div>
+            <BarChart data={bars} xDataKey="label" barWidth={46} aspectRatio="2.6 / 1" margin={{ top: 16, right: 8, bottom: 34, left: 8 }}>
+              <Grid horizontal strokeOpacity={0.6} />
+              <Bar dataKey="Track" fill="#EBEBEB" lineCap={14} groupGap={-46} animate={false} />
+              <Bar dataKey="Band" fill="var(--chart-1)" lineCap={14} groupGap={-46} />
+              <BarXAxis />
+              <ChartTooltip rows={(p) => [{ color: 'var(--chart-1)', label: 'Band', value: p.Real ? bandText(p.Real as number, true) : 'chưa có bài' }]} />
+            </BarChart>
           )}
         </ChartCard>
 
-        <ChartCard tint="bg-leaf-soft" art="person-with-archery-bow-hitting-bullseye" eyebrow="Mục tiêu" title="Còn cách bao xa">
+        <ChartCard tone="grey" eyebrow="Mục tiêu" title="Còn cách bao xa">
           <div className="flex flex-col gap-4">
             <div className="flex gap-3">
               <Tile label="Writing" value={latestOf('writing') ? bandText(latestOf('writing'), true) + ' / ' + bandText(targetOf('writing'), true) : '– / ' + bandText(targetOf('writing'), true)} color="var(--chart-1)" />
-              <Tile label="Speaking" value={latestOf('speaking') ? bandText(latestOf('speaking'), true) + ' / ' + bandText(targetOf('speaking'), true) : 'sắp có'} color="var(--chart-2)" />
+              <Tile label="Speaking" value={latestOf('speaking') ? bandText(latestOf('speaking'), true) + ' / ' + bandText(targetOf('speaking'), true) : 'sắp có'} color="#9DBBE8" />
             </div>
             <div className="relative mx-auto w-full max-w-[300px]">
               <RingChart size={300} strokeWidth={16} ringGap={8} baseInnerRadius={52} data={[
                 { label: 'Writing', value: latestOf('writing'), maxValue: targetOf('writing'), color: 'var(--chart-1)' },
-                { label: 'Speaking', value: latestOf('speaking'), maxValue: targetOf('speaking'), color: 'var(--chart-2)' },
+                { label: 'Speaking', value: latestOf('speaking'), maxValue: targetOf('speaking'), color: '#9DBBE8' },
               ]}>
                 <Ring index={0} showGlow={false} />
                 <Ring index={1} showGlow={false} />
@@ -177,34 +177,34 @@ export function ProgressView({ data, onEditGoal }: { data: ProgressData; onEditG
       </div>
 
       <div className="grid gap-4 lg:grid-cols-3">
-        <ChartCard tint="bg-tomato-soft" className="lg:col-span-2" art="employee-meditating-among-work-tasks-work-life-balance" eyebrow="Giờ học" title="Bạn học nhiều nhất lúc nào"
+        <ChartCard tone="grey" className="lg:col-span-2" eyebrow="Giờ học" title="Bạn học nhiều nhất lúc nào"
           right={<RangeSwitch<'7' | '30' | '90'> label="Khoảng thời gian" options={[{ id: '7', label: '7 ngày' }, { id: '30', label: '30 ngày' }, { id: '90', label: '90 ngày' }]} value={String(days) as '7' | '30' | '90'} onChange={(v) => setDays(Number(v) as 7 | 30 | 90)} />}>
           <div className="flex flex-col gap-3">
             {heat.total > 0 && <p className="m-0 text-sm text-ink/80">Bạn hay luyện nhất vào <b className="text-ink">{DOW[heat.best.d]}, {String(heat.best.h * 2).padStart(2, '0')}h–{String(heat.best.h * 2 + 2).padStart(2, '0')}h</b> ({heat.total} lần trong {days} ngày).</p>}
-            <div className="grid gap-[6px]" style={{ gridTemplateColumns: '28px repeat(12, minmax(0, 1fr))' }}>
+            <div key={days} className="grid gap-[6px]" style={{ gridTemplateColumns: '28px repeat(12, minmax(0, 1fr))' }}>
               {heat.grid.map((row, d) => (
                 <div key={d} className="contents">
                   <span className="self-center text-[13px] text-ink-soft">{DOW[d]}</span>
-                  {row.map((n, h) => <span key={h} title={DOW[d] + ', ' + String(h * 2).padStart(2, '0') + 'h–' + String(h * 2 + 2).padStart(2, '0') + 'h: ' + n + ' lần'} className="aspect-[1.35/1] min-h-[26px] rounded-md transition-colors duration-[var(--duration-fast)]" style={{ background: HEAT[level(n)] }} />)}
+                  {row.map((n, h) => <span key={h} title={DOW[d] + ', ' + String(h * 2).padStart(2, '0') + 'h–' + String(h * 2 + 2).padStart(2, '0') + 'h: ' + n + ' lần'} className="heat-cell aspect-[1.35/1] min-h-[26px] rounded-md" style={{ background: HEAT[level(n)], ['--d' as string]: h * 38 + d * 12 + 'ms' } as React.CSSProperties} />)}
                 </div>
               ))}
               <span />
               {Array.from({ length: 12 }, (_, h) => <span key={h} className="text-center text-[12px] text-ink-soft tabular-nums">{String(h * 2).padStart(2, '0')}</span>)}
             </div>
             <div className="flex items-center justify-end gap-2 text-[13px] text-ink-soft">
-              Ít {HEAT.map((c) => <span key={c} className="size-3.5 rounded-[4px] shadow-ring" style={{ background: c }} />)} Nhiều
+              Ít {HEAT.map((c) => <span key={c} className="size-3.5 rounded-[4px]" style={{ background: c }} />)} Nhiều
             </div>
           </div>
         </ChartCard>
 
-        <ChartCard tint="bg-sun-soft" art="woman-brainstorming-and-choosing-ideas" eyebrow={SKILLS[skill].label + ' · bài gần nhất'} title="Chi tiết tiêu chí">
+        <ChartCard tone="grey" eyebrow={SKILLS[skill].label + ' · bài gần nhất'} title="Chi tiết tiêu chí">
           {last ? (
             <div className="flex flex-col gap-4">
               <div className="mx-auto w-full max-w-[300px]">
                 <RadarChart size={300} levels={4} margin={52} metrics={SKILLS[skill].criteria}
                   data={[
                     { label: 'Gần nhất', color: 'var(--chart-1)', values: Object.fromEntries(SKILLS[skill].criteria.map((c) => [c.key, ((last.scores[c.key] ?? 0) / 9) * 100])) },
-                    ...(target ? [{ label: 'Mục tiêu', color: 'var(--chart-2)', values: Object.fromEntries(SKILLS[skill].criteria.map((c) => [c.key, (target / 9) * 100])) }] : []),
+                    ...(target ? [{ label: 'Mục tiêu', color: '#A3A3A3', values: Object.fromEntries(SKILLS[skill].criteria.map((c) => [c.key, (target / 9) * 100])) }] : []),
                   ]}>
                   <RadarGrid showLabels={false} />
                   <RadarAxis />

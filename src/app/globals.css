@@ -395,3 +395,8 @@ a:hover { color: #404040; }
   --chart-segment-background: oklch(0.41 0.0127 248.14 / 0.25);
   --chart-segment-line: oklch(1 0 0 / 0.25);
 }
+
+/* Heat map cells settle in column by column (--d is the delay) and ease between colours when the range changes. */
+@keyframes heat-in { from { opacity: 0; transform: scale(0.82); } to { opacity: 1; transform: none; } }
+.heat-cell { animation: heat-in var(--duration-very-slow) var(--ease-smooth-out) var(--d, 0ms) both; transition: background-color var(--duration-medium) var(--ease-smooth-out); }
+@media (prefers-reduced-motion: reduce) { .heat-cell { animation: none; } }
