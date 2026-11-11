@@ -160,7 +160,7 @@ export function ChainEditor(p: ChainEditorProps) {
         <div className={tinted(-1).trim()} style={{ flex: 1, minWidth: 0, padding: '6px 10px 10px', borderRadius: 10, ...tint(-1), display: 'flex', alignItems: 'flex-start', gap: 8 }}>
           <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 4 }}>
             <ClLabel color={CL.greenText}>{p.startLabel}</ClLabel>
-            {p.startNode ?? <span style={{ fontFamily: CL.sans, fontSize: 15, fontWeight: 600, lineHeight: 1.5, color: CL.ink }}>{p.start}</span>}
+            {p.startNode ?? <span style={{ alignSelf: 'flex-start', borderRadius: 4, padding: '1px 6px', margin: '0 -6px', fontFamily: CL.sans, fontSize: 15, fontWeight: 500, lineHeight: 1.5, color: CL.greenText, background: CL.mintSoft }}>{p.start}</span>}
           </div>
           {marks(-1)}
         </div>
@@ -211,8 +211,8 @@ export function ChainEditor(p: ChainEditorProps) {
       <li style={{ display: 'flex', gap: 18 }}>
         <Rail last center={CENTER.end} ok={green} dot={<span style={{ width: 9, height: 9, borderRadius: 2, background: '#B8862B', boxShadow: '0 0 0 4px #fff' }} />} />
         <div style={{ flex: 1, minWidth: 0, padding: '6px 10px', display: 'flex', flexDirection: 'column', gap: 4 }}>
-          <ClLabel>{p.endLabel}</ClLabel>
-          {p.endNode ?? <span style={{ fontFamily: CL.sans, fontSize: 15, fontWeight: 600, lineHeight: 1.5, color: CL.ink }}>{p.end}</span>}
+          <ClLabel color="#B33A1A">{p.endLabel}</ClLabel>
+          {p.endNode ?? <span style={{ alignSelf: 'flex-start', borderRadius: 4, padding: '1px 6px', margin: '0 -6px', fontFamily: CL.sans, fontSize: 15, fontWeight: 500, lineHeight: 1.5, color: '#B33A1A', background: CL.yellowSoft }}>{p.end}</span>}
           {green && (
             <span className="co-pop" style={{ alignSelf: 'flex-start', marginTop: 8, display: 'inline-flex', alignItems: 'center', gap: 6, borderRadius: 8, background: CL.mintSoft, color: CL.greenText, padding: '4px 12px', fontFamily: CL.sans, fontSize: 12, fontWeight: 600 }}>
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path className="co-tick" d="M5 12l5 5 9-10" /></svg>Mạch đi liền
