@@ -10,7 +10,7 @@ import { ProBeam } from '@/components/ui/pro-beam';
 const initials = (name: string) => name.trim().split(/\s+/).slice(-2).map((w) => w[0]).join('').toUpperCase();
 
 /** Avatar (Google photo or initials) with "Bài đã viết" and "Đăng xuất". Shows a login link when signed out. */
-export function UserMenu({ placement = 'down' }: { placement?: 'down' | 'up' }) {
+export function UserMenu({ placement = 'down', variant = 'avatar' }: { placement?: 'down' | 'up'; variant?: 'avatar' | 'row' }) {
   const router = useRouter();
   const { data, isPending } = useSession();
   const [open, setOpen] = useState(false);
@@ -42,11 +42,25 @@ export function UserMenu({ placement = 'down' }: { placement?: 'down' | 'up' }) 
   const item: React.CSSProperties = { display: 'block', width: '100%', textAlign: 'left', padding: '10px 14px', borderRadius: 8, fontFamily: 'var(--font-sans)', fontSize: 13.5, color: '#171717', background: 'none', border: 'none', cursor: 'pointer' };
   return (
     <div ref={ref} style={{ position: 'relative' }}>
+      {variant === 'row' ? (
+        <button type="button" onClick={() => setOpen(!open)} aria-haspopup="menu" aria-expanded={open} aria-label="Tài khoản" className="cl-rv" style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%', padding: 8, border: 'none', borderRadius: 10, background: open ? 'rgba(0,0,0,0.045)' : 'none', cursor: 'pointer', textAlign: 'left', fontFamily: 'var(--font-sans)' }}>
+          <ProBeam radius={18}>
+            <span style={{ width: 32, height: 32, borderRadius: 9999, background: 'var(--brand-blue-soft)', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 600, color: 'var(--brand-blue-deep)', flexShrink: 0 }}>
+              {user.image ? <img src={user.image} alt="" referrerPolicy="no-referrer" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : initials(user.name || user.email)}
+            </span>
+          </ProBeam>
+          <span style={{ minWidth: 0, flex: 1 }}>
+            <span style={{ display: 'block', fontSize: 13.5, fontWeight: 600, color: '#171717', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user.name || user.email}</span>
+            <span style={{ display: 'block', fontSize: 12, color: '#737373', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{pro ? 'Pro' : user.email}</span>
+          </span>
+        </button>
+      ) : (
       <ProBeam radius={18}>
       <button type="button" onClick={() => setOpen(!open)} aria-haspopup="menu" aria-expanded={open} aria-label="Tài khoản" style={{ width: 40, height: 40, padding: 0, border: 'none', borderRadius: 9999, background: 'var(--brand-blue-soft)', overflow: 'hidden', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--font-sans)', fontSize: 12, fontWeight: 600, color: 'var(--brand-blue-deep)' }}>
         {user.image ? <img src={user.image} alt="" referrerPolicy="no-referrer" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : initials(user.name || user.email)}
       </button>
       </ProBeam>
+      )}
       {open && (
         <div role="menu" style={{ position: 'absolute', ...(placement === 'up' ? { left: 0, bottom: 'calc(100% + 8px)' } : { right: 0, top: 'calc(100% + 8px)' }), zIndex: 60, width: 240, padding: 6, borderRadius: 10, border: '1px solid #E5E5E5', background: '#fff', boxShadow: 'var(--shadow-ambient-high)' }}>
           <div style={{ padding: '10px 14px 12px', borderBottom: '1px solid #F0F0F0', marginBottom: 6 }}>

@@ -169,6 +169,19 @@ export function HookSidebar({
         onMouseLeave={() => setPointerInside(false)}
         className="relative flex flex-col gap-0.5"
       >
+        {centers.length > 0 && (
+          <span aria-hidden className="pointer-events-none absolute inset-0 text-foreground/25">
+            <span
+              className="absolute left-0.5 w-px"
+              style={{ top: 0, height: Math.max(0, (centers[centers.length - 1] ?? 0) - CORNER), ...(dashed ? { backgroundImage: DASH } : { backgroundColor: "currentColor" }) }}
+            />
+            {centers.map((c, i) => (
+              <svg key={i} width="12" height="7" viewBox="0 0 12 7" fill="none" className="absolute left-0.5" style={{ top: c - CORNER }}>
+                <path d="M0.5 0a6 6 0 0 0 6 6H12" stroke="currentColor" strokeDasharray={dashed ? "2 2" : undefined} />
+              </svg>
+            ))}
+          </span>
+        )}
         <Rail
           from={hoverFrom}
           y={hoverY}

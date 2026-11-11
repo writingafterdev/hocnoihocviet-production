@@ -76,20 +76,29 @@ export function AppSidebar({ children }: { children: React.ReactNode }) {
     return () => document.removeEventListener('keydown', key);
   }, []);
   const title = titleOf(path);
+  const toggleBtn = (
+    <button type="button" onClick={toggle} aria-label={open ? 'Ẩn thanh bên (⌘B)' : 'Hiện thanh bên (⌘B)'} title={(open ? 'Ẩn' : 'Hiện') + ' thanh bên · ⌘B'} aria-expanded={open}
+      className="hidden size-[34px] shrink-0 items-center justify-center rounded-lg text-ink-soft transition-colors hover:bg-paper-2 hover:text-ink md:flex">
+      <ToggleIcon open={open} />
+    </button>
+  );
 
   return (
     <div className="flex h-screen flex-col bg-white">
       {/* Top: the brand cell (as wide as the sidebar), then the bar. */}
       <header className="flex h-14 shrink-0 border-b border-line">
         <div style={{ width: open ? SIDEBAR_W : 0 }} className={cn('hidden shrink-0 items-center overflow-hidden transition-[width] duration-200 ease-out md:flex', open && 'border-r border-line')}>
-          <Link href="/home" aria-label="hocnoihocviet · Trang chủ" className="flex w-[232px] shrink-0 items-center px-4"><Logo /></Link>
+          <div className="flex w-[232px] shrink-0 items-center justify-between pl-4 pr-3">
+            <Link href="/home" aria-label="hocnoihocviet · Trang chủ" className="flex items-center"><Logo /></Link>
+            {toggleBtn}
+          </div>
         </div>
         <div className="flex min-w-0 flex-1 items-center gap-3 px-5">
-          {!open && <Link href="/home" aria-label="hocnoihocviet · Trang chủ" className="hidden md:block"><Logo word={false} /></Link>}
+          {!open && <span className="-ml-2 hidden items-center gap-2 md:flex">{toggleBtn}<Link href="/home" aria-label="hocnoihocviet · Trang chủ"><Logo word={false} /></Link></span>}
           <h1 className="m-0 truncate text-[15px] font-medium tracking-[-0.01em] text-ink">
             {title.section && <span className="font-normal text-ink-soft">{title.section} / </span>}{title.page}
           </h1>
-          <div className="ml-auto flex items-center gap-3"><UserMenu /></div>
+          <div className={cn('ml-auto flex items-center gap-3', open && 'md:hidden')}><UserMenu /></div>
         </div>
       </header>
       <div className="flex min-h-0 flex-1">
@@ -102,15 +111,11 @@ export function AppSidebar({ children }: { children: React.ReactNode }) {
                 return <HookSidebar key={k} label={g.label} items={g.items} value={value} color="var(--brand-tomato)" className="whitespace-nowrap" />;
               })}
             </div>
-            <div className="h-14 shrink-0 border-t border-line" />
+            <div className="shrink-0 border-t border-line p-3"><UserMenu variant="row" placement="up" /></div>
           </div>
         </aside>
         <main className="relative min-h-0 min-w-0 flex-1 overflow-y-auto">{children}</main>
       </div>
-      <button type="button" onClick={toggle} aria-label={open ? 'Ẩn thanh bên (⌘B)' : 'Hiện thanh bên (⌘B)'} title={(open ? 'Ẩn' : 'Hiện') + ' thanh bên · ⌘B'} aria-expanded={open}
-        className={cn('fixed bottom-[11px] z-50 hidden size-[34px] items-center justify-center rounded-lg text-ink-soft transition-colors hover:bg-paper-2 hover:text-ink md:flex', open ? 'left-4' : 'left-[5px]')}>
-        <ToggleIcon open={open} />
-      </button>
     </div>
   );
 }
