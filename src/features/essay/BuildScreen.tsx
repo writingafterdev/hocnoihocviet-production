@@ -144,7 +144,7 @@ export function BuildScreen({ prompt, chains, setChains, checks, setCheck, toolb
   const multi = prompt.questions.length > 1;
 
   return (
-    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', width: '100%', maxWidth: 1710, margin: '0 auto', padding: '12px 40px 16px' }}>
+    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', width: '100%', maxWidth: 1710, margin: '0 auto', padding: '24px 40px 24px' }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10, minHeight: 42, paddingBottom: 12 }}>
         {toolbarLeft}
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>

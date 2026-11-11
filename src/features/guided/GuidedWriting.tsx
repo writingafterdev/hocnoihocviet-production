@@ -100,7 +100,7 @@ export function GuidedWriting({ sample = GW_SAMPLES.charity, onBack, backLabel =
   const card = { borderRadius: 12, border: '1px solid ' + CL.border, background: '#fff' };
 
   return (
-    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', maxWidth: 1710, margin: '0 auto', padding: '12px 40px 16px' }}>
+    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', maxWidth: 1710, margin: '0 auto', padding: '24px 40px 24px' }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', minHeight: 42, paddingBottom: 12 }}>
         <button type="button" className="cl-btn cl-link" onClick={onBack} style={backLinkStyle}><ClIcon name="left" size={14} />{backLabel}</button>
         <span style={{ fontFamily: CL.sans, fontSize: 12, color: CL.ink5 }}>Câu <b style={{ color: CL.ink, fontWeight: 600 }}>{Math.min(cur + 1, flat.length)}</b> / {flat.length}</span>

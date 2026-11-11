@@ -113,7 +113,7 @@ export function PromptLibrary() {
   return (
     <div style={{ minHeight: '100%', background: '#FFFFFF' }}>
       <PageHeader />
-      <div style={{ maxWidth: 1200, margin: '0 auto', padding: '40px 32px 96px' }}>
+      <div style={{ maxWidth: 1200, margin: '0 auto', padding: '40px 32px 40px' }}>
 
         <div style={{ display: 'flex', alignItems: 'flex-start', flexWrap: 'wrap', gap: 24, marginBottom: 48 }}>
           <div style={{ width: 96, height: 96, borderRadius: 12, background: '#FFF0EB', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
