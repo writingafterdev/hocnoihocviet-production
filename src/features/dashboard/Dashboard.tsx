@@ -33,13 +33,13 @@ function Card({ p }: { p: Item }) {
         </div>
       </div>
       <div className={cn('grid w-40 shrink-0 place-items-center', p.tint)}>
-        <Illustration name={p.art} className="h-32 w-auto transition-transform duration-[var(--duration-slow)] ease-[var(--ease-smooth-out)] group-hover:scale-[1.05]" />
+        <Illustration name={p.art} className="h-32 w-auto" />
       </div>
     </>
   );
   const cls = 'group flex min-h-[188px] overflow-hidden rounded-xl bg-white shadow-ring';
   return p.href
-    ? <Link href={p.href} className={cn(cls, 't-card-hover hover:shadow-ring-hover', focusRing)}>{body}</Link>
+    ? <Link href={p.href} className={cn(cls, 'hover:shadow-ring-hover', focusRing)}>{body}</Link>
     : <div aria-disabled="true" className={cls}>{body}</div>;
 }
 
