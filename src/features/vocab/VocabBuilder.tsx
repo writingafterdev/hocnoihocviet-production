@@ -277,6 +277,7 @@ export function VocabBuilder({ onBack }: { onBack: () => void }) {
   const [round, setRound] = useState(0);
   const [making, setMaking] = useState(false);
   const [note, setNote] = useState<string | null>(null);
+  useEffect(() => { if (note) toast.error(note); }, [note]);
   const [mine, setMine] = useState<MinePhrase[]>([]);
   const [mineLoaded, setMineLoaded] = useState(false);
   /** The phrase shown in full on the right, per topic. */
@@ -346,7 +347,6 @@ export function VocabBuilder({ onBack }: { onBack: () => void }) {
     setPractice({ sample: order[k].s, topic: order[k].t.name, phrases, groups, at }); setRound((r) => r + 1);
     return true;
   };
-  useEffect(() => { if (note) toast.error(note); }, [note]);
   const MAX_TICK = 30;
   // Nothing ticked: practise up to 4 phrases from this view, least-practised first.
   const choose = () => (picked.length ? picked : [...rows].sort((a, b) => (count[a.it.en] || 0) - (count[b.it.en] || 0)).slice(0, 4).map((r) => r.it.en)).slice(0, MAX_TICK);
