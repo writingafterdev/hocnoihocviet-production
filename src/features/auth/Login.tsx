@@ -47,13 +47,13 @@ export function Login({ dev = false }: { dev?: boolean }) {
       <div className="relative my-auto w-full max-w-[400px] pt-16">
       <img src="/illustrations/student-walking-with-thought-bubble-backpack.svg" alt="" draggable={false} className="pointer-events-none absolute right-3 top-0 z-10 h-36 w-auto select-none" />
       <AuthCard
-        hideForm
+        disableForm
         providers={['google']}
         providerLabel={() => 'Tiếp tục với Google'}
         onProvider={() => { if (!busy) google(); }}
         logo={<span className="text-lg font-semibold tracking-[-0.02em] text-ink">hocnoihocviet</span>}
         title="Đăng nhập"
-        description="Dùng tài khoản Google để tiếp tục. Không cần mật khẩu. Lần đầu đăng nhập cũng là tạo tài khoản, miễn phí khi đang beta."
+        description="Đăng nhập bằng email sẽ sớm có. Hiện tại hãy dùng Google để tiếp tục, lần đầu đăng nhập cũng là tạo tài khoản."
         footnote={<>Khi tiếp tục, bạn đồng ý với <Link href="/terms" className="underline">Điều khoản</Link> và <Link href="/privacy" className="underline">Chính sách quyền riêng tư</Link>.</>}
       >
         {failure && <p role="alert" className={alert}>Chưa mở được trang đăng nhập Google. Chi tiết: <code>{failure}</code></p>}

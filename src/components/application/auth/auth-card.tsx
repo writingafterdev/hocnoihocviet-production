@@ -106,8 +106,8 @@ export interface AuthCardProps {
    * anything reading the page as a document.
    */
   headingLevel?: 1 | 2 | 3 | 4 | 5 | 6;
-  /** Hide the email and password fields: for apps that sign in through a provider alone. */
-  hideForm?: boolean;
+  /** Keep the email form on the card but switched off: for apps that only sign in through a provider for now. */
+  disableForm?: boolean;
   /** The text on each provider button; defaults to "Continue with <provider>". */
   providerLabel?: (label: string) => string;
   /** Extra content under the providers (a notice, a dev-only button). */
@@ -119,9 +119,9 @@ const COPY = {
   signin: {
     title: "Welcome back",
     description: "Sign in to pick up where you left off.",
-    cta: "Sign in",
-    switchLead: "New here?",
-    switchAction: "Create an account",
+    cta: "Đăng nhập",
+    switchLead: "Mới ở đây?",
+    switchAction: "Tạo tài khoản",
   },
   signup: {
     title: "Create your account",
@@ -158,7 +158,7 @@ export function AuthCard({
   onProvider,
   switchHref = "#",
   headingLevel = 1,
-  hideForm = false,
+  disableForm = false,
   providerLabel,
   children,
   className,
@@ -245,7 +245,6 @@ export function AuthCard({
         </p>
       </div>
 
-      {hideForm ? null : (
       <form onSubmit={submit} className="mt-6 flex flex-col gap-4">
         {verify ? (
           <div className="flex flex-col gap-1.5">
@@ -277,6 +276,7 @@ export function AuthCard({
           autoComplete="email"
           hint={signup ? "We use this to contact you, and never share it." : undefined}
           isRequired
+          isDisabled={disableForm}
         />
         )}
 
@@ -306,23 +306,24 @@ export function AuthCard({
           <Input
             name="password"
             type="password"
-            label="Password"
-            placeholder={signup ? "At least 8 characters" : "Enter your password"}
+            label="Mật khẩu"
+            placeholder={signup ? "Ít nhất 8 ký tự" : "Nhập mật khẩu"}
             autoComplete={signup ? "new-password" : "current-password"}
             isRequired
+            isDisabled={disableForm}
           />
         )}
 
         {signup || verify ? null : (
           <div className="flex items-center justify-between">
-            <Checkbox size="sm" isSelected={remember} onChange={setRemember}>
-              Remember me
+            <Checkbox size="sm" isSelected={remember} onChange={setRemember} isDisabled={disableForm}>
+              Ghi nhớ đăng nhập
             </Checkbox>
-            <LinkButton href="#">Forgot password?</LinkButton>
+            <LinkButton href="#" disabled={disableForm}>Quên mật khẩu?</LinkButton>
           </div>
         )}
 
-        <Button type="submit" className="w-full">
+        <Button type="submit" className="w-full" disabled={disableForm}>
           {copy.cta}
         </Button>
 
@@ -334,7 +335,6 @@ export function AuthCard({
           </p>
         ) : null}
       </form>
-      )}
 
       {/* Providers always follow the form, in every layout: the email fields
           are the path this card is built around, and a bank of provider
@@ -342,11 +342,9 @@ export function AuthCard({
           code step shows none — the visitor has already picked a method. */}
       {!verify && providers.length > 0 ? (
         <>
-          {hideForm ? <div className="mt-6" /> : (
-            <div className="my-5">
-              <Divider>or continue with</Divider>
-            </div>
-          )}
+          <div className="my-5">
+            <Divider>hoặc tiếp tục với</Divider>
+          </div>
           {social}
           {children}
         </>
@@ -359,9 +357,9 @@ export function AuthCard({
           {copy.switchLead}{" "}
           <LinkButton onClick={onResend}>{copy.switchAction}</LinkButton>
         </p>
-      ) : hideForm ? null : (
+      ) : (
         <p className="mt-6 text-center text-body-regular text-text-secondary">
-          {copy.switchLead} <LinkButton href={switchHref}>{copy.switchAction}</LinkButton>
+          {copy.switchLead} <LinkButton href={switchHref} disabled={disableForm}>{copy.switchAction}</LinkButton>
         </p>
       )}
     </>
@@ -374,7 +372,7 @@ export function AuthCard({
         className,
       )}
     >
-      <div className={cx("flex flex-col p-6 sm:p-8", hideForm && "justify-center")}>{body}</div>
+      <div className="flex flex-col p-6 sm:p-8">{body}</div>
       {/* Hidden rather than stacked below `md`: a tall image above the fields
           pushes the form off a phone screen for no gain. */}
       <div className="relative hidden bg-background-secondary-default md:block">{media}</div>
