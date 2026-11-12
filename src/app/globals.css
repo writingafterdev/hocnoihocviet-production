@@ -196,7 +196,6 @@ a:hover { color: #404040; }
 
 /* ---- Shared interaction classes, ported from the UI kit shell ---- */
 .cl-btn { background: none; border: none; padding: 0; cursor: pointer; font: inherit; color: inherit; }
-.cl-btn:active { transform: scale(.97); }
 .cl-btn:disabled { cursor: default; }
 .cl-scroll { scrollbar-width: none; }
 .cl-scroll::-webkit-scrollbar { display: none; }
