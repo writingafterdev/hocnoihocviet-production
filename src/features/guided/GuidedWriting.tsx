@@ -226,7 +226,6 @@ export function GuidedWriting({ sample = GW_SAMPLES.charity, onBack, backLabel =
                 {flat.slice(cur + 1, cur + 4).map((s, k) => (
                   <div key={k} style={{ display: 'flex', alignItems: 'flex-start', gap: 12, padding: '12px 0', borderTop: k ? '1px solid ' + CL.ink1 : 'none' }}>
                     <span style={{ flex: 1, fontFamily: CL.sans, fontSize: 13, lineHeight: 1.55, color: CL.ink5 }}>{s.vi}</span>
-                    <SegChips seg={s} small hidden />
                   </div>
                 ))}
                 {cur + 1 >= flat.length && <p style={{ margin: '8px 0 0', fontFamily: CL.sans, fontSize: 13, color: CL.ink4 }}>Đây là câu cuối.</p>}
