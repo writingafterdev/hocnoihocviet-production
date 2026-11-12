@@ -11,6 +11,7 @@ import { sfx } from '@/lib/sfx';
 import { ModePickerModal } from './ModePickerModal';
 import { CATEGORIES_TASK1, CATEGORIES_TASK2, PROMPTS, TOPIC_ILLUSTRATION, TOPICS_TASK2, type Prompt, type Task } from '@/content/prompts';
 import { startFreeAttempt } from '../attempts/start';
+import { SAMPLE_IDS } from '@/content/samples';
 
 const EASE = 'cubic-bezier(.16,1,.3,1)';
 const PAGE = 20;
@@ -95,7 +96,7 @@ function Filter({ title, options, selected, onToggle }: { title: string; options
 }
 
 /** Prompt card: image + tags at rest; on hover it crossfades to the full prompt and a "Viết bài" button. */
-function PromptCard({ prompt, onWrite }: { prompt: Prompt; onWrite: () => void }) {
+function PromptCard({ prompt, onWrite, label = 'Viết bài' }: { prompt: Prompt; onWrite: () => void; label?: string }) {
   const [hover, setHover] = useState(false);
   const layer = (on: boolean): React.CSSProperties => ({ transition: 'opacity var(--duration-medium) var(--ease-smooth-out), transform var(--duration-slow) var(--ease-smooth-out)', opacity: on ? 1 : 0, transform: on ? 'none' : 'translateY(6px)', pointerEvents: on ? 'auto' : 'none' });
   return (
@@ -117,7 +118,7 @@ function PromptCard({ prompt, onWrite }: { prompt: Prompt; onWrite: () => void }
         <div style={{ borderTop: '1px solid #F0F0F0', paddingTop: 12, marginTop: 12 }}>
           {/* Still reachable by keyboard at rest; focusing it reveals this layer. */}
           <button type="button" onClick={onWrite} className="cl-primary" style={{ width: '100%', minHeight: 40, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, borderRadius: 10, border: 'none', cursor: 'pointer', transition: 'opacity .2s' }}>
-            <span style={{ fontFamily: 'var(--font-sans)', fontSize: 11.5, fontWeight: 600, color: '#fff' }}>Viết bài</span>
+            <span style={{ fontFamily: 'var(--font-sans)', fontSize: 11.5, fontWeight: 600, color: '#fff' }}>{label}</span>
           </button>
         </div>
       </div>
@@ -126,7 +127,7 @@ function PromptCard({ prompt, onWrite }: { prompt: Prompt; onWrite: () => void }
 }
 
 /** Thư viện đề: Task 1 / Task 2 switch, type and topic filters, prompt cards. */
-export function PromptLibrary() {
+export function PromptLibrary({ mode = 'write' }: { mode?: 'write' | 'copy' }) {
   const router = useRouter();
   const [task, setTask] = useState<Task>('task2');
   const [cats, setCats] = useState<string[]>([]);
@@ -135,12 +136,14 @@ export function PromptLibrary() {
   const [page, setPage] = useState(0);
   const [reel, setReel] = useState<{ target: Prompt; others: Prompt[] } | null>(null);
   const toggle = (arr: string[], setArr: (a: string[]) => void, v: string) => { setArr(arr.includes(v) ? arr.filter((x) => x !== v) : [...arr, v]); setPage(0); };
-  const filtered = PROMPTS.filter((p) => p.task === task && (cats.length === 0 || cats.includes(p.category)) && (topics.length === 0 || topics.includes(p.topic)));
+  const filtered = PROMPTS.filter((p) => p.task === task && (mode === 'write' || SAMPLE_IDS.has(p.id)) && (cats.length === 0 || cats.includes(p.category)) && (topics.length === 0 || topics.includes(p.topic)));
 
+  /** Writing opens the start dialog; copying goes straight into the sample. */
+  const pick = (p: Prompt) => { if (mode === 'copy') router.push('/copy/' + p.id); else setModalPrompt(p); };
   const randomize = () => {
     if (reel) return;
     const target = filtered[Math.floor(Math.random() * filtered.length)];
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches || PROMPTS.length < 3) { setModalPrompt(target); return; }
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches || PROMPTS.length < 3) { pick(target); return; }
     setReel({ target, others: shuffle(PROMPTS.filter((p) => p.task === target.task && p.id !== target.id)).slice(0, 9) });
   };
   const pager = (className: string) => <Pagination className={className} previousLabel="Trang trước" nextLabel="Trang sau" aria-label="Chọn trang" page={page + 1} totalPages={Math.ceil(filtered.length / PAGE)} onChange={(n) => { setPage(n - 1); window.scrollTo({ top: 0 }); document.querySelector('main')?.scrollTo({ top: 0 }); }} />;
@@ -156,7 +159,7 @@ export function PromptLibrary() {
           </div>
           <div style={{ paddingTop: 4 }}>
             <p style={{ fontFamily: 'var(--font-mono)', fontSize: 12, fontWeight: 500, color: '#737373', margin: '0 0 12px' }}>Nghị luận xã hội</p>
-            <h1 style={{ fontFamily: 'var(--font-sans)', fontSize: 32, fontWeight: 600, letterSpacing: '-0.01em', color: '#171717', margin: 0 }}>Thư viện đề thi</h1>
+            <h1 style={{ fontFamily: 'var(--font-sans)', fontSize: 32, fontWeight: 600, letterSpacing: '-0.01em', color: '#171717', margin: 0 }}>{mode === 'copy' ? 'Chép mẫu' : 'Thư viện đề thi'}</h1>
           </div>
         </div>
 
@@ -202,7 +205,7 @@ export function PromptLibrary() {
                 </button>
               </>
             )}
-            {filtered.slice(page * PAGE, (page + 1) * PAGE).map((p) => <PromptCard key={p.id} prompt={p} onWrite={() => setModalPrompt(p)} />)}
+            {filtered.slice(page * PAGE, (page + 1) * PAGE).map((p) => <PromptCard key={p.id} prompt={p} label={mode === 'copy' ? 'Chép mẫu' : 'Viết bài'} onWrite={() => pick(p)} />)}
             {filtered.length > PAGE && pager('mt-5')}
             {filtered.length === 0 && (
               <div style={{ borderRadius: 10, border: '1px dashed #E5E5E5', padding: '48px 24px', textAlign: 'center' }}>
@@ -213,8 +216,8 @@ export function PromptLibrary() {
           </div>
         </div>
       </div>
-      {reel && <RandomReel target={reel.target} others={reel.others} onDone={() => { setModalPrompt(reel.target); setReel(null); }} />}
-      {modalPrompt && <ModePickerModal prompt={modalPrompt} onClose={() => setModalPrompt(null)} onStart={async (mode) => router.push(mode === 'guided' ? '/writing/' + modalPrompt.id + '/guided' : await startFreeAttempt(modalPrompt))} onResume={(id) => router.push('/write/' + id + '/chains')} />}
+      {reel && <RandomReel target={reel.target} others={reel.others} onDone={() => { pick(reel.target); setReel(null); }} />}
+      {modalPrompt && <ModePickerModal prompt={modalPrompt} only="free" onClose={() => setModalPrompt(null)} onStart={async () => router.push(await startFreeAttempt(modalPrompt))} onResume={(id) => router.push('/write/' + id + '/chains')} />}
     </div>
   );
 }

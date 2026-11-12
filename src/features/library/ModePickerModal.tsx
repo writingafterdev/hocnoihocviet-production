@@ -48,8 +48,8 @@ const ago = (t: number) => {
 };
 
 /** Pop-up after "Viết bài": pick Tự viết (① Dựng mạch → ② Viết bài) or Chép mẫu, or resume the last attempt. */
-export function ModePickerModal({ prompt, onClose, onStart, onResume }: { prompt: Prompt; onClose: () => void; onStart: (mode: WritingMode) => void; onResume: (attemptId: string) => void }) {
-  const [mode, setMode] = useState<WritingMode>('free');
+export function ModePickerModal({ prompt, onClose, onStart, onResume, only }: { prompt: Prompt; onClose: () => void; onStart: (mode: WritingMode) => void; onResume: (attemptId: string) => void; /** Skip the choice and offer just this mode. */ only?: WritingMode }) {
+  const [mode, setMode] = useState<WritingMode>(only || 'free');
   const [last, setLast] = useState<Attempt | null>(null);
   const [starting, setStarting] = useState(false);
   const [closing, setClosing] = useState(false);
@@ -68,11 +68,15 @@ export function ModePickerModal({ prompt, onClose, onStart, onResume }: { prompt
           <p style={{ flex: 1, fontFamily: 'var(--font-sans)', fontSize: 17, fontWeight: 600, lineHeight: 1.4, color: '#171717', margin: 0 }}>{prompt.text}</p>
           <button type="button" onClick={close} aria-label="Đóng" style={{ cursor: 'pointer', width: 28, height: 28, borderRadius: 999, border: '1px solid #E5E5E5', background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#6E6B64', flexShrink: 0, padding: 0 }}><X size={14} strokeWidth={2.5} /></button>
         </div>
+        {!only && (
+          <>
         <p id="mode-title" style={{ fontFamily: 'var(--font-sans)', fontSize: 15, fontWeight: 600, color: '#171717', margin: '0 0 14px' }}>Chọn chế độ làm bài</p>
         <div role="radiogroup" aria-labelledby="mode-title" style={{ display: 'flex', flexWrap: 'wrap', gap: 14, marginBottom: 22 }}>
           <ModeOption kind="free" selected={mode === 'free'} onClick={() => setMode('free')} title="Tự viết" desc="Dựng một mạch cho mỗi thân bài (đề gợi ý sẵn một đầu), rồi viết bài với mạch nằm cạnh từng đoạn. Chấm TR / CC / LR / GRA khi nộp." />
           <ModeOption kind="guided" selected={mode === 'guided'} onClick={() => setMode('guided')} title="Chép mẫu" desc="Viết lại bài mẫu từng câu từ nghĩa tiếng Việt, chữ cái đầu và công cụ lập luận. Không chấm điểm." disabled={!SAMPLE_IDS.has(prompt.id)} badge={SAMPLE_IDS.has(prompt.id) ? undefined : 'Chưa có bài mẫu'} />
         </div>
+          </>
+        )}
         <button type="button" className="cl-primary" disabled={starting} onClick={() => { setStarting(true); onStart(mode); }} style={{ width: '100%', height: 46, borderRadius: 10, border: 'none', color: '#fff', fontFamily: 'var(--font-sans)', fontSize: 13, fontWeight: 600, cursor: 'pointer', opacity: starting ? 0.6 : 1 }}>{mode === 'free' && last ? 'Bắt đầu bài mới' : 'Bắt đầu làm bài'}</button>
         {mode === 'free' && last && (
           <button type="button" onClick={() => onResume(last.id)} style={{ width: '100%', marginTop: 10, height: 42, borderRadius: 10, border: '1px solid #E5E5E5', background: '#fff', color: '#171717', fontFamily: 'var(--font-sans)', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>Tiếp tục bài đang viết · lưu {ago(last.updatedAt)}</button>

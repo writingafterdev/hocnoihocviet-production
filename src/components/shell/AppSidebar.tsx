@@ -12,12 +12,13 @@ import { UserMenu } from './UserMenu';
 /** One group of the sidebar: a small heading and its pages. `match` tells which pages count as being inside an item. */
 interface Group { label?: string; items: { label: string; href: string; match: string[]; icon: React.ReactNode }[] }
 
-// Task 2 holds the quick drill and the writing practice; vocab and the student's own essays stand apart.
+// Task 2 holds the quick drill, the writing practice and copying a sample; vocab and the student's own essays stand apart.
 const GROUPS: Group[] = [
   { items: [{ label: 'Trang chủ', href: '/home', match: ['/home'], icon: <NavIcon name="home" /> }] },
   { label: 'Task 2', items: [
     { label: 'Chứng minh nhanh', href: '/prove', match: ['/prove'], icon: <NavIcon name="drill" /> },
     { label: 'Luyện viết', href: '/writing', match: ['/writing', '/write'], icon: <NavIcon name="write" /> },
+    { label: 'Chép mẫu', href: '/copy', match: ['/copy'], icon: <NavIcon name="copy" /> },
   ] },
   { label: 'Từ vựng', items: [{ label: 'Từ vựng theo chủ đề', href: '/vocab', match: ['/vocab'], icon: <NavIcon name="vocab" /> }] },
   { label: 'Của bạn', items: [
@@ -34,6 +35,7 @@ const SIDEBAR_W = 232;
 /** What the top bar says about the current page: a section (muted) and the page. */
 function titleOf(path: string): { section?: string; page: string } {
   if (inside(path, '/prove')) return { section: 'Task 2', page: 'Chứng minh nhanh' };
+  if (inside(path, '/copy')) return { section: 'Task 2', page: 'Chép mẫu' };
   if (inside(path, '/writing')) return { section: 'Task 2', page: 'Thư viện đề' };
   if (inside(path, '/write')) return { section: 'Task 2', page: 'Luyện viết' };
   if (inside(path, '/vocab')) return { page: 'Từ vựng' };
