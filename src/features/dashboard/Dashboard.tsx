@@ -16,7 +16,7 @@ import { startFreeAttempt } from '../attempts/start';
 interface SavedWord { id: string; en: string; vi: string }
 
 const TASK2 = PROMPTS.filter((p) => p.task === 'task2');
-const WEEKS = 15;
+const WEEKS = 52;
 const DAY = 86_400_000;
 
 const dayKey = (t: number) => { const d = new Date(t); return d.getFullYear() + '-' + d.getMonth() + '-' + d.getDate(); };
@@ -107,14 +107,27 @@ export function Dashboard() {
             <h1 className="m-0 text-[clamp(30px,3.2vw,42px)] font-semibold leading-[1.1] tracking-[-0.03em]">Hôm nay luyện gì?</h1>
           </div>
 
-          {/* A random prompt where the search bar would be. */}
-          <div className="mt-8 rounded-[18px] bg-black/[0.035] p-1.5">
-            <div className="flex min-h-14 items-center gap-3 rounded-[14px] bg-white py-2 pl-5 pr-2 shadow-ring">
-              <span className="min-w-0 flex-1 text-[15px] leading-[1.45] text-ink">
-                {prompt ? <span className="line-clamp-2">{prompt.text}</span> : <span className="text-ink-soft">…</span>}
-              </span>
-              <button type="button" onClick={shuffle} aria-label="Đổi đề khác" title="Đổi đề khác" className="grid size-10 shrink-0 cursor-pointer place-items-center rounded-[10px] border-0 bg-transparent text-ink-soft transition-colors hover:bg-paper-2 hover:text-ink"><RiShuffleLine size={18} /></button>
-              <button type="button" onClick={start} disabled={!prompt || starting} className="cl-primary h-10 shrink-0 cursor-pointer rounded-[10px] border-0 px-4 text-sm font-medium text-white">{starting ? 'Đang mở…' : 'Viết bài này'}</button>
+          {/* A random prompt, as the same card as the library's, with a way to swap it. */}
+          <div className="mt-8 flex items-stretch rounded-xl bg-white p-3 shadow-ring">
+            <div className="flex min-h-[116px] w-[136px] shrink-0 items-center justify-center rounded-lg bg-[#F5F5F5]">
+              {prompt && (/* eslint-disable-next-line @next/next/no-img-element */
+                <img src={'/illustrations/' + TOPIC_ILLUSTRATION[prompt.topic] + '.svg'} alt="" className="size-[100px] object-contain mix-blend-multiply" />
+              )}
+            </div>
+            <div className="flex min-w-0 flex-1 flex-col px-4 py-1">
+              {prompt ? (
+                <>
+                  <div className="mb-2.5 flex flex-wrap gap-2">
+                    <span className="rounded bg-[#F5F5F5] px-2 py-1 text-xs font-semibold text-[#525252]">{prompt.category}</span>
+                    <span className="rounded bg-[#EDF7EA] px-2 py-1 text-xs font-semibold text-[#167A59]">{prompt.topic}</span>
+                  </div>
+                  <p className="m-0 line-clamp-3 text-left text-sm font-medium leading-[1.55]">{prompt.text}</p>
+                </>
+              ) : <p className="m-0 text-sm text-ink-soft">…</p>}
+            </div>
+            <div className="flex w-36 shrink-0 flex-col items-stretch justify-center gap-2 p-2">
+              <button type="button" onClick={start} disabled={!prompt || starting} className="cl-primary h-10 cursor-pointer rounded-[10px] border-0 px-4 text-sm font-medium text-white">{starting ? 'Đang mở…' : 'Viết bài này'}</button>
+              <button type="button" onClick={shuffle} className="inline-flex h-9 cursor-pointer items-center justify-center gap-1.5 rounded-[10px] border-0 bg-[#F5F5F5] text-[13px] font-medium text-ink-soft hover:text-ink"><RiShuffleLine size={15} />Đổi đề</button>
             </div>
           </div>
 
@@ -171,12 +184,10 @@ export function Dashboard() {
             <div className="rounded-[14px] bg-white p-6 shadow-ring">
               <div className="mb-5 flex items-baseline justify-between">
                 <h2 className="m-0 text-[15px] font-semibold">Hoạt động</h2>
-                <span className="text-xs text-ink-soft">{stats.days} ngày có viết bài trong {WEEKS} tuần gần đây</span>
+                <span className="text-xs text-ink-soft">{stats.days} ngày có viết bài trong năm qua</span>
               </div>
-              <div className="flex justify-center">
-                <div className="grid grid-flow-col grid-rows-7 gap-1" role="img" aria-label={stats.days + ' ngày có viết bài trong ' + WEEKS + ' tuần'}>
-                  {stats.cells.map((c, i) => <span key={i} title={c.n >= 0 ? new Date(c.t).toLocaleDateString('vi-VN') + ' · ' + c.n + ' bài' : undefined} className="heat-cell size-4 rounded-[4px]" style={{ background: c.n < 0 ? 'transparent' : shade(c.n), ['--d' as string]: Math.floor(i / 7) * 25 + 'ms' }} />)}
-                </div>
+              <div className="grid grid-flow-col grid-rows-7 gap-[3px]" style={{ gridTemplateColumns: 'repeat(' + WEEKS + ', minmax(0, 1fr))' }} role="img" aria-label={stats.days + ' ngày có viết bài trong ' + WEEKS + ' tuần'}>
+                {stats.cells.map((c, i) => <span key={i} title={c.n >= 0 ? new Date(c.t).toLocaleDateString('vi-VN') + ' · ' + c.n + ' bài' : undefined} className="heat-cell aspect-square rounded-[3px]" style={{ background: c.n < 0 ? 'transparent' : shade(c.n), ['--d' as string]: Math.floor(i / 7) * 12 + 'ms' }} />)}
               </div>
             </div>
           </section>
