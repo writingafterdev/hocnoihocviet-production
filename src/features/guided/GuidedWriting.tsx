@@ -124,10 +124,6 @@ export function GuidedWriting({ sample = GW_SAMPLES.charity, onBack, backLabel =
       <div style={{ flex: 1, minHeight: 0, display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)', gap: 26 }}>
         {/* Left: prompt + the essay, revealed as the student finishes each sentence */}
         <aside className="cl-scroll" style={{ ...card, minHeight: 0, overflowY: 'auto', padding: '26px 26px 30px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
-            <ClLabel>{label}</ClLabel>
-            <ClLabel color={CL.ink4} style={{ fontSize: 9.5 }}>{taskLabel}</ClLabel>
-          </div>
           <div style={{ border: '1px solid ' + CL.ink3, padding: '14px 16px' }}>
             <p style={{ margin: 0, fontFamily: CL.sans, fontSize: 13, fontWeight: 600, fontStyle: 'italic', lineHeight: 1.55, color: '#20252D', textWrap: 'pretty' }}>{sample.prompt}</p>
           </div>
@@ -185,10 +181,6 @@ export function GuidedWriting({ sample = GW_SAMPLES.charity, onBack, backLabel =
               </section>
 
               <section className={shake ? 't-shake' : undefined} style={{ ...card, padding: '22px 24px' }}>
-                <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, marginBottom: 12 }}>
-                  <ClLabel>Câu mẫu · chữ cái đầu, từ khó gợi ý thêm</ClLabel>
-                  <span style={{ marginLeft: 'auto', fontFamily: CL.sans, fontSize: 11.5, fontWeight: 600, color: all ? CL.greenText : CL.ink5 }}>{nOk}/{words.length} từ đúng</span>
-                </div>
                 <div style={{ height: 4, borderRadius: 999, background: CL.ink1, overflow: 'hidden', marginBottom: 14 }}><div style={{ width: (words.length ? nOk / words.length * 100 : 0) + '%', height: '100%', background: CL.mint, transition: 'width .2s' }} /></div>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
                   {words.map((w, i) => {
