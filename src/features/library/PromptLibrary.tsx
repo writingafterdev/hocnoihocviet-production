@@ -95,31 +95,21 @@ function Filter({ title, options, selected, onToggle }: { title: string; options
   );
 }
 
-/** Prompt card: image + tags at rest; on hover it crossfades to the full prompt and a "Viết bài" button. */
+/** Prompt card: the picture, the tags and the prompt, with its button in the card. No hover effect. */
 function PromptCard({ prompt, onWrite, label = 'Viết bài' }: { prompt: Prompt; onWrite: () => void; label?: string }) {
-  const [hover, setHover] = useState(false);
-  const layer = (on: boolean): React.CSSProperties => ({ transition: 'opacity var(--duration-medium) var(--ease-smooth-out), transform var(--duration-slow) var(--ease-smooth-out)', opacity: on ? 1 : 0, transform: on ? 'none' : 'translateY(6px)', pointerEvents: on ? 'auto' : 'none' });
   return (
-    <article onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)} onFocus={() => setHover(true)} onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setHover(false); }} style={{ position: 'relative', display: 'grid', borderRadius: 10, background: '#fff', boxShadow: hover ? '0 8px 24px rgba(0,0,0,0.06), 0 0 0 1px rgba(0,0,0,0.06)' : '0 1px 4px rgba(0,0,0,0.04), 0 0 0 1px rgba(0,0,0,0.04)', transform: hover ? 'translateY(-2px)' : 'none', transition: 'box-shadow .35s ' + EASE + ', transform .35s ' + EASE, overflow: 'hidden', minHeight: 156 }}>
-      <div aria-hidden={hover} style={{ gridArea: '1/1', display: 'flex', padding: 12, ...layer(!hover) }}>
-        <div style={{ width: 136, height: 132, borderRadius: 8, background: '#F5F5F5', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <img src={'/illustrations/' + TOPIC_ILLUSTRATION[prompt.topic] + '.svg'} alt="" style={{ width: 112, height: 112, objectFit: 'contain', mixBlendMode: 'multiply' }} />
-        </div>
-        <div style={{ flex: 1, padding: '4px 16px' }}>
-          <div style={{ display: 'flex', gap: 8, marginBottom: 10, flexWrap: 'wrap' }}>
-            <span style={{ borderRadius: 4, background: '#F5F5F5', padding: '4px 8px', fontFamily: 'var(--font-mono)', fontSize: 12, fontWeight: 600, color: '#525252' }}>{prompt.category}</span>
-            <span style={{ borderRadius: 4, background: '#EDF7EA', padding: '4px 8px', fontFamily: 'var(--font-mono)', fontSize: 12, fontWeight: 600, color: '#167A59' }}>{prompt.topic}</span>
-          </div>
-          <p style={{ fontFamily: 'var(--font-sans)', fontSize: 14, fontWeight: 500, lineHeight: 1.55, color: '#171717', margin: 0 }}>{prompt.text}</p>
-        </div>
+    <article style={{ display: 'flex', gap: 14, padding: 12, borderRadius: 12, background: '#fff', boxShadow: '0 0 0 1px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.05)' }}>
+      <div style={{ width: 112, minHeight: 112, borderRadius: 8, background: '#F5F5F5', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <img src={'/illustrations/' + TOPIC_ILLUSTRATION[prompt.topic] + '.svg'} alt="" style={{ width: 92, height: 92, objectFit: 'contain', mixBlendMode: 'multiply' }} />
       </div>
-      <div style={{ gridArea: '1/1', display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: '16px 20px', ...layer(hover) }}>
-        <p style={{ fontFamily: 'var(--font-sans)', fontSize: 14, fontWeight: 500, lineHeight: 1.6, color: '#171717', margin: 0 }}>{prompt.text}</p>
-        <div style={{ borderTop: '1px solid #F0F0F0', paddingTop: 12, marginTop: 12 }}>
-          {/* Still reachable by keyboard at rest; focusing it reveals this layer. */}
-          <button type="button" onClick={onWrite} className="cl-primary" style={{ width: '100%', minHeight: 40, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, borderRadius: 10, border: 'none', cursor: 'pointer', transition: 'opacity .2s' }}>
-            <span style={{ fontFamily: 'var(--font-sans)', fontSize: 11.5, fontWeight: 600, color: '#fff' }}>{label}</span>
-          </button>
+      <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 8, padding: '2px 0' }}>
+        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+          <span style={{ borderRadius: 4, background: '#F5F5F5', padding: '3px 7px', fontSize: 11.5, fontWeight: 600, color: '#525252' }}>{prompt.category}</span>
+          <span style={{ borderRadius: 4, background: '#EDF7EA', padding: '3px 7px', fontSize: 11.5, fontWeight: 600, color: '#167A59' }}>{prompt.topic}</span>
+        </div>
+        <p style={{ fontFamily: 'var(--font-sans)', fontSize: 13.5, fontWeight: 500, lineHeight: 1.55, color: '#171717', margin: 0 }}>{prompt.text}</p>
+        <div style={{ marginTop: 'auto', display: 'flex', justifyContent: 'flex-end' }}>
+          <button type="button" onClick={onWrite} className="cl-primary" style={{ height: 34, padding: '0 16px', borderRadius: 9, border: 'none', cursor: 'pointer', fontFamily: 'var(--font-sans)', fontSize: 12.5, fontWeight: 600, color: '#fff' }}>{label}</button>
         </div>
       </div>
     </article>
@@ -171,7 +161,7 @@ export function PromptLibrary({ mode = 'write' }: { mode?: 'write' | 'copy' }) {
             <div style={{ height: 1, background: 'rgba(0,0,0,0.05)', marginBottom: 32 }} />
             {task === 'task2' && <Filter title="Chủ đề" options={TOPICS_TASK2} selected={topics} onToggle={(v) => toggle(topics, setTopics, v)} />}
           </aside>
-          <div style={{ flex: 1, minWidth: 0, width: '100%', display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <div style={{ flex: 1, minWidth: 0, width: '100%', maxWidth: 780, display: 'flex', flexDirection: 'column', gap: 12 }}>
             {filtered.length > 0 && (
               <>
                 <p style={{ fontFamily: 'var(--font-sans)', fontSize: 13, color: '#737373', margin: '0 0 4px' }}>{filtered.length} đề</p>
