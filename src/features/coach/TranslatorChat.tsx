@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Illustration } from '@/components/brand/Illustration';
 import { CL } from '../chainlab/constants';
-import { ClLabel } from '../chainlab/ui/primitives';
+import { ClIcon, ClLabel } from '../chainlab/ui/primitives';
 import { AI_ERROR_TEXT, AiRequestError, postAi } from '../ai/request';
 import { Chip } from '@/components/base/badges/chip';
 import type { BankPhrase } from './useCoach';
@@ -39,6 +39,7 @@ export function TranslatorChat({ ideas = [], onClose, skill = 'task2', vocab }: 
   const [pending, setPending] = useState(false);
   const [copied, setCopied] = useState<number | null>(null);
   const [saved, setSaved] = useState<Record<number, SaveState>>({});
+  const [savedPhrase, setSavedPhrase] = useState<Record<string, SaveState>>({});
   const listRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => { listRef.current?.scrollTo({ top: listRef.current.scrollHeight, behavior: 'smooth' }); }, [msgs]);
@@ -80,15 +81,29 @@ export function TranslatorChat({ ideas = [], onClose, skill = 'task2', vocab }: 
   // Saves the pair under "Đã lưu" in Từ vựng, filed under the topic the translator chose.
   const pair = (m: Msg) => (m.dir === 'vi-en' ? { en: m.translation || '', vi: m.source } : { en: m.source, vi: m.translation || '' });
   const savable = (m: Msg) => { const p = pair(m); return !!p.en && !!p.vi && p.en.length <= 300 && p.vi.length <= 600; };
+  /** Files one pair under "Đã lưu" in Từ vựng. */
+  const postPair = async (en: string, vi: string, topic?: string): Promise<SaveState> => {
+    try {
+      const r = await fetch('/api/vocab/mine', { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'same-origin', body: JSON.stringify({ en, vi, skill, topic }) });
+      return r.ok ? 'saved' : r.status === 409 ? 'full' : 'error';
+    } catch { return 'error'; }
+  };
   const save = async (m: Msg) => {
     if (saved[m.id] === 'saving' || saved[m.id] === 'saved') return;
     setSaved((s) => ({ ...s, [m.id]: 'saving' }));
-    let state: SaveState = 'error';
-    try {
-      const r = await fetch('/api/vocab/mine', { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'same-origin', body: JSON.stringify({ ...pair(m), skill, topic: m.topic }) });
-      state = r.ok ? 'saved' : r.status === 409 ? 'full' : 'error';
-    } catch { /* network: error */ }
+    const p = pair(m);
+    const state = await postPair(p.en, p.vi, m.topic);
     setSaved((s) => ({ ...s, [m.id]: state }));
+  };
+  /** Saves suggested phrases (one, or all that are not saved yet). */
+  const savePhrases = async (list: BankPhrase[]) => {
+    for (const b of list) {
+      if (savedPhrase[b.en] === 'saving' || savedPhrase[b.en] === 'saved') continue;
+      setSavedPhrase((s) => ({ ...s, [b.en]: 'saving' }));
+      const state = await postPair(b.en, b.vi);
+      setSavedPhrase((s) => ({ ...s, [b.en]: state }));
+      if (state === 'full') break;
+    }
   };
 
   return (
@@ -125,16 +140,27 @@ export function TranslatorChat({ ideas = [], onClose, skill = 'task2', vocab }: 
                   m.bank.error ? (
                     <div style={{ borderRadius: '4px 16px 16px 16px', background: CL.redSoft, padding: '9px 13px', fontFamily: CL.sans, fontSize: 12.5, lineHeight: 1.5, color: CL.redText }}>{m.bank.error}</div>
                   ) : m.bank.phrases ? (
-                    <div style={{ borderRadius: '4px 16px 16px 16px', border: '1px solid ' + CL.ink2, background: '#fff', padding: 10, display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-                      {m.bank.phrases.map((b) => {
-                        const used = vocab?.used(b.en);
-                        return (
-                          <button key={b.en} type="button" className="cl-btn" onClick={() => vocab?.onPick(b.en)} disabled={!vocab || vocab.key !== m.bank?.key} style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 1, padding: '6px 10px', borderRadius: 8, border: 'none', background: used ? '#EEF3FC' : '#F5F5F5', cursor: 'pointer', textAlign: 'left', transition: 'background-color .2s' }}>
-                            <span style={{ fontFamily: CL.sans, fontSize: 13, fontWeight: 500, color: used ? '#2F62C4' : CL.ink }}>{b.en}</span>
-                            <span style={{ fontFamily: CL.sans, fontSize: 11, color: '#8A8A8A' }}>{b.vi}</span>
-                          </button>
-                        );
-                      })}
+                    <div style={{ borderRadius: '4px 16px 16px 16px', border: '1px solid ' + CL.ink2, background: '#fff', padding: 10, display: 'flex', flexDirection: 'column', gap: 8 }}>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                        {m.bank.phrases.map((b) => {
+                          const used = vocab?.used(b.en);
+                          const st = savedPhrase[b.en];
+                          return (
+                            <span key={b.en} style={{ display: 'inline-flex', alignItems: 'stretch', borderRadius: 8, background: used ? '#EEF3FC' : '#F5F5F5', transition: 'background-color .2s' }}>
+                              <button type="button" className="cl-btn" onClick={() => vocab?.onPick(b.en)} disabled={!vocab || vocab.key !== m.bank?.key} style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 1, padding: '6px 4px 6px 10px', border: 'none', background: 'none', cursor: 'pointer', textAlign: 'left' }}>
+                                <span style={{ fontFamily: CL.sans, fontSize: 13, fontWeight: 500, color: used ? '#2F62C4' : CL.ink }}>{b.en}</span>
+                                <span style={{ fontFamily: CL.sans, fontSize: 11, color: '#8A8A8A' }}>{b.vi}</span>
+                              </button>
+                              <button type="button" className="cl-btn" onClick={() => savePhrases([b])} disabled={st === 'saving' || st === 'saved'} aria-label={st === 'saved' ? 'Đã lưu ' + b.en : 'Lưu ' + b.en + ' vào Từ vựng'} title={st === 'saved' ? 'Đã lưu vào Từ vựng' : st === 'full' ? 'Kho từ đã đầy' : st === 'error' ? 'Lưu lỗi, bấm để thử lại' : 'Lưu vào Từ vựng'} style={{ display: 'inline-flex', alignItems: 'center', padding: '0 9px 0 5px', border: 'none', background: 'none', cursor: st === 'saved' ? 'default' : 'pointer', color: st === 'saved' ? CL.greenText : st === 'error' || st === 'full' ? CL.redText : CL.ink4, opacity: st === 'saving' ? 0.5 : 1 }}>
+                                <ClIcon name={st === 'saved' ? 'check' : 'bookmark'} size={14} />
+                              </button>
+                            </span>
+                          );
+                        })}
+                      </div>
+                      {m.bank.phrases.some((b) => savedPhrase[b.en] !== 'saved') && (
+                        <button type="button" className="cl-btn cl-link" onClick={() => savePhrases(m.bank?.phrases || [])} style={{ ...chipBtn, alignSelf: 'flex-start', display: 'inline-flex', alignItems: 'center', gap: 5, padding: '4px 6px' }}><ClIcon name="bookmark" size={12} />Lưu tất cả vào Từ vựng</button>
+                      )}
                     </div>
                   ) : (
                     <div aria-live="polite" style={{ borderRadius: '4px 16px 16px 16px', border: '1px solid ' + CL.ink1, padding: '9px 13px', fontFamily: CL.sans, fontSize: 12.5, color: CL.ink4 }}>Đang tìm từ vựng…</div>
@@ -145,7 +171,7 @@ export function TranslatorChat({ ideas = [], onClose, skill = 'task2', vocab }: 
                     {m.translation && (
                       <div style={{ display: 'flex', gap: 2 }}>
                         <button type="button" className="cl-btn cl-link" onClick={() => copy(m)} style={{ ...chipBtn, color: copied === m.id ? CL.greenText : CL.ink5 }}>{copied === m.id ? 'Đã chép' : 'Chép'}</button>
-                        {savable(m) && <button type="button" className="cl-btn cl-link" onClick={() => save(m)} disabled={saved[m.id] === 'saving' || saved[m.id] === 'saved'} title={'Lưu vào Từ vựng' + (m.topic ? ' · ' + m.topic : '')} style={{ ...chipBtn, color: saved[m.id] === 'saved' ? CL.greenText : saved[m.id] === 'error' || saved[m.id] === 'full' ? CL.redText : CL.ink5 }}>{saved[m.id] ? SAVE_LABEL[saved[m.id]] : 'Lưu từ'}</button>}
+                        {savable(m) && <button type="button" className="cl-btn cl-link" onClick={() => save(m)} disabled={saved[m.id] === 'saving' || saved[m.id] === 'saved'} title={'Lưu vào Từ vựng' + (m.topic ? ' · ' + m.topic : '')} style={{ ...chipBtn, display: 'inline-flex', alignItems: 'center', gap: 4, color: saved[m.id] === 'saved' ? CL.greenText : saved[m.id] === 'error' || saved[m.id] === 'full' ? CL.redText : CL.ink5 }}><ClIcon name={saved[m.id] === 'saved' ? 'check' : 'bookmark'} size={11} />{saved[m.id] ? SAVE_LABEL[saved[m.id]] : 'Lưu từ'}</button>}
                       </div>
                     )}
                   </>
