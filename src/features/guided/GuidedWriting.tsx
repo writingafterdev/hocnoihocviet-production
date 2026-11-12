@@ -180,8 +180,7 @@ export function GuidedWriting({ sample = GW_SAMPLES.charity, onBack, backLabel =
           ) : (
             <Fragment>
               <section style={{ ...card, padding: '22px 24px' }}>
-                {/* Vocab practice lists the phrases being practised; an essay sentence is just its Vietnamese. */}
-                {seg.vocab && <div style={{ marginBottom: 12 }}><SegChips seg={seg} hidden /></div>}
+                <div style={{ marginBottom: 12 }}><SegChips seg={seg} hidden /></div>
                 <p style={{ margin: 0, fontFamily: CL.sans, fontSize: 19, fontWeight: 600, lineHeight: 1.5, color: CL.ink, textWrap: 'pretty' }}>{seg.vi}</p>
               </section>
 
