@@ -76,8 +76,8 @@ function KindPicker({ onPick }: { onPick: (kind?: StatementKind, tone?: 'benefit
       <div className="grid w-full max-w-[720px] grid-cols-3 gap-3 sm:gap-4">
         {KINDS.map((k) => (
           <button key={k.kind} type="button" onClick={() => (k.kind === 'impact' ? setImpact(true) : onPick(k.kind))}
-            className={cn('group m-0 flex w-full min-w-0 cursor-pointer flex-col overflow-hidden rounded-xl border-0 bg-white p-0 text-left shadow-ring t-card-hover hover:shadow-ring-hover focus-visible:outline-none focus-visible:shadow-[0_0_0_2px_var(--brand-blue-deep)]', impact && k.kind === 'impact' && 'shadow-[0_0_0_2px_var(--brand-blue-deep)]')}>
-            <div className={cn('grid h-28 place-items-center', k.bg)}><Illustration name={DRAWING[k.kind]} className="h-24 w-auto transition-transform duration-[var(--duration-slow)] ease-[var(--ease-smooth-out)] group-hover:scale-[1.04]" /></div>
+            className={cn('group m-0 flex w-full min-w-0 cursor-pointer flex-col overflow-hidden rounded-xl border-0 bg-white p-0 text-left shadow-ring hover:shadow-ring-hover focus-visible:outline-none focus-visible:shadow-[0_0_0_2px_var(--brand-blue-deep)]', impact && k.kind === 'impact' && 'shadow-[0_0_0_2px_var(--brand-blue-deep)]')}>
+            <div className={cn('grid h-28 place-items-center', k.bg)}><Illustration name={DRAWING[k.kind]} className="h-24 w-auto" /></div>
             <div className="flex flex-col gap-1 px-4 pb-4 pt-3">
               <span className="text-[15px] font-semibold tracking-[-0.01em] text-ink">{KIND_LABEL[k.kind]}</span>
               <span className="text-[13px] leading-snug text-ink-soft">{k.note}</span>
