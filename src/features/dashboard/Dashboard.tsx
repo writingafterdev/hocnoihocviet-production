@@ -8,7 +8,8 @@ import { RiShuffleLine } from '@remixicon/react';
 import { Illustration } from '@/components/brand/Illustration';
 import { NavIcon, type NavIconName } from '@/components/brand/NavIcon';
 import { AppCredits } from '@/components/shell/AppCredits';
-import { findPrompt, PROMPTS, type Prompt } from '@/content/prompts';
+import { findPrompt, PROMPTS, TOPIC_ILLUSTRATION, type Prompt } from '@/content/prompts';
+import { wordCount } from '../desk/scoring';
 import { attemptStore, type Attempt } from '../attempts/store';
 import { startFreeAttempt } from '../attempts/start';
 
@@ -90,14 +91,11 @@ export function Dashboard() {
       const t = monday - (WEEKS - 1) * 7 * DAY + i * DAY;
       return { t, n: t > today.getTime() ? -1 : counts.get(dayKey(t)) || 0 };
     });
-    const scored = list.filter((a) => a.essay.review?.scores.band != null).sort((a, b) => a.updatedAt - b.updatedAt);
-    const bands = scored.slice(-8).map((a) => a.essay.review!.scores.band as number);
-    return { cells, days: cells.filter((c) => c.n > 0).length, bands, latest: bands.length ? bands[bands.length - 1] : null, total: list.length };
+    return { cells, days: cells.filter((c) => c.n > 0).length };
   }, [attempts]);
 
-  const recent = (attempts || []).slice(0, 4);
+  const recent = (attempts || []).slice(0, 3);
   const saved = (words || []).slice(0, 4);
-  const figures: [string, string | number][] = [['Bài đã viết', stats.total], ['Band gần nhất', stats.latest != null ? stats.latest.toFixed(1) : '—'], ['Từ đã lưu', words ? words.length : '—']];
 
   return (
     <div className="relative flex min-h-full flex-col bg-white text-ink">
@@ -120,17 +118,46 @@ export function Dashboard() {
             </div>
           </div>
 
-          <div className="mt-12 grid grid-cols-1 gap-x-12 gap-y-10 md:grid-cols-3">
-            <Column title="Luyện tập">
-              {PRACTICE.map((p) => <Row key={p.href} href={p.href} icon={<NavIcon name={p.icon} />}>{p.label}</Row>)}
-            </Column>
-            <Column title="Bài đang viết" href="/attempts">
+          {/* Writing in progress, as the same cards as the library and Bài đã viết. */}
+          <section aria-label="Bài đang viết" className="mt-12">
+            <div className="mb-3 flex h-6 items-center text-[13px] font-medium text-ink-soft">
+              <Link href="/attempts" className="inline-flex items-center gap-0.5 hover:text-ink">Bài đang viết<ChevronRight className="size-3.5" /></Link>
+            </div>
+            <div className="flex flex-col gap-3">
               {attempts === null ? <Empty>Đang tải…</Empty>
                 : recent.length === 0 ? <Empty>Chưa có bài nào. Chọn một đề ở trên để bắt đầu.</Empty>
                 : recent.map((a) => {
+                  const p = findPrompt(a.promptId);
+                  if (!p) return null;
+                  const words = Object.values(a.essay.drafts || {}).reduce((n, t) => n + wordCount(t), 0);
                   const band = a.essay.review?.scores.band;
-                  return <Row key={a.id} href={'/write/' + a.id + '/chains'} note={band != null ? band.toFixed(1) : undefined}>{findPrompt(a.promptId)?.text || 'Bài viết'}</Row>;
+                  return (
+                    <Link key={a.id} href={'/write/' + a.id + (words ? '/essay' : '/chains')} className="pl-card flex items-stretch rounded-xl bg-white p-3 text-ink shadow-ring">
+                      <div className="flex min-h-[116px] w-[136px] shrink-0 items-center justify-center rounded-lg bg-[#F5F5F5]">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={'/illustrations/' + TOPIC_ILLUSTRATION[p.topic] + '.svg'} alt="" className="size-[100px] object-contain mix-blend-multiply" />
+                      </div>
+                      <div className="flex min-w-0 flex-1 flex-col px-4 py-1">
+                        <div className="mb-2.5 flex flex-wrap gap-2">
+                          <span className="rounded bg-[#F5F5F5] px-2 py-1 text-xs font-semibold text-[#525252]">{p.category}</span>
+                          <span className="rounded bg-[#EDF7EA] px-2 py-1 text-xs font-semibold text-[#167A59]">{p.topic}</span>
+                        </div>
+                        <p className="m-0 line-clamp-2 text-sm font-medium leading-[1.55]">{p.text}</p>
+                        <p className="m-0 mt-auto pt-2.5 text-xs text-ink-soft">{a.chains.length} thân bài · {words} từ</p>
+                      </div>
+                      <div className="flex w-28 shrink-0 flex-col items-center justify-center p-2 text-center">
+                        {band != null ? <span className="text-[34px] font-semibold leading-none tracking-[-0.02em] text-blue-deep tabular-nums">{band.toFixed(1)}</span>
+                          : <span className="text-[13px] font-semibold text-ink-soft">{words ? 'Chưa nộp' : 'Đang dựng mạch'}</span>}
+                      </div>
+                    </Link>
+                  );
                 })}
+            </div>
+          </section>
+
+          <div className="mt-12 grid grid-cols-1 gap-x-12 gap-y-10 md:grid-cols-2">
+            <Column title="Luyện tập">
+              {PRACTICE.map((p) => <Row key={p.href} href={p.href} icon={<NavIcon name={p.icon} />}>{p.label}</Row>)}
             </Column>
             <Column title="Từ vựng đã lưu" href="/vocab">
               {words === null ? <Empty>Đang tải…</Empty>
@@ -139,40 +166,17 @@ export function Dashboard() {
             </Column>
           </div>
 
-          {/* The numbers: several small diagrams in one card. */}
+          {/* The heat map: the days the student wrote. */}
           <section aria-label="Hoạt động" className="mt-12 rounded-[18px] bg-black/[0.035] p-1.5">
             <div className="rounded-[14px] bg-white p-6 shadow-ring">
               <div className="mb-5 flex items-baseline justify-between">
                 <h2 className="m-0 text-[15px] font-semibold">Hoạt động</h2>
-                <span className="text-xs text-ink-soft">{WEEKS} tuần gần đây</span>
+                <span className="text-xs text-ink-soft">{stats.days} ngày có viết bài trong {WEEKS} tuần gần đây</span>
               </div>
-              <div className="grid grid-cols-1 gap-8 md:grid-cols-[auto_1fr_auto] md:items-end">
-                <div>
-                  <div className="grid grid-flow-col grid-rows-7 gap-[3px]" role="img" aria-label={stats.days + ' ngày có viết bài trong ' + WEEKS + ' tuần'}>
-                    {stats.cells.map((c, i) => <span key={i} title={c.n >= 0 ? new Date(c.t).toLocaleDateString('vi-VN') + ' · ' + c.n + ' bài' : undefined} className="heat-cell size-3 rounded-[3px]" style={{ background: c.n < 0 ? 'transparent' : shade(c.n), ['--d' as string]: Math.floor(i / 7) * 25 + 'ms' }} />)}
-                  </div>
-                  <p className="m-0 mt-3 text-xs text-ink-soft">{stats.days} ngày có viết bài</p>
+              <div className="flex justify-center">
+                <div className="grid grid-flow-col grid-rows-7 gap-1" role="img" aria-label={stats.days + ' ngày có viết bài trong ' + WEEKS + ' tuần'}>
+                  {stats.cells.map((c, i) => <span key={i} title={c.n >= 0 ? new Date(c.t).toLocaleDateString('vi-VN') + ' · ' + c.n + ' bài' : undefined} className="heat-cell size-4 rounded-[4px]" style={{ background: c.n < 0 ? 'transparent' : shade(c.n), ['--d' as string]: Math.floor(i / 7) * 25 + 'ms' }} />)}
                 </div>
-
-                <div className="flex h-24 items-end justify-center gap-2" role="img" aria-label="Điểm band các bài gần nhất">
-                  {stats.bands.length === 0
-                    ? <span className="self-center text-[13px] text-ink-soft">Điểm các bài đã chấm sẽ hiện ở đây.</span>
-                    : stats.bands.map((b, i) => (
-                      <div key={i} className="flex h-full w-7 flex-col items-center justify-end gap-1">
-                        <span className="text-[11px] tabular-nums text-ink-soft">{b.toFixed(1)}</span>
-                        <div className="flex w-full flex-1 items-end rounded-md bg-[#EEF0F4]"><div className="w-full rounded-md bg-[#77A1DD]" style={{ height: Math.max(8, (b / 9) * 100) + '%' }} /></div>
-                      </div>
-                    ))}
-                </div>
-
-                <dl className="m-0 grid grid-cols-3 gap-6 md:grid-cols-1 md:gap-3">
-                  {figures.map(([k, v]) => (
-                    <div key={k} className="flex flex-col md:flex-row md:items-baseline md:justify-between md:gap-6">
-                      <dt className="text-xs text-ink-soft">{k}</dt>
-                      <dd className="m-0 text-xl font-semibold tabular-nums tracking-[-0.02em]">{v}</dd>
-                    </div>
-                  ))}
-                </dl>
               </div>
             </div>
           </section>
