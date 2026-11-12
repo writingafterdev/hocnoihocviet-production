@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { ChevronRight } from 'lucide-react';
 import { RiShuffleLine } from '@remixicon/react';
 import { Illustration } from '@/components/brand/Illustration';
@@ -12,6 +12,7 @@ import { findPrompt, PROMPTS, TOPIC_ILLUSTRATION, type Prompt } from '@/content/
 import { wordCount } from '../desk/scoring';
 import { attemptStore, type Attempt } from '../attempts/store';
 import { startFreeAttempt } from '../attempts/start';
+import { cn } from '@/lib/utils';
 
 interface SavedWord { id: string; en: string; vi: string }
 
@@ -69,10 +70,27 @@ export function Dashboard() {
     fetch('/api/vocab/mine', { credentials: 'same-origin' }).then((r) => (r.ok ? r.json() : { items: [] })).then((d) => setWords(d.items || []), () => setWords([]));
   }, []);
 
-  const shuffle = () => setPrompt((cur) => {
-    const rest = TASK2.filter((p) => p.id !== cur?.id);
-    return rest[Math.floor(Math.random() * rest.length)];
-  });
+  // "Đổi đề": the card itself spins through prompts, slowing down until it settles on one.
+  const [rolling, setRolling] = useState(false);
+  const timers = useRef<number[]>([]);
+  useEffect(() => () => timers.current.forEach(clearTimeout), []);
+  const shuffle = () => {
+    if (rolling) return;
+    const rest = TASK2.filter((p) => p.id !== prompt?.id);
+    const target = rest[Math.floor(Math.random() * rest.length)];
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) { setPrompt(target); return; }
+    setRolling(true);
+    const steps = 14;
+    let at = 0;
+    for (let i = 0; i < steps; i++) {
+      at += 55 + i * i * 2.2;
+      const last = i === steps - 1;
+      timers.current.push(window.setTimeout(() => {
+        setPrompt(last ? target : TASK2[Math.floor(Math.random() * TASK2.length)]);
+        if (last) setRolling(false);
+      }, at));
+    }
+  };
   const start = async () => {
     if (!prompt || starting) return;
     setStarting(true);
@@ -121,13 +139,13 @@ export function Dashboard() {
                     <span className="rounded bg-[#F5F5F5] px-2 py-1 text-xs font-semibold text-[#525252]">{prompt.category}</span>
                     <span className="rounded bg-[#EDF7EA] px-2 py-1 text-xs font-semibold text-[#167A59]">{prompt.topic}</span>
                   </div>
-                  <p className="m-0 line-clamp-3 text-left text-sm font-medium leading-[1.55]">{prompt.text}</p>
+                  <p className={cn('m-0 line-clamp-3 text-left text-sm font-medium leading-[1.55] transition-opacity', rolling && 'opacity-50')}>{prompt.text}</p>
                 </>
               ) : <p className="m-0 text-sm text-ink-soft">…</p>}
             </div>
             <div className="flex w-36 shrink-0 flex-col items-stretch justify-center gap-2 p-2">
-              <button type="button" onClick={start} disabled={!prompt || starting} className="cl-primary h-10 cursor-pointer rounded-[10px] border-0 px-4 text-sm font-medium text-white">{starting ? 'Đang mở…' : 'Viết bài này'}</button>
-              <button type="button" onClick={shuffle} className="inline-flex h-9 cursor-pointer items-center justify-center gap-1.5 rounded-[10px] border-0 bg-[#F5F5F5] text-[13px] font-medium text-ink-soft hover:text-ink"><RiShuffleLine size={15} />Đổi đề</button>
+              <button type="button" onClick={start} disabled={!prompt || starting || rolling} className="cl-primary h-10 cursor-pointer rounded-[10px] border-0 px-4 text-sm font-medium text-white">{starting ? 'Đang mở…' : 'Viết bài này'}</button>
+              <button type="button" onClick={shuffle} disabled={rolling} className="inline-flex h-9 cursor-pointer items-center justify-center gap-1.5 rounded-[10px] border-0 bg-[#F5F5F5] text-[13px] font-medium text-ink-soft hover:text-ink"><RiShuffleLine size={15} className={rolling ? 'animate-spin' : undefined} />Đổi đề</button>
             </div>
           </div>
 
