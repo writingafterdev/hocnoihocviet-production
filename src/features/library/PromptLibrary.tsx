@@ -129,7 +129,7 @@ function PromptCard({ prompt, onWrite, label = 'Viết bài' }: { prompt: Prompt
 /** Thư viện đề: Task 1 / Task 2 switch, type and topic filters, prompt cards. */
 export function PromptLibrary({ mode = 'write' }: { mode?: 'write' | 'copy' }) {
   const router = useRouter();
-  const [task, setTask] = useState<Task>('task2');
+  const task = 'task2' as Task; // Task 1 has its own (greyed) place in the sidebar for now
   const [cats, setCats] = useState<string[]>([]);
   const [topics, setTopics] = useState<string[]>([]);
   const [modalPrompt, setModalPrompt] = useState<Prompt | null>(null);
@@ -167,22 +167,6 @@ export function PromptLibrary({ mode = 'write' }: { mode?: 'write' | 'copy' }) {
 
         <div className="pl-grid" style={{ display: 'flex', alignItems: 'flex-start', gap: 32 }}>
           <aside className="cl-scroll" style={{ width: 260, flexShrink: 0, position: 'sticky', top: 24, alignSelf: 'flex-start', maxHeight: 'calc(100vh - 104px)', overflowY: 'auto' }}>
-            <div style={{ marginBottom: 32 }}>
-              <div id="task-label" style={{ fontFamily: 'var(--font-sans)', fontSize: 18, fontWeight: 600, color: '#171717', marginBottom: 16 }}>Phần thi</div>
-              <div role="tablist" aria-labelledby="task-label" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 4, padding: 4, borderRadius: 10, background: '#F5F5F5' }}>
-                {([['task2', 'Task 2'], ['task1', 'Task 1']] as const).map(([id, label]) => {
-                  // Task 1 has no prompts or writing flow yet.
-                  const soon = id === 'task1';
-                  return (
-                    <button key={id} type="button" role="tab" aria-selected={task === id} aria-disabled={soon} disabled={soon} title={soon ? 'Task 1 sắp ra mắt' : undefined} onClick={() => { setTask(id); setCats([]); setTopics([]); setPage(0); }} style={{ height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, borderRadius: 7, border: 'none', cursor: soon ? 'not-allowed' : 'pointer', background: task === id ? '#fff' : 'transparent', boxShadow: task === id ? '0 1px 3px rgba(0,0,0,0.08)' : 'none', fontFamily: 'var(--font-sans)', fontSize: 14, fontWeight: 600, color: task === id ? '#171717' : soon ? '#B5B2A8' : '#737373' }}>
-                      {label}
-                      {soon && <span style={{ borderRadius: 4, background: '#ECEAE4', padding: '1px 5px', fontSize: 9.5, fontWeight: 700, letterSpacing: '0.04em', color: '#737373' }}>SẮP CÓ</span>}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-            <div style={{ height: 1, background: 'rgba(0,0,0,0.05)', marginBottom: 32 }} />
             <Filter title="Dạng đề" options={task === 'task1' ? CATEGORIES_TASK1 : CATEGORIES_TASK2} selected={cats} onToggle={(v) => toggle(cats, setCats, v)} />
             <div style={{ height: 1, background: 'rgba(0,0,0,0.05)', marginBottom: 32 }} />
             {task === 'task2' && <Filter title="Chủ đề" options={TOPICS_TASK2} selected={topics} onToggle={(v) => toggle(topics, setTopics, v)} />}
