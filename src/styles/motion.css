@@ -66,8 +66,7 @@
 .t-tabs-slide { transition: left var(--duration-fast) var(--ease-smooth-out), width var(--duration-fast) var(--ease-smooth-out); }
 
 /* Card hover (shared by the home and vocab cards): a small lift and a ring that deepens. */
-.t-card-hover { transition: transform var(--duration-fast) var(--ease-smooth-out), box-shadow var(--duration-fast) var(--ease-smooth-out); }
-@media (hover: hover) { .t-card-hover:hover { transform: translateY(-2px); } }
+.t-card-hover { transition: box-shadow var(--duration-fast) var(--ease-smooth-out); }
 
 @media (prefers-reduced-motion: reduce) {
   .t-modal-back, .t-modal, .t-modal-back.is-closing, .t-shake, .t-reveal, .t-tabs-slide, .t-card-hover { animation: none !important; transition: none !important; transform: none !important; }
