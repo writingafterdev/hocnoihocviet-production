@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { CL } from '../chainlab/constants';
 import { ClIcon, ClLabel } from '../chainlab/ui/primitives';
-import { NOTE_STYLE, type BankPhrase, type Hint, type PlacedNote } from './useCoach';
+import { NOTE_STYLE, type Hint, type PlacedNote } from './useCoach';
 import { ProBeam } from '@/components/ui/pro-beam';
 
 const DOT = 17;
@@ -34,8 +34,8 @@ export interface ChainEditorProps {
   checking?: boolean;
   /** The latest check found nothing to fix (and the chain hasn't changed since): the line turns green. */
   clean?: boolean;
-  /** English phrases for the whole chain (drill only): tapping one adds it to the step being edited. */
-  bank?: BankPhrase[];
+  /** Tells the parent which step has the cursor (so a suggested phrase can be added there). */
+  onFocusStep?: (i: number) => void;
   /** The question shown in the empty first step (a question about this chain, not a generic prompt). */
   firstQuestion?: string;
 }
@@ -146,16 +146,7 @@ export function ChainEditor(p: ChainEditorProps) {
       style={{ flexShrink: 0, marginTop: 2, minWidth: 22, height: 20, padding: '0 6px', borderRadius: 5, border: '1px solid ' + NOTE_STYLE[n.type].fg, background: p.active === k ? NOTE_STYLE[n.type].fg : '#fff', color: p.active === k ? '#fff' : NOTE_STYLE[n.type].fg, fontFamily: CL.sans, fontSize: 10.5, fontWeight: 700, ['--d' as string]: noteDelay(k) }}>{k + 1}</button>
   ));
   const n = p.steps.length;
-  const all = p.steps.join(' ').toLowerCase();
-  const addPhrase = (en: string) => {
-    const i = Math.min(lastStep.current, p.steps.length - 1);
-    const cur = p.steps[i].replace(/\s+$/, '');
-    focusAt.current = i;
-    p.setSteps(p.steps.map((s, j) => (j === i ? (cur ? cur + ' ' : '') + en : s)));
-  };
-
   return (
-    <>
     <ol ref={listRef} style={{ position: 'relative', listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column' }}>
       <li style={{ display: 'flex', gap: 18 }}>
         <Rail first center={CENTER.end} jump={jumpAt(-1)} dot={plainDot(CL.green)} ok={green} />
@@ -174,7 +165,7 @@ export function ChainEditor(p: ChainEditorProps) {
           <div className={'co-content' + tinted(i)} style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'flex-start', gap: 8, padding: '6px 10px', margin: '2px 0', borderRadius: 10, ...tint(i), transition: 'background-color .3s' }}>
             <textarea ref={(el) => { refs.current[i] = el; }} className="co-ta" value={s} rows={1} aria-label={'Bước ' + (i + 1)}
               placeholder={i === 0 ? p.firstQuestion || 'Điểm đầu chạm tới ai, ra sao?' : 'Rồi chuyện gì xảy ra tiếp?'}
-              onFocus={() => { lastStep.current = i; }}
+              onFocus={() => { lastStep.current = i; p.onFocusStep?.(i); }}
               onChange={(e) => edit(i, e.target.value)}
               onKeyDown={(e) => {
                 if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) { e.preventDefault(); if (s.trim()) insertAfter(i); }
@@ -223,23 +214,6 @@ export function ChainEditor(p: ChainEditorProps) {
         </div>
       </li>
     </ol>
-    {p.bank && p.bank.length > 0 && (
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 18, paddingTop: 16, borderTop: '1px solid ' + CL.ink1 }}>
-        <span style={{ fontFamily: CL.sans, fontSize: 12, fontWeight: 600, color: CL.ink }}>Từ vựng cho chuỗi này</span>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-          {p.bank.map((b) => {
-            const used = all.includes(b.en);
-            return (
-              <button key={b.en} type="button" className="cl-btn" onClick={() => addPhrase(b.en)} style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 1, padding: '7px 11px', borderRadius: 8, border: 'none', background: used ? '#EEF3FC' : '#F5F5F5', cursor: 'pointer', textAlign: 'left', transition: 'background-color .2s' }}>
-                <span style={{ fontFamily: CL.sans, fontSize: 13, fontWeight: 500, color: used ? '#2F62C4' : CL.ink }}>{b.en}</span>
-                <span style={{ fontFamily: CL.sans, fontSize: 11, color: '#8A8A8A' }}>{b.vi}</span>
-              </button>
-            );
-          })}
-        </div>
-      </div>
-    )}
-    </>
   );
 }
 

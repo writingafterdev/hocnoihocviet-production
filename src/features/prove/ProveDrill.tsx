@@ -19,7 +19,7 @@ import { ChainEditor } from '../coach/ChainEditor';
 import { CoachGrid, SidePanel, useLast } from '../coach/CoachGrid';
 import { NotesPanel } from '../coach/NotesPanel';
 import { TranslatorChat } from '../coach/TranslatorChat';
-import { useCoach, useVocabBank } from '../coach/useCoach';
+import { askVocabBank, useCoach } from '../coach/useCoach';
 import { primaryBtn } from '../coach/ui';
 import { Chip } from '@/components/base/badges/chip';
 import { AnimatedCounter } from '@/components/ui/animated-counter';
@@ -123,7 +123,17 @@ export function ProveDrill() {
   const prompt = s ? findPrompt(s.promptId) : null;
   const coach = useCoach(s?.promptId || '', { kind: s?.kind || 'impact', tone: s?.tone || null, start: s?.start || '', end: s?.end || '', steps, sentence: s ? plainSentence(s.sentence) : '', stakeholder: s?.stakeholder });
   const rolling = !!reel;
-  const bank = useVocabBank(s?.promptId || '', { kind: s?.kind || 'impact', tone: s?.tone || null, start: s?.start || '', end: s?.end || '', steps: [], stakeholder: s?.stakeholder }, !!s && !rolling);
+  const focusStep = useRef(0);
+  /** The translator panel can suggest English phrases for this chain; a tap adds one to the step being edited. */
+  const vocab = {
+    key: s ? s.id : '',
+    ask: () => askVocabBank(s?.promptId || '', { kind: s?.kind || 'impact', tone: s?.tone || null, start: s?.start || '', end: s?.end || '', steps: [], stakeholder: s?.stakeholder }),
+    onPick: (en: string) => {
+      const i = Math.min(focusStep.current, steps.length - 1);
+      setSteps(steps.map((x, j) => (j === i ? (x.trim() ? x.replace(/\s+$/, '') + ' ' : '') + en : x)));
+    },
+    used: (en: string) => steps.join(' ').toLowerCase().includes(en),
+  };
   useEffect(() => { if (coach.error) toast.error(coach.error); }, [coach.error]);
   useEffect(() => { if (openError) toast.error(openError); }, [openError]);
 
@@ -280,7 +290,7 @@ export function ProveDrill() {
                         steps={steps} setSteps={setSteps}
                         notes={notes} active={active} onPick={(k) => { setActive(k); setNotesOpen(true); }}
                         hint={coach.hint} asking={coach.asking} onHint={coach.askHint} onCloseHint={coach.closeHint}
-                        helper={helper} checking={coach.checking} clean={clean} bank={bank}
+                        helper={helper} checking={coach.checking} clean={clean} onFocusStep={(k) => { focusStep.current = k; }}
                         firstQuestion={s.ask}
                       />
                     </div>
@@ -314,7 +324,7 @@ export function ProveDrill() {
                   : <NotesPanel result={shownResult} fresh={coach.fresh} active={active} onPick={setActive} onClose={() => setNotesOpen(false)} />}
               </SidePanel>
               <SidePanel on={chat} grow={2} top={notesOn}>
-                <TranslatorChat onClose={() => setChat(false)} />
+                <TranslatorChat onClose={() => setChat(false)} vocab={s ? vocab : undefined} />
               </SidePanel>
             </>
           }

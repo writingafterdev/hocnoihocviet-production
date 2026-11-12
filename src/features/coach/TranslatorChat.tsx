@@ -6,9 +6,20 @@ import { CL } from '../chainlab/constants';
 import { ClLabel } from '../chainlab/ui/primitives';
 import { AI_ERROR_TEXT, AiRequestError, postAi } from '../ai/request';
 import { Chip } from '@/components/base/badges/chip';
+import type { BankPhrase } from './useCoach';
 
 type Dir = 'vi-en' | 'en-vi';
-interface Msg { id: number; dir: Dir; source: string; translation?: string; topic?: string; error?: string }
+interface Msg { id: number; dir: Dir; source: string; translation?: string; topic?: string; error?: string; bank?: { key: string; phrases?: BankPhrase[]; error?: string } }
+
+/** Lets the panel suggest vocabulary for the chain on screen: one chip above the input, the answer arrives as a message. */
+export interface VocabHelp {
+  /** Changes with the chain; a chain already answered shows no chip. */
+  key: string;
+  ask: () => Promise<BankPhrase[]>;
+  /** Tapping a phrase adds it to the chain. */
+  onPick: (en: string) => void;
+  used: (en: string) => boolean;
+}
 
 const MAX = 800;
 const VI_CHARS = /[ăâđêôơưáàảãạấầẩẫậắằẳẵặéèẻẽẹếềểễệíìỉĩịóòỏõọốồổỗộớờởỡợúùủũụứừửữựýỳỷỹỵ]/i;
@@ -22,7 +33,7 @@ const chipBtn: React.CSSProperties = { borderRadius: 5, padding: '3px 8px', font
  * "Dịch" as a chat: the student's text on the right, the translation on the left. The direction is guessed
  * from the text (Vietnamese letters → English, otherwise → Vietnamese). Kept for the visit only.
  */
-export function TranslatorChat({ ideas = [], onClose, skill = 'task2' }: { ideas?: string[]; onClose?: () => void; skill?: 'task2' | 'task1' | 'speaking' }) {
+export function TranslatorChat({ ideas = [], onClose, skill = 'task2', vocab }: { ideas?: string[]; onClose?: () => void; skill?: 'task2' | 'task1' | 'speaking'; vocab?: VocabHelp }) {
   const [text, setText] = useState('');
   const [msgs, setMsgs] = useState<Msg[]>([]);
   const [pending, setPending] = useState(false);
@@ -48,6 +59,22 @@ export function TranslatorChat({ ideas = [], onClose, skill = 'task2' }: { ideas
     }
     setPending(false);
   };
+
+  const askVocab = async () => {
+    if (!vocab || pending) return;
+    const id = Date.now(), key = vocab.key;
+    setMsgs((xs) => [...xs, { id, dir: 'vi-en', source: 'Gợi ý từ vựng cho chuỗi này', bank: { key } }]);
+    setPending(true);
+    try {
+      const phrases = await vocab.ask();
+      setMsgs((xs) => xs.map((x) => (x.id === id ? { ...x, bank: { key, phrases } } : x)));
+    } catch (e) {
+      const error = e instanceof AiRequestError ? AI_ERROR_TEXT[e.code] : AI_ERROR_TEXT.network;
+      setMsgs((xs) => xs.map((x) => (x.id === id ? { ...x, bank: { key, error } } : x)));
+    }
+    setPending(false);
+  };
+  const asked = !!vocab && msgs.some((m) => m.bank?.key === vocab.key && !m.bank.error);
 
   const copy = (m: Msg) => navigator.clipboard?.writeText(m.translation || '').then(() => { setCopied(m.id); setTimeout(() => setCopied(null), 1500); }, () => {});
   // Saves the pair under "Đã lưu" in Từ vựng, filed under the topic the translator chose.
@@ -94,7 +121,25 @@ export function TranslatorChat({ ideas = [], onClose, skill = 'task2' }: { ideas
             <div style={{ alignSelf: 'flex-start', maxWidth: '92%', display: 'flex', gap: 9 }}>
               <span style={{ flexShrink: 0, width: 24, height: 24, borderRadius: 8, background: CL.mint, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontFamily: CL.sans, fontSize: 9.5, fontWeight: 700, color: CL.ink }}>{m.dir === 'vi-en' ? 'EN' : 'VI'}</span>
               <div style={{ minWidth: 0, display: 'flex', flexDirection: 'column', gap: 4 }}>
-                {m.translation != null ? (
+                {m.bank ? (
+                  m.bank.error ? (
+                    <div style={{ borderRadius: '4px 16px 16px 16px', background: CL.redSoft, padding: '9px 13px', fontFamily: CL.sans, fontSize: 12.5, lineHeight: 1.5, color: CL.redText }}>{m.bank.error}</div>
+                  ) : m.bank.phrases ? (
+                    <div style={{ borderRadius: '4px 16px 16px 16px', border: '1px solid ' + CL.ink2, background: '#fff', padding: 10, display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                      {m.bank.phrases.map((b) => {
+                        const used = vocab?.used(b.en);
+                        return (
+                          <button key={b.en} type="button" className="cl-btn" onClick={() => vocab?.onPick(b.en)} disabled={!vocab || vocab.key !== m.bank?.key} style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 1, padding: '6px 10px', borderRadius: 8, border: 'none', background: used ? '#EEF3FC' : '#F5F5F5', cursor: 'pointer', textAlign: 'left', transition: 'background-color .2s' }}>
+                            <span style={{ fontFamily: CL.sans, fontSize: 13, fontWeight: 500, color: used ? '#2F62C4' : CL.ink }}>{b.en}</span>
+                            <span style={{ fontFamily: CL.sans, fontSize: 11, color: '#8A8A8A' }}>{b.vi}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <div aria-live="polite" style={{ borderRadius: '4px 16px 16px 16px', border: '1px solid ' + CL.ink1, padding: '9px 13px', fontFamily: CL.sans, fontSize: 12.5, color: CL.ink4 }}>Đang tìm từ vựng…</div>
+                  )
+                ) : m.translation != null ? (
                   <>
                     <div style={{ borderRadius: '4px 16px 16px 16px', border: '1px solid ' + CL.ink2, background: '#fff', padding: '9px 13px', fontFamily: CL.serif, fontSize: 15, lineHeight: 1.5, color: CL.ink8, whiteSpace: 'pre-wrap' }}>{m.translation || '—'}</div>
                     {m.translation && (
@@ -116,6 +161,9 @@ export function TranslatorChat({ ideas = [], onClose, skill = 'task2' }: { ideas
       </div>
 
       <div style={{ padding: '10px 12px 12px' }}>
+        {vocab && !asked && (
+          <button type="button" className="cl-btn cl-add" onClick={askVocab} disabled={pending} style={{ marginBottom: 8, borderRadius: 8, border: '1px solid ' + CL.ink2, padding: '5px 12px', fontFamily: CL.sans, fontSize: 12, fontWeight: 600, color: CL.ink6, opacity: pending ? 0.5 : 1 }}>Gợi ý từ vựng cho chuỗi này</button>
+        )}
         <div className="cl-askbox" style={{ display: 'flex', alignItems: 'flex-end', gap: 8, borderRadius: 12, border: '1px solid ' + CL.ink2, background: CL.panel, padding: '7px 7px 7px 14px' }}>
           <textarea className="co-ta" value={text} onChange={(e) => setText(e.target.value)} maxLength={MAX} rows={1} placeholder="Nhắn để dịch…" aria-label="Văn bản cần dịch"
             onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) { e.preventDefault(); send(); } }}
