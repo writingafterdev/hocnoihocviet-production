@@ -136,7 +136,7 @@ export function Dashboard() {
             <div className="mb-3 flex h-6 items-center text-[13px] font-medium text-ink-soft">
               <Link href="/attempts" className="inline-flex items-center gap-0.5 hover:text-ink">Bài đang viết<ChevronRight className="size-3.5" /></Link>
             </div>
-            <div className="flex flex-col gap-3">
+            <div className="flex flex-col gap-2">
               {attempts === null ? <Empty>Đang tải…</Empty>
                 : recent.length === 0 ? <Empty>Chưa có bài nào. Chọn một đề ở trên để bắt đầu.</Empty>
                 : recent.map((a) => {
@@ -145,23 +145,17 @@ export function Dashboard() {
                   const words = Object.values(a.essay.drafts || {}).reduce((n, t) => n + wordCount(t), 0);
                   const band = a.essay.review?.scores.band;
                   return (
-                    <Link key={a.id} href={'/write/' + a.id + (words ? '/essay' : '/chains')} className="pl-card flex items-stretch rounded-xl bg-white p-3 text-ink shadow-ring">
-                      <div className="flex min-h-[116px] w-[136px] shrink-0 items-center justify-center rounded-lg bg-[#F5F5F5]">
+                    <Link key={a.id} href={'/write/' + a.id + (words ? '/essay' : '/chains')} className="pl-card flex items-center gap-3 rounded-xl bg-white p-2 pr-4 text-ink shadow-ring">
+                      <div className="flex size-14 shrink-0 items-center justify-center rounded-lg bg-[#F5F5F5]">
                         {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={'/illustrations/' + TOPIC_ILLUSTRATION[p.topic] + '.svg'} alt="" className="size-[100px] object-contain mix-blend-multiply" />
+                        <img src={'/illustrations/' + TOPIC_ILLUSTRATION[p.topic] + '.svg'} alt="" className="size-11 object-contain mix-blend-multiply" />
                       </div>
-                      <div className="flex min-w-0 flex-1 flex-col px-4 py-1">
-                        <div className="mb-2.5 flex flex-wrap gap-2">
-                          <span className="rounded bg-[#F5F5F5] px-2 py-1 text-xs font-semibold text-[#525252]">{p.category}</span>
-                          <span className="rounded bg-[#EDF7EA] px-2 py-1 text-xs font-semibold text-[#167A59]">{p.topic}</span>
-                        </div>
-                        <p className="m-0 line-clamp-2 text-sm font-medium leading-[1.55]">{p.text}</p>
-                        <p className="m-0 mt-auto pt-2.5 text-xs text-ink-soft">{a.chains.length} thân bài · {words} từ</p>
+                      <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+                        <p className="m-0 truncate text-[13.5px] font-medium">{p.text}</p>
+                        <p className="m-0 truncate text-xs text-ink-soft">{p.category} · {p.topic} · {words} từ</p>
                       </div>
-                      <div className="flex w-28 shrink-0 flex-col items-center justify-center p-2 text-center">
-                        {band != null ? <span className="text-[34px] font-semibold leading-none tracking-[-0.02em] text-blue-deep tabular-nums">{band.toFixed(1)}</span>
-                          : <span className="text-[13px] font-semibold text-ink-soft">{words ? 'Chưa nộp' : 'Đang dựng mạch'}</span>}
-                      </div>
+                      {band != null ? <span className="shrink-0 text-lg font-semibold leading-none tracking-[-0.02em] text-blue-deep tabular-nums">{band.toFixed(1)}</span>
+                        : <span className="shrink-0 text-xs font-medium text-ink-soft">{words ? 'Chưa nộp' : 'Đang dựng mạch'}</span>}
                     </Link>
                   );
                 })}
