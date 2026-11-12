@@ -164,18 +164,18 @@ export function FixView({ prompt, chains, sections, essay, setEssay, tasks, chai
               <span style={{ marginLeft: 'auto', fontFamily: CL.sans, fontSize: 12, color: CL.ink5 }}>{wordCount(text)} từ</span>
             </div>
             <div className="cl-scroll" style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: '18px 22px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {text.includes(task.item.quote!) && (
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, borderRadius: 8, background: st.soft, padding: '7px 12px', fontFamily: CL.sans, fontSize: 12, color: st.fg }}>
+                  <b style={{ flexShrink: 0 }}>Chỗ cần sửa</b><i style={{ fontFamily: CL.serif, fontSize: 13 }}>“{task.item.quote}”</i>
+                </div>
+              )}
               {editing ? <>
-                {text.includes(task.item.quote!) && (
-                  <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, borderRadius: 8, background: st.soft, padding: '7px 12px', fontFamily: CL.sans, fontSize: 12, color: st.fg }}>
-                    <b style={{ flexShrink: 0 }}>Chỗ cần sửa</b><i style={{ fontFamily: CL.serif, fontSize: 13 }}>“{task.item.quote}”</i>
-                  </div>
-                )}
                 <textarea className="co-ta" autoFocus value={text} aria-label={label}
                   onChange={(e) => { const v = e.target.value; setChecked(false); setEssay((x) => ({ ...x, drafts: { ...x.drafts, [sec]: v } })); }}
-                  style={{ flex: 1, minHeight: 200, resize: 'none', border: '1px solid ' + CL.ink5, borderRadius: 12, outline: 'none', padding: '14px 16px', fontFamily: CL.serif, fontSize: 15.5, lineHeight: 1.75, color: CL.ink8 }} />
+                  style={{ flex: 1, minHeight: 200, resize: 'none', border: '1px solid ' + CL.ink5, transition: 'border-color var(--duration-fast) ease', borderRadius: 12, outline: 'none', padding: '14px 16px', fontFamily: CL.serif, fontSize: 15.5, lineHeight: 1.75, color: CL.ink8 }} />
               </> : (
                 <button type="button" className="cl-btn" onClick={() => setEditing(true)} aria-label={'Sửa ' + label}
-                  style={{ textAlign: 'left', cursor: 'text', border: '1px solid ' + CL.ink2, borderRadius: 12, background: '#fff', padding: '14px 16px', fontFamily: CL.serif, fontSize: 15.5, lineHeight: 1.75, color: CL.ink8, whiteSpace: 'pre-wrap' }}>
+                  style={{ textAlign: 'left', cursor: 'text', border: '1px solid ' + CL.ink2, transition: 'border-color var(--duration-fast) ease', borderRadius: 12, background: '#fff', padding: '14px 16px', fontFamily: CL.serif, fontSize: 15.5, lineHeight: 1.75, color: CL.ink8, whiteSpace: 'pre-wrap' }}>
                   <Highlighted text={text} quote={task.item.quote} crit={task.crit} />
                 </button>
               )}
