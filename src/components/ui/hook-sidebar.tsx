@@ -13,7 +13,7 @@ const CORNER = 6;
 const DASH =
   "repeating-linear-gradient(to top, transparent 0 2px, currentColor 2px 4px)";
 
-export type HookSidebarItem = string | { label: string; href?: string; icon?: ReactNode };
+export type HookSidebarItem = string | { label: string; href?: string; icon?: ReactNode; /** Shown but not usable yet. */ disabled?: boolean };
 
 export type HookSidebarProps = Omit<ComponentProps<"nav">, "onChange"> & {
   items: HookSidebarItem[];
@@ -23,6 +23,10 @@ export type HookSidebarProps = Omit<ComponentProps<"nav">, "onChange"> & {
   onChange?: (index: number) => void;
   color?: string;
   dashed?: boolean;
+  /** A smaller, sentence-case heading for a group nested under another one. */
+  sub?: boolean;
+  /** Sits after the heading (a status chip, for instance). */
+  labelSuffix?: ReactNode;
 };
 
 const hrefOf = (item: HookSidebarItem) =>
@@ -30,6 +34,9 @@ const hrefOf = (item: HookSidebarItem) =>
 
 const labelOf = (item: HookSidebarItem) =>
   typeof item === "string" ? item : item.label;
+
+const disabledOf = (item: HookSidebarItem) =>
+  typeof item === "string" ? false : !!item.disabled;
 
 const iconOf = (item: HookSidebarItem) =>
   typeof item === "string" ? undefined : item.icon;
@@ -102,6 +109,8 @@ export function HookSidebar({
   onChange,
   color = "#FC4C01",
   dashed = true,
+  sub = false,
+  labelSuffix,
   className,
   ...props
 }: HookSidebarProps) {
@@ -158,9 +167,13 @@ export function HookSidebar({
       {label && (
         <span
           data-slot="hook-sidebar-label"
-          className="pb-3 pl-0.5 pr-2 font-sans text-sm font-medium uppercase tracking-wide text-foreground"
+          className={cn(
+            "flex items-center gap-2 pl-0.5 pr-2 font-sans font-medium",
+            sub ? "pb-2 text-[13px] text-foreground/70" : "pb-3 text-sm uppercase tracking-wide text-foreground",
+          )}
         >
           {label}
+          {labelSuffix}
         </span>
       )}
 
@@ -223,6 +236,20 @@ export function HookSidebar({
                 : "text-foreground/50 hover:bg-black/[0.03] hover:text-foreground/80",
             ),
           };
+
+          if (disabledOf(item)) {
+            return (
+              <span
+                key={`${index}-${text}`}
+                ref={setRef}
+                aria-disabled="true"
+                className="flex cursor-not-allowed items-center gap-2.5 rounded-lg py-1.5 pl-5 pr-2 text-left text-sm text-foreground/35"
+              >
+                <span className="flex items-center gap-2.5 opacity-50 grayscale">{iconOf(item)}</span>
+                {text}
+              </span>
+            );
+          }
 
           return href ? (
             <Link

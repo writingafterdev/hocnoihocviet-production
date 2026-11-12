@@ -9,16 +9,21 @@ import { HookSidebar } from '@/components/ui/hook-sidebar';
 import { cn } from '@/lib/utils';
 import { UserMenu } from './UserMenu';
 
-/** One group of the sidebar: a small heading and its pages. `match` tells which pages count as being inside an item. */
-interface Group { label?: string; items: { label: string; href: string; match: string[]; icon: React.ReactNode }[] }
+/** One group of the sidebar: a small heading and its pages, or a heading over nested sections. `match` tells which pages count as being inside an item. */
+interface Item { label: string; href: string; match: string[]; icon: React.ReactNode; disabled?: boolean }
+interface Section { label: string; soon?: boolean; items: Item[] }
+interface Group { label?: string; items?: Item[]; sections?: Section[] }
 
-// Task 2 holds the quick drill, the writing practice and copying a sample; vocab and the student's own essays stand apart.
+const drill = (disabled?: boolean): Item => ({ label: 'Chứng minh nhanh', href: '/prove', match: disabled ? [] : ['/prove'], icon: <NavIcon name="drill" />, disabled });
+const write = (disabled?: boolean): Item => ({ label: 'Luyện viết', href: '/writing', match: disabled ? [] : ['/writing', '/write'], icon: <NavIcon name="write" />, disabled });
+const copy = (disabled?: boolean): Item => ({ label: 'Chép mẫu', href: '/copy', match: disabled ? [] : ['/copy'], icon: <NavIcon name="copy" />, disabled });
+
+// Writing holds Task 2 (quick drill, writing practice, copying a sample) and Task 1 (not open yet); vocab and the student's own essays stand apart.
 const GROUPS: Group[] = [
   { items: [{ label: 'Trang chủ', href: '/home', match: ['/home'], icon: <NavIcon name="home" /> }] },
-  { label: 'Task 2', items: [
-    { label: 'Chứng minh nhanh', href: '/prove', match: ['/prove'], icon: <NavIcon name="drill" /> },
-    { label: 'Luyện viết', href: '/writing', match: ['/writing', '/write'], icon: <NavIcon name="write" /> },
-    { label: 'Chép mẫu', href: '/copy', match: ['/copy'], icon: <NavIcon name="copy" /> },
+  { label: 'Writing', sections: [
+    { label: 'Task 2', items: [drill(), write(), copy()] },
+    { label: 'Task 1', soon: true, items: [drill(true), write(true), copy(true)] },
   ] },
   { label: 'Từ vựng', items: [{ label: 'Từ vựng theo chủ đề', href: '/vocab', match: ['/vocab'], icon: <NavIcon name="vocab" /> }] },
   { label: 'Của bạn', items: [
@@ -111,8 +116,21 @@ export function AppSidebar({ children }: { children: React.ReactNode }) {
           <div className="flex h-full w-[232px] shrink-0 flex-col">
             <div className="flex flex-1 flex-col gap-5 overflow-y-auto px-3 py-4">
               {GROUPS.map((g, k) => {
-                const value = g.items.findIndex((it) => it.match.some((m) => inside(path, m)));
-                return <HookSidebar key={k} label={g.label} items={g.items} value={value} color="var(--brand-tomato)" className="whitespace-nowrap" />;
+                if (g.sections) return (
+                  <div key={k} className="flex flex-col">
+                    <span className="pb-3 pl-0.5 pr-2 font-sans text-sm font-medium uppercase tracking-wide text-foreground">{g.label}</span>
+                    <div className="flex flex-col gap-4 pl-2">
+                      {g.sections.map((sec) => (
+                        <HookSidebar key={sec.label} sub label={sec.label}
+                          labelSuffix={sec.soon ? <span className="rounded bg-black/[0.05] px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-foreground/45">Sắp có</span> : undefined}
+                          items={sec.items} value={sec.items.findIndex((it) => it.match.some((m) => inside(path, m)))} color="var(--brand-tomato)" className="whitespace-nowrap" />
+                      ))}
+                    </div>
+                  </div>
+                );
+                const items = g.items || [];
+                const value = items.findIndex((it) => it.match.some((m) => inside(path, m)));
+                return <HookSidebar key={k} label={g.label} items={items} value={value} color="var(--brand-tomato)" className="whitespace-nowrap" />;
               })}
             </div>
             <div className="shrink-0 border-t border-line p-3"><UserMenu variant="row" placement="up" /></div>
