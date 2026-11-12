@@ -144,8 +144,8 @@ export function Dashboard() {
               ) : <p className="m-0 text-sm text-ink-soft">…</p>}
             </div>
             <div className="flex w-36 shrink-0 flex-col items-stretch justify-center gap-2 p-2">
-              <button type="button" onClick={start} disabled={!prompt || starting || rolling} className="cl-primary h-10 cursor-pointer rounded-[10px] border-0 px-4 text-sm font-medium text-white">{starting ? 'Đang mở…' : 'Viết bài này'}</button>
-              <button type="button" onClick={shuffle} disabled={rolling} className="inline-flex h-9 cursor-pointer items-center justify-center gap-1.5 rounded-[10px] border-0 bg-[#F5F5F5] text-[13px] font-medium text-ink-soft hover:text-ink"><RiShuffleLine size={15} className={rolling ? 'animate-spin' : undefined} />Đổi đề</button>
+              <button type="button" onClick={start} disabled={!prompt || starting || rolling} className="cl-primary h-10 cursor-pointer rounded-[10px] border-0 px-4 text-sm font-semibold text-white">{starting ? 'Đang mở…' : 'Viết bài này'}</button>
+              <button type="button" onClick={shuffle} disabled={rolling} className="inline-flex h-9 cursor-pointer items-center justify-center gap-1.5 rounded-[10px] border-0 bg-[#F5F5F5] text-[13px] font-semibold text-ink-soft hover:text-ink"><RiShuffleLine size={15} className={rolling ? 'animate-spin' : undefined} />Đổi đề</button>
             </div>
           </div>
 
