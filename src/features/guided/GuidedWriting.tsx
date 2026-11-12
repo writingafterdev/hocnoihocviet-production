@@ -129,7 +129,6 @@ export function GuidedWriting({ sample = GW_SAMPLES.charity, onBack, backLabel =
           </div>
           <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginTop: 28, marginBottom: 14 }}>
             <ClLabel color={CL.ink}>{textLabel}</ClLabel>
-            <span style={{ fontFamily: CL.sans, fontSize: 11, color: CL.ink4 }}>Hiện dần sau mỗi câu bạn viết xong</span>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             {sample.paragraphs.map((p, pi) => (
