@@ -95,10 +95,10 @@ function Filter({ title, options, selected, onToggle }: { title: string; options
   );
 }
 
-/** Prompt card: the picture, the tags and the prompt, with its button in the card. No hover effect. */
-function PromptCard({ prompt, onWrite, label = 'Viết bài' }: { prompt: Prompt; onWrite: () => void; label?: string }) {
+/** Prompt card: the picture, the tags and the prompt. The card itself is the button; no hover motion. */
+function PromptCard({ prompt, onWrite }: { prompt: Prompt; onWrite: () => void; label?: string }) {
   return (
-    <article style={{ display: 'flex', alignItems: 'center', gap: 14, padding: 10, borderRadius: 12, background: '#fff', boxShadow: '0 0 0 1px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.05)' }}>
+    <button type="button" onClick={onWrite} className="pl-card" style={{ display: 'flex', alignItems: 'center', gap: 14, padding: 10, width: '100%', textAlign: 'left', font: 'inherit', color: '#171717', cursor: 'pointer', border: 'none', borderRadius: 12, background: '#fff', boxShadow: '0 0 0 1px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.05)' }}>
       <div style={{ width: 84, height: 84, borderRadius: 8, background: '#F5F5F5', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <img src={'/illustrations/' + TOPIC_ILLUSTRATION[prompt.topic] + '.svg'} alt="" style={{ width: 70, height: 70, objectFit: 'contain', mixBlendMode: 'multiply' }} />
       </div>
@@ -107,10 +107,9 @@ function PromptCard({ prompt, onWrite, label = 'Viết bài' }: { prompt: Prompt
           <span style={{ borderRadius: 4, background: '#F5F5F5', padding: '2px 7px', fontSize: 11.5, fontWeight: 600, color: '#525252' }}>{prompt.category}</span>
           <span style={{ borderRadius: 4, background: '#EDF7EA', padding: '2px 7px', fontSize: 11.5, fontWeight: 600, color: '#167A59' }}>{prompt.topic}</span>
         </div>
-        <p style={{ fontFamily: 'var(--font-sans)', fontSize: 13.5, fontWeight: 500, lineHeight: 1.5, color: '#171717', margin: 0, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{prompt.text}</p>
+        <p style={{ fontFamily: 'var(--font-sans)', fontSize: 13.5, fontWeight: 500, lineHeight: 1.5, margin: 0, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{prompt.text}</p>
       </div>
-      <button type="button" onClick={onWrite} className="cl-primary" style={{ flexShrink: 0, height: 34, padding: '0 16px', borderRadius: 9, border: 'none', cursor: 'pointer', fontFamily: 'var(--font-sans)', fontSize: 12.5, fontWeight: 600, color: '#fff' }}>{label}</button>
-    </article>
+    </button>
   );
 }
 
