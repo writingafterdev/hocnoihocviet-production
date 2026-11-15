@@ -6,6 +6,7 @@ import type { Chain } from '../chainlab/types';
 import type { CheckResult } from '../coach/useCoach';
 import type { EssayReview } from '../desk/scoring';
 import type { CheckOut, PlanTask } from '../essay/fix-api';
+import type { GuidedSentence } from '@/lib/ai/guided-essay';
 
 export interface EssayState {
   /** Ids of body paragraphs, in order. Each body paragraph is one chain: its id is the chain's id. */
@@ -26,6 +27,12 @@ export interface EssayState {
    * and "Kiểm tra" is a simple local check. `checks` keeps the AI's latest verdict per task key.
    */
   fix?: { view: 'fix' | 'diff' | 'paused'; step: number; solved: string[]; before: Record<string, string>; plan?: PlanTask[]; checks?: Record<string, CheckOut> } | null;
+  /**
+   * "Viết có hướng dẫn": the sample essay from the chains, sentence by sentence (null while it is being made).
+   * `at` is the sentence being written; each finished sentence is appended to its section's draft. `done` hands
+   * the essay back to plain editing ("Tự viết phần còn lại", or after the last sentence).
+   */
+  guided?: { plan: GuidedSentence[] | null; at: number; level: 'frame' | 'detail'; done?: boolean } | null;
   /** Scores of the review before the latest one, to show how much a resubmission moved them. */
   prevScores?: EssayReview['scores'] | null;
 }

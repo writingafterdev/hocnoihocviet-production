@@ -19,7 +19,7 @@ type SaveState = 'saved' | 'saving' | 'failed';
 const SAVE_DELAY = 1500;
 
 /** What counts as an edit worth saving: everything except the running timer and timestamps. */
-const contentKey = (a: Attempt) => JSON.stringify([a.chains, a.checks, a.essay.bodies, a.essay.drafts, a.essay.review, a.essay.fixing, a.essay.fix]);
+const contentKey = (a: Attempt) => JSON.stringify([a.chains, a.checks, a.essay.bodies, a.essay.drafts, a.essay.review, a.essay.fixing, a.essay.fix, a.essay.guided]);
 
 const SAVE_LABEL: Record<SaveState, string> = { saved: 'Đã lưu', saving: 'Đang lưu…', failed: 'Chưa lưu được · thử lại' };
 
@@ -122,7 +122,12 @@ export function AttemptWorkspace({ attemptId }: { attemptId: string }) {
       <div style={{ flex: 1, minHeight: 0 }}>
         {view === 'chains' ? (
           <BuildScreen prompt={prompt} chains={attempt.chains} setChains={setChains} checks={attempt.checks || {}} setCheck={setCheck}
-            toolbarLeft={left('/writing', 'Thư viện đề', 0)} onNext={() => router.push(base + '/essay')} />
+            toolbarLeft={left('/writing', 'Thư viện đề', 0)}
+            started={!!attempt.essay.guided || !!attempt.essay.review || Object.values(attempt.essay.drafts).some((t) => t.trim())}
+            onNext={(mode) => {
+              if (mode === 'guided') setEssay((e) => ({ ...e, guided: { plan: null, at: 0, level: 'frame' } }));
+              router.push(base + '/essay');
+            }} />
         ) : (
           <WriteScreen prompt={prompt} chains={attempt.chains} setChains={setChains} essay={attempt.essay} setEssay={setEssay}
             toolbarLeft={left(base + '/chains', 'Dựng mạch', 1)} chainsHref={base + '/chains'} />

@@ -13,6 +13,7 @@ import { primaryBtn } from '../coach/ui';
 import { bandText, CRITERIA, markStyle, CRITERION_STYLE, draftsKey, requestEssayReview, retryEssayCriterion, wordCount, type EssayReview, type EssaySection } from '../desk/scoring';
 import { DiffView, fixTasks, FixView } from './FixFlow';
 import { planFix, rescore } from './fix-api';
+import { GuidedHeader, GuidedWriter, useGuidedPlan } from './GuidedWriter';
 import { MiniChain } from './MiniChain';
 import { Skeleton } from '@/components/base/skeleton/skeleton';
 import { AiStatus } from '@/components/ui/ai-status';
@@ -113,7 +114,8 @@ export function WriteScreen({ prompt, chains, setChains, essay, setEssay, toolba
   const sections = sectionsFor(chains);
   const review = essay.review;
   const editing = !review || !!essay.fixing;
-  const [chat, setChat] = useState(!review);
+  // The guided writer needs the room: the translator starts closed there.
+  const [chat, setChat] = useState(!review && !(essay.guided && !essay.guided.done));
   /** The body paragraph being written (its chain is highlighted on the left). */
   const [focus, setFocus] = useState<string | null>(null);
   const paraRefs = useRef<Record<string, HTMLElement | null>>({});
@@ -129,6 +131,11 @@ export function WriteScreen({ prompt, chains, setChains, essay, setEssay, toolba
   const [tab, setTab] = useState('tr');
   /** What the feedback panel shows: the review, or while grading, what has arrived so far (null = all skeleton). */
   const panel = sending ? live : review;
+  /** "Viết có hướng dẫn" is running: the middle panel writes one sentence at a time. */
+  const guidedOn = !!essay.guided && !essay.guided.done && !review;
+  const guided = useGuidedPlan(prompt, chains, essay, setEssay);
+  const gPlan = essay.guided?.plan || null;
+  const gNow = guidedOn && gPlan ? gPlan[essay.guided!.at] : null;
   // The white tab behind the active criterion slides to the new one (transitions.dev "Tabs sliding").
   const tabsRef = useRef<HTMLDivElement>(null);
   const [ind, setInd] = useState<{ left: number; width: number } | null>(null);
@@ -243,7 +250,8 @@ export function WriteScreen({ prompt, chains, setChains, essay, setEssay, toolba
     setSending(false);
   };
 
-  const hitFor = (c: Chain) => (active && active.item.chainId === c.id ? { at: active.item.at ?? null, bg: CRITERION_STYLE[active.crit].soft } : null);
+  const hitFor = (c: Chain) => (gNow ? (gNow.section === c.id && gNow.step >= 0 ? { at: gNow.step, bg: '#EEF3FC' } : null)
+    : active && active.item.chainId === c.id ? { at: active.item.at ?? null, bg: CRITERION_STYLE[active.crit].soft } : null);
   const scores = panel?.scores;
 
   const paragraph = (s: EssaySection) => {
@@ -300,7 +308,7 @@ export function WriteScreen({ prompt, chains, setChains, essay, setEssay, toolba
           {error && <span role="alert" style={{ fontFamily: CL.sans, fontSize: 12, color: CL.redText, marginRight: 4 }}>{error}</span>}
           <button type="button" className="cl-btn" onClick={() => setChat(!chat)} aria-pressed={chat} style={toolbarBtn(chat)}>Dịch</button>
           {editing
-            ? <ProBeam><button type="button" className="cl-btn cl-primary" onClick={submit} disabled={sending || !words} style={{ ...primaryBtn, opacity: sending || !words ? 0.4 : 1 }}>{sending ? 'Đang chấm…' : review ? 'Nộp lại' : 'Nộp bài'}</button></ProBeam>
+            ? <ProBeam><button type="button" className="cl-btn cl-primary" onClick={submit} disabled={sending || !words || guidedOn} style={{ ...primaryBtn, opacity: sending || !words || guidedOn ? 0.4 : 1 }}>{sending ? 'Đang chấm…' : review ? 'Nộp lại' : 'Nộp bài'}</button></ProBeam>
             : <ProBeam><button type="button" className="cl-btn cl-primary" onClick={startFix} disabled={planning} style={{ ...primaryBtn, opacity: planning ? 0.5 : 1 }}>{planning ? 'Đang chuẩn bị…' : essay.fix ? 'Tiếp tục sửa' : 'Sửa bài'}</button></ProBeam>}
         </div>
       </div>
@@ -319,7 +327,7 @@ export function WriteScreen({ prompt, chains, setChains, essay, setEssay, toolba
               <div style={{ borderRadius: 10, border: '1px dashed ' + CL.ink2, padding: '9px 12px', fontFamily: CL.sans, fontSize: 12, color: CL.ink4 }}>Mở bài · không cần mạch</div>
               {chains.map((c, i) => (
                 <MiniChain key={c.id} prompt={prompt} chain={c} num={i + 1} first={i === 0} last={i === chains.length - 1} onMove={(d) => move(i, d)} hit={hitFor(c)}
-                  focused={focus === c.id} onOpen={() => openPara(c.id)} chainsHref={chainsHref} />
+                  focused={gNow ? gNow.section === c.id : focus === c.id} onOpen={() => openPara(c.id)} chainsHref={chainsHref} />
               ))}
               <div style={{ borderRadius: 10, border: '1px dashed ' + CL.ink2, padding: '9px 12px', fontFamily: CL.sans, fontSize: 12, color: CL.ink4 }}>Kết bài · không cần mạch</div>
             </div>
@@ -327,12 +335,16 @@ export function WriteScreen({ prompt, chains, setChains, essay, setEssay, toolba
           <section style={{ minHeight: 0, display: 'flex', flexDirection: 'column', borderRadius: 12, border: '1px solid ' + CL.border, background: '#fff', overflow: 'hidden' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 14, minHeight: 56, padding: '0 24px', borderBottom: '1px solid ' + CL.ink1, background: CL.panel }}>
               <ClLabel color={CL.ink}>Bài viết</ClLabel>
+              {guidedOn ? <GuidedHeader essay={essay} setEssay={setEssay} total={gPlan?.length || 0} /> : <>
               <span style={{ fontFamily: CL.sans, fontSize: 12, color: CL.ink5 }}>{editing ? '' : 'Bấm chỗ tô màu để xem nhận xét.'}{stale && editing ? 'Bạn đã sửa bài, nộp lại để chấm bản mới.' : ''}</span>
               <span style={{ marginLeft: 'auto', fontFamily: CL.sans, fontSize: 12, color: CL.ink5 }}>Số từ: <b style={{ color: words >= 250 ? CL.green : CL.ink }}>{words}</b> / 250</span>
+              </>}
             </div>
-            <div className="cl-scroll" style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: '20px 26px 28px', display: 'flex', flexDirection: 'column', gap: 22 }}>
+            {guidedOn
+              ? <GuidedWriter sections={sections} essay={essay} setEssay={setEssay} plan={gPlan} error={guided.error} loading={guided.loading} retry={guided.retry} />
+              : <div className="cl-scroll" style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: '20px 26px 28px', display: 'flex', flexDirection: 'column', gap: 22 }}>
               {sections.map((s) => <div key={s.id}>{paragraph(s)}</div>)}
-            </div>
+            </div>}
           </section>
         </main>
         }

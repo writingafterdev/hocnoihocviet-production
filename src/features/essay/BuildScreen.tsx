@@ -22,7 +22,52 @@ export interface BuildProps {
   checks: Record<string, CheckResult>;
   setCheck: (id: string, r: CheckResult | null) => void;
   toolbarLeft: ReactNode;
-  onNext: () => void;
+  /** The essay already has text, a review or a guided round: "Viết bài" goes straight there. */
+  started: boolean;
+  /** To ② Viết bài; a first visit says how the student wants to write. */
+  onNext: (mode?: 'free' | 'guided') => void;
+}
+
+/** A chain is ready for writing when both ends and at least one middle step are there. */
+const isReady = (c: Chain) => c.built !== false && !!startOf(c).trim() && !!endOf(c).trim() && middleOf(c).some((s) => s.trim());
+const NEED = 2;
+
+/** Tiny pictures on the two choices: lines of text, and a sentence half typed over first-letter hints. */
+const picFree = (
+  <span aria-hidden="true" style={{ height: 72, borderRadius: 10, background: '#F7F6F2', border: '1px solid #E5E5E5', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 6, padding: '0 12px' }}>
+    {[86, 70, 78].map((w) => <span key={w} style={{ height: 7, borderRadius: 4, background: '#E3E1D8', width: w + '%' }} />)}
+  </span>
+);
+const tok = (t: string, ok: boolean) => <span key={t} style={{ border: '1px solid ' + (ok ? '#BFE0B5' : '#E5E5E5'), background: ok ? '#EDF7EA' : '#fff', borderRadius: 5, fontFamily: 'ui-monospace, Menlo, monospace', fontSize: 12, color: ok ? '#2D6E1E' : '#737373', padding: '2px 6px' }}>{t}</span>;
+const picGuided = (
+  <span aria-hidden="true" style={{ height: 72, borderRadius: 10, background: '#F7F9FD', border: '1px solid #DCE7F7', display: 'flex', alignItems: 'center', alignContent: 'center', flexWrap: 'wrap', gap: 5, padding: '0 12px' }}>
+    {tok('Many', true)}{tok('new', true)}{tok('p******', false)}{tok('h***', false)}{tok('n****', false)}
+  </span>
+);
+
+function ModeDialog({ onPick, onClose }: { onPick: (m: 'free' | 'guided') => void; onClose: () => void }) {
+  const [mode, setMode] = useState<'free' | 'guided'>('guided');
+  const opt = (m: 'free' | 'guided', pic: ReactNode, title: string, text: string) => (
+    <button type="button" className="cl-btn" onClick={() => setMode(m)} aria-pressed={mode === m}
+      style={{ flex: 1, textAlign: 'left', borderRadius: 14, border: '1px solid ' + (mode === m ? '#2F62C4' : '#E5E5E5'), boxShadow: mode === m ? '0 0 0 3px #EEF3FC' : 'none', background: '#fff', padding: 14, display: 'flex', flexDirection: 'column', gap: 6, transition: 'border-color .15s, box-shadow .15s' }}>
+      {pic}
+      <b style={{ marginTop: 6, fontFamily: CL.sans, fontSize: 15, fontWeight: 600, color: CL.ink }}>{title}</b>
+      <span style={{ fontFamily: CL.sans, fontSize: 12.5, lineHeight: 1.55, color: CL.ink5 }}>{text}</span>
+    </button>
+  );
+  return (
+    <div role="dialog" aria-modal="true" aria-label="Chọn cách viết" onClick={onClose} onKeyDown={(e) => { if (e.key === 'Escape') onClose(); }}
+      style={{ position: 'fixed', inset: 0, zIndex: 60, background: 'rgba(20,20,19,.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
+      <div onClick={(e) => e.stopPropagation()} style={{ width: 640, maxWidth: '100%', boxSizing: 'border-box', background: '#fff', borderRadius: 20, padding: '28px 28px 24px', display: 'flex', flexDirection: 'column', gap: 16 }}>
+        <p style={{ margin: 0, fontFamily: CL.sans, fontSize: 17, fontWeight: 600, lineHeight: 1.4, color: CL.ink }}>Mạch đã xong. Bạn muốn viết thế nào?</p>
+        <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap' }}>
+          {opt('free', picFree, 'Tự viết', 'Viết cả bài với mạch nằm cạnh, rồi nộp để chấm theo bốn tiêu chí.')}
+          {opt('guided', picGuided, 'Viết có hướng dẫn', 'Viết từng câu theo mạch của bạn. Mỗi câu có gợi ý cấu trúc và từ vựng; vẫn bí thì bật gợi ý chi tiết.')}
+        </div>
+        <button type="button" autoFocus className="cl-btn cl-primary" onClick={() => onPick(mode)} style={{ ...primaryBtn, height: 46, justifyContent: 'center' }}>Bắt đầu viết</button>
+      </div>
+    </div>
+  );
 }
 
 const arrow = (
@@ -129,8 +174,11 @@ function BodyCard({ prompt, chain, num, canDelete, onChange, onDelete, check, on
 }
 
 /** ① Dựng mạch: the prompt, then one chain card per body paragraph. Right: the chosen chain's notes and the translator. */
-export function BuildScreen({ prompt, chains, setChains, checks, setCheck, toolbarLeft, onNext }: BuildProps) {
+export function BuildScreen({ prompt, chains, setChains, checks, setCheck, toolbarLeft, started, onNext }: BuildProps) {
   const [chat, setChat] = useState(true);
+  const [picking, setPicking] = useState(false);
+  const ready = chains.filter(isReady).length;
+  const canWrite = started || ready >= NEED;
   const [focus, setFocus] = useState<string | null>(null);
   const [active, setActive] = useState<number | null>(null);
   const [notesOpen, setNotesOpen] = useState(true);
@@ -150,10 +198,14 @@ export function BuildScreen({ prompt, chains, setChains, checks, setCheck, toolb
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10, minHeight: 42, paddingBottom: 12 }}>
         {toolbarLeft}
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          {!started && <Chip variant="caption" color={ready >= NEED ? 'lime' : 'gray'}>{Math.min(ready, NEED)}/{NEED} mạch đã dựng</Chip>}
           <button type="button" className="cl-btn" onClick={() => setChat(!chat)} aria-pressed={chat} style={toolbarBtn(chat)}>Dịch</button>
-          <button type="button" className="cl-btn cl-primary" onClick={onNext} style={primaryBtn}>Viết bài<ClIcon name="right" size={13} /></button>
+          <button type="button" className="cl-btn cl-primary" onClick={() => (started ? onNext() : setPicking(true))} disabled={!canWrite}
+            title={canWrite ? '' : 'Dựng xong ít nhất ' + NEED + ' mạch (có điểm đầu, điểm cuối và một bước ở giữa) để viết bài.'}
+            style={{ ...primaryBtn, opacity: canWrite ? 1 : 0.4 }}>Viết bài<ClIcon name="right" size={13} /></button>
         </div>
       </div>
+      {picking && <ModeDialog onClose={() => setPicking(false)} onPick={(m) => { setPicking(false); onNext(m); }} />}
 
       <CoachGrid
         open={chat || notesOn}
