@@ -1,36 +1,18 @@
 'use client';
 
 import { CL } from '../chainlab/constants';
-import { ClLabel } from '../chainlab/ui/primitives';
 import { AiStatus } from '@/components/ui/ai-status';
 import { NOTE_STYLE, type CheckResult, type PlacedNote } from './useCoach';
 
 /**
- * Above the chain after "Kiểm tra": logic and persuasiveness at a glance, then the one-line summary. While checking,
- * a status line; after an edit, the tiles fade and a line asks for "Kiểm tra lại".
+ * Above the chain after "Kiểm tra": the one-line summary (the notes themselves sit on the chain). While checking, a
+ * status line; after an edit, a line asks for "Kiểm tra lại".
  */
 export function CheckSummary({ result, fresh, checking }: { result: CheckResult | null; fresh: boolean; checking: boolean }) {
   if (checking) return <AiStatus state="analyzing" states={{ analyzing: { label: 'Đang đọc mạch', active: true } }} className="text-[13px]" />;
   if (!result) return null;
-  const jumps = result.notes.filter((n) => n.type === 'jump').length;
-  const more = result.notes.length - jumps;
-  const tile = (label: string, value: string, ok: boolean, badBg: string, badFg: string) => (
-    <div style={{ flex: 1, minWidth: 0, borderRadius: 12, background: ok ? CL.mintSoft : badBg, padding: '10px 12px', display: 'flex', flexDirection: 'column', gap: 2 }}>
-      <ClLabel color={ok ? CL.greenText : badFg}>{label}</ClLabel>
-      <span style={{ fontFamily: CL.sans, fontSize: 13.5, fontWeight: 600, color: ok ? CL.greenText : badFg }}>{value}</span>
-    </div>
-  );
-  return (
-    <div key={result.snap + result.summary} className="co-rise" style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-      <div style={{ display: 'flex', gap: 8, opacity: fresh ? 1 : 0.55, transition: 'opacity .2s' }}>
-        {tile('Logic', jumps ? jumps + ' chỗ nhảy bước' : 'Mạch đi liền', !jumps, CL.redSoft, CL.redText)}
-        {tile('Thuyết phục', more ? more + ' chỗ nên thêm' : 'Đủ chi tiết', !more, CL.yellowSoft, CL.yellowText)}
-      </div>
-      {fresh
-        ? result.summary && <p style={{ margin: '0 2px', fontFamily: CL.sans, fontSize: 13, lineHeight: 1.6, color: CL.ink7 }}>{result.summary}</p>
-        : <span style={{ margin: '0 2px', fontFamily: CL.sans, fontSize: 12, fontWeight: 500, color: CL.ink5 }}>Bạn đã sửa mạch, kiểm tra lại để xem nhận xét mới.</span>}
-    </div>
-  );
+  if (!fresh) return <span style={{ margin: '0 2px', fontFamily: CL.sans, fontSize: 12, fontWeight: 500, color: CL.ink5 }}>Bạn đã sửa mạch, kiểm tra lại để xem nhận xét mới.</span>;
+  return result.summary ? <p key={result.snap + result.summary} className="co-rise" style={{ margin: '0 2px', fontFamily: CL.sans, fontSize: 13, lineHeight: 1.6, color: CL.ink7 }}>{result.summary}</p> : null;
 }
 
 /** One note from "Kiểm tra", shown on the chain right under the step it is about. Faded once the chain has changed. */
