@@ -1,6 +1,5 @@
 'use client';
 
-import Link from 'next/link';
 import { Volume2, VolumeX } from 'lucide-react';
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Illustration } from '@/components/brand/Illustration';
@@ -11,7 +10,7 @@ import { KIND_LABEL, sentenceParts, plainSentence, STATEMENTS, type Statement, t
 import { cn } from '@/lib/utils';
 import { toast } from '@/components/ui/toast';
 import { CL } from '../chainlab/constants';
-import { backLinkStyle, ClIcon, ClLabel, toolbarBtn } from '../chainlab/ui/primitives';
+import { ClIcon, ClLabel, toolbarBtn } from '../chainlab/ui/primitives';
 import { ChainEditor } from '../coach/ChainEditor';
 import { CoachGrid, SidePanel, useLast } from '../coach/CoachGrid';
 import { NotesPanel } from '../coach/NotesPanel';
@@ -20,8 +19,6 @@ import { useCoach } from '../coach/useCoach';
 import { DrillParagraph } from './DrillParagraph';
 import { useStepHelp } from './StepHelp';
 import { primaryBtn } from '../coach/ui';
-import { Chip } from '@/components/base/badges/chip';
-import { AnimatedCounter } from '@/components/ui/animated-counter';
 import { AiStatus } from '@/components/ui/ai-status';
 import { ProBeam } from '@/components/ui/pro-beam';
 
@@ -103,7 +100,6 @@ interface Reel { items: string[]; target: Statement; startH: number; endH: numbe
 export function ProveDrill() {
   const [deck, setDeck] = useState<Statement[] | null>(null);
   const [i, setI] = useState(0);
-  const [done, setDone] = useState(0);
   const [steps, setSteps] = useState<string[]>(['']);
   const [active, setActive] = useState<number | null>(null);
   const [chat, setChat] = useState(true);
@@ -162,9 +158,8 @@ export function ProveDrill() {
   const backToPick = () => { if (rolling) return; setDeck(null); setI(0); setSteps(['']); setActive(null); coach.reset(); };
 
   /** Spin to the next statement: other statements slide past, slow down, and the new one eases into place. */
-  const go = (counted: boolean) => {
+  const go = () => {
     if (!deck || !s || rolling) return;
-    if (counted && coach.result) setDone((d) => d + 1);
     const k = i + 1, target = deck[k % deck.length];
     coach.reset(); setActive(null);
     sfx.roll(ROLL_MS);
@@ -218,15 +213,11 @@ export function ProveDrill() {
       <div style={{ flex: 1, minHeight: 0, width: '100%', maxWidth: 1560, margin: '0 auto', padding: '24px 32px 24px', display: 'flex', flexDirection: 'column' }}>
         {para && s && prompt ? <DrillParagraph key={s.id + para} s={s} prompt={prompt} steps={steps} guided={para === 'guided'} onBack={() => setPara(null)} /> : <>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10, minHeight: 42, paddingBottom: 12 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 18 }}>
-            <Link href="/home" className="cl-link" style={backLinkStyle}><ClIcon name="left" size={14} />Trang chủ</Link>
-            <Chip variant="subtle" color="blue">Chứng minh nhanh</Chip>
-            <span style={{ width: 1, height: 18, background: CL.ink2 }} />
-            <span style={{ fontFamily: CL.sans, fontSize: 12.5, color: CL.ink5 }}>Đã chứng minh <AnimatedCounter value={done} className="ml-1 text-[15px] font-bold text-ink" /></span>
-          </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             {s && <button type="button" className="cl-btn" onClick={backToPick} disabled={rolling} style={{ ...toolbarBtn(false), opacity: rolling ? 0.5 : 1 }}>Đổi loại</button>}
-            <button type="button" className="cl-btn" onClick={() => go(false)} disabled={rolling || !s} style={{ ...toolbarBtn(false), opacity: rolling || !s ? 0.5 : 1 }}><span className={'co-dice' + (rolling ? ' on' : '')} aria-hidden="true">⟳</span> Đổi câu</button>
+            <button type="button" className="cl-btn" onClick={() => go()} disabled={rolling || !s} style={{ ...toolbarBtn(false), opacity: rolling || !s ? 0.5 : 1 }}><span className={'co-dice' + (rolling ? ' on' : '')} aria-hidden="true">⟳</span> Đổi câu</button>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <button type="button" className="cl-btn" onClick={toggleSound} aria-pressed={sound} aria-label={sound ? 'Tắt âm thanh' : 'Bật âm thanh'} title={sound ? 'Tắt âm thanh' : 'Bật âm thanh'} style={{ ...toolbarBtn(false), width: 36, padding: 0, color: sound ? CL.ink7 : CL.ink4 }}>{sound ? <Volume2 size={16} strokeWidth={1.75} /> : <VolumeX size={16} strokeWidth={1.75} />}</button>
             <button type="button" className="cl-btn" onClick={() => setChat(!chat)} aria-pressed={chat} style={toolbarBtn(chat)}>Dịch</button>
             {!checked ? (
@@ -234,7 +225,7 @@ export function ProveDrill() {
             ) : (
               <>
                 <button type="button" className="cl-btn" onClick={check} disabled={coach.fresh || coach.checking || !coach.filled} style={{ ...toolbarBtn(false), color: CL.ink, opacity: coach.fresh || coach.checking ? 0.4 : 1 }}>{coach.checking ? 'Đang kiểm tra…' : 'Kiểm tra lại'}</button>
-                <button type="button" className="cl-btn cl-primary" onClick={() => go(true)} disabled={rolling} style={primaryBtn}>Câu tiếp<ClIcon name="right" size={13} /></button>
+                <button type="button" className="cl-btn cl-primary" onClick={() => go()} disabled={rolling} style={primaryBtn}>Câu tiếp<ClIcon name="right" size={13} /></button>
               </>
             )}
           </div>

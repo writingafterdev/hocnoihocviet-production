@@ -26,12 +26,12 @@ function PhraseRow({ p, used }: { p: Phrase; used?: boolean }) {
 }
 
 /**
- * Per-step help in the quick drill. Each step can show vocabulary (only when asked, "Gợi ý từ vựng"); after
+ * Per-step help in the quick drill. "Gợi ý" on a step gives a guiding question (shown as the step's placeholder) and vocabulary; after
  * Enter, the AI reads the step: which suggested phrases were used, better wording for the rough parts, and the
  * question for the next step. Students always type the phrases themselves; nothing is inserted on click.
  */
 export function useStepHelp(promptId: string, base: Omit<ChainIn, 'steps'>, steps: string[], firstQuestion: string) {
-  const [vocab, setVocab] = useState<Record<number, Load<Phrase[]>>>({});
+  const [vocab, setVocab] = useState<Record<number, Load<{ question: string; phrases: Phrase[] }>>>({});
   const [hidden, setHidden] = useState<Record<number, boolean>>({});
   const [scans, setScans] = useState<Record<number, { text: string; load: Load<Scan> }>>({});
   const [closed, setClosed] = useState<Record<number, boolean>>({});
@@ -39,21 +39,28 @@ export function useStepHelp(promptId: string, base: Omit<ChainIn, 'steps'>, step
   useEffect(() => { setVocab({}); setHidden({}); setScans({}); setClosed({}); }, [key]);
 
   const chainUpTo = (i: number): ChainIn => ({ ...base, steps: steps.slice(0, i).map((x) => x.trim()).filter(Boolean) });
-  const question = (i: number) => (i === 0 ? firstQuestion : (() => { const sc = scans[i - 1]; return sc && sc.load.state === 'done' && sc.load.data.next ? sc.load.data.next : undefined; })());
+  /** The step's placeholder: the question from "Gợi ý" once asked, else the drill's first question or the last scan's next one. */
+  const question = (i: number) => {
+    const v = vocab[i];
+    if (v && v.state === 'done' && v.data.question) return v.data.question;
+    if (i === 0) return firstQuestion;
+    const sc = scans[i - 1];
+    return sc && sc.load.state === 'done' && sc.load.data.next ? sc.load.data.next : undefined;
+  };
 
   const askVocab = async (i: number) => {
     if (vocab[i]?.state === 'loading') return;
     setVocab((v) => ({ ...v, [i]: { state: 'loading' } })); setHidden((h) => ({ ...h, [i]: false }));
     try {
-      const r = await postAi<{ phrases: Phrase[] }>('step-vocab', { promptId, chain: chainUpTo(i), index: i, question: question(i) || '' });
-      setVocab((v) => ({ ...v, [i]: { state: 'done', data: r.phrases } }));
+      const r = await postAi<{ question: string; phrases: Phrase[] }>('step-vocab', { promptId, chain: chainUpTo(i), index: i, question: question(i) || '' });
+      setVocab((v) => ({ ...v, [i]: { state: 'done', data: { question: r.question || '', phrases: r.phrases || [] } } }));
     } catch (e) { setVocab((v) => ({ ...v, [i]: { state: 'error', error: errText(e) } })); }
   };
 
   const onSubmitStep = async (i: number, text: string) => {
     if (scans[i]?.text === text) return;
     const v = vocab[i];
-    const suggested = v && v.state === 'done' ? v.data.map((p) => p.en) : [];
+    const suggested = v && v.state === 'done' ? v.data.phrases.map((p) => p.en) : [];
     setScans((s) => ({ ...s, [i]: { text, load: { state: 'loading' } } })); setClosed((c) => ({ ...c, [i]: false }));
     try {
       const r = await postAi<Scan>('step-scan', { promptId, chain: chainUpTo(i), index: i, step: text, suggested });
@@ -68,7 +75,7 @@ export function useStepHelp(promptId: string, base: Omit<ChainIn, 'steps'>, step
       if (sc.load.state === 'error') return <div style={panel}><span style={{ ...label, color: CL.redText }}>{sc.load.error}</span></div>;
       const d = sc.load.data;
       const vd = vocab[i];
-      const usedPhrases = vd && vd.state === 'done' ? vd.data.filter((p) => d.used.some((u) => u.toLowerCase() === p.en.toLowerCase())) : [];
+      const usedPhrases = vd && vd.state === 'done' ? vd.data.phrases.filter((p) => d.used.some((u) => u.toLowerCase() === p.en.toLowerCase())) : [];
       if (closed[i]) return (
         <div style={{ ...panel, flexDirection: 'row', alignItems: 'center' }}>
           <span style={label}>Cách nói hay hơn{d.parts.length ? ' · ' + d.parts.length + ' chỗ' : ''}</span>
@@ -97,9 +104,9 @@ export function useStepHelp(promptId: string, base: Omit<ChainIn, 'steps'>, step
     if (i !== steps.length - 1) return null;
     const v = vocab[i];
     if (!v || hidden[i]) return (
-      <button type="button" className="cl-btn" onClick={() => (v && v.state === 'done' ? setHidden((h) => ({ ...h, [i]: false })) : askVocab(i))} style={{ ...miniBtn, boxShadow: 'none', background: '#EEF3FC', color: '#2F62C4' }}>Gợi ý từ vựng</button>
+      <button type="button" className="cl-btn" onClick={() => (v && v.state === 'done' ? setHidden((h) => ({ ...h, [i]: false })) : askVocab(i))} style={{ ...miniBtn, boxShadow: 'none', background: '#EEF3FC', color: '#2F62C4' }}>Gợi ý</button>
     );
-    if (v.state === 'loading') return <div style={card}><span style={label}>Đang tìm từ vựng…</span></div>;
+    if (v.state === 'loading') return <div style={card}><span style={label}>Đang tìm gợi ý…</span></div>;
     if (v.state === 'error') return <div style={card}><span style={{ ...label, color: CL.redText }}>{v.error}</span></div>;
     return (
       <div className="co-unfold" style={card}>
@@ -107,7 +114,7 @@ export function useStepHelp(promptId: string, base: Omit<ChainIn, 'steps'>, step
           <span style={label}>Từ vựng cho bước này</span>
           <button type="button" className="cl-btn" style={linkBtn} onClick={() => setHidden((h) => ({ ...h, [i]: true }))}>Ẩn</button>
         </span>
-        {v.data.map((p) => <PhraseRow key={p.en} p={p} />)}
+        {v.data.phrases.map((p) => <PhraseRow key={p.en} p={p} />)}
       </div>
     );
   };

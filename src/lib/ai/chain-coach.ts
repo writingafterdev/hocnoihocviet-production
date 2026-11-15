@@ -20,15 +20,15 @@ const cleanPhrases = (xs: unknown, max: number): { en: string; vi: string }[] =>
     .slice(0, max);
 };
 
-/** Quick drill, "Gợi ý từ vựng" on step `index` (0-based among the middle steps). */
-export async function aiStepVocab(userId: string, prompt: Prompt, chain: ChainIn, index: number, question: string): Promise<{ phrases: { en: string; vi: string }[] }> {
+/** Quick drill, "Gợi ý" on step `index` (0-based among the middle steps): a guiding question and three phrases. */
+export async function aiStepVocab(userId: string, prompt: Prompt, chain: ChainIn, index: number, question: string): Promise<{ question: string; phrases: { en: string; vi: string }[] }> {
   const { text } = describeChain(chain);
-  const out = await ask<{ phrases: unknown }>({
+  const out = await ask<{ question: unknown; phrases: unknown }>({
     userId, kind: 'hint', task: STEP_VOCAB_TASK, effort: 'low', maxTokens: 1500,
-    schema: { type: 'object', additionalProperties: false, required: ['phrases'], properties: { phrases: PHRASES_SCHEMA } },
+    schema: { type: 'object', additionalProperties: false, required: ['question', 'phrases'], properties: { question: { type: 'string' }, phrases: PHRASES_SCHEMA } },
     input: describePrompt(prompt) + '\n\n' + text + '\n\nBƯỚC ĐANG VIẾT: vị trí ' + (index + 1) + (question ? ' · câu hỏi: ' + question : ''),
   });
-  return { phrases: cleanPhrases(out.phrases, 3) };
+  return { question: String(out.question || '').trim().slice(0, 200), phrases: cleanPhrases(out.phrases, 3) };
 }
 
 export interface StepScan { used: string[]; parts: { text: string; phrases: { en: string; vi: string }[] }[]; next: string }
