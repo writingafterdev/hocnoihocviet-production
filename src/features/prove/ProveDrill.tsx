@@ -12,14 +12,12 @@ import { toast } from '@/components/ui/toast';
 import { CL } from '../chainlab/constants';
 import { ClIcon, ClLabel, toolbarBtn } from '../chainlab/ui/primitives';
 import { ChainEditor } from '../coach/ChainEditor';
-import { CoachGrid, SidePanel, useLast } from '../coach/CoachGrid';
-import { NotesPanel } from '../coach/NotesPanel';
+import { CoachGrid, SidePanel } from '../coach/CoachGrid';
 import { TranslatorChat } from '../coach/TranslatorChat';
 import { useCoach } from '../coach/useCoach';
 import { DrillParagraph } from './DrillParagraph';
 import { useStepHelp } from './StepHelp';
 import { primaryBtn } from '../coach/ui';
-import { AiStatus } from '@/components/ui/ai-status';
 import { ProBeam } from '@/components/ui/pro-beam';
 
 const shuffle = <T,>(xs: T[]) => { const a = [...xs]; for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
@@ -103,7 +101,6 @@ export function ProveDrill() {
   const [steps, setSteps] = useState<string[]>(['']);
   const [active, setActive] = useState<number | null>(null);
   const [chat, setChat] = useState(true);
-  const [notesOpen, setNotesOpen] = useState(true);
   /** "Viết chuỗi này thành một đoạn văn": the paragraph screen, written alone or guided. */
   const [para, setPara] = useState<'free' | 'guided' | null>(null);
   const [reel, setReel] = useState<Reel | null>(null);
@@ -135,7 +132,7 @@ export function ProveDrill() {
   }, [coach.result]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const land = (k: number) => {
-    setI(k); setSteps(['']); setActive(null); setNotesOpen(true); setReel(null); setPara(null); setPromptOut(false); setLanded((n) => n + 1);
+    setI(k); setSteps(['']); setActive(null); setReel(null); setPara(null); setPromptOut(false); setLanded((n) => n + 1);
     sfx.pop();
     coach.reset();
   };
@@ -145,7 +142,7 @@ export function ProveDrill() {
     if (rolling) return;
     const pool = shuffle(STATEMENTS.filter((x) => (!kind || x.kind === kind) && (!tone || x.tone === tone)));
     const target = pool[0];
-    setDeck(pool); setI(0); setSteps(['']); setActive(null); setNotesOpen(true); coach.reset();
+    setDeck(pool); setI(0); setSteps(['']); setActive(null); coach.reset();
     sfx.roll(ROLL_MS);
     if (reducedMotion()) { setLanded((n) => n + 1); return; }
     const others = shuffle(STATEMENTS.filter((x) => x.id !== target.id)).slice(0, 8).map((x) => plainSentence(x.sentence));
@@ -197,15 +194,12 @@ export function ProveDrill() {
     return () => { if (!reelRef.current) a.cancel(); };
   }, [reel?.target.id, reel?.endH]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const check = () => { setActive(null); setNotesOpen(true); coach.runCheck(); };
+  const check = () => { setActive(null); coach.runCheck(); };
 
   const checked = !!coach.result;
   const notes = coach.fresh && coach.result ? coach.result.placed : [];
   const clean = coach.fresh && !!coach.result && coach.result.placed.length === 0;
   const chip = s ? kindChip(s) : null;
-  const notesOn = (checked && notesOpen) || coach.checking;
-  const shownResult = useLast(coach.result);
-  const helper = coach.checking ? 'Đang kiểm tra…' : coach.fresh ? (coach.result?.placed.length ? coach.result.placed.length + ' nhận xét ở bên phải.' : 'Mạch đi liền.') : checked ? 'Bạn đã sửa mạch, kiểm tra lại để xem nhận xét mới.' : '';
 
   return (
     <div style={{ height: '100%', background: '#fff', display: 'flex', flexDirection: 'column' }}>
@@ -232,7 +226,7 @@ export function ProveDrill() {
         </div>
 
         <CoachGrid
-          open={chat || notesOn}
+          open={chat}
           main={
             <main className="co-col" style={{ minWidth: 0 }}>
               <section style={{ flex: '1 1 0', minHeight: 0, display: 'flex', flexDirection: 'column', borderRadius: 12, border: '1px solid ' + CL.border, background: '#fff', overflow: 'hidden' }}>
@@ -260,9 +254,10 @@ export function ProveDrill() {
                       <ChainEditor
                         start={s.start} end={s.end} startLabel="Điểm đầu · đề cho" endLabel="Điểm cuối · đề cho"
                         steps={steps} setSteps={setSteps}
-                        notes={notes} active={active} onPick={(k) => { setActive(k); setNotesOpen(true); }}
+                        notes={notes} active={active} onPick={setActive}
                         hint={coach.hint} asking={coach.asking} onHint={coach.askHint} onCloseHint={coach.closeHint}
-                        helper={helper} checking={coach.checking} clean={clean} hideHint
+                        checking={coach.checking} clean={clean} hideHint
+                        check={{ result: coach.result, fresh: coach.fresh, checking: coach.checking }}
                         stepQuestion={help.stepQuestion} onSubmitStep={help.onSubmitStep} belowStep={help.belowStep}
                       />
                     </div>
@@ -291,12 +286,7 @@ export function ProveDrill() {
           }
           side={
             <>
-              <SidePanel on={notesOn} grow={3}>
-                {coach.checking || !shownResult
-                  ? <section style={{ height: '100%', borderRadius: 12, border: '1px solid ' + CL.border, background: '#fff', padding: '18px 20px', display: 'flex', flexDirection: 'column', gap: 10 }}><ClLabel color={CL.ink}>Nhận xét</ClLabel><AiStatus state="analyzing" states={{ analyzing: { label: 'Đang đọc mạch', active: true } }} className="text-[13px]" /></section>
-                  : <NotesPanel result={shownResult} fresh={coach.fresh} active={active} onPick={setActive} onClose={() => setNotesOpen(false)} />}
-              </SidePanel>
-              <SidePanel on={chat} grow={2} top={notesOn}>
+              <SidePanel on={chat} grow={2}>
                 <TranslatorChat onClose={() => setChat(false)} />
               </SidePanel>
             </>

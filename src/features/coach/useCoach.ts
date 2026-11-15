@@ -21,8 +21,8 @@ export interface Hint { q: string; why: string }
 
 const snapOf = (c: ChainIn) => JSON.stringify([c.start, c.end, c.steps.map((s) => s.trim()).filter(Boolean)]);
 
-/** Maps the AI's positions (0 = start, 1…n = filled steps, n+1 = end) to indexes in `steps`. */
-function place(steps: string[], notes: ChainNote[]): PlacedNote[] {
+/** Maps the AI's positions (0 = start, 1…n = filled steps, n+1 = end) to indexes in `steps` (empty steps skipped, so inserting one keeps notes in place). */
+export function place(steps: string[], notes: ChainNote[]): PlacedNote[] {
   const filled = steps.map((s, i) => [s, i] as const).filter(([s]) => s.trim()).map(([, i]) => i);
   const n = filled.length;
   return notes.map((x) => {

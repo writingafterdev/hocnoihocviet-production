@@ -6,8 +6,7 @@ import { CL, CL_CIRC } from '../chainlab/constants';
 import type { Chain } from '../chainlab/types';
 import { ClIcon, ClLabel, toolbarBtn } from '../chainlab/ui/primitives';
 import { ChainEditor, miniBtn } from '../coach/ChainEditor';
-import { CoachGrid, SidePanel, useLast } from '../coach/CoachGrid';
-import { NotesPanel } from '../coach/NotesPanel';
+import { CoachGrid, SidePanel } from '../coach/CoachGrid';
 import { TranslatorChat } from '../coach/TranslatorChat';
 import { primaryBtn } from '../coach/ui';
 import { useCoach, type CheckResult } from '../coach/useCoach';
@@ -157,7 +156,8 @@ function BodyCard({ prompt, chain, num, canDelete, onChange, onDelete, check, on
               notes={notes} active={focused ? active : null} onPick={(k) => { onFocus(); onPick(k); }}
               hint={coach.hint} asking={coach.asking} onHint={coach.askHint} onCloseHint={coach.closeHint} hideHint
               stepQuestion={help.stepQuestion} onSubmitStep={help.onSubmitStep} belowStep={help.belowStep}
-              helper={coach.error || (coach.checking ? 'Đang kiểm tra…' : '')}
+              helper={coach.error}
+              check={{ result: coach.result, fresh: coach.fresh, checking: coach.checking }}
               checking={coach.checking} clean={coach.fresh && !!coach.result && coach.result.placed.length === 0}
             />
           </div>
@@ -181,16 +181,10 @@ export function BuildScreen({ prompt, chains, setChains, checks, setCheck, toolb
   const canWrite = started || ready >= NEED;
   const [focus, setFocus] = useState<string | null>(null);
   const [active, setActive] = useState<number | null>(null);
-  const [notesOpen, setNotesOpen] = useState(true);
   const update = (c: Chain) => setChains((cs) => cs.map((x) => (x.id === c.id ? c : x)));
   const remove = (id: string) => setChains((cs) => cs.filter((x) => x.id !== id));
   const add = (n: number) => setChains((cs) => [...cs, newBody(prompt, prompt.questions.find((q) => q.n === n) || prompt.questions[0], cs)]);
   const focused = chains.find((c) => c.id === focus) || null;
-  const shown = focused && checks[focused.id] ? focused : null;
-  const shownCheck = shown ? checks[shown.id] : null;
-  const fresh = !!shown && !!shownCheck && shownCheck.snap === JSON.stringify([startOf(shown), endOf(shown), middleOf(shown).map((s) => s.trim()).filter(Boolean)]);
-  const notesOn = !!(shown && shownCheck && notesOpen);
-  const lastCheck = useLast(notesOn ? shownCheck : null);
   const multi = prompt.questions.length > 1;
 
   return (
@@ -208,7 +202,7 @@ export function BuildScreen({ prompt, chains, setChains, checks, setCheck, toolb
       {picking && <ModeDialog onClose={() => setPicking(false)} onPick={(m) => { setPicking(false); onNext(m); }} />}
 
       <CoachGrid
-        open={chat || notesOn}
+        open={chat}
         main={
         <main className="co-col cl-scroll" style={{ minWidth: 0, overflowY: 'auto', gap: 16, paddingBottom: 24 }}>
           <section style={{ flexShrink: 0, borderRadius: 12, border: '1px solid ' + CL.border, background: '#fff', padding: '18px 24px', display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -217,9 +211,9 @@ export function BuildScreen({ prompt, chains, setChains, checks, setCheck, toolb
           {chains.map((c, i) => (
             <BodyCard key={c.id} prompt={prompt} chain={c} num={i + 1} canDelete={chains.length > 1}
               onChange={update} onDelete={() => remove(c.id)}
-              check={checks[c.id] || null} onCheck={(r) => { setCheck(c.id, r); setFocus(c.id); setActive(null); setNotesOpen(true); }}
+              check={checks[c.id] || null} onCheck={(r) => { setCheck(c.id, r); setFocus(c.id); setActive(null); }}
               focused={focus === c.id} onFocus={() => { if (focus !== c.id) { setFocus(c.id); setActive(null); } }}
-              active={active} onPick={(k) => { setActive(k); setNotesOpen(true); }} />
+              active={active} onPick={(k) => { setActive(k); }} />
           ))}
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
             {prompt.questions.map((q) => (
@@ -232,10 +226,7 @@ export function BuildScreen({ prompt, chains, setChains, checks, setCheck, toolb
         }
         side={
           <>
-            <SidePanel on={notesOn} grow={3}>
-              {lastCheck && <NotesPanel result={lastCheck} fresh={fresh} active={active} onPick={setActive} onClose={() => setNotesOpen(false)} />}
-            </SidePanel>
-            <SidePanel on={chat} grow={2} top={notesOn}>
+            <SidePanel on={chat} grow={2}>
               <TranslatorChat onClose={() => setChat(false)} />
             </SidePanel>
           </>

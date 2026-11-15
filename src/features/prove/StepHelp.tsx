@@ -98,8 +98,8 @@ export function useStepHelp(promptId: string, base: Omit<ChainIn, 'steps'>, step
         </div>
       );
     }
-    // The step being written (the last one) gets the vocabulary button.
-    if (i !== steps.length - 1) return null;
+    // The step being written gets the vocabulary button: the last one, or an empty one (e.g. opened at a missing step).
+    if (i !== steps.length - 1 && steps[i]?.trim()) return null;
     const v = vocab[i];
     if (!v || hidden[i]) return (
       <button type="button" className="cl-btn" onClick={() => (v && v.state === 'done' ? setHidden((h) => ({ ...h, [i]: false })) : askVocab(i))} style={{ ...miniBtn, boxShadow: 'none', background: '#EEF3FC', color: '#2F62C4' }}>Gợi ý</button>

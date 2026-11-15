@@ -3,7 +3,8 @@
 import { Fragment, useEffect, useRef, useState, type ReactNode } from 'react';
 import { CL } from '../chainlab/constants';
 import { ClIcon, ClLabel } from '../chainlab/ui/primitives';
-import { NOTE_STYLE, type Hint, type PlacedNote } from './useCoach';
+import { CheckSummary, NoteCard } from './NotesPanel';
+import { NOTE_STYLE, place, type CheckResult, type Hint, type PlacedNote } from './useCoach';
 import { ProBeam } from '@/components/ui/pro-beam';
 
 const DOT = 17;
@@ -46,6 +47,11 @@ export interface ChainEditorProps {
   belowStep?: (i: number) => ReactNode;
   /** Drill: no "Bí? Gợi ý" row (help lives in each step instead). */
   hideHint?: boolean;
+  /**
+   * The latest "Kiểm tra", shown on the chain itself: the summary above it, each note right under its step, and an
+   * empty step opened where a step is missing. Notes fade once the chain changes. Replaces `notes` when given.
+   */
+  check?: { result: CheckResult | null; fresh: boolean; checking: boolean };
 }
 
 const reduced = () => typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -77,6 +83,20 @@ export function ChainEditor(p: ChainEditorProps) {
   /** Steps added since the last render get the entrance (line grows, dot pops, text rises). */
   const entering = useRef<Set<number>>(new Set());
   const [green, setGreen] = useState(false);
+  /** The check's notes, placed on the steps as they are now (an inserted empty step does not move them). */
+  const live = p.check?.result ? place(p.steps, p.check.result.notes) : [];
+  const notes = p.check ? (p.check.fresh ? live : []) : p.notes;
+  // After a check with a jump: open an empty step right where the step is missing, so the student can type it there.
+  const opened = useRef('');
+  useEffect(() => {
+    const r = p.check?.result;
+    if (!r || !p.check?.fresh || opened.current === r.snap + r.summary) return;
+    opened.current = r.snap + r.summary;
+    const at = [...new Set(live.filter((n) => n.type === 'jump').map((n) => n.step))].sort((a, b) => b - a);
+    const next = [...p.steps];
+    at.forEach((i) => { if ((next[i + 1] ?? null) !== '') { next.splice(i + 1, 0, ''); entering.current.add(i + 1); } });
+    if (next.length !== p.steps.length) p.setSteps(next);
+  }, [p.check?.result]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => {
     entering.current.clear();
     if (focusAt.current == null) return;
@@ -128,7 +148,7 @@ export function ChainEditor(p: ChainEditorProps) {
     return () => { a.cancel(); line.remove(); timers.forEach(clearTimeout); dots.forEach((d) => d.classList.remove('co-ok')); };
   }, [p.clean]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const notesOn = (i: number) => p.notes.map((n, k) => ({ n, k })).filter(({ n }) => n.step === i);
+  const notesOn = (i: number) => notes.map((n, k) => ({ n, k })).filter(({ n }) => n.step === i);
   const edit = (i: number, v: string) => p.setSteps(p.steps.map((s, j) => (j === i ? v : s)));
   const insertAfter = (i: number) => { const next = [...p.steps]; next.splice(i + 1, 0, ''); focusAt.current = i + 1; entering.current.add(i + 1); p.setSteps(next); };
   const remove = (i: number) => {
@@ -148,13 +168,33 @@ export function ChainEditor(p: ChainEditorProps) {
     return { background: NOTE_STYLE[pick.n.type].bg, ['--d' as string]: noteDelay(pick.k) };
   };
   const tinted = (i: number) => (notesOn(i).length ? ' co-noted' : '');
-  const jumpAt = (i: number) => { const k = p.notes.findIndex((n) => n.type === 'jump' && n.step === i); return k >= 0 ? noteDelay(k) : null; };
+  const jumpAt = (i: number) => { const k = notes.findIndex((n) => n.type === 'jump' && n.step === i); return k >= 0 ? noteDelay(k) : null; };
+  /** The note cards under row `i` (−1 = the starting point), on the chain's line; a jump keeps its red bar running past them. */
+  const cards = (i: number) => {
+    if (!p.check) return null;
+    const here = live.map((n, k) => ({ n, k })).filter(({ n }) => n.step === i);
+    if (!here.length) return null;
+    const bar = p.check.fresh && here.some(({ n }) => n.type === 'jump');
+    return (
+      <li style={{ display: 'flex', gap: 18 }}>
+        <div aria-hidden="true" style={{ position: 'relative', width: DOT, flexShrink: 0 }}>
+          <span style={{ position: 'absolute', left: DOT / 2 - 0.5, width: 1, top: 0, bottom: 0, background: CL.ink2 }} />
+          {bar && <span style={{ position: 'absolute', left: DOT / 2 - 1.5, width: 3, borderRadius: 2, background: CL.red, top: 0, bottom: 0, zIndex: 1 }} />}
+        </div>
+        <div style={{ flex: 1, minWidth: 0, padding: '2px 0 10px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+          {here.map(({ n, k }) => <NoteCard key={k} note={n} k={k} on={p.active === k && !!p.check?.fresh} faded={!p.check?.fresh} onPick={() => p.onPick(p.active === k ? null : k)} delay={noteDelay(k)} />)}
+        </div>
+      </li>
+    );
+  };
   const marks = (i: number) => notesOn(i).map(({ n, k }) => (
     <button key={k} type="button" className="cl-btn co-badge" onClick={() => p.onPick(p.active === k ? null : k)} aria-label={'Nhận xét ' + (k + 1)} aria-pressed={p.active === k}
       style={{ flexShrink: 0, marginTop: 2, minWidth: 22, height: 20, padding: '0 6px', borderRadius: 5, border: '1px solid ' + NOTE_STYLE[n.type].fg, background: p.active === k ? NOTE_STYLE[n.type].fg : '#fff', color: p.active === k ? '#fff' : NOTE_STYLE[n.type].fg, fontFamily: CL.sans, fontSize: 10.5, fontWeight: 700, ['--d' as string]: noteDelay(k) }}>{k + 1}</button>
   ));
   const n = p.steps.length;
   return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+    {p.check && <CheckSummary result={p.check.result} fresh={p.check.fresh} checking={p.check.checking} />}
     <ol ref={listRef} style={{ position: 'relative', listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column' }}>
       <li style={{ display: 'flex', gap: 18 }}>
         <Rail first center={CENTER.end} jump={jumpAt(-1)} dot={plainDot(CL.green)} ok={green} />
@@ -166,6 +206,7 @@ export function ChainEditor(p: ChainEditorProps) {
           {marks(-1)}
         </div>
       </li>
+      {cards(-1)}
 
       {p.steps.map((s, i) => (
         <Fragment key={i}>
@@ -185,6 +226,7 @@ export function ChainEditor(p: ChainEditorProps) {
             <button type="button" className="cl-btn cl-del cl-reveal" onClick={() => remove(i)} aria-label={'Xoá bước ' + (i + 1)} style={{ flexShrink: 0, width: 24, height: 24, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', color: CL.ink3 }}><ClIcon name="trash" size={13} /></button>
           </div>
         </li>
+        {cards(i)}
         {p.belowStep && (() => { const below = p.belowStep!(i); return below ? (
           <li style={{ display: 'flex', gap: 18 }}>
             <div aria-hidden="true" style={{ position: 'relative', width: DOT, flexShrink: 0 }}><span style={{ position: 'absolute', left: DOT / 2 - 0.5, width: 1, top: 0, bottom: 0, background: CL.ink2 }} /></div>
@@ -230,6 +272,7 @@ export function ChainEditor(p: ChainEditorProps) {
         </div>
       </li>
     </ol>
+    </div>
   );
 }
 
