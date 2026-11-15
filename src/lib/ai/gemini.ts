@@ -69,8 +69,13 @@ export class GeminiError extends Error {
 const noEffort = new Set<string>();
 export type Effort = 'low' | 'medium' | 'high';
 
-export async function callGemini(e: CloudflareEnv, { system, input, maxTokens, timeoutMs, effort }: { system: string; input: string; maxTokens: number; timeoutMs: number; effort?: Effort }): Promise<GeminiReply> {
-  const keys = geminiKeys(e), models = geminiModels(e);
+/** Tried first when the answer's quality matters most (grading, feedback, guided samples): the strongest model, ~5 s at low thinking. */
+export const QUALITY_FIRST = ['gemini-4-hydrogen'];
+
+/** `quality`: the strongest model goes first; otherwise the fast ones lead (hints, scans, quick checks). */
+export async function callGemini(e: CloudflareEnv, { system, input, maxTokens, timeoutMs, effort, quality }: { system: string; input: string; maxTokens: number; timeoutMs: number; effort?: Effort; quality?: boolean }): Promise<GeminiReply> {
+  const keys = geminiKeys(e), all = geminiModels(e);
+  const models = quality ? [...all.filter((m) => QUALITY_FIRST.includes(m)), ...all.filter((m) => !QUALITY_FIRST.includes(m))] : all;
   const deadline = Date.now() + timeoutMs;
   let last = 'no_model';
   for (const model of models) {
@@ -134,7 +139,7 @@ export async function callGemini(e: CloudflareEnv, { system, input, maxTokens, t
  * A long call (essay grading) as the event stream the browser already reads (Anthropic's format): the response starts
  * at once and sends a keep-alive comment every 15 s while Gemini works, then the whole reply as one text delta.
  */
-export function streamGemini(e: CloudflareEnv, args: { system: string; input: string; maxTokens: number; timeoutMs: number; effort?: Effort }): Response {
+export function streamGemini(e: CloudflareEnv, args: { system: string; input: string; maxTokens: number; timeoutMs: number; effort?: Effort; quality?: boolean }): Response {
   const enc = new TextEncoder();
   const { readable, writable } = new TransformStream<Uint8Array, Uint8Array>();
   const w = writable.getWriter();

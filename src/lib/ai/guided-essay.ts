@@ -60,7 +60,7 @@ const SCHEMA = {
 /** The whole essay from the chains, or (`sentence` given) one paragraph proving that sentence from a single chain. */
 export async function aiGuidedPlan(userId: string, prompt: Prompt, chains: Chain[], sentence?: string): Promise<GuidedSentence[]> {
   const out = await ask<{ sentences: unknown }>({
-    userId, kind: 'fix', task: (sentence ? PARAGRAPH_HEAD : ESSAY_HEAD) + FIELDS, schema: SCHEMA, effort: 'low', maxTokens: sentence ? 8000 : 16000,
+    userId, kind: 'fix', task: (sentence ? PARAGRAPH_HEAD : ESSAY_HEAD) + FIELDS, schema: SCHEMA, effort: 'low', quality: true, maxTokens: sentence ? 8000 : 16000,
     input: describePrompt(prompt) + '\n\n' + describeChains(prompt, chains, '') + (sentence ? '\n\nCÂU CẦN CHỨNG MINH: ' + sentence : ''),
   });
   const ids = new Set(['intro', 'conclusion', ...chains.map((c) => c.id)]);
