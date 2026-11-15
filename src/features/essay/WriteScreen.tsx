@@ -14,6 +14,7 @@ import { bandText, CRITERIA, markStyle, CRITERION_STYLE, draftsKey, requestEssay
 import { passes, type FixTask } from './FixFlow';
 import { checkFix, rescore } from './fix-api';
 import { applyEdits, FixBody, matchesFix } from './InlineFix';
+import { Clamp } from './Clamp';
 import { GuidedHeader, GuidedWriter, useGuidedPlan } from './GuidedWriter';
 import { MiniChain } from './MiniChain';
 import { Skeleton } from '@/components/base/skeleton/skeleton';
@@ -413,9 +414,9 @@ export function WriteScreen({ prompt, chains, setChains, essay, setEssay, toolba
                 <span style={{ fontFamily: CL.serif, fontSize: 42, fontWeight: 500, lineHeight: 1, color: CL.ink }}>{bandText(scores.band, true)}</span>
                 {panel.rescore
                   ? <span style={{ fontFamily: CL.sans, fontSize: 12.5, lineHeight: 1.5, color: CL.ink6 }}>Đã chấm lại sau vòng sửa.</span>
-                  : panel.summary && <span style={{ display: 'flex', flexDirection: 'column', gap: 6, fontFamily: CL.sans, fontSize: 12.5, lineHeight: 1.5, color: CL.ink6 }}>
-                    {panel.summary.replace(/\*\*/g, '')}
-                    {panel.praise && <span style={{ color: CL.greenText }}>{panel.praise.replace(/\*\*/g, '')}</span>}
+                  : panel.summary && <span style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 6, fontFamily: CL.sans, fontSize: 12.5, lineHeight: 1.5, color: CL.ink6 }}>
+                    <Clamp lines={3}>{panel.summary.replace(/\*\*/g, '')}</Clamp>
+                    {panel.praise && <Clamp lines={2} style={{ color: CL.greenText }}>{panel.praise.replace(/\*\*/g, '')}</Clamp>}
                   </span>}
               </div>
               {panel.rescore && panel.rescore.notes.length > 0 && (
@@ -448,11 +449,14 @@ export function WriteScreen({ prompt, chains, setChains, essay, setEssay, toolba
                 return (
                   <div style={{ padding: '14px 18px 16px', display: 'flex', flexDirection: 'column', gap: 8, fontFamily: CL.sans, fontSize: 13, lineHeight: 1.55 }}>
                     {panel.rescore && <ClLabel>Nhận xét lần chấm trước</ClLabel>}
-                    {c.bandQuote && !panel.rescore && <span style={quote}>Band {v}: “{c.bandQuote}”</span>}
-                    <span style={{ color: CL.ink7 }}>{plain(c.why)}</span>
-                    {c.nextQuote && !panel.rescore && v < 9 && <span style={quote}>Band {v + 1}: “{c.nextQuote}”</span>}
-                    {c.gap && <span style={{ color: CL.ink7 }}>{plain(c.gap)}</span>}
+                    {/* The next step stays in view; the analysis behind it folds after a few lines. */}
                     {c.next && !panel.rescore && <span style={{ color: CL.ink, fontWeight: 600 }}>→ {plain(c.next)}</span>}
+                    <Clamp key={tab} height={112} style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                      {c.bandQuote && !panel.rescore && <span style={quote}>Band {v}: “{c.bandQuote}”</span>}
+                      <span style={{ color: CL.ink7 }}>{plain(c.why)}</span>
+                      {c.nextQuote && !panel.rescore && v < 9 && <span style={quote}>Band {v + 1}: “{c.nextQuote}”</span>}
+                      {c.gap && <span style={{ color: CL.ink7 }}>{plain(c.gap)}</span>}
+                    </Clamp>
                   </div>
                 );
               })()}
@@ -476,8 +480,8 @@ export function WriteScreen({ prompt, chains, setChains, essay, setEssay, toolba
                   <span style={{ fontFamily: CL.sans, fontSize: 13, fontWeight: 600, color: CL.ink }}>{note.item.label || CRIT_SHORT[note.crit]}</span>
                   <span style={{ marginLeft: 'auto', fontFamily: CL.sans, fontSize: 10.5, color: CL.ink5, textAlign: 'right' }}>{note.item.where.split(' · Mạch')[0]}</span>
                 </span>
-                {note.item.quote && <span style={{ fontFamily: CL.serif, fontSize: 12.5, fontStyle: 'italic', lineHeight: 1.5, color: CL.ink6 }}>“{note.item.quote}”</span>}
-                <span style={{ fontFamily: CL.sans, fontSize: 12.5, lineHeight: 1.5, color: CL.ink7 }}>{note.item.text.replace(/\*\*/g, '')}</span>
+                {note.item.quote && <Clamp lines={2} style={{ fontFamily: CL.serif, fontSize: 12.5, fontStyle: 'italic', lineHeight: 1.5, color: CL.ink6 }}>“{note.item.quote}”</Clamp>}
+                <Clamp lines={3} style={{ fontFamily: CL.sans, fontSize: 12.5, lineHeight: 1.5, color: CL.ink7 }}>{note.item.text.replace(/\*\*/g, '')}</Clamp>
                 {/* The fix is the answer to type: hidden here, shown only as first-letter hints inside "Sửa". */}
                 {note.item.fix && !t && <span style={{ fontFamily: CL.sans, fontSize: 12.5, lineHeight: 1.5, color: CL.greenText }}>Sửa: <i style={{ fontFamily: CL.serif }}>{note.item.fix}</i></span>}
                 {note.item.example && !t && <span style={{ fontFamily: CL.sans, fontSize: 12.5, lineHeight: 1.5, color: CL.greenText }}>Ví dụ: <i style={{ fontFamily: CL.serif }}>{note.item.example}</i></span>}
