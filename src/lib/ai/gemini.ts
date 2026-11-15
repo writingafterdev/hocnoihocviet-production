@@ -12,14 +12,13 @@ export interface GeminiReply { text: string; stop: 'end_turn' | 'max_tokens'; in
 const URL_CHAT = 'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions';
 
 /**
- * Tried in this order: Gemini 4 Hydrogen and the stronger Flash models first (about 20 requests a day each on the free tier), then the Flash
- * Lite models (about 500 a day), then Gemma (about 14,400 a day). Ids as listed in Google's Gemini API docs (Nov 2026).
- * Override with GEMINI_MODELS (comma-separated ids).
+ * Tried in this order, fastest first (measured from the Worker, Nov 2026: about 2 s for a short reply), then the slower
+ * models (3.8 Flash about 25 s; Gemini 4 Hydrogen and Gemma 4 31B over 30 s). Free tier: Flash about 20 requests a day,
+ * Flash Lite about 500, Gemma about 14,400. Override with GEMINI_MODELS (comma-separated ids).
  */
 export const DEFAULT_MODELS = [
-  'gemini-4-hydrogen', 'gemini-3.8-flash', 'gemini-3.6-flash', 'gemini-3-flash-preview',
-  'gemini-3.5-flash-lite', 'gemini-3.1-flash-lite',
-  'gemma-4-31b-it',
+  'gemini-3.6-flash', 'gemini-3-flash-preview', 'gemini-3.5-flash-lite', 'gemini-3.1-flash-lite',
+  'gemini-3.8-flash', 'gemini-4-hydrogen', 'gemma-4-31b-it',
 ];
 
 const list = (x?: string) => (x || '').split(',').map((s) => s.trim()).filter(Boolean);
@@ -62,7 +61,15 @@ export class GeminiError extends Error {
  * One chat call, rotating through models and keys until one answers. `system` is the full system prompt (Gemma takes it
  * inside the user message, since it has no system role). Throws GeminiError when every model and key failed.
  */
-export async function callGemini(e: CloudflareEnv, { system, input, maxTokens, timeoutMs }: { system: string; input: string; maxTokens: number; timeoutMs: number }): Promise<GeminiReply> {
+/**
+ * How long a model thinks before it answers. Gemini 3 models default to "high", the slowest, so every call sends the
+ * level its feature declares (hints and quick checks low, chain checks medium, grading high). Gemma doesn't think and
+ * gets none; a model that rejects the setting is retried once without it and remembered.
+ */
+const noEffort = new Set<string>();
+export type Effort = 'low' | 'medium' | 'high';
+
+export async function callGemini(e: CloudflareEnv, { system, input, maxTokens, timeoutMs, effort }: { system: string; input: string; maxTokens: number; timeoutMs: number; effort?: Effort }): Promise<GeminiReply> {
   const keys = geminiKeys(e), models = geminiModels(e);
   const deadline = Date.now() + timeoutMs;
   let last = 'no_model';
@@ -72,22 +79,31 @@ export async function callGemini(e: CloudflareEnv, { system, input, maxTokens, t
       if ((skip.get(id) || 0) > Date.now()) continue;
       const left = deadline - Date.now();
       if (left < 3000) throw new GeminiError('timeout', last);
+      // One slow model can't use up the whole wait: it gets half the budget, then the next model is tried.
+      const cap = Math.min(left, Math.max(20_000, Math.round(timeoutMs / 2)));
       const gemma = model.startsWith('gemma');
       const messages = gemma ? [{ role: 'user', content: system + '\n\n---\n\n' + input }] : [{ role: 'system', content: system }, { role: 'user', content: input }];
       let res: Response;
       const t0 = Date.now();
+      const send = (withEffort: boolean) => fetch(URL_CHAT, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', authorization: 'Bearer ' + keys[k] },
+        body: JSON.stringify({ model, messages, max_tokens: Math.min(maxTokens, gemma ? 8192 : 32768), ...(withEffort ? { reasoning_effort: effort } : {}) }),
+        signal: AbortSignal.timeout(Math.max(1000, cap - (Date.now() - t0))),
+      });
       try {
-        res = await fetch(URL_CHAT, {
-          method: 'POST',
-          headers: { 'content-type': 'application/json', authorization: 'Bearer ' + keys[k] },
-          body: JSON.stringify({ model, messages, max_tokens: Math.min(maxTokens, gemma ? 8192 : 32768) }),
-          signal: AbortSignal.timeout(left),
-        });
+        const withEffort = !!effort && !gemma && !noEffort.has(model);
+        res = await send(withEffort);
+        // The model doesn't take a thinking level: once more without it, and don't send it to this model again.
+        if (withEffort && res.status === 400) {
+          const why = await res.clone().text().catch(() => '');
+          if (/reasoning|thinking|effort/i.test(why)) { noEffort.add(model); res = await send(false); }
+        }
       } catch (err) {
         const timedOut = err instanceof Error && (err.name === 'TimeoutError' || err.name === 'AbortError');
         console.error('gemini_failed', model, k, timedOut ? 'timeout' : err instanceof Error ? err.message : err);
         await logModelUse(e, model, 'failed', { ms: Date.now() - t0, status: timedOut ? 'timeout' : 'network' });
-        if (timedOut) throw new GeminiError('timeout', model);
+        if (timedOut) { skip.set(id, Date.now() + 10 * 60_000); last = model + ':timeout'; continue; } // too slow now: set aside, try the next
         last = model + ':network';
         continue;
       }
@@ -111,14 +127,14 @@ export async function callGemini(e: CloudflareEnv, { system, input, maxTokens, t
       else skip.set(id, Date.now() + 30_000); // 5xx: busy, try the next one
     }
   }
-  throw new GeminiError('upstream', 'all_models_failed:' + last);
+  throw new GeminiError(last.endsWith(':timeout') ? 'timeout' : 'upstream', 'all_models_failed:' + last);
 }
 
 /**
  * A long call (essay grading) as the event stream the browser already reads (Anthropic's format): the response starts
  * at once and sends a keep-alive comment every 15 s while Gemini works, then the whole reply as one text delta.
  */
-export function streamGemini(e: CloudflareEnv, args: { system: string; input: string; maxTokens: number; timeoutMs: number }): Response {
+export function streamGemini(e: CloudflareEnv, args: { system: string; input: string; maxTokens: number; timeoutMs: number; effort?: Effort }): Response {
   const enc = new TextEncoder();
   const { readable, writable } = new TransformStream<Uint8Array, Uint8Array>();
   const w = writable.getWriter();
@@ -142,7 +158,7 @@ export function streamGemini(e: CloudflareEnv, args: { system: string; input: st
 }
 
 /**
- * Admin "Kiểm tra từng mô hình": one tiny request per model with the first key, to see which ids work and which are used
+ * Admin "Kiểm tra từng mô hình": one tiny request per model with the first key (thinking level low, like most features), to see which ids work and which are used
  * up right now. Each takes one request from that model's free allowance. Never sends student data.
  */
 export async function probeModels(e: CloudflareEnv): Promise<{ model: string; status: string; ms: number; note: string }[]> {
@@ -153,7 +169,7 @@ export async function probeModels(e: CloudflareEnv): Promise<{ model: string; st
     try {
       const res = await fetch(URL_CHAT, {
         method: 'POST', headers: { 'content-type': 'application/json', authorization: 'Bearer ' + key },
-        body: JSON.stringify({ model, messages: [{ role: 'user', content: 'Reply with the single word OK.' }], max_tokens: 20 }),
+        body: JSON.stringify({ model, messages: [{ role: 'user', content: 'Reply with the single word OK.' }], max_tokens: 20, ...(model.startsWith('gemma') ? {} : { reasoning_effort: 'low' }) }),
         signal: AbortSignal.timeout(30_000),
       });
       const body = (await res.text().catch(() => '')).slice(0, 300);

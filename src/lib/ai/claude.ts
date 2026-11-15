@@ -136,7 +136,7 @@ export async function ask<T = string>({ userId, kind, task, input, schema, effor
     if (geminiKeys(e).length) {
       const started = Date.now();
       let r;
-      try { r = await callGemini(e, { system: systemText(task, schema, grounded), input, maxTokens, timeoutMs: TIMEOUT_MS[kind] }); }
+      try { r = await callGemini(e, { system: systemText(task, schema, grounded), input, maxTokens, timeoutMs: TIMEOUT_MS[kind], effort }); }
       catch (err) { throw err instanceof GeminiError ? new AiError(err.code, err.message) : err; }
       console.log('ai_call', kind, r.model, (Date.now() - started) + 'ms', 'in=' + r.input, 'out=' + r.output, r.stop);
       await (quota ? quota.record({ input: r.input, output: r.output }) : recordTokens(DB, userId, kind, { input: r.input, output: r.output })).catch(() => {});
@@ -208,7 +208,7 @@ function messagesBody(model: string, { task, input, schema, effort = 'medium', m
 export async function askStream({ kind, task, input, schema, effort = 'medium', maxTokens = 16000, grounded = true }: Omit<Ask, 'userId' | 'counted'>): Promise<Response> {
   const e = await env();
   if (!configured(e)) throw new AiError('not_configured');
-  if (geminiKeys(e).length) return streamGemini(e, { system: systemText(task, schema, grounded), input, maxTokens, timeoutMs: 240_000 });
+  if (geminiKeys(e).length) return streamGemini(e, { system: systemText(task, schema, grounded), input, maxTokens, timeoutMs: 240_000, effort });
   const model = e.AI_MODEL || MODEL;
   const url = (e.AI_BASE_URL || 'https://api.anthropic.com').replace(/\/+$/, '') + '/v1/messages';
   const headers: Record<string, string> = { 'content-type': 'application/json', 'x-api-key': e.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01', ...(model.startsWith('claude-') ? { 'anthropic-beta': BETA } : {}) };
