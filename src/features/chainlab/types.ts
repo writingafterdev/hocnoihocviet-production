@@ -120,7 +120,8 @@ export interface ReviewItem {
   /** Essay feedback on ideas or flow: an example sentence in the student's own idea, showing what the fix looks like. */
   example?: string;
   /** Essay feedback on ideas or flow (TR/CC): a guided fix. Open questions shown one by one, then a sentence starter. */
-  task?: { title?: string; ask: string[]; starter?: string; ok?: string };
+  /** A guided fix: questions, a sentence starter, and a model rewrite of the quote with its meaning (the copy-hints in "Gợi ý cách viết"). */
+  task?: { title?: string; ask: string[]; starter?: string; ok?: string; model?: string; vi?: string };
   para?: boolean;
   fixed?: boolean;
 }

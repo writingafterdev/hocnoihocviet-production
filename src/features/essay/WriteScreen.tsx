@@ -193,7 +193,7 @@ export function WriteScreen({ prompt, chains, setChains, essay, setEssay, toolba
     const q = n.item.quote!, item = { ...n.item, key: fixKey(n) };
     const p = plan?.find((t) => t.sectionId === n.item.sectionId && !!t.quote && (t.quote.includes(q) || q.includes(t.quote)));
     if (p) return { item, crit: n.crit, title: p.title, ask: p.ask, starter: p.starter || undefined, ok: '', plan: { ...p, quote: q } };
-    return { item, crit: n.crit, title: n.item.label || 'Sửa ý', ask: n.item.task?.ask?.length ? n.item.task.ask : [n.item.text.replace(/\*\*/g, '')], starter: n.item.task?.starter, ok: n.item.task?.ok || 'Đã sửa xong chỗ này.' };
+    return { item, crit: n.crit, title: n.item.label || 'Sửa ý', ask: n.item.task?.ask?.length ? n.item.task.ask : [n.item.text.replace(/\*\*/g, '')], starter: n.item.task?.starter, ok: n.item.task?.ok || 'Đã sửa xong chỗ này.', model: n.item.task?.model || n.item.fix, vi: n.item.task?.vi };
   };
   const tasks = useMemo(() => (sending ? [] : notes.filter(isFixable).map(taskFor)), [notes, plan, sending]); // eslint-disable-line react-hooks/exhaustive-deps
   const taskOf = (n: Note) => tasks.find((t) => t.item.key === fixKey(n)) || null;

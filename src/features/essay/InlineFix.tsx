@@ -91,7 +91,9 @@ export function FixBody({ task, edit, setEdit, solved, verdict, checking, error,
 }) {
   const [more, setMore] = useState(0);
   const [hints, setHints] = useState(false);
-  const model = task.plan?.model || '';
+  // The model rewrite: from the AI's plan, or from the comment itself (a written-in task, or its "Sửa:" text).
+  const model = task.plan?.model || task.model || '';
+  const vi = task.plan?.vi || task.vi || '';
   const tokens = model ? splitWords(model) : [];
   const states = model ? wordStates(model, edit) : [];
   const ok = states.filter((x) => x.s === 'ok').length;
@@ -113,7 +115,7 @@ export function FixBody({ task, edit, setEdit, solved, verdict, checking, error,
           </button>
         )}
         {hints && model && <>
-          {task.plan?.vi && <span style={{ fontFamily: CL.sans, fontSize: 13, lineHeight: 1.45, color: CL.ink7 }}>{task.plan.vi}</span>}
+          {vi && <span style={{ fontFamily: CL.sans, fontSize: 13, lineHeight: 1.45, color: CL.ink7 }}>{vi}</span>}
           <span style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
             {tokens.map((w, i) => {
               const good = states[i]?.s === 'ok', bad = states[i]?.s === 'bad';

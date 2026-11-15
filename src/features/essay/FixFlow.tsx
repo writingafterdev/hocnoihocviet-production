@@ -3,7 +3,7 @@ import { wordCount } from '../desk/scoring';
 import type { PlanTask } from './fix-api';
 
 /** One guided fix: an idea or flow problem (TR / CC) that quotes the essay. `plan` = the AI's task, checked by the AI. */
-export interface FixTask { item: ReviewItem; crit: string; title: string; ask: string[]; starter?: string; ok: string; plan?: PlanTask }
+export interface FixTask { item: ReviewItem; crit: string; title: string; ask: string[]; starter?: string; ok: string; plan?: PlanTask; model?: string; vi?: string }
 
 /** The AI's planned fixes as tasks (the essay's fix plan, or the drill paragraph's comments). */
 export const planTasks = (plan: PlanTask[]): FixTask[] => plan.map((p, k) => ({
