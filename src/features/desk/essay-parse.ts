@@ -67,7 +67,7 @@ export function toItems(criterion: string, out: { comments?: Comment[] }, sectio
     const fix = typeof c.fix === 'string' ? c.fix.trim() : '';
     const example = typeof c.example === 'string' ? c.example.trim() : '';
     const label = typeof c.label === 'string' ? c.label.trim().slice(0, 60) : '';
-    const vi = typeof c.vi === 'string' ? c.vi.trim().slice(0, 600) : '';
+    const vi = typeof c.vi === 'string' ? c.vi.trim().slice(0, 1200) : '';
     const ask = (Array.isArray(c.ask) ? c.ask : []).map((q) => (typeof q === 'string' ? q.trim().slice(0, 400) : '')).filter(Boolean).slice(0, 2);
     items.push({
       key: criterion + items.length,

@@ -69,7 +69,7 @@ const FIX_FIELDS = (id: string) => `
 # MỖI NHẬN XÉT LÀ MỘT CHỖ HỌC SINH TỰ SỬA
 Học sinh sửa ngay trong nhận xét: chữ trong quote bị gạch đi, học sinh gõ chữ thay vào đúng chỗ đó. Cách sửa (fix) bị ẩn, chỉ hiện chữ cái đầu mỗi từ làm gợi ý. Vì vậy mỗi nhận xét phải có đủ:
 - label: vấn đề, ngắn. text: giải thích vì sao đó là vấn đề.
-- fix: chữ thay THẲNG cho toàn bộ quote, đọc liền mạch với phần trước và sau quote trong đoạn, sửa xong đúng vấn đề đã nêu. Luôn có fix, kể cả nhận xét về ý và mạch (khi đó fix là câu viết lại hoàn chỉnh, band 7, bám chữ và ý của học sinh, 15 đến 45 chữ).
+- fix: chữ thay THẲNG cho toàn bộ quote, đọc liền mạch với phần trước và sau quote trong đoạn, sửa xong đúng vấn đề đã nêu. Luôn có fix, kể cả nhận xét về ý và mạch (khi đó fix là câu hoặc đoạn viết lại hoàn chỉnh, band 8 đến 9, bám chữ và ý của học sinh, dài bao nhiêu tuỳ chỗ cần sửa).
 - vi: nghĩa tiếng Việt tự nhiên của fix.
 - ask: ${id === 'tr' || id === 'cc' ? 'đúng 2 câu hỏi gợi mở tiếng Việt dẫn học sinh tự nghĩ ra CHÍNH fix ở trên (cùng người, cùng việc, cùng ý với fix). ask[0] chạm đúng chỗ thiếu; ask[1] hẹp hơn, đặt vào một cảnh cụ thể. Câu hỏi mở, không có/không, không chứa sẵn đáp án.' : 'mảng rỗng [] (lỗi từ vựng, ngữ pháp dễ hiểu, không cần câu hỏi).'}
 - example: chuỗi rỗng "".`;

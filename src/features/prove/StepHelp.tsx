@@ -7,7 +7,7 @@ import type { ChainIn } from '../coach/useCoach';
 import { AI_ERROR_TEXT, AiRequestError, postAi } from '../ai/request';
 
 interface Phrase { en: string; vi: string }
-interface Scan { used: string[]; parts: { text: string; phrases: Phrase[] }[]; next: string }
+interface Scan { used: string[]; parts: { text: string; phrases: Phrase[] }[] }
 type Load<T> = { state: 'loading' } | { state: 'error'; error: string } | { state: 'done'; data: T };
 
 const errText = (e: unknown) => (e instanceof AiRequestError ? AI_ERROR_TEXT[e.code] : AI_ERROR_TEXT.network);
@@ -27,8 +27,8 @@ function PhraseRow({ p, used }: { p: Phrase; used?: boolean }) {
 
 /**
  * Per-step help in the quick drill. "Gợi ý" on a step gives a guiding question (shown as the step's placeholder) and vocabulary; after
- * Enter, the AI reads the step: which suggested phrases were used, better wording for the rough parts, and the
- * question for the next step. Students always type the phrases themselves; nothing is inserted on click.
+ * Enter, the AI reads the step: which suggested phrases were used, and better wording for every rough part (the next
+ * step's question comes only from "Gợi ý"). Students always type the phrases themselves; nothing is inserted on click.
  */
 export function useStepHelp(promptId: string, base: Omit<ChainIn, 'steps'>, steps: string[], firstQuestion: string) {
   const [vocab, setVocab] = useState<Record<number, Load<{ question: string; phrases: Phrase[] }>>>({});
@@ -39,13 +39,11 @@ export function useStepHelp(promptId: string, base: Omit<ChainIn, 'steps'>, step
   useEffect(() => { setVocab({}); setHidden({}); setScans({}); setClosed({}); }, [key]);
 
   const chainUpTo = (i: number): ChainIn => ({ ...base, steps: steps.slice(0, i).map((x) => x.trim()).filter(Boolean) });
-  /** The step's placeholder: the question from "Gợi ý" once asked, else the drill's first question or the last scan's next one. */
+  /** The step's placeholder: the question from "Gợi ý" once asked, else the drill's question for the first step. */
   const question = (i: number) => {
     const v = vocab[i];
     if (v && v.state === 'done' && v.data.question) return v.data.question;
-    if (i === 0) return firstQuestion;
-    const sc = scans[i - 1];
-    return sc && sc.load.state === 'done' && sc.load.data.next ? sc.load.data.next : undefined;
+    return i === 0 && firstQuestion ? firstQuestion : undefined;
   };
 
   const askVocab = async (i: number) => {

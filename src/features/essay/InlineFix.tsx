@@ -137,10 +137,12 @@ export function FixBody({ task, edit, setEdit, solved, verdict, checking, error,
           style={{ resize: 'none', boxSizing: 'border-box', border: '1px solid #77A1DD', borderRadius: 8, boxShadow: '0 0 0 3px #EEF3FC', outline: 'none', padding: '8px 12px', fontFamily: CL.serif, fontSize: 14, lineHeight: 1.55, color: CL.ink, background: '#fff', fieldSizing: 'content' } as React.CSSProperties} />
       </div>
       {solved && <span className="co-unfold" style={{ borderRadius: 10, background: CL.mintSoft, padding: '9px 12px', fontFamily: CL.sans, fontSize: 13, lineHeight: 1.5, color: CL.greenText }}>{verdict?.reply || 'Đã sửa xong chỗ này.'}</span>}
-      {!solved && verdict && (
-        <span role="status" className="co-unfold" style={{ display: 'flex', flexDirection: 'column', gap: 4, borderRadius: 10, background: '#F5F5F5', padding: '9px 12px', fontFamily: CL.sans, fontSize: 13, lineHeight: 1.5, color: CL.ink7 }}>
-          <span>Chưa được: {verdict.reply}</span>
-          {verdict.ask && <b style={{ color: CL.ink }}>{verdict.ask}</b>}
+      {/* Not fixed yet: why, then the next hint as a card of its own. */}
+      {!solved && verdict && <span role="status" key={verdict.reply} className="co-unfold" style={{ borderRadius: 10, background: '#F5F5F5', padding: '9px 12px', fontFamily: CL.sans, fontSize: 13, lineHeight: 1.5, color: CL.ink7 }}>Chưa được: {verdict.reply}</span>}
+      {!solved && verdict?.ask && (
+        <span key={verdict.ask} className="co-unfold" style={{ display: 'flex', flexDirection: 'column', gap: 4, borderRadius: 10, background: '#F7F9FD', border: '1px solid #DCE7F7', padding: '10px 12px' }}>
+          <span style={label}>Gợi ý tiếp</span>
+          <span style={{ fontFamily: CL.sans, fontSize: 13.5, fontWeight: 600, lineHeight: 1.45, color: CL.ink }}>{verdict.ask}</span>
         </span>
       )}
       {error && <span role="alert" style={{ fontFamily: CL.sans, fontSize: 12.5, color: CL.redText }}>{error}</span>}
