@@ -33,6 +33,8 @@ export interface EssayState {
    * the essay back to plain editing ("Tự viết phần còn lại", or after the last sentence).
    */
   guided?: { plan: GuidedSentence[] | null; at: number; level: 'frame' | 'detail'; done?: boolean } | null;
+  /** How the student chose to write after building the chains ("Tự viết" or "Viết có hướng dẫn"); opens ② Viết bài. */
+  mode?: 'free' | 'guided';
   /** Scores of the review before the latest one, to show how much a resubmission moved them. */
   prevScores?: EssayReview['scores'] | null;
 }

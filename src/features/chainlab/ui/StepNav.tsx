@@ -4,9 +4,10 @@ import Link from 'next/link';
 import { Fragment } from 'react';
 import { CL } from '../constants';
 
-export interface Step { label: string; href: string }
+/** `locked`: shown but not reachable yet; `title` says why. */
+export interface Step { label: string; href: string; locked?: boolean; title?: string }
 
-/** The ① Dựng mạch · ② Viết bài bar of a "Tự viết" attempt. Every step stays reachable. */
+/** The ① Dựng mạch · ② Viết bài bar of a "Tự viết" attempt. A locked step shows but can't be opened. */
 export function StepNav({ steps, current }: { steps: Step[]; current: number }) {
   return (
     <nav aria-label="Các bước" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -16,7 +17,9 @@ export function StepNav({ steps, current }: { steps: Step[]; current: number }) 
         return (
           <Fragment key={s.href}>
             {i > 0 && <span aria-hidden="true" style={{ width: 14, height: 1, background: CL.ink2 }} />}
-            {on ? <span aria-current="step" style={st}>{s.label}</span> : <Link href={s.href} className="cl-btn" style={st}>{s.label}</Link>}
+            {on ? <span aria-current="step" style={st}>{s.label}</span>
+              : s.locked ? <span aria-disabled="true" title={s.title} style={{ ...st, opacity: 0.45, cursor: 'not-allowed' }}>{s.label}</span>
+              : <Link href={s.href} className="cl-btn" style={st}>{s.label}</Link>}
           </Fragment>
         );
       })}

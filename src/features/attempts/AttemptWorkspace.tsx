@@ -9,7 +9,7 @@ import { StepNav } from '../chainlab/ui/StepNav';
 import type { Chain } from '../chainlab/types';
 import { backLinkStyle, ClIcon } from '../chainlab/ui/primitives';
 import type { CheckResult } from '../coach/useCoach';
-import { BuildScreen } from '../essay/BuildScreen';
+import { BuildScreen, isReady, NEED } from '../essay/BuildScreen';
 import { WriteScreen } from '../essay/WriteScreen';
 import { attemptStore, SignedOutError, type Attempt, type EssayState } from './store';
 
@@ -19,7 +19,10 @@ type SaveState = 'saved' | 'saving' | 'failed';
 const SAVE_DELAY = 1500;
 
 /** What counts as an edit worth saving: everything except the running timer and timestamps. */
-const contentKey = (a: Attempt) => JSON.stringify([a.chains, a.checks, a.essay.bodies, a.essay.drafts, a.essay.review, a.essay.fixing, a.essay.fix, a.essay.guided]);
+const contentKey = (a: Attempt) => JSON.stringify([a.chains, a.checks, a.essay.bodies, a.essay.drafts, a.essay.review, a.essay.fixing, a.essay.fix, a.essay.guided, a.essay.mode]);
+
+/** ② Viết bài is open once the student chose how to write (or the essay already has text, a review or a guided round). */
+const essayOpen = (a: Attempt) => !!a.essay.mode || !!a.essay.guided || !!a.essay.review || Object.values(a.essay.drafts).some((t) => t.trim());
 
 const SAVE_LABEL: Record<SaveState, string> = { saved: 'Đã lưu', saving: 'Đang lưu…', failed: 'Chưa lưu được · thử lại' };
 
@@ -76,6 +79,11 @@ export function AttemptWorkspace({ attemptId }: { attemptId: string }) {
     return () => { flush(); window.removeEventListener('pagehide', flush); document.removeEventListener('visibilitychange', onHide); };
   }, []);
 
+  // Opening ② Viết bài by its address before it is open goes back to ① Dựng mạch.
+  useEffect(() => {
+    if (status === 'ready' && attempt && view === 'essay' && !essayOpen(attempt)) router.replace('/write/' + attempt.id + '/chains');
+  }, [status, view]); // eslint-disable-line react-hooks/exhaustive-deps
+
   if (status !== 'ready') {
     return (
       <div style={{ height: '100%', background: '#fff', display: 'flex', flexDirection: 'column' }}>
@@ -106,7 +114,10 @@ export function AttemptWorkspace({ attemptId }: { attemptId: string }) {
     setAttempt((a) => { const checks = { ...(a.checks || {}) }; if (r) checks[id] = r; else delete checks[id]; return { ...a, checks, updatedAt: Date.now() }; });
   const setEssay = (fn: (e: EssayState) => EssayState) => setAttempt((a) => ({ ...a, essay: fn(a.essay), updatedAt: Date.now() }));
   const base = '/write/' + attempt.id;
-  const steps = [{ label: '① Dựng mạch', href: base + '/chains' }, { label: '② Viết bài', href: base + '/essay' }];
+  // ② Viết bài opens only through "Viết bài" on ① Dựng mạch (two built chains, then the Tự viết / có hướng dẫn choice),
+  // or once the essay has started. Until then the step is shown locked.
+  const started = essayOpen(attempt);
+  const steps = [{ label: '① Dựng mạch', href: base + '/chains' }, { label: '② Viết bài', href: base + '/essay', locked: !started, title: 'Dựng xong ít nhất ' + NEED + ' mạch rồi bấm "Viết bài".' }];
   const left = (back: string, label: string, k: number) => (
     <div style={{ display: 'flex', alignItems: 'center', gap: 18 }}>
       <Link href={back} className="cl-link" style={backLinkStyle}><ClIcon name="left" size={14} />{label}</Link>
@@ -123,9 +134,9 @@ export function AttemptWorkspace({ attemptId }: { attemptId: string }) {
         {view === 'chains' ? (
           <BuildScreen prompt={prompt} chains={attempt.chains} setChains={setChains} checks={attempt.checks || {}} setCheck={setCheck}
             toolbarLeft={left('/writing', 'Thư viện đề', 0)}
-            started={!!attempt.essay.guided || !!attempt.essay.review || Object.values(attempt.essay.drafts).some((t) => t.trim())}
+            started={started}
             onNext={(mode) => {
-              if (mode === 'guided') setEssay((e) => ({ ...e, guided: { plan: null, at: 0, level: 'frame' } }));
+              if (mode) setEssay((e) => ({ ...e, mode, ...(mode === 'guided' ? { guided: { plan: null, at: 0, level: 'frame' as const } } : {}) }));
               router.push(base + '/essay');
             }} />
         ) : (

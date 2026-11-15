@@ -29,8 +29,8 @@ export interface BuildProps {
 }
 
 /** A chain is ready for writing when both ends and at least one middle step are there. */
-const isReady = (c: Chain) => c.built !== false && !!startOf(c).trim() && !!endOf(c).trim() && middleOf(c).some((s) => s.trim());
-const NEED = 2;
+export const isReady = (c: Chain) => c.built !== false && !!startOf(c).trim() && !!endOf(c).trim() && middleOf(c).some((s) => s.trim());
+export const NEED = 2;
 
 /** Tiny pictures on the two choices: lines of text, and a sentence half typed over first-letter hints. */
 const picFree = (
