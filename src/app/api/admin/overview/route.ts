@@ -3,6 +3,7 @@ import { CATEGORIES_TASK2, PROMPTS } from '@/content/prompts';
 import { SAMPLE_IDS } from '@/content/samples';
 import { getAdmin, notFound } from '@/lib/admin';
 import { DAILY_LIMIT, MODEL, vnDay, type AiKind } from '@/lib/ai/claude';
+import { geminiKeys, geminiModels } from '@/lib/ai/gemini';
 
 const KINDS = Object.keys(DAILY_LIMIT) as AiKind[];
 const json = (body: unknown) => Response.json(body, { headers: { 'Cache-Control': 'no-store' } });
@@ -75,9 +76,10 @@ export async function GET(request: Request) {
     series, features,
     errors: { total24h: errs24.results.reduce((s, r) => s + r.n, 0), byCode: errorsByCode, recent: errGroups.results },
     health: {
-      apiKey: !!env.ANTHROPIC_API_KEY,
-      model: env.AI_MODEL || MODEL,
-      endpoint: env.AI_BASE_URL ? new URL(env.AI_BASE_URL).host : 'api.anthropic.com',
+      apiKey: !!env.ANTHROPIC_API_KEY || geminiKeys(env).length > 0,
+      // Gemini wins when its key is set (rotating models; details in the "Mô hình AI" card).
+      model: geminiKeys(env).length ? 'Gemini · ' + geminiModels(env).length + ' mô hình xoay vòng' : env.AI_MODEL || MODEL,
+      endpoint: geminiKeys(env).length ? 'generativelanguage.googleapis.com' : env.AI_BASE_URL ? new URL(env.AI_BASE_URL).host : 'api.anthropic.com',
       decisionModel: decisionOn,
       migrations: migrations?.n ?? null,
     },

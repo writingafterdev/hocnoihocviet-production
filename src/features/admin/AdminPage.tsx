@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import { PageHeader } from '@/components/shell/BrandHeader';
 import './admin.css';
+import { AiModels } from './AiModels';
 import { Area } from '@/components/charts/area';
 import { AreaChart } from '@/components/charts/area-chart';
 import { ChartCard } from '@/components/charts/ChartCard';
@@ -205,6 +206,7 @@ export function AdminPage() {
                 </table>
               </div>
             </div>
+            <AiModels />
           </div>
 
           <div style={{ flex: '1 1 340px', minWidth: 0, display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -229,7 +231,7 @@ export function AdminPage() {
               <h2 className="adm-h2">Sức khoẻ hệ thống</h2>
               <ul style={{ listStyle: 'none', margin: '14px 0 0', padding: 0 }}>
                 <li className="adm-li"><span style={{ flexGrow: 1, fontSize: 14, fontWeight: 500 }}>Khoá API<div className="adm-sub">{ov.health.apiKey ? 'Đã đặt trong Cloudflare' : 'Chưa đặt: AI đang tắt'}</div></span><span className={'adm-pill ' + (ov.health.apiKey ? 'ok' : 'bad')}><i className="adm-dot" />{ov.health.apiKey ? 'Ổn' : 'Thiếu'}</span></li>
-                <li className="adm-li"><span style={{ flexGrow: 1, minWidth: 0, fontSize: 14, fontWeight: 500 }}>Mô hình đang dùng<div className="adm-sub" style={{ overflowWrap: 'anywhere' }}>{ov.health.model} · {ov.health.endpoint}</div></span><span className={'adm-pill ' + (ov.health.model.startsWith('claude-') ? 'ok' : 'info')}>{ov.health.model.startsWith('claude-') ? 'Claude' : 'Thử nghiệm'}</span></li>
+                <li className="adm-li"><span style={{ flexGrow: 1, minWidth: 0, fontSize: 14, fontWeight: 500 }}>Mô hình đang dùng<div className="adm-sub" style={{ overflowWrap: 'anywhere' }}>{ov.health.model} · {ov.health.endpoint}</div></span><span className={'adm-pill ' + (ov.health.model.startsWith('claude-') || ov.health.model.startsWith('Gemini') ? 'ok' : 'info')}>{ov.health.model.startsWith('claude-') ? 'Claude' : ov.health.model.startsWith('Gemini') ? 'Gemini' : 'Thử nghiệm'}</span></li>
                 <li className="adm-li"><span style={{ flexGrow: 1, fontSize: 14, fontWeight: 500 }}>Mô hình phân nhóm từ vựng<div className="adm-sub">{ov.health.decisionModel ? 'Đã cấu hình' : 'Chưa cấu hình: dùng nhóm có sẵn'}</div></span><span className={'adm-pill ' + (ov.health.decisionModel ? 'ok' : 'idle')}>{ov.health.decisionModel ? 'Bật' : 'Tắt'}</span></li>
                 <li className="adm-li"><span style={{ flexGrow: 1, fontSize: 14, fontWeight: 500 }}>Cơ sở dữ liệu<div className="adm-sub">{ov.health.migrations != null ? <><span className="adm-num">{ov.health.migrations}</span> bản cập nhật cấu trúc đã chạy</> : 'Không đọc được danh sách bản cập nhật'}</div></span><span className={'adm-pill ' + (ov.health.migrations != null ? 'ok' : 'warn')}><i className="adm-dot" />{ov.health.migrations != null ? 'Ổn' : 'Kiểm tra'}</span></li>
               </ul>

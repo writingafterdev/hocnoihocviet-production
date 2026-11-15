@@ -31,6 +31,28 @@ const skip = new Map<string, number>();
 /** Next midnight in California, when the free tier's daily allowance resets (approximately: UTC−8). */
 const nextReset = () => { const d = new Date(Date.now() - 8 * 3600_000); d.setUTCHours(24, 0, 0, 0); return d.getTime() + 8 * 3600_000; };
 
+/**
+ * Per model and day: answered, used up (429), failed, tokens and total time. The admin panel's "Mô hình AI" card reads
+ * it. The table is created on first use (no migration needed); writing is best effort and never breaks a call.
+ */
+let tableReady: Promise<unknown> | null = null;
+const USE_TABLE = 'create table if not exists ai_model_use (day text not null, model text not null, ok integer not null default 0, limited integer not null default 0, failed integer not null default 0, inputTokens integer not null default 0, outputTokens integer not null default 0, ms integer not null default 0, lastStatus text, lastAt integer, primary key (day, model))';
+const vnToday = () => new Date(Date.now() + 7 * 3600_000).toISOString().slice(0, 10);
+export async function logModelUse(e: CloudflareEnv, model: string, outcome: 'ok' | 'limited' | 'failed', o: { input?: number; output?: number; ms?: number; status?: string } = {}) {
+  try {
+    if (!e.DB) return;
+    tableReady = tableReady || e.DB.prepare(USE_TABLE).run();
+    await tableReady;
+    await e.DB.prepare('insert into ai_model_use (day, model, ok, limited, failed, inputTokens, outputTokens, ms, lastStatus, lastAt) values (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10) on conflict (day, model) do update set ok = ok + ?3, limited = limited + ?4, failed = failed + ?5, inputTokens = inputTokens + ?6, outputTokens = outputTokens + ?7, ms = ms + ?8, lastStatus = ?9, lastAt = ?10')
+      .bind(vnToday(), model, outcome === 'ok' ? 1 : 0, outcome === 'limited' ? 1 : 0, outcome === 'failed' ? 1 : 0, o.input || 0, o.output || 0, o.ms || 0, o.status || outcome, Date.now()).run();
+  } catch { tableReady = null; }
+}
+export async function modelUse(e: CloudflareEnv, fromDay: string) {
+  tableReady = tableReady || e.DB.prepare(USE_TABLE).run();
+  await tableReady;
+  return (await e.DB.prepare('select * from ai_model_use where day >= ? order by day').bind(fromDay).all<{ day: string; model: string; ok: number; limited: number; failed: number; inputTokens: number; outputTokens: number; ms: number; lastStatus: string | null; lastAt: number | null }>()).results;
+}
+
 export class GeminiError extends Error {
   code: 'timeout' | 'upstream';
   constructor(code: 'timeout' | 'upstream', message: string) { super(message); this.code = code; }
@@ -53,6 +75,7 @@ export async function callGemini(e: CloudflareEnv, { system, input, maxTokens, t
       const gemma = model.startsWith('gemma');
       const messages = gemma ? [{ role: 'user', content: system + '\n\n---\n\n' + input }] : [{ role: 'system', content: system }, { role: 'user', content: input }];
       let res: Response;
+      const t0 = Date.now();
       try {
         res = await fetch(URL_CHAT, {
           method: 'POST',
@@ -63,6 +86,7 @@ export async function callGemini(e: CloudflareEnv, { system, input, maxTokens, t
       } catch (err) {
         const timedOut = err instanceof Error && (err.name === 'TimeoutError' || err.name === 'AbortError');
         console.error('gemini_failed', model, k, timedOut ? 'timeout' : err instanceof Error ? err.message : err);
+        await logModelUse(e, model, 'failed', { ms: Date.now() - t0, status: timedOut ? 'timeout' : 'network' });
         if (timedOut) throw new GeminiError('timeout', model);
         last = model + ':network';
         continue;
@@ -71,12 +95,14 @@ export async function callGemini(e: CloudflareEnv, { system, input, maxTokens, t
         const data = await res.json() as { choices?: { message?: { content?: string }; finish_reason?: string }[]; usage?: { prompt_tokens?: number; completion_tokens?: number } };
         const c = data.choices?.[0];
         const text = c?.message?.content || '';
-        if (!text) { last = model + ':empty'; skip.set(id, Date.now() + 60_000); continue; }
+        if (!text) { last = model + ':empty'; skip.set(id, Date.now() + 60_000); await logModelUse(e, model, 'failed', { ms: Date.now() - t0, status: 'empty' }); continue; }
+        await logModelUse(e, model, 'ok', { input: data.usage?.prompt_tokens, output: data.usage?.completion_tokens, ms: Date.now() - t0, status: '200' });
         return { text, stop: c?.finish_reason === 'length' ? 'max_tokens' : 'end_turn', input: data.usage?.prompt_tokens || 0, output: data.usage?.completion_tokens || 0, model };
       }
       const detail = (await res.text().catch(() => '')).slice(0, 400);
       last = model + ':' + res.status;
       console.warn('gemini_skip', model, k, res.status, detail.slice(0, 200));
+      await logModelUse(e, model, res.status === 429 ? 'limited' : 'failed', { ms: Date.now() - t0, status: String(res.status) });
       if (res.status === 429) skip.set(id, /per.?day|PerDay|daily/i.test(detail) ? nextReset() : Date.now() + 60_000);
       else if (res.status === 404 || res.status === 400) skip.set(id, Date.now() + 6 * 3600_000); // unknown or unsupported model id
       else if (res.status === 401 || res.status === 403) { for (const m of models) skip.set(m + '|' + k, Date.now() + 6 * 3600_000); } // bad key
@@ -111,4 +137,28 @@ export function streamGemini(e: CloudflareEnv, args: { system: string; input: st
     }
   })();
   return new Response(readable, { headers: { 'content-type': 'text/event-stream', 'cache-control': 'no-store' } });
+}
+
+/**
+ * Admin "Kiểm tra từng mô hình": one tiny request per model with the first key, to see which ids work and which are used
+ * up right now. Each takes one request from that model's free allowance. Never sends student data.
+ */
+export async function probeModels(e: CloudflareEnv): Promise<{ model: string; status: string; ms: number; note: string }[]> {
+  const key = geminiKeys(e)[0];
+  if (!key) return [];
+  return Promise.all(geminiModels(e).map(async (model) => {
+    const t0 = Date.now();
+    try {
+      const res = await fetch(URL_CHAT, {
+        method: 'POST', headers: { 'content-type': 'application/json', authorization: 'Bearer ' + key },
+        body: JSON.stringify({ model, messages: [{ role: 'user', content: 'Reply with the single word OK.' }], max_tokens: 20 }),
+        signal: AbortSignal.timeout(30_000),
+      });
+      const body = (await res.text().catch(() => '')).slice(0, 300);
+      const note = res.ok ? '' : (body.match(/"message"\s*:\s*"([^"]+)/)?.[1] || body).slice(0, 160);
+      return { model, status: res.ok ? 'ok' : String(res.status), ms: Date.now() - t0, note };
+    } catch (err) {
+      return { model, status: 'error', ms: Date.now() - t0, note: err instanceof Error ? err.message.slice(0, 160) : 'error' };
+    }
+  }));
 }
