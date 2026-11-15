@@ -4,7 +4,7 @@ import { useState, type ReactNode } from 'react';
 import type { Prompt } from '@/content/prompts';
 import { CL, CL_CIRC } from '../chainlab/constants';
 import type { Chain } from '../chainlab/types';
-import { ClIcon, ClLabel, toolbarBtn } from '../chainlab/ui/primitives';
+import { ClIcon, ClLabel, PromptText, toolbarBtn } from '../chainlab/ui/primitives';
 import { ChainEditor, miniBtn } from '../coach/ChainEditor';
 import { CoachGrid, SidePanel } from '../coach/CoachGrid';
 import { TranslatorChat } from '../coach/TranslatorChat';
@@ -205,8 +205,8 @@ export function BuildScreen({ prompt, chains, setChains, checks, setCheck, toolb
         open={chat}
         main={
         <main className="co-col cl-scroll" style={{ minWidth: 0, overflowY: 'auto', gap: 16, paddingBottom: 24 }}>
-          <section style={{ flexShrink: 0, borderRadius: 12, border: '1px solid ' + CL.border, background: '#fff', padding: '18px 24px', display: 'flex', flexDirection: 'column', gap: 8 }}>
-            <p style={{ margin: 0, fontFamily: CL.sans, fontSize: 15, fontStyle: 'italic', lineHeight: 1.6, color: CL.ink8 }}>{prompt.text}</p>
+          <section style={{ flexShrink: 0, borderRadius: 12, border: '1px solid ' + CL.border, background: '#fff', padding: '18px 24px' }}>
+            <PromptText text={prompt.text} />
           </section>
           {chains.map((c, i) => (
             <BodyCard key={c.id} prompt={prompt} chain={c} num={i + 1} canDelete={chains.length > 1}

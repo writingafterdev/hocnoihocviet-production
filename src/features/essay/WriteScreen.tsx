@@ -6,7 +6,7 @@ import { SignedOutError, type EssayState } from '../attempts/store';
 import { AI_ERROR_TEXT, AiRequestError } from '../ai/request';
 import { CL } from '../chainlab/constants';
 import type { Chain, ReviewItem } from '../chainlab/types';
-import { ClLabel, toolbarBtn } from '../chainlab/ui/primitives';
+import { ClLabel, PromptText, toolbarBtn } from '../chainlab/ui/primitives';
 import { CoachGrid, SidePanel } from '../coach/CoachGrid';
 import { TranslatorChat } from '../coach/TranslatorChat';
 import { primaryBtn } from '../coach/ui';
@@ -373,10 +373,7 @@ export function WriteScreen({ prompt, chains, setChains, essay, setEssay, toolba
         main={
         <main className="co-col co-write3" style={{ minWidth: 0 }}>
           <aside aria-label="Dàn bài" style={{ minHeight: 0, display: 'flex', flexDirection: 'column', borderRadius: 12, border: '1px solid ' + CL.border, background: '#fff', overflow: 'hidden' }}>
-            <div style={{ padding: '18px 20px 16px', borderBottom: '1px solid ' + CL.ink1, display: 'flex', flexDirection: 'column', gap: 8 }}>
-              <ClLabel>Đề bài</ClLabel>
-              <p style={{ margin: 0, fontFamily: CL.sans, fontSize: 14, fontStyle: 'italic', lineHeight: 1.6, color: CL.ink8 }}>{prompt.text}</p>
-            </div>
+            <PromptText text={prompt.text} style={{ padding: '18px 20px 16px', borderBottom: '1px solid ' + CL.ink1 }} />
             <div className="cl-scroll" style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: '14px 16px 18px', display: 'flex', flexDirection: 'column', gap: 12 }}>
               <ClLabel>Dàn bài · {chains.length} thân bài</ClLabel>
               <div style={{ borderRadius: 10, border: '1px dashed ' + CL.ink2, padding: '9px 12px', fontFamily: CL.sans, fontSize: 12, color: CL.ink4 }}>Mở bài · không cần mạch</div>

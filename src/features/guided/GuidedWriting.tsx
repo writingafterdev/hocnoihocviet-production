@@ -2,7 +2,7 @@
 
 import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
 import { CL } from '../chainlab/constants';
-import { backLinkStyle, ClIcon, ClLabel } from '../chainlab/ui/primitives';
+import { backLinkStyle, ClIcon, ClLabel, PromptText } from '../chainlab/ui/primitives';
 import { GW_SAMPLES, GW_VOCAB_STYLE, moveChip, type GuidedSample, type Segment } from './data';
 import { hint, hintLetters, mask, norm, partial, wordStates, words as splitWords } from './matching';
 
@@ -124,9 +124,7 @@ export function GuidedWriting({ sample = GW_SAMPLES.charity, onBack, backLabel =
       <div style={{ flex: 1, minHeight: 0, display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)', gap: 26 }}>
         {/* Left: prompt + the essay, revealed as the student finishes each sentence */}
         <aside className="cl-scroll" style={{ ...card, minHeight: 0, overflowY: 'auto', padding: '26px 26px 30px' }}>
-          <div style={{ border: '1px solid ' + CL.ink3, padding: '14px 16px' }}>
-            <p style={{ margin: 0, fontFamily: CL.sans, fontSize: 13, fontWeight: 600, fontStyle: 'italic', lineHeight: 1.55, color: '#20252D', textWrap: 'pretty' }}>{sample.prompt}</p>
-          </div>
+          <PromptText text={sample.prompt} />
           <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginTop: 28, marginBottom: 14 }}>
             <ClLabel color={CL.ink}>{textLabel}</ClLabel>
           </div>

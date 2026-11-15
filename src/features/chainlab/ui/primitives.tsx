@@ -29,6 +29,16 @@ export function ClLabel({ children, color = CL.ink5, style }: { children: ReactN
   return <span style={{ fontFamily: CL.sans, fontSize: 12, fontWeight: 500, color, ...style }}>{children}</span>;
 }
 
+/** The essay question as a reference beside the work, the same on every screen: "Đề bài", then the question in italics. */
+export function PromptText({ text, style }: { text: string; style?: CSSProperties }) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 8, ...style }}>
+      <ClLabel>Đề bài</ClLabel>
+      <p style={{ margin: 0, fontFamily: CL.sans, fontSize: 14, fontStyle: 'italic', lineHeight: 1.6, color: CL.ink8, textWrap: 'pretty' } as CSSProperties}>{text}</p>
+    </div>
+  );
+}
+
 /** Lens chip (With/Without, Scope, Khả thi…). */
 export function ClTag({ kind }: { kind: string }) {
   const s = CL_KIND_STYLE[kind] || CL_KIND_STYLE['Khả thi'];
