@@ -44,7 +44,8 @@ function PhraseRow({ p, used, save, state }: { p: Phrase; used?: boolean; save?:
 export function useStepHelp(promptId: string, base: Omit<ChainIn, 'steps'>, steps: string[], firstQuestion: string) {
   const [vocab, setVocab] = useState<Record<number, Load<{ question: string; phrases: Phrase[] }>>>({});
   const [hidden, setHidden] = useState<Record<number, boolean>>({});
-  const [scans, setScans] = useState<Record<number, { text: string; load: Load<Scan> }>>({});
+  /** Per step: the text that was scanned, the scan, and how many steps there were then (to tell whether this step moved). */
+  const [scans, setScans] = useState<Record<number, { text: string; count: number; load: Load<Scan> }>>({});
   const [closed, setClosed] = useState<Record<number, boolean>>({});
   const key = promptId + '|' + base.start + '|' + base.end;
   // Saving a phrase to Từ vựng › Đã lưu, filed under the essay question's topic (kept across statements).
@@ -63,6 +64,16 @@ export function useStepHelp(promptId: string, base: Omit<ChainIn, 'steps'>, step
   const saveAll = async (list: Phrase[]) => { for (const p of list) { if (saved[p.en] !== 'saved') await savePhrase(p); } };
   const row = (p: Phrase, used?: boolean) => <PhraseRow key={p.en} p={p} used={used} save={() => savePhrase(p)} state={saved[p.en]} />;
   useEffect(() => { setVocab({}); setHidden({}); setScans({}); setClosed({}); }, [key]);
+  // While a step still reads exactly as scanned it is known to be in place: re-anchor its step count, so later steps
+  // added elsewhere don't hide its panel when the student then rewrites it.
+  useEffect(() => {
+    setScans((s) => {
+      let changed = false;
+      const next = { ...s };
+      Object.entries(s).forEach(([k, sc]) => { const i = Number(k); if (steps[i]?.trim() === sc.text && sc.count !== steps.length) { next[i] = { ...sc, count: steps.length }; changed = true; } });
+      return changed ? next : s;
+    });
+  }, [steps.join('\u0001')]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const chainUpTo = (i: number): ChainIn => ({ ...base, steps: steps.slice(0, i).map((x) => x.trim()).filter(Boolean) });
   /** The step's placeholder: the question from "Gợi ý" once asked, else the drill's question for the first step. */
@@ -85,16 +96,20 @@ export function useStepHelp(promptId: string, base: Omit<ChainIn, 'steps'>, step
     if (scans[i]?.text === text) return;
     const v = vocab[i];
     const suggested = v && v.state === 'done' ? v.data.phrases.map((p) => p.en) : [];
-    setScans((s) => ({ ...s, [i]: { text, load: { state: 'loading' } } })); setClosed((c) => ({ ...c, [i]: false }));
+    setScans((s) => ({ ...s, [i]: { text, count: steps.length, load: { state: 'loading' } } })); setClosed((c) => ({ ...c, [i]: false }));
     try {
       const r = await postAi<Scan>('step-scan', { promptId, chain: chainUpTo(i), index: i, step: text, suggested });
-      setScans((s) => (s[i]?.text === text ? { ...s, [i]: { text, load: { state: 'done', data: r } } } : s));
-    } catch (e) { setScans((s) => (s[i]?.text === text ? { ...s, [i]: { text, load: { state: 'error', error: errText(e) } } } : s)); }
+      setScans((s) => (s[i]?.text === text ? { ...s, [i]: { ...s[i], load: { state: 'done', data: r } } } : s));
+    } catch (e) { setScans((s) => (s[i]?.text === text ? { ...s, [i]: { ...s[i], load: { state: 'error', error: errText(e) } } } : s)); }
   };
 
   const belowStep = (i: number): ReactNode => {
     const sc = scans[i];
-    if (sc && steps[i]?.trim() === sc.text) {
+    // The panel stays while the student rewrites this step (that's when its phrases are needed). It goes only if steps
+    // were added or removed since, so it can't land on the wrong step; Enter again brings a fresh scan.
+    // Enter adds one empty step right after a scan, so one more step than at the last anchor still counts as the same place.
+    const samePlace = !!sc && (steps[i]?.trim() === sc.text || (i < steps.length && steps.length - sc.count >= 0 && steps.length - sc.count <= 1));
+    if (sc && samePlace) {
       if (sc.load.state === 'loading') return <div style={panel}><span style={label}>Đang đọc bước này…</span></div>;
       if (sc.load.state === 'error') return <div style={panel}><span style={{ ...label, color: CL.redText }}>{sc.load.error}</span></div>;
       const d = sc.load.data;
