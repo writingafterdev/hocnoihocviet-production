@@ -13,10 +13,11 @@ const URL_CHAT = 'https://generativelanguage.googleapis.com/v1beta/openai/chat/c
 
 /**
  * Tried in this order: Gemini 4 Hydrogen and the stronger Flash models first (about 20 requests a day each on the free tier), then the Flash
- * Lite models (about 500 a day), then Gemma (about 14,400 a day). Override with GEMINI_MODELS (comma-separated ids).
+ * Lite models (about 500 a day), then Gemma (about 14,400 a day). Ids as listed in Google's Gemini API docs (Nov 2026).
+ * Override with GEMINI_MODELS (comma-separated ids).
  */
 export const DEFAULT_MODELS = [
-  'gemini-4-hydrogen', 'gemini-3.8-flash', 'gemini-3.6-flash', 'gemini-3-flash', 'gemini-2.5-flash',
+  'gemini-4-hydrogen', 'gemini-3.8-flash', 'gemini-3.6-flash', 'gemini-3-flash-preview', 'gemini-2.5-flash',
   'gemini-3.5-flash-lite', 'gemini-3.1-flash-lite', 'gemini-2.5-flash-lite',
   'gemma-4-31b-it',
 ];
