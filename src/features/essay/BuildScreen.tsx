@@ -205,9 +205,7 @@ export function BuildScreen({ prompt, chains, setChains, checks, setCheck, toolb
         open={chat}
         main={
         <main className="co-col cl-scroll" style={{ minWidth: 0, overflowY: 'auto', gap: 16, paddingBottom: 24 }}>
-          <section style={{ flexShrink: 0, borderRadius: 12, border: '1px solid ' + CL.border, background: '#fff', padding: '18px 24px' }}>
-            <PromptText text={prompt.text} />
-          </section>
+          <PromptText text={prompt.text} style={{ flexShrink: 0, background: '#fff' }} />
           {chains.map((c, i) => (
             <BodyCard key={c.id} prompt={prompt} chain={c} num={i + 1} canDelete={chains.length > 1}
               onChange={update} onDelete={() => remove(c.id)}

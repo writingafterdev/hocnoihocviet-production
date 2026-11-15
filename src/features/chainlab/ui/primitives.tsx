@@ -29,12 +29,16 @@ export function ClLabel({ children, color = CL.ink5, style }: { children: ReactN
   return <span style={{ fontFamily: CL.sans, fontSize: 12, fontWeight: 500, color, ...style }}>{children}</span>;
 }
 
-/** The essay question as a reference beside the work, the same on every screen: "Đề bài", then the question in italics. */
+/**
+ * The essay question as a reference beside the work, the same on every screen, in the Cambridge exam-paper style: a thin
+ * square box with the question in bold italics. `style` goes on the outer wrapper (its padding, a divider).
+ */
 export function PromptText({ text, style }: { text: string; style?: CSSProperties }) {
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 8, ...style }}>
-      <ClLabel>Đề bài</ClLabel>
-      <p style={{ margin: 0, fontFamily: CL.sans, fontSize: 14, fontStyle: 'italic', lineHeight: 1.6, color: CL.ink8, textWrap: 'pretty' } as CSSProperties}>{text}</p>
+    <div style={style}>
+      <div style={{ border: '1px solid ' + CL.ink3, padding: '14px 16px' }}>
+        <p style={{ margin: 0, fontFamily: CL.sans, fontSize: 13, fontWeight: 600, fontStyle: 'italic', lineHeight: 1.55, color: '#20252D', textWrap: 'pretty' } as CSSProperties}>{text}</p>
+      </div>
     </div>
   );
 }
