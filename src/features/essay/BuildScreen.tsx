@@ -11,7 +11,7 @@ import { NotesPanel } from '../coach/NotesPanel';
 import { TranslatorChat } from '../coach/TranslatorChat';
 import { primaryBtn } from '../coach/ui';
 import { useCoach, type CheckResult } from '../coach/useCoach';
-import { chainIn, endOf, hasTone, KIND_ASK, kindOf, middleOf, newBody, questionOf, startOf, withEnds, withMiddle } from './model';
+import { chainIn, endOf, KIND_ASK, kindOf, middleOf, newBody, questionOf, startOf, withEnds, withMiddle } from './model';
 import { Chip } from '@/components/base/badges/chip';
 import { ProBeam } from '@/components/ui/pro-beam';
 
@@ -101,7 +101,6 @@ function BodyCard({ prompt, chain, num, canDelete, onChange, onDelete, check, on
   const notes = coach.fresh && coach.result ? coach.result.placed : [];
   const multi = prompt.questions.length > 1;
   const status = !chain.built ? (ready ? 'Đủ hai đầu' : 'Chưa đủ hai đầu') : filled ? filled + ' bước ở giữa' : 'Chưa có bước nào';
-  const tone = hasTone(prompt, chain);
 
   const endBox = (which: 'start' | 'end') => {
     const isMine = which === mine;
@@ -125,10 +124,6 @@ function BodyCard({ prompt, chain, num, canDelete, onChange, onDelete, check, on
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, minHeight: 56, padding: '0 14px 0 22px', borderBottom: '1px solid ' + CL.ink1 }}>
         <span style={{ fontFamily: CL.sans, fontSize: 14.5, fontWeight: 600, color: CL.ink }}>Thân bài {num}</span>
         <Chip variant="caption" color="gray">{multi ? CL_CIRC[q.n - 1] + ' ' : ''}{info.chip}</Chip>
-        {tone && (
-          <button type="button" className="cl-btn" onClick={() => onChange({ ...chain, tone: chain.tone === 'cost' ? 'benefit' : 'cost' })} title="Đổi lợi ích / tác hại"
-            style={{ padding: 0 }}><Chip variant="caption" color={chain.tone === 'cost' ? 'rose' : 'lime'}>{chain.tone === 'cost' ? 'Tác hại' : 'Lợi ích'} ⇄</Chip></button>
-        )}
         <Chip className="ml-auto" variant="caption" color={chain.built && filled ? 'lime' : 'gray'}>{status}</Chip>
         {canDelete && <button type="button" className="cl-btn cl-del" onClick={onDelete} aria-label={'Xoá thân bài ' + num} style={{ width: 30, height: 30, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', color: CL.ink3 }}><ClIcon name="trash" size={14} /></button>}
       </div>
