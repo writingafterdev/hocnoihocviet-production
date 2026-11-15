@@ -9,6 +9,53 @@ import type { Prompt } from '@/content/prompts';
 import { ask } from './claude';
 import { describePrompt } from './describe';
 import { BANK_TASK, CHECK_TASK, HINT_TASK } from './prompts';
+import { STEP_SCAN_TASK, STEP_VOCAB_TASK } from './prompts-drill';
+
+const PHRASES_SCHEMA = { type: 'array', items: { type: 'object', additionalProperties: false, required: ['en', 'vi'], properties: { en: { type: 'string' }, vi: { type: 'string' } } } };
+const cleanPhrases = (xs: unknown, max: number): { en: string; vi: string }[] => {
+  const seen = new Set<string>();
+  return (Array.isArray(xs) ? xs : [])
+    .map((x) => ({ en: String((x as { en?: unknown })?.en || '').trim(), vi: String((x as { vi?: unknown })?.vi || '').trim() }))
+    .filter((x) => x.en && x.en.length <= 60 && x.vi && !seen.has(x.en.toLowerCase()) && !!seen.add(x.en.toLowerCase()))
+    .slice(0, max);
+};
+
+/** Quick drill, "Gợi ý từ vựng" on step `index` (0-based among the middle steps). */
+export async function aiStepVocab(userId: string, prompt: Prompt, chain: ChainIn, index: number, question: string): Promise<{ phrases: { en: string; vi: string }[] }> {
+  const { text } = describeChain(chain);
+  const out = await ask<{ phrases: unknown }>({
+    userId, kind: 'hint', task: STEP_VOCAB_TASK, effort: 'low', maxTokens: 1500,
+    schema: { type: 'object', additionalProperties: false, required: ['phrases'], properties: { phrases: PHRASES_SCHEMA } },
+    input: describePrompt(prompt) + '\n\n' + text + '\n\nBƯỚC ĐANG VIẾT: vị trí ' + (index + 1) + (question ? ' · câu hỏi: ' + question : ''),
+  });
+  return { phrases: cleanPhrases(out.phrases, 3) };
+}
+
+export interface StepScan { used: string[]; parts: { text: string; phrases: { en: string; vi: string }[] }[]; next: string }
+
+/** Quick drill, after Enter on step `index`: phrases used, better wording for the rest, the next question. */
+export async function aiStepScan(userId: string, prompt: Prompt, chain: ChainIn, index: number, step: string, suggested: string[]): Promise<StepScan> {
+  const { text } = describeChain(chain);
+  const out = await ask<{ used: unknown; parts: unknown; next: unknown }>({
+    userId, kind: 'hint', task: STEP_SCAN_TASK, effort: 'low', maxTokens: 2000,
+    schema: {
+      type: 'object', additionalProperties: false, required: ['used', 'parts', 'next'],
+      properties: {
+        used: { type: 'array', items: { type: 'string' } },
+        parts: { type: 'array', items: { type: 'object', additionalProperties: false, required: ['text', 'phrases'], properties: { text: { type: 'string' }, phrases: PHRASES_SCHEMA } } },
+        next: { type: 'string' },
+      },
+    },
+    input: describePrompt(prompt) + '\n\n' + text + '\n\nBƯỚC VỪA VIẾT (vị trí ' + (index + 1) + '): ' + step + '\n\nCỤM ĐÃ GỢI Ý CHO BƯỚC NÀY: ' + (suggested.length ? suggested.join(' | ') : '(không có)'),
+  });
+  const sug = new Set(suggested.map((x) => x.toLowerCase()));
+  const used = (Array.isArray(out.used) ? out.used : []).map((x) => String(x).trim()).filter((x) => sug.has(x.toLowerCase()));
+  const parts = (Array.isArray(out.parts) ? out.parts : [])
+    .map((p) => ({ text: String((p as { text?: unknown })?.text || '').trim(), phrases: cleanPhrases((p as { phrases?: unknown })?.phrases, 2) }))
+    .filter((p) => p.text && p.phrases.length)
+    .slice(0, 2);
+  return { used, parts, next: String(out.next || '').trim().slice(0, 200) };
+}
 
 export type ChainKind = 'cause' | 'impact' | 'solution';
 

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { Fragment, useEffect, useRef, useState, type ReactNode } from 'react';
 import { CL } from '../chainlab/constants';
 import { ClIcon, ClLabel } from '../chainlab/ui/primitives';
 import { NOTE_STYLE, type Hint, type PlacedNote } from './useCoach';
@@ -38,6 +38,14 @@ export interface ChainEditorProps {
   onFocusStep?: (i: number) => void;
   /** The question shown in the empty first step (a question about this chain, not a generic prompt). */
   firstQuestion?: string;
+  /** Drill: the question shown in each empty step (overrides firstQuestion and the generic one). */
+  stepQuestion?: (i: number) => string | undefined;
+  /** Drill: Enter on a step with text (before the next step is added). */
+  onSubmitStep?: (i: number, text: string) => void;
+  /** Drill: content shown under a step, on the same line (vocabulary, the rewording panel). */
+  belowStep?: (i: number) => ReactNode;
+  /** Drill: no "Bí? Gợi ý" row (help lives in each step instead). */
+  hideHint?: boolean;
 }
 
 const reduced = () => typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -153,22 +161,23 @@ export function ChainEditor(p: ChainEditorProps) {
         <div className={tinted(-1).trim()} style={{ flex: 1, minWidth: 0, padding: '6px 10px 10px', borderRadius: 10, ...tint(-1), display: 'flex', alignItems: 'flex-start', gap: 8 }}>
           <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 4 }}>
             <ClLabel color={CL.greenText}>{p.startLabel}</ClLabel>
-            {p.startNode ?? <span style={{ alignSelf: 'flex-start', borderRadius: 4, padding: '1px 6px', margin: '0 -6px', fontFamily: CL.sans, fontSize: 15, fontWeight: 500, lineHeight: 1.5, color: CL.greenText, background: CL.mintSoft }}>{p.start}</span>}
+            {p.startNode ?? <span style={{ fontFamily: CL.sans, fontSize: 15, fontWeight: 500, lineHeight: 1.5, color: CL.greenText }}>{p.start}</span>}
           </div>
           {marks(-1)}
         </div>
       </li>
 
       {p.steps.map((s, i) => (
-        <li key={i} className={'cl-node' + (entering.current.has(i) ? ' co-enter' : '')} style={{ display: 'flex', gap: 18, minHeight: 46 }}>
+        <Fragment key={i}>
+        <li className={'cl-node' + (entering.current.has(i) ? ' co-enter' : '')} style={{ display: 'flex', gap: 18, minHeight: 46 }}>
           <Rail center={CENTER.step} jump={jumpAt(i)} dot={plainDot(s.trim() ? CL.ink3 : CL.ink2)} track={!!s.trim()} ok={green} />
           <div className={'co-content' + tinted(i)} style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'flex-start', gap: 8, padding: '6px 10px', margin: '2px 0', borderRadius: 10, ...tint(i), transition: 'background-color .3s' }}>
             <textarea ref={(el) => { refs.current[i] = el; }} className="co-ta" value={s} rows={1} aria-label={'Bước ' + (i + 1)}
-              placeholder={i === 0 ? p.firstQuestion || 'Điểm đầu chạm tới ai, ra sao?' : 'Rồi chuyện gì xảy ra tiếp?'}
+              placeholder={p.stepQuestion?.(i) || (i === 0 ? p.firstQuestion || 'Điểm đầu chạm tới ai, ra sao?' : 'Rồi chuyện gì xảy ra tiếp?')}
               onFocus={() => { lastStep.current = i; p.onFocusStep?.(i); }}
               onChange={(e) => edit(i, e.target.value)}
               onKeyDown={(e) => {
-                if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) { e.preventDefault(); if (s.trim()) insertAfter(i); }
+                if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) { e.preventDefault(); if (s.trim()) { p.onSubmitStep?.(i, s.trim()); if (i === n - 1 || p.steps[i + 1]?.trim()) insertAfter(i); else { focusAt.current = i + 1; refs.current[i + 1]?.focus(); } } }
                 else if (e.key === 'Backspace' && !s && n > 1) { e.preventDefault(); remove(i); }
               }}
               style={{ flex: 1, minWidth: 0, minHeight: 24, resize: 'none', border: 'none', outline: 'none', background: 'transparent', padding: 0, fontFamily: CL.serif, fontSize: 15, lineHeight: 1.55, color: CL.ink8 }} />
@@ -176,15 +185,22 @@ export function ChainEditor(p: ChainEditorProps) {
             <button type="button" className="cl-btn cl-del cl-reveal" onClick={() => remove(i)} aria-label={'Xoá bước ' + (i + 1)} style={{ flexShrink: 0, width: 24, height: 24, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', color: CL.ink3 }}><ClIcon name="trash" size={13} /></button>
           </div>
         </li>
+        {p.belowStep && (() => { const below = p.belowStep!(i); return below ? (
+          <li style={{ display: 'flex', gap: 18 }}>
+            <div aria-hidden="true" style={{ position: 'relative', width: DOT, flexShrink: 0 }}><span style={{ position: 'absolute', left: DOT / 2 - 0.5, width: 1, top: 0, bottom: 0, background: CL.ink2 }} /></div>
+            <div style={{ flex: 1, minWidth: 0, padding: '2px 0 10px' }}>{below}</div>
+          </li>
+        ) : null; })()}
+        </Fragment>
       ))}
 
-      <li style={{ display: 'flex', gap: 18, minHeight: 44 }}>
+      {!p.hideHint && <li style={{ display: 'flex', gap: 18, minHeight: 44 }}>
         <Rail center={CENTER.add} track={false} dot={<span style={{ width: DOT, height: DOT, borderRadius: 999, border: '1.5px solid ' + CL.ink2, background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', color: CL.ink4 }}><ClIcon name="plus" size={9} /></span>} />
         <div style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 6, padding: '6px 0' }}>
           <ProBeam><button type="button" className="cl-btn" onClick={p.onHint} disabled={p.asking} style={{ ...miniBtn, border: 'none', boxShadow: 'none', background: '#EEF3FC', color: '#2F62C4', opacity: p.asking ? 0.6 : 1 }}>{p.asking ? 'Đang nghĩ…' : 'Bí? Gợi ý'}</button></ProBeam>
           {p.helper && <span style={{ marginLeft: 6, fontFamily: CL.sans, fontSize: 11.5, lineHeight: 1.4, color: CL.ink4 }}>{p.helper}</span>}
         </div>
-      </li>
+      </li>}
 
       {p.hint && (
         <li key={p.hint.q} style={{ display: 'flex', gap: 18, paddingBottom: 8 }}>
@@ -205,7 +221,7 @@ export function ChainEditor(p: ChainEditorProps) {
         <Rail last center={CENTER.end} ok={green} dot={<span style={{ width: 9, height: 9, borderRadius: 2, background: '#B8862B', boxShadow: '0 0 0 4px #fff' }} />} />
         <div style={{ flex: 1, minWidth: 0, padding: '6px 10px', display: 'flex', flexDirection: 'column', gap: 4 }}>
           <ClLabel color="#B33A1A">{p.endLabel}</ClLabel>
-          {p.endNode ?? <span style={{ alignSelf: 'flex-start', borderRadius: 4, padding: '1px 6px', margin: '0 -6px', fontFamily: CL.sans, fontSize: 15, fontWeight: 500, lineHeight: 1.5, color: '#B33A1A', background: CL.yellowSoft }}>{p.end}</span>}
+          {p.endNode ?? <span style={{ fontFamily: CL.sans, fontSize: 15, fontWeight: 500, lineHeight: 1.5, color: '#B33A1A' }}>{p.end}</span>}
           {green && (
             <span className="co-pop" style={{ alignSelf: 'flex-start', marginTop: 8, display: 'inline-flex', alignItems: 'center', gap: 6, borderRadius: 8, background: CL.mintSoft, color: CL.greenText, padding: '4px 12px', fontFamily: CL.sans, fontSize: 12, fontWeight: 600 }}>
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path className="co-tick" d="M5 12l5 5 9-10" /></svg>Mạch đi liền
