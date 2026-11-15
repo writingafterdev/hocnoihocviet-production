@@ -13,7 +13,7 @@ import { primaryBtn } from '../coach/ui';
 import { bandText, CRITERIA, markStyle, CRITERION_STYLE, draftsKey, requestEssayReview, retryEssayCriterion, wordCount, type EssayReview, type EssaySection } from '../desk/scoring';
 import { passes, type FixTask } from './FixFlow';
 import { wordStates, words as splitWords } from '../guided/matching';
-import { checkFix, planFix, rescore } from './fix-api';
+import { checkFix, rescore } from './fix-api';
 import { applyEdits, FixBody } from './InlineFix';
 import { GuidedHeader, GuidedWriter, useGuidedPlan } from './GuidedWriter';
 import { MiniChain } from './MiniChain';
@@ -142,8 +142,6 @@ export function WriteScreen({ prompt, chains, setChains, essay, setEssay, toolba
   const [error, setError] = useState('');
   const [active, setActive] = useState<Note | null>(null);
   const [retrying, setRetrying] = useState(false);
-  /** "Sửa bài" is asking the AI for the fix plan. */
-  const [planning, setPlanning] = useState(false);
   /** The fix round: the comment open for rewriting, the one being checked, and the last error. */
   const [openFix, setOpenFix] = useState<string | null>(null);
   const [checkingFix, setCheckingFix] = useState<string | null>(null);
@@ -185,23 +183,20 @@ export function WriteScreen({ prompt, chains, setChains, essay, setEssay, toolba
     let n = 0;
     return panel.groups.flatMap((g) => g.items.map((item) => ({ item, crit: g.id, n: ++n })));
   }, [panel]);
-  const plan = essay.fix?.plan;
   /** Every comment that quotes the essay is fixed in place ("Sửa" on its card); guiding questions come with the idea/flow ones. */
   const isFixable = (n: Note) => !!n.item.quote && !!n.item.sectionId;
   /** The comment carries its own fix (and questions) from the grading, so they belong together. */
   const ownFix = (n: Note) => !!(n.item.fix || n.item.ask?.length || n.item.task?.model);
   const fixKey = (n: Note) => n.crit + ':' + n.item.key;
-  /** The comment as a fix task: the AI's planned questions and model rewrite when the plan covers it, else the comment itself. */
+  /** The comment as a fix task: its own fix, meaning and questions from the grading (or the comment's words as the question). */
   const taskFor = (n: Note): FixTask => {
-    const q = n.item.quote!, item = { ...n.item, key: fixKey(n) };
+    const item = { ...n.item, key: fixKey(n) };
     const own = { item, crit: n.crit, title: n.item.label || 'Sửa', ask: n.item.ask?.length ? n.item.ask : n.item.task?.ask || [], starter: n.item.task?.starter, ok: n.item.task?.ok || 'Đã sửa xong chỗ này.', model: n.item.task?.model || n.item.fix, vi: n.item.task?.vi || n.item.vi };
-    if (ownFix(n)) return own;
-    // Older AI reviews: questions and model rewrite from the fix plan, when it covers this comment.
-    const p = plan?.find((t) => t.sectionId === n.item.sectionId && !!t.quote && (t.quote.includes(q) || q.includes(t.quote)));
-    if (p) return { item, crit: n.crit, title: p.title, ask: p.ask, starter: p.starter || undefined, ok: '', plan: { ...p, quote: q } };
+    if (ownFix(n) || n.crit === 'lr' || n.crit === 'gra') return own;
+    // A comment graded before comments carried their own fix: its explanation stands in as the question.
     return { ...own, ask: own.ask.length ? own.ask : [n.item.text.replace(/\*\*/g, '')] };
   };
-  const tasks = useMemo(() => (sending ? [] : notes.filter(isFixable).map(taskFor)), [notes, plan, sending]); // eslint-disable-line react-hooks/exhaustive-deps
+  const tasks = useMemo(() => (sending ? [] : notes.filter(isFixable).map(taskFor)), [notes, sending]); // eslint-disable-line react-hooks/exhaustive-deps
   const taskOf = (n: Note) => tasks.find((t) => t.item.key === fixKey(n)) || null;
   const tabNotes = notes.filter((n) => n.crit === tab);
   const edits = essay.fix?.edits || {};
@@ -225,7 +220,7 @@ export function WriteScreen({ prompt, chains, setChains, essay, setEssay, toolba
       return;
     }
     // Ideas and flow in an AI review: checked by the AI, with the planned task or the comment itself.
-    const task = t.plan || (review?.source === 'ai' ? { sectionId: sec, criterion: t.crit as 'tr' | 'cc', quote: t.item.quote!, title: t.title, ask: t.ask, starter: t.starter || '', aim: t.item.text.replace(/\*\*/g, '') } : null);
+    const task = (review?.source === 'ai' ? { sectionId: sec, criterion: t.crit as 'tr' | 'cc', quote: t.item.quote!, title: t.title, ask: t.ask, starter: t.starter || '', aim: t.item.text.replace(/\*\*/g, '') } : null);
     if (!task) {
       const ok = passes(t, after, before);
       verdict({ solved: ok, reply: ok ? t.ok : 'Câu mới còn ngắn quá. Trả lời câu hỏi ở trên thay vì chỉ xoá câu cũ.', ask: '' });
@@ -273,24 +268,13 @@ export function WriteScreen({ prompt, chains, setChains, essay, setEssay, toolba
 
   /**
    * "Sửa" on a comment: opens the fix inside that card. The first one starts the round: the drafts are kept as they
-   * were, and an AI review asks once for the fix plan (guiding questions and a model rewrite per comment).
+   * were. Each comment brings its own fix, meaning and questions from the grading.
    */
-  const openFixFor = async (n: Note) => {
+  const openFixFor = (n: Note) => {
     const key = fixKey(n);
     setOpenFix(key); setActive(n); setTab(n.crit); setFixError(''); setError('');
     if (essay.fix || !review) return;
     setEssay((e) => ({ ...e, fix: { view: 'fix', step: 0, solved: [], before: { ...e.drafts }, checks: {}, edits: {} } }));
-    // Only older AI reviews, whose idea/flow comments came without their own fix, need the fix plan.
-    if (review.source !== 'ai' || notes.every((x) => !isFixable(x) || x.crit === 'lr' || x.crit === 'gra' || ownFix(x))) return;
-    setPlanning(true);
-    try {
-      const planned = await planFix(prompt, chains, sections, essay.drafts, review);
-      setEssay((e) => (e.fix ? { ...e, fix: { ...e.fix, plan: planned } } : e));
-    } catch (e) {
-      if (e instanceof SignedOutError) { location.href = '/login?next=' + encodeURIComponent(location.pathname); return; }
-      // Without the plan each comment is still fixed from its own words.
-    }
-    setPlanning(false);
   };
   /** "Sửa bài" without idea/flow comments to fix: plain editing. */
   const startFix = () => { setActive(null); setError(''); setEssay((e) => ({ ...e, fixing: true })); };
@@ -308,7 +292,7 @@ export function WriteScreen({ prompt, chains, setChains, essay, setEssay, toolba
     setSending(true); setError('');
     try {
       const done = tasks.filter((t) => fix.solved.includes(t.item.key) || (fix.edits?.[t.item.key] || '').trim()).slice(0, 8)
-        .map((t) => ({ title: t.title, criterion: t.crit, aim: t.plan?.aim || t.item.text.replace(/\*\*/g, '').slice(0, 600), solved: fix.solved.includes(t.item.key) }));
+        .map((t) => ({ title: t.title, criterion: t.crit, aim: t.item.text.replace(/\*\*/g, '').slice(0, 600), solved: fix.solved.includes(t.item.key) }));
       const r = await rescore(prompt, chains, sections, fix.before, drafts, review, done);
       setEssay((e) => {
         if (!e.review) return e;
@@ -501,7 +485,7 @@ export function WriteScreen({ prompt, chains, setChains, essay, setEssay, toolba
                 {t && !editing && (open ? (
                   <div onClick={(e) => e.stopPropagation()} onKeyDown={(e) => e.stopPropagation()} style={{ display: 'flex', flexDirection: 'column', gap: 9, cursor: 'default', marginTop: 2 }}>
                     <FixBody task={t} edit={edits[key] || ''} setEdit={(v) => setEdit(key, v)} solved={solved} verdict={essay.fix?.checks?.[key]}
-                      checking={checkingFix === key} error={fixError} onCheck={() => checkTask(t)} preparing={planning && !t.plan} />
+                      checking={checkingFix === key} error={fixError} onCheck={() => checkTask(t)} />
                   </div>
                 ) : (
                   <span style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 2 }}>

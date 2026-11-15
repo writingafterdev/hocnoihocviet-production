@@ -5,7 +5,7 @@
 import type { Chain } from '../chainlab/types';
 import type { CheckResult } from '../coach/useCoach';
 import type { EssayReview } from '../desk/scoring';
-import type { CheckOut, PlanTask } from '../essay/fix-api';
+import type { CheckOut } from '../essay/fix-api';
 import type { GuidedSentence } from '@/lib/ai/guided-essay';
 
 export interface EssayState {
@@ -21,14 +21,12 @@ export interface EssayState {
   /** Keys of the comments the student ticked "Đã sửa" in "Sửa bài". Their own to-do list; nothing is detected. */
   ticked?: string[];
   /**
-   * The guided fix round after a review ("Sửa bài"): one task per idea/flow comment, fixed in place, then a
-   * before/after view ('paused': back on the assessment, resumed by "Sửa bài"). `before` is the drafts when the round started; `solved` holds the task keys that passed "Kiểm tra".
-   * `plan` holds the AI's tasks (made from the review's TR/CC comments); without it the tasks come from the comments themselves
-   * and "Kiểm tra" is a simple local check. `checks` keeps the AI's latest verdict per task key. Each task is fixed inside its
-   * comment on the assessment screen: `edits` holds the rewrite typed for each task key, shown after its struck words and put in
-   * place of them at "Nộp lại" (`view` and `step` are left from the old one-task-at-a-time screen).
+   * The fix round after a review ("Sửa bài"): each comment that quotes the essay is fixed inside its card on the assessment
+   * screen. `before` is the drafts when the round started; `edits` holds the rewrite typed for each comment key, shown after its
+   * struck words and put in place of them at "Nộp lại"; `solved` holds the keys that passed "Kiểm tra" and `checks` the latest
+   * verdict per key. (`view` and `step` are left from the old one-task-at-a-time screen.)
    */
-  fix?: { view: 'fix' | 'diff' | 'paused'; step: number; solved: string[]; before: Record<string, string>; plan?: PlanTask[]; checks?: Record<string, CheckOut>; edits?: Record<string, string> } | null;
+  fix?: { view: 'fix' | 'diff' | 'paused'; step: number; solved: string[]; before: Record<string, string>; checks?: Record<string, CheckOut>; edits?: Record<string, string> } | null;
   /**
    * "Viết có hướng dẫn": the sample essay from the chains, sentence by sentence (null while it is being made).
    * `at` is the sentence being written; each finished sentence is appended to its section's draft. `done` hands

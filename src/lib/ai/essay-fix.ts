@@ -1,17 +1,15 @@
 /**
- * The fix round after a review: "Sửa bài" plans up to five tasks from the grading's TR/CC comments, "Kiểm tra"
- * judges one task on the edited paragraph, and "Nộp lại" re-scores the essay against the last grading
- * (scores and a few one-line notes, no new comments).
+ * The fix round after a review: "Kiểm tra" judges one idea/flow fix on the edited paragraph (each comment brings its
+ * own fix and questions from the grading), and "Nộp lại" re-scores the essay against the last grading (scores and a few
+ * one-line notes, no new comments). `PlanTask` is the shape of one fix, shared with the drill paragraph's comments.
  */
 import type { Prompt } from '@/content/prompts';
 import type { Chain } from '@/features/chainlab/types';
 import { ask } from './claude';
-import { describeChains, describePrompt } from './describe';
+import { describePrompt } from './describe';
 import type { SectionIn } from './essay-review';
-import { FIXCHECK_TASK, FIXPLAN_TASK, RESCORE_TASK } from './prompts';
+import { FIXCHECK_TASK, RESCORE_TASK } from './prompts';
 
-/** A TR/CC comment of the grading, as the fix plan reads it. */
-export interface FixComment { criterion: string; sectionId: string; quote: string; label: string; text: string; example: string; chainId: string; step: number }
 export interface PlanTask { sectionId: string; criterion: 'tr' | 'cc'; quote: string; title: string; ask: string[]; starter: string; aim: string; model?: string; vi?: string }
 export interface CheckOut { solved: boolean; reply: string; ask: string }
 export interface RescoreTask { title: string; criterion: string; aim: string; solved: boolean }
@@ -19,18 +17,6 @@ export interface Scores { tr: number; cc: number; lr: number; gra: number }
 export interface RescoreOut { scores: Scores; notes: { criterion: string; text: string }[] }
 
 const str = { type: 'string' } as const;
-const PLAN_SCHEMA = {
-  type: 'object', additionalProperties: false, required: ['tasks'],
-  properties: {
-    tasks: {
-      type: 'array',
-      items: {
-        type: 'object', additionalProperties: false, required: ['sectionId', 'criterion', 'quote', 'title', 'ask', 'starter', 'aim', 'model', 'vi'],
-        properties: { sectionId: str, criterion: { type: 'string', enum: ['tr', 'cc'] }, quote: str, title: str, ask: { type: 'array', items: str }, starter: str, aim: str, model: str, vi: str },
-      },
-    },
-  },
-};
 const CHECK_SCHEMA = {
   type: 'object', additionalProperties: false, required: ['solved', 'reply', 'ask'],
   properties: { solved: { type: 'boolean' }, reply: str, ask: str },
@@ -43,37 +29,9 @@ const RESCORE_SCHEMA = {
   },
 };
 
-/**
- * The fix is now written inside the comment, in place of the quoted words: each task also carries a model rewrite
- * for the "Gợi ý cách viết" hints (the student sees its meaning and the first letter of each word, never the text).
- */
-const PLAN_EXTRA = `
-
-## Bổ sung · câu mẫu cho gợi ý (mỗi việc thêm hai trường)
-Học sinh sửa ngay trong nhận xét: chữ trong quote bị gạch đi và học sinh gõ câu thay thế vào đúng chỗ đó.
-- model: câu (hoặc vài câu) tiếng Anh band 7 thay THẲNG cho quote trong đoạn, đọc liền mạch với phần trước và sau quote, làm xong đúng điều aim yêu cầu. Viết bằng lời của người viết giỏi, bám chữ và ý của học sinh, 15 đến 45 chữ.
-- vi: nghĩa tiếng Việt tự nhiên của model.
-
-ĐỊNH DẠNG TRẢ LỜI (thay cho định dạng ở trên): chỉ một JSON object, không có gì khác:
-{"tasks": [{"sectionId": string, "criterion": "tr"|"cc", "quote": string, "title": string, "ask": [string, string], "starter": string, "aim": string, "model": string, "vi": string}]}`;
-
 const essayText = (sections: SectionIn[]) => sections.map((s) => `<section id="${s.id}" label="${s.label}">\n${s.text.trim() || '(trống)'}\n</section>`).join('\n');
 const clip = (x: unknown, max: number) => (typeof x === 'string' ? x.trim().slice(0, max) : '');
 const band = (x: unknown) => Math.max(1, Math.min(9, Math.round(Number(x) || 0)));
-
-export async function aiFixPlan(userId: string, prompt: Prompt, sections: SectionIn[], chains: Chain[], comments: FixComment[]): Promise<PlanTask[]> {
-  const input = describePrompt(prompt) + '\n\n' + describeChains(prompt, chains, '') + '\n\nBÀI VIẾT\n' + essayText(sections)
-    + '\n\nNHẬN XÉT TR VÀ CC CỦA BÀI CHẤM\n' + JSON.stringify(comments, null, 1);
-  const out = await ask<{ tasks: PlanTask[] }>({ userId, kind: 'fix', task: FIXPLAN_TASK + PLAN_EXTRA, schema: PLAN_SCHEMA, effort: 'medium', maxTokens: 8000, input });
-  const ids = new Set(sections.map((s) => s.id));
-  return (Array.isArray(out.tasks) ? out.tasks : [])
-    .filter((t) => t && ids.has(t.sectionId) && (t.criterion === 'tr' || t.criterion === 'cc') && clip(t.title, 80) && Array.isArray(t.ask) && clip(t.ask[0], 400))
-    .slice(0, 5)
-    .map((t) => ({
-      sectionId: t.sectionId, criterion: t.criterion, quote: clip(t.quote, 600), title: clip(t.title, 80),
-      ask: t.ask.map((q) => clip(q, 400)).filter(Boolean).slice(0, 2), starter: clip(t.starter, 120), aim: clip(t.aim, 600), model: clip(t.model, 600), vi: clip(t.vi, 600),
-    }));
-}
 
 export async function aiFixCheck(userId: string, prompt: Prompt, chain: Chain | null, task: PlanTask, before: string, after: string): Promise<CheckOut> {
   const steps = chain ? '\n\nCÁC BƯỚC CỦA ĐOẠN\n' + chain.steps.map((s, k) => `  bước ${k + 1}: ${s.trim() || '(trống)'}`).join('\n') : '';

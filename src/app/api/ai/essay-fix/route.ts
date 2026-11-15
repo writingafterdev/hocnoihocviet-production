@@ -1,5 +1,5 @@
 import { aiErrorResponse, AiError } from '@/lib/ai/claude';
-import { aiFixCheck, aiFixPlan, aiRescore, type FixComment, type PlanTask, type RescoreTask, type Scores } from '@/lib/ai/essay-fix';
+import { aiFixCheck, aiRescore, type PlanTask, type RescoreTask, type Scores } from '@/lib/ai/essay-fix';
 import type { SectionIn } from '@/lib/ai/essay-review';
 import { readAiRequest } from '@/lib/ai/http';
 import type { Chain } from '@/features/chainlab/types';
@@ -16,20 +16,14 @@ const validTask = (t: unknown): t is PlanTask => {
 };
 
 /**
- * The fix round. action "plan": tasks from the grading's TR/CC comments; "check": is one task solved in the edited
- * paragraph; "rescore": the scores after the round, anchored to the last grading. Each takes one "fix" use.
+ * The fix round. action "check": is one fix solved in the edited paragraph; "rescore": the scores after the round,
+ * anchored to the last grading. Each takes one "fix" use.
  */
 export async function POST(request: Request) {
   const r = await readAiRequest<{ promptId: string; chains: Chain[]; stance: string; action: string } & Record<string, unknown>>(request);
   if (r instanceof Response) return r;
   const b = r.body;
   try {
-    if (b.action === 'plan') {
-      const comments = b.comments as FixComment[];
-      if (!validSections(b.sections) || !Array.isArray(comments) || comments.length > 40) return json({ error: 'invalid' }, 400);
-      if (!comments.length) return json({ tasks: [] });
-      return json({ tasks: await aiFixPlan(r.userId, r.prompt, b.sections, b.chains, comments) });
-    }
     if (b.action === 'check') {
       if (!validTask(b.task) || !text(b.before, 8000) || !text(b.after, 8000)) return json({ error: 'invalid' }, 400);
       const chain = b.chains.find((c) => c.id === (b.task as PlanTask).sectionId) || null;

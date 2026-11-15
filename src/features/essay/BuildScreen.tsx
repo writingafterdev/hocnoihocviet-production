@@ -11,6 +11,7 @@ import { NotesPanel } from '../coach/NotesPanel';
 import { TranslatorChat } from '../coach/TranslatorChat';
 import { primaryBtn } from '../coach/ui';
 import { useCoach, type CheckResult } from '../coach/useCoach';
+import { useStepHelp } from '../prove/StepHelp';
 import { chainIn, endOf, KIND_ASK, kindOf, middleOf, newBody, questionOf, startOf, withEnds, withMiddle } from './model';
 import { Chip } from '@/components/base/badges/chip';
 import { ProBeam } from '@/components/ui/pro-beam';
@@ -91,6 +92,9 @@ function BodyCard({ prompt, chain, num, canDelete, onChange, onDelete, check, on
 }) {
   const kind = kindOf(prompt, chain), q = questionOf(prompt, chain), info = KIND_ASK[kind];
   const coach = useCoach(prompt.id, chainIn(prompt, chain), check, onCheck);
+  const { steps: _steps, ...base } = chainIn(prompt, chain); // eslint-disable-line @typescript-eslint/no-unused-vars
+  /** Same per-step help as Chứng minh nhanh: "Gợi ý" (a guiding question as the placeholder + phrases), then rewording after Enter. */
+  const help = useStepHelp(prompt.id, base, middleOf(chain).length ? middleOf(chain) : [''], '');
   const mine = chain.mine || 'start';
   const start = startOf(chain), end = endOf(chain);
   const ready = !!(start.trim() && end.trim());
@@ -151,7 +155,8 @@ function BodyCard({ prompt, chain, num, canDelete, onChange, onDelete, check, on
               endLabel={'Điểm cuối · ' + (mine === 'end' ? 'bạn viết' : 'gợi ý từ đề')}
               steps={middle.length ? middle : ['']} setSteps={(m) => onChange(withMiddle(chain, m))}
               notes={notes} active={focused ? active : null} onPick={(k) => { onFocus(); onPick(k); }}
-              hint={coach.hint} asking={coach.asking} onHint={coach.askHint} onCloseHint={coach.closeHint}
+              hint={coach.hint} asking={coach.asking} onHint={coach.askHint} onCloseHint={coach.closeHint} hideHint
+              stepQuestion={help.stepQuestion} onSubmitStep={help.onSubmitStep} belowStep={help.belowStep}
               helper={coach.error || (coach.checking ? 'Đang kiểm tra…' : '')}
               checking={coach.checking} clean={coach.fresh && !!coach.result && coach.result.placed.length === 0}
             />
