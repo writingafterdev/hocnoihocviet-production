@@ -72,7 +72,12 @@ export function useCoach(promptId: string, chain: ChainIn, initial?: CheckResult
     if (checking) return;
     setChecking(true); setError('');
     try {
-      const r = await postAi<ChainCheckOut>('chain-check', { promptId, chain });
+      // "Kiểm tra lại" after an edit: send what the last check said, so the server only judges those notes (fast).
+      let prev: { steps: string[]; notes: ChainNote[] } | undefined;
+      if (result && result.notes.length && result.snap !== snap) {
+        try { prev = { steps: JSON.parse(result.snap)[2] as string[], notes: result.notes.map(({ type, at, text }) => ({ type, at, text })) }; } catch { prev = undefined; }
+      }
+      const r = await postAi<ChainCheckOut>('chain-check', { promptId, chain, ...(prev ? { prev } : {}) });
       setResult({ ...r, snap, placed: place(chain.steps, r.notes) });
       setHint(null);
     } catch (e) { setError(errText(e)); }

@@ -9,7 +9,7 @@ import type { Prompt } from '@/content/prompts';
 import { ask } from './claude';
 import { describePrompt } from './describe';
 import { BANK_TASK, CHECK_TASK, HINT_TASK } from './prompts';
-import { STEP_SCAN_TASK, STEP_VOCAB_TASK } from './prompts-drill';
+import { CHAIN_RECHECK_TASK, STEP_SCAN_TASK, STEP_VOCAB_TASK } from './prompts-drill';
 
 const PHRASES_SCHEMA = { type: 'array', items: { type: 'object', additionalProperties: false, required: ['en', 'vi'], properties: { en: { type: 'string' }, vi: { type: 'string' } } } };
 const cleanPhrases = (xs: unknown, max: number): { en: string; vi: string }[] => {
@@ -141,12 +141,22 @@ export async function aiVocabBank(userId: string, prompt: Prompt, chain: ChainIn
   return { phrases };
 }
 
-export async function aiChainCheck(userId: string, prompt: Prompt, chain: ChainIn): Promise<ChainCheckOut> {
+/** What the last check said, sent back with "Kiểm tra lại" so the recheck only has to judge those notes. */
+export interface PrevCheck { steps: string[]; notes: ChainNote[] }
+
+export async function aiChainCheck(userId: string, prompt: Prompt, chain: ChainIn, prev?: PrevCheck | null): Promise<ChainCheckOut> {
   const { text, n } = describeChain(chain);
-  const out = await ask<ChainCheckOut>({
-    userId, kind: 'chain', task: CHECK_TASK, schema: CHECK_SCHEMA, effort: 'medium', maxTokens: 8000,
-    input: describePrompt(prompt) + '\n\n' + text,
-  });
+  // A recheck after notes: short prompt, no METHOD, low effort. Otherwise the full read of the chain.
+  const out = prev && prev.notes.length
+    ? await ask<ChainCheckOut>({
+      userId, kind: 'chain', task: CHAIN_RECHECK_TASK, schema: CHECK_SCHEMA, effort: 'low', maxTokens: 1500, grounded: false,
+      input: 'ĐỀ BÀI\n' + prompt.text + '\n\nCHUỖI CŨ\nvị trí 0 · điểm đầu: ' + chain.start + '\n' + prev.steps.map((s, i) => 'vị trí ' + (i + 1) + ': ' + s).join('\n') + '\nvị trí ' + (prev.steps.length + 1) + ' · điểm cuối: ' + chain.end
+        + '\n\nNHẬN XÉT LẦN TRƯỚC\n' + JSON.stringify(prev.notes) + '\n\nCHUỖI MỚI\n' + text,
+    })
+    : await ask<ChainCheckOut>({
+      userId, kind: 'chain', task: CHECK_TASK, schema: CHECK_SCHEMA, effort: 'medium', maxTokens: 8000,
+      input: describePrompt(prompt) + '\n\n' + text,
+    });
   const notes = (out.notes || [])
     .map((x) => ({ type: x.type, at: Math.round(Number(x.at)), text: (x.text || '').trim() }))
     // A jump sits between `at` and `at + 1`, so it can't start at the ending point; a trait or detail is on a middle step.
