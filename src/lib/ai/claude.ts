@@ -1,6 +1,7 @@
 import { parseReply } from './json';
 import { getCloudflareContext } from '@opennextjs/cloudflare';
 import { METHOD } from './method';
+import { callGemini, geminiKeys, GeminiError, streamGemini } from './gemini';
 
 export const MODEL = 'claude-opus-5-5';
 
@@ -54,9 +55,17 @@ export async function remaining(userId: string): Promise<Record<AiKind, number>>
   return left;
 }
 
+/** An AI provider is set: Gemini (GEMINI_API_KEYS / GEMINI_API_KEY, used first) or the Anthropic-compatible one. */
+const configured = (e: CloudflareEnv) => geminiKeys(e).length > 0 || !!e.ANTHROPIC_API_KEY;
+
 export async function aiConfigured() {
-  return !!(await env()).ANTHROPIC_API_KEY;
+  return configured(await env());
 }
+
+/** The system prompt as one text, for providers without Anthropic's blocks: method (if grounded), task, and the JSON shape. */
+const JSON_RULE = '\n\nOUTPUT FORMAT: reply with ONE JSON object and nothing else (no markdown, no code fences, no text before or after). Inside string values never use the straight double quote character; write quotations with “ ” instead. It must match this JSON Schema exactly:\n';
+const systemText = (task: string, schema: Record<string, unknown> | undefined, grounded: boolean) =>
+  (grounded ? METHOD + '\n\n' : '') + task + (schema ? JSON_RULE + JSON.stringify(schema) : '');
 
 interface Ask {
   userId: string;
@@ -81,8 +90,9 @@ const TICKET_MS = 15 * 60_000;
  * request, so each gets its own CPU budget). Returns a ticket; each part can be claimed with it once.
  */
 export async function startTicket(userId: string, kind: AiKind) {
-  const { DB, ANTHROPIC_API_KEY } = await env();
-  if (!ANTHROPIC_API_KEY) throw new AiError('not_configured');
+  const e = await env();
+  const { DB } = e;
+  if (!configured(e)) throw new AiError('not_configured');
   await reserve(userId, kind);
   const id = crypto.randomUUID();
   await DB.batch([
@@ -118,10 +128,23 @@ export async function refundTicket(userId: string, ticket: string) {
  */
 export async function ask<T = string>({ userId, kind, task, input, schema, effort = 'medium', maxTokens = 16000, grounded = true, counted = true }: Ask): Promise<T> {
   const e = await env();
-  if (!e.ANTHROPIC_API_KEY) throw new AiError('not_configured');
+  if (!configured(e)) throw new AiError('not_configured');
   const quota = counted ? await reserve(userId, kind) : null;
   const { DB } = e;
   try {
+    // Gemini (Google AI Studio), rotating through models and keys as each one's free allowance runs out.
+    if (geminiKeys(e).length) {
+      const started = Date.now();
+      let r;
+      try { r = await callGemini(e, { system: systemText(task, schema, grounded), input, maxTokens, timeoutMs: TIMEOUT_MS[kind] }); }
+      catch (err) { throw err instanceof GeminiError ? new AiError(err.code, err.message) : err; }
+      console.log('ai_call', kind, r.model, (Date.now() - started) + 'ms', 'in=' + r.input, 'out=' + r.output, r.stop);
+      await (quota ? quota.record({ input: r.input, output: r.output }) : recordTokens(DB, userId, kind, { input: r.input, output: r.output })).catch(() => {});
+      const bad = (why: string) => { console.error('ai_bad_output', kind, r.model, why, r.stop, JSON.stringify(r.text.slice(0, 300))); return new AiError('bad_output', why); };
+      if (!schema) { if (r.stop === 'max_tokens') throw bad('max_tokens'); return r.text.trim() as T; }
+      try { return parseReply<T>(r.text, r.stop, (schema.required as string[]) || []); }
+      catch (err) { throw bad(err instanceof Error ? err.message : 'invalid_json'); }
+    }
     const model = e.AI_MODEL || MODEL;
     const claude = model.startsWith('claude-');
     const started = Date.now();
@@ -184,7 +207,8 @@ function messagesBody(model: string, { task, input, schema, effort = 'medium', m
  */
 export async function askStream({ kind, task, input, schema, effort = 'medium', maxTokens = 16000, grounded = true }: Omit<Ask, 'userId' | 'counted'>): Promise<Response> {
   const e = await env();
-  if (!e.ANTHROPIC_API_KEY) throw new AiError('not_configured');
+  if (!configured(e)) throw new AiError('not_configured');
+  if (geminiKeys(e).length) return streamGemini(e, { system: systemText(task, schema, grounded), input, maxTokens, timeoutMs: 240_000 });
   const model = e.AI_MODEL || MODEL;
   const url = (e.AI_BASE_URL || 'https://api.anthropic.com').replace(/\/+$/, '') + '/v1/messages';
   const headers: Record<string, string> = { 'content-type': 'application/json', 'x-api-key': e.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01', ...(model.startsWith('claude-') ? { 'anthropic-beta': BETA } : {}) };

@@ -1,3 +1,4 @@
+import { geminiKeys, geminiModels } from '@/lib/ai/gemini';
 import { getCloudflareContext } from '@opennextjs/cloudflare';
 
 /**
@@ -24,6 +25,9 @@ export async function GET(request: Request) {
       GOOGLE_CLIENT_SECRET: !!env.GOOGLE_CLIENT_SECRET,
       ANTHROPIC_API_KEY: !!env.ANTHROPIC_API_KEY && (!!env.AI_BASE_URL || env.ANTHROPIC_API_KEY.startsWith('sk-ant-')),
     },
-    ai: { endpoint: env.AI_BASE_URL ? new URL(env.AI_BASE_URL).host : 'api.anthropic.com', model: env.AI_MODEL || 'claude-opus-5-5' },
+    // Gemini wins when its key is set; the key count is shown, never the keys.
+    ai: geminiKeys(env).length
+      ? { endpoint: 'generativelanguage.googleapis.com', keys: geminiKeys(env).length, models: geminiModels(env) }
+      : { endpoint: env.AI_BASE_URL ? new URL(env.AI_BASE_URL).host : 'api.anthropic.com', model: env.AI_MODEL || 'claude-opus-5-5' },
   }, { headers: { 'Cache-Control': 'no-store' } });
 }

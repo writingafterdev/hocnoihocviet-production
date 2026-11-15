@@ -53,6 +53,11 @@ D1 database, then deploys.
       no thinking, no fallbacks, and the JSON shape is requested in the prompt instead of enforced.
     - **Cloudflare AI Gateway:** `AI_BASE_URL=https://gateway.ai.cloudflare.com/v1/<account>/<gateway>/anthropic`, with
       `AI_MODEL` unset, for logs and caching.
+  - optional `GEMINI_API_KEYS` (secret): one or more Google AI Studio keys, comma-separated. When set, every AI call goes
+    to Gemini (OpenAI-compatible endpoint) instead of `ANTHROPIC_API_KEY`'s provider, rotating through models and keys:
+    a model that is used up (429), unknown (404) or busy (5xx) is skipped and the next is tried. Essay grading still
+    reaches the browser as the same event stream. Optional `GEMINI_MODELS` (plain variable): the model ids to try, in
+    order; unset = the list in `src/lib/ai/gemini.ts`. `/api/health` shows the key count and the model list.
   - `ADMIN_EMAILS` (Cloudflare Variables and Secrets, plain text is fine): comma-separated emails that can open `/admin`.
     Unset = nobody can. The admin APIs (`/api/admin/*`) answer 404 to everyone else.
   - optional `DECISION_URL`: the decision model's endpoint. When `AI_BASE_URL` is a Model Studio host it's derived

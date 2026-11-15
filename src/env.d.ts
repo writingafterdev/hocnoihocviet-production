@@ -31,6 +31,12 @@ interface CloudflareEnv {
   AI_BASE_URL?: string;
   /** Optional: model ID for that endpoint, e.g. a ModelScope model. Unset = claude-opus-5-5. Non-Claude models skip thinking, fallbacks and enforced JSON. */
   AI_MODEL?: string;
+  /** Google AI Studio key(s), comma-separated: when set, every AI call goes to Gemini (see src/lib/ai/gemini.ts) instead of ANTHROPIC_API_KEY's provider. */
+  GEMINI_API_KEYS?: string;
+  /** Same as GEMINI_API_KEYS, for a single key. */
+  GEMINI_API_KEY?: string;
+  /** Optional: Gemini model ids to rotate through, comma-separated, in order. Unset = the list in gemini.ts. */
+  GEMINI_MODELS?: string;
   /** Comma-separated emails that can open /admin. Unset = nobody. */
   ADMIN_EMAILS?: string;
   /** Optional: full URL of Model Studio's decision-model endpoint (…/compatible-mode/v1/systemone). Unset = derived from a Model Studio AI_BASE_URL. */
