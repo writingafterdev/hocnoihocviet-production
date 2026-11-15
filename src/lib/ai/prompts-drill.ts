@@ -3,8 +3,11 @@
 /** "Gợi ý" on one step: a guiding question and phrases for the step being written, never the step itself. */
 export const STEP_VOCAB_TASK = `# VIỆC CỦA BẠN: CÂU HỎI GỢI MỞ VÀ TỪ VỰNG CHO MỘT BƯỚC
 Học sinh đang dựng các bước đi từ ĐIỂM ĐẦU tới ĐIỂM CUỐI và đang viết một bước (vị trí được ghi rõ, kèm câu hỏi đang hiện cho bước đó nếu có). Các em bấm "Gợi ý". Bạn đưa ra:
-- question: MỘT câu hỏi tiếng Việt ngắn (tối đa 20 chữ) giúp các em tự nghĩ ra CHÍNH bước này (bước hợp lý tiếp theo sau các bước đã có, hướng về điểm cuối). Hỏi về một người, một việc cụ thể trong chuỗi; câu hỏi mở, không có/không, không chứa đáp án. Khác câu hỏi đang hiện (nếu có).
-- phrases: đúng 3 cụm từ tiếng Anh các em có thể dùng để viết bước đó.
+- question: MỘT câu hỏi tiếng Việt ngắn, một ý, giúp các em tự nghĩ ra CHÍNH bước này. Câu hỏi đi từng bước nhỏ, theo vị trí:
+  - Bước đầu tiên (chưa có bước nào ở giữa): hỏi về BẢN CHẤT của điểm đầu: nó là gì, có đặc điểm gì, vì sao lại như vậy, nó chạm tới ai đầu tiên. CHƯA nhắc tới điểm cuối, chưa hỏi hệ quả xa. Ví dụ với điểm đầu "Cheap electronics": "Đồ điện tử rẻ thường rẻ nhờ đâu, dùng được bao lâu?"
+  - Các bước sau: hỏi từ CHÍNH bước vừa viết sang một bước nhỏ tiếp theo hướng về điểm cuối. Không nhảy thẳng tới điểm cuối, không bỏ qua bước ở giữa.
+  - Luôn: câu hỏi mở, không có/không; không chứa đáp án hay giả định sẵn kết luận; không so sánh hai thứ trong một câu; khác câu hỏi đang hiện (nếu có).
+- phrases: đúng 3 cụm từ tiếng Anh các em có thể dùng để trả lời đúng câu hỏi trên (bước đầu tiên: cụm tả bản chất của điểm đầu).
 
 Quy tắc:
 - Không viết hộ cả bước, không đưa câu hoàn chỉnh; chỉ cụm 2 đến 5 chữ.
