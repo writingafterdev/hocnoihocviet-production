@@ -12,9 +12,8 @@ import { TranslatorChat } from '../coach/TranslatorChat';
 import { primaryBtn } from '../coach/ui';
 import { bandText, CRITERIA, markStyle, CRITERION_STYLE, draftsKey, requestEssayReview, retryEssayCriterion, wordCount, type EssayReview, type EssaySection } from '../desk/scoring';
 import { passes, type FixTask } from './FixFlow';
-import { wordStates, words as splitWords } from '../guided/matching';
 import { checkFix, rescore } from './fix-api';
-import { applyEdits, FixBody } from './InlineFix';
+import { applyEdits, FixBody, matchesFix } from './InlineFix';
 import { GuidedHeader, GuidedWriter, useGuidedPlan } from './GuidedWriter';
 import { MiniChain } from './MiniChain';
 import { Skeleton } from '@/components/base/skeleton/skeleton';
@@ -212,11 +211,11 @@ export function WriteScreen({ prompt, chains, setChains, essay, setEssay, toolba
     const after = applyEdits(before, [t], edits);
     const key = t.item.key;
     const verdict = (v: { solved: boolean; reply: string; ask: string }) => setEssay((e) => (e.fix ? { ...e, fix: { ...e.fix, checks: { ...e.fix.checks, [key]: v }, solved: v.solved ? [...e.fix.solved.filter((x) => x !== key), key] : e.fix.solved.filter((x) => x !== key) } } : e));
-    // Vocabulary and grammar: checked here, against the hidden fix.
+    // Written along the hidden fix (the first-letter hints): solved at once, nothing to ask the AI.
+    if (matchesFix(t, edits[key] || '')) { verdict({ solved: true, reply: 'Đã sửa đúng chỗ này.', ask: '' }); return; }
+    // Vocabulary and grammar have one right fix: not matching it is not solved yet.
     if ((t.crit === 'lr' || t.crit === 'gra') && t.model) {
-      const st = wordStates(t.model, edits[key] || ''), n = splitWords(t.model).length;
-      const ok = n > 0 && st.filter((x) => x.s === 'ok').length / n >= 0.75;
-      verdict({ solved: ok, reply: ok ? 'Đã sửa đúng chỗ này.' : 'Chưa khớp cách sửa. Bật "Gợi ý cách viết" để xem chữ cái đầu của từng từ.', ask: '' });
+      verdict({ solved: false, reply: 'Chưa khớp cách sửa. Bật "Gợi ý cách viết" để xem chữ cái đầu của từng từ.', ask: '' });
       return;
     }
     // Ideas and flow in an AI review: checked by the AI, with the planned task or the comment itself.

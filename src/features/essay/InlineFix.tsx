@@ -35,6 +35,16 @@ export function FixParagraph({ text, tasks, edits, open, onOpen }: { text: strin
   return <>{out}</>;
 }
 
+/**
+ * The rewrite follows the hidden fix (most words match, the way the first-letter hints lead): solved on the spot,
+ * with no AI call. Only a rewrite in the student's own words needs the AI to judge it.
+ */
+export function matchesFix(task: FixTask, typed: string) {
+  const model = task.plan?.model || task.model || '';
+  const n = model ? splitWords(model).length : 0;
+  return n > 0 && wordStates(model, typed).filter((x) => x.s === 'ok').length / n >= 0.75;
+}
+
 /** The text with every typed rewrite put in place of its quoted words. */
 export function applyEdits(text: string, tasks: FixTask[], edits: Record<string, string>) {
   return tasks.reduce((t, task) => {

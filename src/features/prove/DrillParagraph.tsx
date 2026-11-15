@@ -14,7 +14,7 @@ import { wordCount } from '../desk/scoring';
 import { checkFix, type CheckOut, type PlanTask } from '../essay/fix-api';
 import { planTasks, type FixTask } from '../essay/FixFlow';
 import { GuidedHeader, GuidedWriter, useGuidedPlan } from '../essay/GuidedWriter';
-import { applyEdits, FixCard, FixParagraph } from '../essay/InlineFix';
+import { applyEdits, FixCard, FixParagraph, matchesFix } from '../essay/InlineFix';
 import { Chip } from '@/components/base/badges/chip';
 import { AiStatus } from '@/components/ui/ai-status';
 import { ProBeam } from '@/components/ui/pro-beam';
@@ -67,6 +67,11 @@ export function DrillParagraph({ s, prompt, steps, guided: startGuided, onBack }
   const check = async (t: FixTask) => {
     if (!review || !t.plan || checking) return;
     const key = t.item.key, after = applyEdits(text, [t], review.edits);
+    // Written along the hidden fix (the first-letter hints): solved at once, nothing to ask the AI.
+    if (matchesFix(t, review.edits[key] || '')) {
+      setReview((r) => (r ? { ...r, checks: { ...r.checks, [key]: { solved: true, reply: 'Đã sửa đúng chỗ này.', ask: '' } }, solved: [...r.solved.filter((x) => x !== key), key] } : r));
+      return;
+    }
     setChecking(key); setFixError('');
     try {
       const v = await checkFix(prompt, [chain], t.plan, text, after);
