@@ -51,14 +51,7 @@ export function FixCard({ task, where, comment, open, onOpen, edit, setEdit, sol
   task: FixTask; where: string; comment?: string; open: boolean; onOpen: () => void;
   edit: string; setEdit: (v: string) => void; solved: boolean; verdict?: CheckOut; checking: boolean; error: string; onCheck: () => void;
 }) {
-  const [more, setMore] = useState(0);
-  const [hints, setHints] = useState(false);
   const st = CRITERION_STYLE[task.crit] || CRITERION_STYLE.tr;
-  const model = task.plan?.model || '';
-  const tokens = model ? splitWords(model) : [];
-  const states = model ? wordStates(model, edit) : [];
-  const ok = states.filter((x) => x.s === 'ok').length;
-  const extra = (task.ask.length - 1) + (task.starter ? 1 : 0);
 
   if (!open) {
     return (
@@ -83,7 +76,30 @@ export function FixCard({ task, where, comment, open, onOpen, edit, setEdit, sol
       </span>
       {task.item.quote && <span style={{ fontFamily: CL.serif, fontSize: 12.5, fontStyle: 'italic', color: CL.ink6 }}>“{task.item.quote}”</span>}
       {comment && <span style={{ fontFamily: CL.sans, fontSize: 13, lineHeight: 1.5, color: CL.ink7 }}>{comment}</span>}
+      <FixBody task={task} edit={edit} setEdit={setEdit} solved={solved} verdict={verdict} checking={checking} error={error} onCheck={onCheck} />
+    </div>
+  );
+}
+
+/**
+ * The fix itself, inside a comment: the guiding question on top, "Gợi ý cách viết" for the model rewrite's meaning and
+ * the first letter of each word, the box for the new words, "Gợi ý thêm" and "Kiểm tra". `preparing`: the AI's
+ * questions and hints are still on their way (the comment's own text stands in until then).
+ */
+export function FixBody({ task, edit, setEdit, solved, verdict, checking, error, onCheck, preparing }: {
+  task: FixTask; edit: string; setEdit: (v: string) => void; solved: boolean; verdict?: CheckOut; checking: boolean; error: string; onCheck: () => void; preparing?: boolean;
+}) {
+  const [more, setMore] = useState(0);
+  const [hints, setHints] = useState(false);
+  const model = task.plan?.model || '';
+  const tokens = model ? splitWords(model) : [];
+  const states = model ? wordStates(model, edit) : [];
+  const ok = states.filter((x) => x.s === 'ok').length;
+  const extra = (task.ask.length - 1) + (task.starter ? 1 : 0);
+  return (
+    <>
       <div style={{ borderRadius: 10, background: '#F7F9FD', border: '1px solid #DCE7F7', padding: '10px 12px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+        {preparing && <span role="status" style={label}>Đang chuẩn bị câu hỏi gợi mở…</span>}
         <span style={{ fontFamily: CL.sans, fontSize: 13.5, fontWeight: 600, lineHeight: 1.45, color: CL.ink }}>{task.ask[0]}</span>
         {task.ask.slice(1, 1 + more).map((q) => <span key={q} className="co-unfold" style={{ fontFamily: CL.sans, fontSize: 13, fontWeight: 600, lineHeight: 1.45, color: CL.ink7 }}>{q}</span>)}
         {task.starter && more >= task.ask.length && <span className="co-unfold" style={{ fontFamily: CL.sans, fontSize: 12.5, lineHeight: 1.5, color: CL.ink6 }}>Thử mở câu bằng: <i style={{ fontFamily: CL.serif, fontSize: 13.5, color: CL.ink8 }}>{task.starter}</i></span>}
@@ -120,6 +136,6 @@ export function FixCard({ task, where, comment, open, onOpen, edit, setEdit, sol
         {extra > 0 && <button type="button" className="cl-btn" onClick={() => setMore(more + 1)} disabled={more >= extra} style={{ ...smallBtn, opacity: more >= extra ? 0.4 : 1 }}>Gợi ý thêm</button>}
         <button type="button" className="cl-btn cl-primary" onClick={onCheck} disabled={checking || !edit.trim()} style={{ ...primaryBtn, height: 32, fontSize: 13, marginLeft: 'auto', opacity: checking || !edit.trim() ? 0.45 : 1 }}>{checking ? 'Đang kiểm tra…' : 'Kiểm tra'}</button>
       </span>
-    </div>
+    </>
   );
 }
