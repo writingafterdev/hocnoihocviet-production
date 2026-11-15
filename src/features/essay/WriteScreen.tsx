@@ -410,8 +410,9 @@ export function WriteScreen({ prompt, chains, setChains, essay, setEssay, toolba
           {sending && !scores && <ReviewBone />}
           {panel && scores && (
             <section style={{ flexShrink: 0, borderRadius: 12, border: '1px solid ' + CL.border, background: '#fff', overflow: 'hidden' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '16px 18px 14px' }}>
-                <span style={{ fontFamily: CL.serif, fontSize: 42, fontWeight: 500, lineHeight: 1, color: CL.ink }}>{bandText(scores.band, true)}</span>
+              {/* The band sits at the top beside the summary (not centred on a tall block), in a tighter box. */}
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14, padding: '12px 14px 10px' }}>
+                <span style={{ flexShrink: 0, fontFamily: CL.serif, fontSize: 38, fontWeight: 500, lineHeight: 1, color: CL.ink }}>{bandText(scores.band, true)}</span>
                 {panel.rescore
                   ? <span style={{ fontFamily: CL.sans, fontSize: 12.5, lineHeight: 1.5, color: CL.ink6 }}>Đã chấm lại sau vòng sửa.</span>
                   : panel.summary && <span style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 6, fontFamily: CL.sans, fontSize: 12.5, lineHeight: 1.5, color: CL.ink6 }}>
