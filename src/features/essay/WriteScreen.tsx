@@ -410,14 +410,16 @@ export function WriteScreen({ prompt, chains, setChains, essay, setEssay, toolba
           {sending && !scores && <ReviewBone />}
           {panel && scores && (
             <section style={{ flexShrink: 0, borderRadius: 12, border: '1px solid ' + CL.border, background: '#fff', overflow: 'hidden' }}>
-              {/* The band sits at the top beside the summary (not centred on a tall block), in a tighter box. */}
-              <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14, padding: '12px 14px 10px' }}>
-                <span style={{ flexShrink: 0, fontFamily: CL.serif, fontSize: 38, fontWeight: 500, lineHeight: 1, color: CL.ink }}>{bandText(scores.band, true)}</span>
+              {/* The band stays centred; the text beside it is folded to about its height, so the box stays compact. */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '12px 18px' }}>
+                <span style={{ flexShrink: 0, fontFamily: CL.serif, fontSize: 42, fontWeight: 500, lineHeight: 1, color: CL.ink }}>{bandText(scores.band, true)}</span>
                 {panel.rescore
                   ? <span style={{ fontFamily: CL.sans, fontSize: 12.5, lineHeight: 1.5, color: CL.ink6 }}>Đã chấm lại sau vòng sửa.</span>
-                  : panel.summary && <span style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 6, fontFamily: CL.sans, fontSize: 12.5, lineHeight: 1.5, color: CL.ink6 }}>
-                    <Clamp lines={3}>{panel.summary.replace(/\*\*/g, '')}</Clamp>
-                    {panel.praise && <Clamp lines={2} style={{ color: CL.greenText }}>{panel.praise.replace(/\*\*/g, '')}</Clamp>}
+                  : panel.summary && <span style={{ flex: 1, minWidth: 0, fontFamily: CL.sans, fontSize: 12.5, lineHeight: 1.5, color: CL.ink6 }}>
+                    <Clamp lines={2} style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                      <span>{panel.summary.replace(/\*\*/g, '')}</span>
+                      {panel.praise && <span style={{ color: CL.greenText }}>{panel.praise.replace(/\*\*/g, '')}</span>}
+                    </Clamp>
                   </span>}
               </div>
               {panel.rescore && panel.rescore.notes.length > 0 && (
