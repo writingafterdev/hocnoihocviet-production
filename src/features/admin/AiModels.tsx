@@ -86,9 +86,11 @@ export function AiModels() {
                     <td className="adm-num" style={{ textAlign: 'right', padding: '12px', color: '#525252' }}>{m.today.tokens ? num(m.today.tokens) : '—'}</td>
                     <td className="adm-num" style={{ textAlign: 'right', padding: '12px', color: '#525252' }}>{secs(m.today.avgMs)}</td>
                     <td style={{ padding: '12px 24px 12px 12px' }}>
-                      {pill ? <span className={'adm-pill ' + pill.cls} title={p!.note || undefined}>{pill.label}{p!.status === 'ok' ? ' · ' + secs(p!.ms) : ''}</span>
-                        : m.last ? <span className="adm-sub">Lần cuối: {m.last.status === '200' ? 'trả lời' : m.last.status === '429' ? 'hết lượt' : 'lỗi ' + m.last.status}</span>
+                      {pill ? <span className={'adm-pill ' + pill.cls}>{pill.label}{p!.status === 'ok' ? ' · ' + secs(p!.ms) : ''}</span>
+                        : m.last ? <span className="adm-sub">Lần cuối: {m.last.status === '200' ? 'trả lời' : m.last.status.startsWith('429') ? 'hết lượt' : 'lỗi ' + m.last.status.split(':')[0]}</span>
                         : <span className="adm-sub">Chưa dùng hôm nay</span>}
+                      {/* Google's own words for a failure: shown, not hidden in a tooltip. */}
+                      {(p && p.status !== 'ok' && p.note) || (!p && m.last && m.last.status.includes(': ')) ? <div className="adm-sub" style={{ marginTop: 4, maxWidth: 280, overflowWrap: 'anywhere', color: '#B33A1A' }}>{p ? p.note : m.last!.status.slice(m.last!.status.indexOf(': ') + 2)}</div> : null}
                     </td>
                   </tr>
                 );

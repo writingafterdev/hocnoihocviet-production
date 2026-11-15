@@ -102,7 +102,9 @@ export async function callGemini(e: CloudflareEnv, { system, input, maxTokens, t
       const detail = (await res.text().catch(() => '')).slice(0, 400);
       last = model + ':' + res.status;
       console.warn('gemini_skip', model, k, res.status, detail.slice(0, 200));
-      await logModelUse(e, model, res.status === 429 ? 'limited' : 'failed', { ms: Date.now() - t0, status: String(res.status) });
+      // Keep Google's own message with the status, so the admin card can say why (bad key, unknown model, used up…).
+      const why = (detail.match(/"message"\s*:\s*"([^"]+)/)?.[1] || '').slice(0, 140);
+      await logModelUse(e, model, res.status === 429 ? 'limited' : 'failed', { ms: Date.now() - t0, status: res.status + (why ? ': ' + why : '') });
       if (res.status === 429) skip.set(id, /per.?day|PerDay|daily/i.test(detail) ? nextReset() : Date.now() + 60_000);
       else if (res.status === 404 || res.status === 400) skip.set(id, Date.now() + 6 * 3600_000); // unknown or unsupported model id
       else if (res.status === 401 || res.status === 403) { for (const m of models) skip.set(m + '|' + k, Date.now() + 6 * 3600_000); } // bad key
