@@ -265,15 +265,6 @@ export function ProveDrill() {
                         stepQuestion={help.stepQuestion} onSubmitStep={help.onSubmitStep} belowStep={help.belowStep}
                       />
                     </div>
-                    {clean && !rolling && (
-                      <div className="co-rise" style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '6px 34px 14px' }}>
-                        <Illustration name="person-with-archery-bow-hitting-bullseye" className="h-24 w-auto" />
-                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
-                          <svg width="22" height="22" viewBox="0 0 22 22" fill="none" aria-hidden="true" className="co-pop"><circle cx="11" cy="11" r="11" fill="#2D881A" /><path className="co-tick" d="M6.5 11.5l3 3 6-6.5" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
-                          <span style={{ fontFamily: CL.sans, fontSize: 14, fontWeight: 600, color: CL.ink }}>Mạch đi liền</span>
-                        </span>
-                      </div>
-                    )}
                     {checked && !rolling && (
                       <div className="co-rise" style={{ borderTop: '1px solid ' + CL.ink1, background: CL.panel, padding: '14px 22px', display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
                         <span style={{ marginRight: 'auto', fontFamily: CL.sans, fontSize: 14, fontWeight: 600, color: CL.ink }}>Viết chuỗi này thành một đoạn văn</span>

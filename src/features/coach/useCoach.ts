@@ -25,7 +25,9 @@ const snapOf = (c: ChainIn) => JSON.stringify([c.start, c.end, c.steps.map((s) =
 export function place(steps: string[], notes: ChainNote[]): PlacedNote[] {
   const filled = steps.map((s, i) => [s, i] as const).filter(([s]) => s.trim()).map(([, i]) => i);
   const n = filled.length;
-  return notes.map((x) => {
+  // Down the chain in order; on the same step, what to add to the step itself comes before the missing step after it.
+  const ordered = [...notes].sort((a, b) => a.at - b.at || (a.type === 'jump' ? 1 : 0) - (b.type === 'jump' ? 1 : 0));
+  return ordered.map((x) => {
     const step = x.at === 0 ? -1 : filled[x.at - 1] ?? -1;
     if (x.type === 'jump') {
       const from = x.at === 0 ? 'Điểm đầu' : 'Bước ' + x.at;
