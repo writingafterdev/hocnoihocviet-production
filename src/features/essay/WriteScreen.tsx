@@ -11,8 +11,9 @@ import { CoachGrid, SidePanel } from '../coach/CoachGrid';
 import { TranslatorChat } from '../coach/TranslatorChat';
 import { primaryBtn } from '../coach/ui';
 import { bandText, CRITERIA, markStyle, CRITERION_STYLE, draftsKey, requestEssayReview, retryEssayCriterion, wordCount, type EssayReview, type EssaySection } from '../desk/scoring';
-import { DiffView, fixTasks, FixView } from './FixFlow';
-import { planFix, rescore } from './fix-api';
+import { fixTasks, passes, type FixTask } from './FixFlow';
+import { checkFix, planFix, rescore } from './fix-api';
+import { applyEdits, FixCard, FixParagraph } from './InlineFix';
 import { GuidedHeader, GuidedWriter, useGuidedPlan } from './GuidedWriter';
 import { MiniChain } from './MiniChain';
 import { Skeleton } from '@/components/base/skeleton/skeleton';
@@ -127,6 +128,10 @@ export function WriteScreen({ prompt, chains, setChains, essay, setEssay, toolba
   const [retrying, setRetrying] = useState(false);
   /** "Sửa bài" is asking the AI for the fix plan. */
   const [planning, setPlanning] = useState(false);
+  /** The fix round: the comment open for rewriting, the one being checked, and the last error. */
+  const [openFix, setOpenFix] = useState<string | null>(null);
+  const [checkingFix, setCheckingFix] = useState<string | null>(null);
+  const [fixError, setFixError] = useState('');
   /** The criterion tab open in the feedback panel; the essay highlights only its comments. */
   const [tab, setTab] = useState('tr');
   /** What the feedback panel shows: the review, or while grading, what has arrived so far (null = all skeleton). */
@@ -169,15 +174,40 @@ export function WriteScreen({ prompt, chains, setChains, essay, setEssay, toolba
   /** Before a round starts: will "Sửa bài" have idea/flow work to plan? */
   const fixable = !!review && (review.source === 'ai' ? review.groups.some((g) => (g.id === 'tr' || g.id === 'cc') && g.items.some((it) => it.quote)) : tasks.length > 0);
   const tabNotes = notes.filter((n) => n.crit === tab);
+  /** "Sửa bài" is on: each idea/flow comment is fixed in place, on this screen. */
+  const inFix = !!review && !!essay.fix && tasks.length > 0 && !essay.fixing;
+  const edits = essay.fix?.edits || {};
+  const solvedN = essay.fix ? tasks.filter((t) => essay.fix!.solved.includes(t.item.key)).length : 0;
+  /** The grading's own words for a task, when the task came from one comment. */
+  const commentFor = (t: FixTask) => review?.groups.flatMap((g) => g.items).find((it) => it.quote && it.quote === t.item.quote)?.text.replace(/\*\*/g, '') || '';
+  const setEdit = (key: string, v: string) => setEssay((e) => (e.fix ? { ...e, fix: { ...e.fix, edits: { ...e.fix.edits, [key]: v } } } : e));
+  const checkTask = async (t: FixTask) => {
+    const fix = essay.fix;
+    if (!fix || checkingFix) return;
+    const sec = t.item.sectionId!, before = essay.drafts[sec] || '';
+    const after = applyEdits(before, [t], edits);
+    const key = t.item.key;
+    const verdict = (v: { solved: boolean; reply: string; ask: string }) => setEssay((e) => (e.fix ? { ...e, fix: { ...e.fix, checks: { ...e.fix.checks, [key]: v }, solved: v.solved ? [...e.fix.solved.filter((x) => x !== key), key] : e.fix.solved.filter((x) => x !== key) } } : e));
+    if (!t.plan) {
+      const ok = passes(t, after, before);
+      verdict({ solved: ok, reply: ok ? t.ok : 'Câu mới còn ngắn quá. Trả lời câu hỏi ở trên thay vì chỉ xoá câu cũ.', ask: '' });
+      return;
+    }
+    setCheckingFix(key); setFixError('');
+    try { verdict(await checkFix(prompt, chains, t.plan, before, after)); }
+    catch (e) { setFixError(e instanceof AiRequestError ? AI_ERROR_TEXT[e.code] : AI_ERROR_TEXT.network); }
+    setCheckingFix(null);
+  };
   const stale = !!review && review.key !== draftsKey(essay.drafts);
   const setDraft = (id: string, v: string) => setEssay((e) => ({ ...e, drafts: { ...e.drafts, [id]: v } }));
   const move = (i: number, d: -1 | 1) => setChains((cs) => { const a = [...cs]; [a[i], a[i + d]] = [a[i + d], a[i]]; return a; });
 
-  const submit = async () => {
+  const submit = async (override?: Record<string, string>) => {
+    const drafts = override || essay.drafts;
     if (sending || !words) return;
     setSending(true); setError(''); setActive(null); setLive(null); setChat(false); setTab('tr');
     try {
-      const r = await requestEssayReview(prompt, sections, essay.drafts, chains, '', setLive);
+      const r = await requestEssayReview(prompt, sections, drafts, chains, '', setLive);
       setEssay((e) => ({ ...e, review: r, fixing: false, fix: null, prevScores: e.review ? e.review.scores : null }));
       setTab('tr');
       setChat(false);
@@ -210,13 +240,14 @@ export function WriteScreen({ prompt, chains, setChains, essay, setEssay, toolba
    */
   const startFix = async () => {
     setActive(null); setError('');
-    if (essay.fix) { setEssay((e) => (e.fix ? { ...e, fix: { ...e.fix, view: 'fix' } } : e)); return; }
+    if (essay.fix) { setEssay((e) => (e.fix ? { ...e, fix: { ...e.fix, view: 'fix' } } : e)); setOpenFix(tasks.find((t) => !essay.fix!.solved.includes(t.item.key))?.item.key || null); return; }
     if (!review || !fixable) { setEssay((e) => ({ ...e, fixing: true })); return; }
-    if (review.source !== 'ai') { setEssay((e) => ({ ...e, fix: { view: 'fix', step: 0, solved: [], before: { ...e.drafts } } })); return; }
+    if (review.source !== 'ai') { setEssay((e) => ({ ...e, fix: { view: 'fix', step: 0, solved: [], before: { ...e.drafts } } })); setOpenFix(fixTasks(review)[0]?.item.key || null); return; }
     setPlanning(true);
     try {
       const planned = await planFix(prompt, chains, sections, essay.drafts, review);
-      setEssay((e) => (planned.length ? { ...e, fix: { view: 'fix', step: 0, solved: [], before: { ...e.drafts }, plan: planned, checks: {} } } : { ...e, fixing: true }));
+      setEssay((e) => (planned.length ? { ...e, fix: { view: 'fix', step: 0, solved: [], before: { ...e.drafts }, plan: planned, checks: {}, edits: {} } } : { ...e, fixing: true }));
+      if (planned.length) setOpenFix('p0');
     } catch (e) {
       if (e instanceof SignedOutError) { location.href = '/login?next=' + encodeURIComponent(location.pathname); return; }
       setError(e instanceof AiRequestError ? AI_ERROR_TEXT[e.code] : AI_ERROR_TEXT.network);
@@ -230,17 +261,20 @@ export function WriteScreen({ prompt, chains, setChains, essay, setEssay, toolba
    */
   const resubmitFix = async () => {
     const fix = essay.fix;
-    if (!review || !fix?.plan) { submit(); return; }
     if (sending) return;
+    // Every rewrite typed in a comment goes in place of its struck words.
+    const drafts = Object.fromEntries(Object.entries(essay.drafts).map(([id, t]) => [id, applyEdits(t, tasks.filter((x) => x.item.sectionId === id), fix?.edits || {})]));
+    setOpenFix(null);
+    if (!review || !fix?.plan) { setEssay((e) => ({ ...e, drafts, fix: null })); submit(drafts); return; }
     setSending(true); setError('');
     try {
       const done = fix.plan.map((t, k) => ({ title: t.title, criterion: t.criterion, aim: t.aim, solved: fix.solved.includes('p' + k) }));
-      const r = await rescore(prompt, chains, sections, fix.before, essay.drafts, review, done);
+      const r = await rescore(prompt, chains, sections, fix.before, drafts, review, done);
       setEssay((e) => {
         if (!e.review) return e;
-        const groups = e.review.groups.map((g) => ({ ...g, items: g.items.filter((it) => !it.quote || !it.sectionId || (e.drafts[it.sectionId] || '').includes(it.quote)) }));
-        const next: EssayReview = { ...e.review, scores: r.scores, groups, key: draftsKey(e.drafts), rescore: { notes: r.notes } };
-        return { ...e, review: next, prevScores: e.review.scores, fix: null, fixing: false };
+        const groups = e.review.groups.map((g) => ({ ...g, items: g.items.filter((it) => !it.quote || !it.sectionId || (drafts[it.sectionId] || '').includes(it.quote)) }));
+        const next: EssayReview = { ...e.review, scores: r.scores, groups, key: draftsKey(drafts), rescore: { notes: r.notes } };
+        return { ...e, drafts, review: next, prevScores: e.review.scores, fix: null, fixing: false };
       });
       setTab('tr');
     } catch (e) {
@@ -271,7 +305,9 @@ export function WriteScreen({ prompt, chains, setChains, essay, setEssay, toolba
             <textarea className="co-ta" value={text} readOnly={sending} onChange={(e) => setDraft(s.id, e.target.value)} onFocus={() => setFocus(s.id)} rows={3} placeholder={s.placeholder} aria-label={s.label}
               style={{ display: 'block', width: '100%', minHeight: 72, resize: 'none', border: 'none', outline: 'none', background: 'transparent', padding: 0, fontFamily: CL.serif, fontSize: 15, lineHeight: 1.75, color: CL.ink8 }} />
           ) : (
-            <p style={{ margin: 0, whiteSpace: 'pre-wrap', fontFamily: CL.serif, fontSize: 15, lineHeight: 1.75, color: CL.ink8 }}>{text ? <Marked text={text} notes={own} active={active} onPick={(n) => setActive(active === n ? null : n)} /> : <span style={{ color: CL.ink4 }}>(trống)</span>}</p>
+            <p style={{ margin: 0, whiteSpace: 'pre-wrap', fontFamily: CL.serif, fontSize: 15, lineHeight: 1.75, color: CL.ink8 }}>{!text ? <span style={{ color: CL.ink4 }}>(trống)</span>
+              : inFix ? <FixParagraph text={text} tasks={tasks.filter((t) => t.item.sectionId === s.id)} edits={edits} open={openFix} onOpen={setOpenFix} />
+              : <Marked text={text} notes={own} active={active} onPick={(n) => setActive(active === n ? null : n)} />}</p>
           )}
         </div>
       </div>
@@ -286,15 +322,6 @@ export function WriteScreen({ prompt, chains, setChains, essay, setEssay, toolba
   };
 
   const shell = { height: '100%', display: 'flex', flexDirection: 'column', width: '100%', maxWidth: 1560, margin: '0 auto', padding: '24px 32px 24px' } as const;
-  if (essay.fix && essay.fix.view !== 'paused' && tasks.length) {
-    return (
-      <div style={shell}>
-        {essay.fix.view === 'diff'
-          ? <DiffView sections={sections} essay={essay} setEssay={setEssay} tasks={tasks} onResubmit={resubmitFix} sending={sending} error={error} />
-          : <FixView prompt={prompt} chains={chains} sections={sections} essay={essay} setEssay={setEssay} tasks={tasks} chainsHref={chainsHref} />}
-      </div>
-    );
-  }
 
   return (
     <div style={shell}>
@@ -308,7 +335,11 @@ export function WriteScreen({ prompt, chains, setChains, essay, setEssay, toolba
           {error && <span role="alert" style={{ fontFamily: CL.sans, fontSize: 12, color: CL.redText, marginRight: 4 }}>{error}</span>}
           <button type="button" className="cl-btn" onClick={() => setChat(!chat)} aria-pressed={chat} style={toolbarBtn(chat)}>Dịch</button>
           {editing
-            ? <ProBeam><button type="button" className="cl-btn cl-primary" onClick={submit} disabled={sending || !words || guidedOn} style={{ ...primaryBtn, opacity: sending || !words || guidedOn ? 0.4 : 1 }}>{sending ? 'Đang chấm…' : review ? 'Nộp lại' : 'Nộp bài'}</button></ProBeam>
+            ? <ProBeam><button type="button" className="cl-btn cl-primary" onClick={() => submit()} disabled={sending || !words || guidedOn} style={{ ...primaryBtn, opacity: sending || !words || guidedOn ? 0.4 : 1 }}>{sending ? 'Đang chấm…' : review ? 'Nộp lại' : 'Nộp bài'}</button></ProBeam>
+            : inFix ? <>
+              <span style={{ fontFamily: CL.sans, fontSize: 12.5, color: CL.ink5, marginRight: 4 }}>Đã sửa <b style={{ color: CL.ink }}>{solvedN}</b> / {tasks.length}</span>
+              <ProBeam><button type="button" className="cl-btn cl-primary" onClick={resubmitFix} disabled={sending || !solvedN} style={{ ...primaryBtn, opacity: sending || !solvedN ? 0.45 : 1 }}>{sending ? 'Đang chấm…' : 'Nộp lại'}</button></ProBeam>
+            </>
             : <ProBeam><button type="button" className="cl-btn cl-primary" onClick={startFix} disabled={planning} style={{ ...primaryBtn, opacity: planning ? 0.5 : 1 }}>{planning ? 'Đang chuẩn bị…' : essay.fix ? 'Tiếp tục sửa' : 'Sửa bài'}</button></ProBeam>}
         </div>
       </div>
@@ -336,7 +367,7 @@ export function WriteScreen({ prompt, chains, setChains, essay, setEssay, toolba
             <div style={{ display: 'flex', alignItems: 'center', gap: 14, minHeight: 56, padding: '0 24px', borderBottom: '1px solid ' + CL.ink1, background: CL.panel }}>
               <ClLabel color={CL.ink}>Bài viết</ClLabel>
               {guidedOn ? <GuidedHeader essay={essay} setEssay={setEssay} total={gPlan?.length || 0} /> : <>
-              <span style={{ fontFamily: CL.sans, fontSize: 12, color: CL.ink5 }}>{editing ? '' : 'Bấm chỗ tô màu để xem nhận xét.'}{stale && editing ? 'Bạn đã sửa bài, nộp lại để chấm bản mới.' : ''}</span>
+              <span style={{ fontFamily: CL.sans, fontSize: 12, color: CL.ink5 }}>{editing ? '' : inFix ? 'Bấm chỗ bị gạch để viết lại.' : 'Bấm chỗ tô màu để xem nhận xét.'}{stale && editing ? 'Bạn đã sửa bài, nộp lại để chấm bản mới.' : ''}</span>
               <span style={{ marginLeft: 'auto', fontFamily: CL.sans, fontSize: 12, color: CL.ink5 }}>Số từ: <b style={{ color: words >= 250 ? CL.green : CL.ink }}>{words}</b> / 250</span>
               </>}
             </div>
@@ -352,6 +383,23 @@ export function WriteScreen({ prompt, chains, setChains, essay, setEssay, toolba
           <>
             <SidePanel on={(!!review || sending) && !chat} grow={3}>
               <div className="cl-scroll" style={{ height: '100%', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 14, padding: '2px 2px 4px' }}>
+          {inFix && !sending && scores ? <>
+            <section style={{ flexShrink: 0, borderRadius: 12, border: '1px solid ' + CL.border, background: '#fff', padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
+              <span style={{ fontFamily: CL.serif, fontSize: 30, fontWeight: 500, lineHeight: 1, color: CL.ink }}>{bandText(scores.band, true)}</span>
+              {CRITERIA.map(([id]) => {
+                const st = CRITERION_STYLE[id];
+                return <span key={id} style={{ display: 'flex', alignItems: 'center', gap: 5, fontFamily: CL.sans, fontSize: 12, fontWeight: 600, color: CL.ink }}>{st.short}<b style={{ borderRadius: 5, padding: '1px 6px', background: st.soft, color: st.fg, fontWeight: 600 }}>{bandText(scores[id as 'tr'])}</b></span>;
+              })}
+            </section>
+            <ClLabel>{tasks.length} nhận xét về ý và mạch</ClLabel>
+            {tasks.map((t) => (
+              <FixCard key={t.item.key} task={t} where={sections.find((x) => x.id === t.item.sectionId)?.label || ''} comment={t.plan ? commentFor(t) : ''}
+                open={openFix === t.item.key} onOpen={() => { setOpenFix(t.item.key); setFixError(''); }}
+                edit={edits[t.item.key] || ''} setEdit={(v) => setEdit(t.item.key, v)}
+                solved={!!essay.fix?.solved.includes(t.item.key)} verdict={essay.fix?.checks?.[t.item.key]}
+                checking={checkingFix === t.item.key} error={openFix === t.item.key ? fixError : ''} onCheck={() => checkTask(t)} />
+            ))}
+          </> : <>
           {sending && !scores && <ReviewBone />}
           {panel && scores && (
             <section style={{ flexShrink: 0, borderRadius: 12, border: '1px solid ' + CL.border, background: '#fff', overflow: 'hidden' }}>
@@ -436,6 +484,7 @@ export function WriteScreen({ prompt, chains, setChains, essay, setEssay, toolba
               <button type="button" className="cl-btn cl-primary" onClick={startFix} disabled={planning} style={{ ...primaryBtn, opacity: planning ? 0.5 : 1 }}>{planning ? 'Đang chuẩn bị…' : essay.fix ? 'Tiếp tục →' : 'Bắt đầu sửa →'}</button>
             </section>
           )}
+          </>}
               </div>
             </SidePanel>
             <SidePanel on={chat} grow={2}>

@@ -12,7 +12,7 @@ const validScores = (s: unknown): s is Scores =>
   !!s && typeof s === 'object' && ['tr', 'cc', 'lr', 'gra'].every((k) => Number.isFinite((s as Record<string, unknown>)[k]));
 const validTask = (t: unknown): t is PlanTask => {
   const x = t as PlanTask;
-  return !!x && text(x.sectionId, 100) && (x.criterion === 'tr' || x.criterion === 'cc') && text(x.quote, 600) && text(x.title, 100) && Array.isArray(x.ask) && x.ask.length <= 3 && x.ask.every((q) => text(q, 400)) && text(x.starter, 200) && text(x.aim, 800);
+  return !!x && text(x.sectionId, 100) && (x.criterion === 'tr' || x.criterion === 'cc') && text(x.quote, 600) && text(x.title, 100) && Array.isArray(x.ask) && x.ask.length <= 3 && x.ask.every((q) => text(q, 400)) && text(x.starter, 200) && text(x.aim, 800) && (x.model === undefined || text(x.model, 800)) && (x.vi === undefined || text(x.vi, 800));
 };
 
 /**
