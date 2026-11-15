@@ -16,6 +16,9 @@
     }
   ],
   "observability": { "enabled": true },
+  // Run the Worker near Google Cloud's Singapore region: the Gemini API refuses requests from some Cloudflare data
+  // centres near Vietnam (e.g. Hong Kong: "User location is not supported"), and Singapore is close to students and D1.
+  "placement": { "region": "gcp:asia-southeast1" },
   // Keep variables set in the dashboard when deploying from git (otherwise plain-text ones are wiped).
   "keep_vars": true,
   "d1_databases": [
