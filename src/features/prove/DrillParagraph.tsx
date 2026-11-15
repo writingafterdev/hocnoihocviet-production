@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { Prompt } from '@/content/prompts';
 import { plainSentence, type Statement } from '@/content/statements';
 import type { EssayState } from '../attempts/store';
@@ -24,19 +24,23 @@ const card: React.CSSProperties = { minHeight: 0, borderRadius: 12, border: '1px
 const label: React.CSSProperties = { fontFamily: CL.sans, fontSize: 12, fontWeight: 500, color: CL.ink5 };
 
 interface Review { tasks: FixTask[]; solved: string[]; checks: Record<string, CheckOut>; edits: Record<string, string> }
+/** What the paragraph screen keeps when the student goes back to the chain and returns. */
+export interface ParagraphDraft { essay: EssayState; review: Review | null }
 
 /**
  * Chứng minh nhanh, after "Kiểm tra": the chain written as one paragraph, by the student alone ("Tự viết") or
  * sentence by sentence ("Viết có hướng dẫn"). "Nhận xét đoạn văn" gives idea/flow comments, no score; each is fixed
  * inside its comment, the old words struck through in the paragraph with the rewrite after them.
  */
-export function DrillParagraph({ s, prompt, steps, guided: startGuided, onBack }: { s: Statement; prompt: Prompt; steps: string[]; guided: boolean; onBack: () => void }) {
+export function DrillParagraph({ s, prompt, steps, guided: startGuided, onBack, saved, onSave }: { s: Statement; prompt: Prompt; steps: string[]; guided: boolean; onBack: () => void; saved?: ParagraphDraft; onSave?: (d: ParagraphDraft) => void }) {
   const chain: Chain = { id: 'para', q: 1, title: '', tone: s.tone || null, area: '', split: null, findings: [], steps: [s.start, ...steps.map((x) => x.trim()).filter(Boolean), s.end], mine: 'start', built: true };
   const sentence = plainSentence(s.sentence);
-  const [essay, setEssay] = useState<EssayState>({ bodies: [], drafts: { para: '' }, seconds: 0, review: null, guided: startGuided ? { plan: null, at: 0, level: 'frame' } : null });
+  const [essay, setEssay] = useState<EssayState>(saved?.essay || { bodies: [], drafts: { para: '' }, seconds: 0, review: null, guided: startGuided ? { plan: null, at: 0, level: 'frame' } : null });
   const plan = useGuidedPlan(prompt, [chain], essay, setEssay, sentence);
   const [chat, setChat] = useState(!startGuided);
-  const [review, setReview] = useState<Review | null>(null);
+  const [review, setReview] = useState<Review | null>(saved?.review || null);
+  // Kept for "Về chuỗi" and back: the draft, the guided round and the comments with their rewrites.
+  useEffect(() => { onSave?.({ essay, review }); }, [essay, review]); // eslint-disable-line react-hooks/exhaustive-deps
   const [reviewing, setReviewing] = useState(false);
   const [error, setError] = useState('');
   const [open, setOpen] = useState<string | null>(null);

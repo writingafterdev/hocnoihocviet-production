@@ -15,7 +15,7 @@ import { ChainEditor } from '../coach/ChainEditor';
 import { CoachGrid, SidePanel } from '../coach/CoachGrid';
 import { TranslatorChat } from '../coach/TranslatorChat';
 import { useCoach } from '../coach/useCoach';
-import { DrillParagraph } from './DrillParagraph';
+import { DrillParagraph, type ParagraphDraft } from './DrillParagraph';
 import { useStepHelp } from './StepHelp';
 import { primaryBtn } from '../coach/ui';
 import { ProBeam } from '@/components/ui/pro-beam';
@@ -103,6 +103,8 @@ export function ProveDrill() {
   const [chat, setChat] = useState(true);
   /** "Viết chuỗi này thành một đoạn văn": the paragraph screen, written alone or guided. */
   const [para, setPara] = useState<'free' | 'guided' | null>(null);
+  /** Paragraphs in progress, per statement, chain and way of writing: going back to the chain and returning resumes them. */
+  const drafts = useRef(new Map<string, ParagraphDraft>());
   const [reel, setReel] = useState<Reel | null>(null);
   const [landed, setLanded] = useState(0);
   const [promptOut, setPromptOut] = useState(false);
@@ -205,7 +207,9 @@ export function ProveDrill() {
     <div style={{ height: '100%', background: '#fff', display: 'flex', flexDirection: 'column' }}>
       <WorkspaceHeader />
       <div style={{ flex: 1, minHeight: 0, width: '100%', maxWidth: 1560, margin: '0 auto', padding: '24px 32px 24px', display: 'flex', flexDirection: 'column' }}>
-        {para && s && prompt ? <DrillParagraph key={s.id + para} s={s} prompt={prompt} steps={steps} guided={para === 'guided'} onBack={() => setPara(null)} /> : <>
+        {para && s && prompt ? <DrillParagraph key={s.id + para} s={s} prompt={prompt} steps={steps} guided={para === 'guided'} onBack={() => setPara(null)}
+          saved={drafts.current.get([s.id, para, ...steps.map((x) => x.trim()).filter(Boolean)].join('|'))}
+          onSave={(d) => drafts.current.set([s.id, para, ...steps.map((x) => x.trim()).filter(Boolean)].join('|'), d)} /> : <>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10, minHeight: 42, paddingBottom: 12 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             {s && <button type="button" className="cl-btn" onClick={backToPick} disabled={rolling} style={{ ...toolbarBtn(false), opacity: rolling ? 0.5 : 1 }}>Đổi loại</button>}
