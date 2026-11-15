@@ -1,7 +1,6 @@
 'use client';
 
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { Volume2, VolumeX } from 'lucide-react';
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Illustration } from '@/components/brand/Illustration';
@@ -11,8 +10,6 @@ import { findPrompt } from '@/content/prompts';
 import { KIND_LABEL, sentenceParts, plainSentence, STATEMENTS, type Statement, type StatementKind } from '@/content/statements';
 import { cn } from '@/lib/utils';
 import { toast } from '@/components/ui/toast';
-import { SignedOutError } from '../attempts/store';
-import { startFromStatement } from '../attempts/start';
 import { CL } from '../chainlab/constants';
 import { backLinkStyle, ClIcon, ClLabel, toolbarBtn } from '../chainlab/ui/primitives';
 import { ChainEditor } from '../coach/ChainEditor';
@@ -20,6 +17,7 @@ import { CoachGrid, SidePanel, useLast } from '../coach/CoachGrid';
 import { NotesPanel } from '../coach/NotesPanel';
 import { TranslatorChat } from '../coach/TranslatorChat';
 import { useCoach } from '../coach/useCoach';
+import { DrillParagraph } from './DrillParagraph';
 import { useStepHelp } from './StepHelp';
 import { primaryBtn } from '../coach/ui';
 import { Chip } from '@/components/base/badges/chip';
@@ -103,7 +101,6 @@ interface Reel { items: string[]; target: Statement; startH: number; endH: numbe
  * Nothing is saved; the counter is for this visit only.
  */
 export function ProveDrill() {
-  const router = useRouter();
   const [deck, setDeck] = useState<Statement[] | null>(null);
   const [i, setI] = useState(0);
   const [done, setDone] = useState(0);
@@ -111,8 +108,8 @@ export function ProveDrill() {
   const [active, setActive] = useState<number | null>(null);
   const [chat, setChat] = useState(true);
   const [notesOpen, setNotesOpen] = useState(true);
-  const [opening, setOpening] = useState(false);
-  const [openError, setOpenError] = useState('');
+  /** "Viết chuỗi này thành một đoạn văn": the paragraph screen, written alone or guided. */
+  const [para, setPara] = useState<'free' | 'guided' | null>(null);
   const [reel, setReel] = useState<Reel | null>(null);
   const [landed, setLanded] = useState(0);
   const [promptOut, setPromptOut] = useState(false);
@@ -127,7 +124,6 @@ export function ProveDrill() {
   /** Per-step help: vocabulary when asked, then a rewording panel and the next question after each Enter. */
   const help = useStepHelp(s?.promptId || '', { kind: s?.kind || 'impact', tone: s?.tone || null, start: s?.start || '', end: s?.end || '', stakeholder: s?.stakeholder }, steps, s?.ask || '');
   useEffect(() => { if (coach.error) toast.error(coach.error); }, [coach.error]);
-  useEffect(() => { if (openError) toast.error(openError); }, [openError]);
 
   // Sounds: on by default, muted with the speaker button (remembered).
   const [sound, setSound] = useState(true);
@@ -143,7 +139,7 @@ export function ProveDrill() {
   }, [coach.result]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const land = (k: number) => {
-    setI(k); setSteps(['']); setActive(null); setNotesOpen(true); setOpenError(''); setReel(null); setPromptOut(false); setLanded((n) => n + 1);
+    setI(k); setSteps(['']); setActive(null); setNotesOpen(true); setReel(null); setPara(null); setPromptOut(false); setLanded((n) => n + 1);
     sfx.pop();
     coach.reset();
   };
@@ -153,7 +149,7 @@ export function ProveDrill() {
     if (rolling) return;
     const pool = shuffle(STATEMENTS.filter((x) => (!kind || x.kind === kind) && (!tone || x.tone === tone)));
     const target = pool[0];
-    setDeck(pool); setI(0); setSteps(['']); setActive(null); setNotesOpen(true); setOpenError(''); coach.reset();
+    setDeck(pool); setI(0); setSteps(['']); setActive(null); setNotesOpen(true); coach.reset();
     sfx.roll(ROLL_MS);
     if (reducedMotion()) { setLanded((n) => n + 1); return; }
     const others = shuffle(STATEMENTS.filter((x) => x.id !== target.id)).slice(0, 8).map((x) => plainSentence(x.sentence));
@@ -163,7 +159,7 @@ export function ProveDrill() {
     setTimeout(() => setPromptOut(false), ROLL_MS);
     setTimeout(() => land(0), ROLL_MS + 250);
   };
-  const backToPick = () => { if (rolling) return; setDeck(null); setI(0); setSteps(['']); setActive(null); setOpenError(''); coach.reset(); };
+  const backToPick = () => { if (rolling) return; setDeck(null); setI(0); setSteps(['']); setActive(null); coach.reset(); };
 
   /** Spin to the next statement: other statements slide past, slow down, and the new one eases into place. */
   const go = (counted: boolean) => {
@@ -207,14 +203,6 @@ export function ProveDrill() {
   }, [reel?.target.id, reel?.endH]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const check = () => { setActive(null); setNotesOpen(true); coach.runCheck(); };
-  const writeEssay = () => {
-    if (!s || !prompt || opening) return;
-    setOpening(true); setOpenError('');
-    startFromStatement(prompt, s, steps).then((url) => router.push(url), (e) => {
-      setOpening(false);
-      if (e instanceof SignedOutError) router.replace('/login?next=/prove'); else setOpenError('Chưa tạo được bài. Thử lại nhé.');
-    });
-  };
 
   const checked = !!coach.result;
   const notes = coach.fresh && coach.result ? coach.result.placed : [];
@@ -228,6 +216,7 @@ export function ProveDrill() {
     <div style={{ height: '100%', background: '#fff', display: 'flex', flexDirection: 'column' }}>
       <WorkspaceHeader />
       <div style={{ flex: 1, minHeight: 0, width: '100%', maxWidth: 1560, margin: '0 auto', padding: '24px 32px 24px', display: 'flex', flexDirection: 'column' }}>
+        {para && s && prompt ? <DrillParagraph key={s.id + para} s={s} prompt={prompt} steps={steps} guided={para === 'guided'} onBack={() => setPara(null)} /> : <>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10, minHeight: 42, paddingBottom: 12 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 18 }}>
             <Link href="/home" className="cl-link" style={backLinkStyle}><ClIcon name="left" size={14} />Trang chủ</Link>
@@ -296,9 +285,10 @@ export function ProveDrill() {
                       </div>
                     )}
                     {checked && !rolling && (
-                      <div className="co-rise" style={{ borderTop: '1px solid ' + CL.ink1, background: CL.panel, padding: '12px 22px', display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-                        
-                        <button type="button" className="cl-btn cl-add" onClick={writeEssay} disabled={opening} style={{ marginLeft: 'auto', display: 'inline-flex', alignItems: 'center', gap: 6, borderRadius: 5, border: '1px solid ' + CL.ink, background: '#fff', color: CL.ink, padding: '6px 12px', fontFamily: CL.sans, fontSize: 12, fontWeight: 600 }}>{opening ? 'Đang tạo bài…' : 'Viết cả bài cho đề này'}<ClIcon name="right" size={12} /></button>
+                      <div className="co-rise" style={{ borderTop: '1px solid ' + CL.ink1, background: CL.panel, padding: '14px 22px', display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+                        <span style={{ marginRight: 'auto', fontFamily: CL.sans, fontSize: 14, fontWeight: 600, color: CL.ink }}>Viết chuỗi này thành một đoạn văn</span>
+                        <button type="button" className="cl-btn" onClick={() => setPara('free')} style={toolbarBtn(false)}>Tự viết</button>
+                        <button type="button" className="cl-btn cl-primary" onClick={() => setPara('guided')} style={primaryBtn}>Viết có hướng dẫn</button>
                       </div>
                     )}
                   </>
@@ -321,6 +311,7 @@ export function ProveDrill() {
             </>
           }
         />
+        </>}
       </div>
     </div>
   );

@@ -10,7 +10,7 @@ import { describeChains, describePrompt } from './describe';
 
 export interface GuidedSentence { section: string; step: number; idea: string; en: string; vi: string; frame: string; note: string; vocab: string[] }
 
-const TASK = `# VIỆC CỦA BẠN: BÀI MẪU THEO MẠCH CỦA HỌC SINH ("Viết có hướng dẫn")
+const ESSAY_HEAD = `# VIỆC CỦA BẠN: BÀI MẪU THEO MẠCH CỦA HỌC SINH ("Viết có hướng dẫn")
 Học sinh đã dựng các mạch (mỗi mạch là một đoạn thân bài: điểm đầu → các bước → điểm cuối) và chọn "Viết có hướng dẫn". Bạn viết một bài IELTS Writing Task 2 mẫu, band 7, đi ĐÚNG theo các mạch của học sinh, rồi chia thành từng câu để học sinh tự viết lại từng câu.
 
 Bố cục:
@@ -18,7 +18,16 @@ Bố cục:
 - Mỗi mạch là một thân bài (section = id của mạch, theo đúng thứ tự): câu chủ đề, rồi mỗi bước của mạch một câu (gộp hai bước rất ngắn được), câu cuối chạm tới điểm cuối. Không thêm ý ngoài mạch; bước viết bằng tiếng Việt thì diễn đạt lại bằng tiếng Anh. 4 đến 6 câu mỗi đoạn.
 - Kết bài (section "conclusion"): 2 câu.
 - Tổng độ dài khoảng 260 đến 300 chữ. Câu dài vừa phải (15 đến 28 chữ), có mệnh đề phụ, văn phong học thuật, từ vựng cụ thể, không sáo rỗng.
+`;
 
+/** Chứng minh nhanh, "Viết chuỗi này thành một đoạn văn": one body paragraph from the drill's chain. */
+const PARAGRAPH_HEAD = `# VIỆC CỦA BẠN: ĐOẠN VĂN MẪU TỪ MỘT CHUỖI ("Viết có hướng dẫn")
+Học sinh vừa dựng một chuỗi để chứng minh một câu (điểm đầu → các bước → điểm cuối; câu cần chứng minh ghi ở dưới) và chọn viết chuỗi đó thành một đoạn văn có hướng dẫn. Bạn viết MỘT đoạn thân bài IELTS Writing Task 2 mẫu, band 7, đi ĐÚNG theo chuỗi, rồi chia thành từng câu để học sinh tự viết lại từng câu.
+
+Bố cục: câu chủ đề nêu điều câu cần chứng minh nói, rồi mỗi bước của chuỗi một câu (gộp hai bước rất ngắn được), câu cuối chạm tới điểm cuối. 4 đến 6 câu, khoảng 90 đến 120 chữ. Mọi câu có section = id của chuỗi. Không mở bài, không kết bài, không thêm ý ngoài chuỗi; bước viết bằng tiếng Việt thì diễn đạt lại bằng tiếng Anh. Câu dài vừa phải (15 đến 28 chữ), có mệnh đề phụ, văn phong học thuật, từ vựng cụ thể.
+`;
+
+const FIELDS = `
 Mỗi câu trả về:
 - section: "intro", id của mạch, hoặc "conclusion".
 - step: vị trí bước trong mạch mà câu này viết (0 = điểm đầu, bước cuối = điểm cuối, đếm theo danh sách bước của mạch, bắt đầu từ 0); câu chủ đề, mở bài, kết bài để -1.
@@ -48,10 +57,11 @@ const SCHEMA = {
   },
 };
 
-export async function aiGuidedPlan(userId: string, prompt: Prompt, chains: Chain[]): Promise<GuidedSentence[]> {
+/** The whole essay from the chains, or (`sentence` given) one paragraph proving that sentence from a single chain. */
+export async function aiGuidedPlan(userId: string, prompt: Prompt, chains: Chain[], sentence?: string): Promise<GuidedSentence[]> {
   const out = await ask<{ sentences: unknown }>({
-    userId, kind: 'fix', task: TASK, schema: SCHEMA, effort: 'low', maxTokens: 12000,
-    input: describePrompt(prompt) + '\n\n' + describeChains(prompt, chains, ''),
+    userId, kind: 'fix', task: (sentence ? PARAGRAPH_HEAD : ESSAY_HEAD) + FIELDS, schema: SCHEMA, effort: 'low', maxTokens: sentence ? 5000 : 12000,
+    input: describePrompt(prompt) + '\n\n' + describeChains(prompt, chains, '') + (sentence ? '\n\nCÂU CẦN CHỨNG MINH: ' + sentence : ''),
   });
   const ids = new Set(['intro', 'conclusion', ...chains.map((c) => c.id)]);
   const s = (x: unknown, max: number) => String(x ?? '').trim().slice(0, max);
