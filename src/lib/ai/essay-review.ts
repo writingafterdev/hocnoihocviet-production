@@ -12,7 +12,7 @@ const TASK = ASSESS_TASK;
 const COMMENT = (criterion: string) => ({
   type: 'object',
   additionalProperties: false,
-  required: ['criterion', 'sectionId', 'quote', 'label', 'text', 'fix', 'example', 'chainId', 'step'],
+  required: ['criterion', 'sectionId', 'quote', 'label', 'text', 'fix', 'vi', 'ask', 'example', 'chainId', 'step'],
   properties: {
     criterion: { type: 'string', enum: [criterion] },
     sectionId: { type: 'string' },
@@ -20,6 +20,8 @@ const COMMENT = (criterion: string) => ({
     label: { type: 'string' },
     text: { type: 'string' },
     fix: { type: 'string' },
+    vi: { type: 'string' },
+    ask: { type: 'array', items: { type: 'string' } },
     example: { type: 'string' },
     chainId: { type: 'string' },
     step: { type: 'integer' },
@@ -56,7 +58,21 @@ const COMMENTS_SCHEMA = (criterion: string) => ({
 });
 
 const ONLY_SCORES = '\n\n# LẦN GỌI NÀY\nChỉ trả về criteria, summary và praise. KHÔNG viết comments; các nhận xét chi tiết do những lần gọi khác viết. Vẫn đọc kỹ cả bài và chấm đúng theo bảng mô tả band ở trên. Trả về JSON: {"criteria": {...}, "summary": string, "praise": string}.';
-const ONLY_COMMENTS = (id: string, name: string) => `\n\n# LẦN GỌI NÀY\nChỉ viết nhận xét chi tiết (comments) cho MỘT tiêu chí: ${name} (criterion = "${id}"). Không chấm điểm, không viết summary hay praise, không nhận xét tiêu chí khác (các lần gọi khác làm phần đó). Đọc hết cả bài và nêu mọi chỗ làm bài mất điểm ở tiêu chí này. Trả về JSON: {"comments": [...]}.`;
+const ONLY_COMMENTS = (id: string, name: string) => `\n\n# LẦN GỌI NÀY\nChỉ viết nhận xét chi tiết (comments) cho MỘT tiêu chí: ${name} (criterion = "${id}"). Không chấm điểm, không viết summary hay praise, không nhận xét tiêu chí khác (các lần gọi khác làm phần đó). Đọc hết cả bài và nêu mọi chỗ làm bài mất điểm ở tiêu chí này.` + FIX_FIELDS(id) + `\nTrả về JSON: {"comments": [...]}.`;
+
+/**
+ * Each comment is fixed where it stands: the student rewrites the quoted words, with the fix hidden behind first-letter
+ * hints and, for ideas and flow, guiding questions. All of it comes from this one call, so the questions lead to the fix.
+ */
+const FIX_FIELDS = (id: string) => `
+
+# MỖI NHẬN XÉT LÀ MỘT CHỖ HỌC SINH TỰ SỬA
+Học sinh sửa ngay trong nhận xét: chữ trong quote bị gạch đi, học sinh gõ chữ thay vào đúng chỗ đó. Cách sửa (fix) bị ẩn, chỉ hiện chữ cái đầu mỗi từ làm gợi ý. Vì vậy mỗi nhận xét phải có đủ:
+- label: vấn đề, ngắn. text: giải thích vì sao đó là vấn đề.
+- fix: chữ thay THẲNG cho toàn bộ quote, đọc liền mạch với phần trước và sau quote trong đoạn, sửa xong đúng vấn đề đã nêu. Luôn có fix, kể cả nhận xét về ý và mạch (khi đó fix là câu viết lại hoàn chỉnh, band 7, bám chữ và ý của học sinh, 15 đến 45 chữ).
+- vi: nghĩa tiếng Việt tự nhiên của fix.
+- ask: ${id === 'tr' || id === 'cc' ? 'đúng 2 câu hỏi gợi mở tiếng Việt dẫn học sinh tự nghĩ ra CHÍNH fix ở trên (cùng người, cùng việc, cùng ý với fix). ask[0] chạm đúng chỗ thiếu; ask[1] hẹp hơn, đặt vào một cảnh cụ thể. Câu hỏi mở, không có/không, không chứa sẵn đáp án.' : 'mảng rỗng [] (lỗi từ vựng, ngữ pháp dễ hiểu, không cần câu hỏi).'}
+- example: chuỗi rỗng "".`;
 
 const essayInput = (prompt: Prompt, sections: SectionIn[], chains: Chain[], stance: string) => {
   const words = sections.reduce((n, s) => n + (s.text.trim() ? s.text.trim().split(/\s+/).length : 0), 0);

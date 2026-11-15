@@ -117,10 +117,13 @@ export interface ReviewItem {
   label?: string;
   /** Essay feedback: a drop-in replacement for `quote`, when the fix fits inside it. */
   fix?: string;
+  /** Essay feedback: the Vietnamese meaning of `fix` (shown with its first-letter hints). */
+  vi?: string;
+  /** Essay feedback on ideas or flow: guiding questions that lead to `fix`, from the same grading call. */
+  ask?: string[];
   /** Essay feedback on ideas or flow: an example sentence in the student's own idea, showing what the fix looks like. */
   example?: string;
-  /** Essay feedback on ideas or flow (TR/CC): a guided fix. Open questions shown one by one, then a sentence starter. */
-  /** A guided fix: questions, a sentence starter, and a model rewrite of the quote with its meaning (the copy-hints in "Gợi ý cách viết"). */
+  /** A guided fix (the sample review): questions, a sentence starter, and a model rewrite of the quote with its meaning (the copy-hints in "Gợi ý cách viết"). */
   task?: { title?: string; ask: string[]; starter?: string; ok?: string; model?: string; vi?: string };
   para?: boolean;
   fixed?: boolean;

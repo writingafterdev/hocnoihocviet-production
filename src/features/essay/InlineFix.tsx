@@ -97,12 +97,12 @@ export function FixBody({ task, edit, setEdit, solved, verdict, checking, error,
   const tokens = model ? splitWords(model) : [];
   const states = model ? wordStates(model, edit) : [];
   const ok = states.filter((x) => x.s === 'ok').length;
-  const extra = (task.ask.length - 1) + (task.starter ? 1 : 0);
+  const extra = Math.max(0, task.ask.length - 1) + (task.starter ? 1 : 0);
   return (
     <>
       <div style={{ borderRadius: 10, background: '#F7F9FD', border: '1px solid #DCE7F7', padding: '10px 12px', display: 'flex', flexDirection: 'column', gap: 8 }}>
         {preparing && <span role="status" style={label}>Đang chuẩn bị câu hỏi gợi mở…</span>}
-        <span style={{ fontFamily: CL.sans, fontSize: 13.5, fontWeight: 600, lineHeight: 1.45, color: CL.ink }}>{task.ask[0]}</span>
+        {task.ask[0] && <span style={{ fontFamily: CL.sans, fontSize: 13.5, fontWeight: 600, lineHeight: 1.45, color: CL.ink }}>{task.ask[0]}</span>}
         {task.ask.slice(1, 1 + more).map((q) => <span key={q} className="co-unfold" style={{ fontFamily: CL.sans, fontSize: 13, fontWeight: 600, lineHeight: 1.45, color: CL.ink7 }}>{q}</span>)}
         {task.starter && more >= task.ask.length && <span className="co-unfold" style={{ fontFamily: CL.sans, fontSize: 12.5, lineHeight: 1.5, color: CL.ink6 }}>Thử mở câu bằng: <i style={{ fontFamily: CL.serif, fontSize: 13.5, color: CL.ink8 }}>{task.starter}</i></span>}
         {model && (

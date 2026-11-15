@@ -12,6 +12,7 @@ import { TranslatorChat } from '../coach/TranslatorChat';
 import { primaryBtn } from '../coach/ui';
 import { bandText, CRITERIA, markStyle, CRITERION_STYLE, draftsKey, requestEssayReview, retryEssayCriterion, wordCount, type EssayReview, type EssaySection } from '../desk/scoring';
 import { passes, type FixTask } from './FixFlow';
+import { wordStates, words as splitWords } from '../guided/matching';
 import { checkFix, planFix, rescore } from './fix-api';
 import { applyEdits, FixBody } from './InlineFix';
 import { GuidedHeader, GuidedWriter, useGuidedPlan } from './GuidedWriter';
@@ -185,15 +186,20 @@ export function WriteScreen({ prompt, chains, setChains, essay, setEssay, toolba
     return panel.groups.flatMap((g) => g.items.map((item) => ({ item, crit: g.id, n: ++n })));
   }, [panel]);
   const plan = essay.fix?.plan;
-  /** Comments fixed in place: the idea and flow ones (TR / CC) that quote the essay. Each gets "Sửa" on its card. */
-  const isFixable = (n: Note) => (n.crit === 'tr' || n.crit === 'cc') && !!n.item.quote && !!n.item.sectionId;
+  /** Every comment that quotes the essay is fixed in place ("Sửa" on its card); guiding questions come with the idea/flow ones. */
+  const isFixable = (n: Note) => !!n.item.quote && !!n.item.sectionId;
+  /** The comment carries its own fix (and questions) from the grading, so they belong together. */
+  const ownFix = (n: Note) => !!(n.item.fix || n.item.ask?.length || n.item.task?.model);
   const fixKey = (n: Note) => n.crit + ':' + n.item.key;
   /** The comment as a fix task: the AI's planned questions and model rewrite when the plan covers it, else the comment itself. */
   const taskFor = (n: Note): FixTask => {
     const q = n.item.quote!, item = { ...n.item, key: fixKey(n) };
+    const own = { item, crit: n.crit, title: n.item.label || 'Sửa', ask: n.item.ask?.length ? n.item.ask : n.item.task?.ask || [], starter: n.item.task?.starter, ok: n.item.task?.ok || 'Đã sửa xong chỗ này.', model: n.item.task?.model || n.item.fix, vi: n.item.task?.vi || n.item.vi };
+    if (ownFix(n)) return own;
+    // Older AI reviews: questions and model rewrite from the fix plan, when it covers this comment.
     const p = plan?.find((t) => t.sectionId === n.item.sectionId && !!t.quote && (t.quote.includes(q) || q.includes(t.quote)));
     if (p) return { item, crit: n.crit, title: p.title, ask: p.ask, starter: p.starter || undefined, ok: '', plan: { ...p, quote: q } };
-    return { item, crit: n.crit, title: n.item.label || 'Sửa ý', ask: n.item.task?.ask?.length ? n.item.task.ask : [n.item.text.replace(/\*\*/g, '')], starter: n.item.task?.starter, ok: n.item.task?.ok || 'Đã sửa xong chỗ này.', model: n.item.task?.model || n.item.fix, vi: n.item.task?.vi };
+    return { ...own, ask: own.ask.length ? own.ask : [n.item.text.replace(/\*\*/g, '')] };
   };
   const tasks = useMemo(() => (sending ? [] : notes.filter(isFixable).map(taskFor)), [notes, plan, sending]); // eslint-disable-line react-hooks/exhaustive-deps
   const taskOf = (n: Note) => tasks.find((t) => t.item.key === fixKey(n)) || null;
@@ -211,7 +217,14 @@ export function WriteScreen({ prompt, chains, setChains, essay, setEssay, toolba
     const after = applyEdits(before, [t], edits);
     const key = t.item.key;
     const verdict = (v: { solved: boolean; reply: string; ask: string }) => setEssay((e) => (e.fix ? { ...e, fix: { ...e.fix, checks: { ...e.fix.checks, [key]: v }, solved: v.solved ? [...e.fix.solved.filter((x) => x !== key), key] : e.fix.solved.filter((x) => x !== key) } } : e));
-    // An AI review is checked by the AI, with the planned task or, when the plan left this comment out, the comment itself.
+    // Vocabulary and grammar: checked here, against the hidden fix.
+    if ((t.crit === 'lr' || t.crit === 'gra') && t.model) {
+      const st = wordStates(t.model, edits[key] || ''), n = splitWords(t.model).length;
+      const ok = n > 0 && st.filter((x) => x.s === 'ok').length / n >= 0.75;
+      verdict({ solved: ok, reply: ok ? 'Đã sửa đúng chỗ này.' : 'Chưa khớp cách sửa. Bật "Gợi ý cách viết" để xem chữ cái đầu của từng từ.', ask: '' });
+      return;
+    }
+    // Ideas and flow in an AI review: checked by the AI, with the planned task or the comment itself.
     const task = t.plan || (review?.source === 'ai' ? { sectionId: sec, criterion: t.crit as 'tr' | 'cc', quote: t.item.quote!, title: t.title, ask: t.ask, starter: t.starter || '', aim: t.item.text.replace(/\*\*/g, '') } : null);
     if (!task) {
       const ok = passes(t, after, before);
@@ -267,7 +280,8 @@ export function WriteScreen({ prompt, chains, setChains, essay, setEssay, toolba
     setOpenFix(key); setActive(n); setTab(n.crit); setFixError(''); setError('');
     if (essay.fix || !review) return;
     setEssay((e) => ({ ...e, fix: { view: 'fix', step: 0, solved: [], before: { ...e.drafts }, checks: {}, edits: {} } }));
-    if (review.source !== 'ai') return;
+    // Only older AI reviews, whose idea/flow comments came without their own fix, need the fix plan.
+    if (review.source !== 'ai' || notes.every((x) => !isFixable(x) || x.crit === 'lr' || x.crit === 'gra' || ownFix(x))) return;
     setPlanning(true);
     try {
       const planned = await planFix(prompt, chains, sections, essay.drafts, review);
@@ -473,7 +487,7 @@ export function WriteScreen({ prompt, chains, setChains, essay, setEssay, toolba
             return (
               <div key={note.item.key + note.crit} role="button" tabIndex={0} aria-pressed={on} className={'cl-btn' + (sending ? ' co-skel-in' : '')}
                 onClick={() => setActive(on ? null : note)} onKeyDown={(e) => { if (e.key === 'Enter' && e.target === e.currentTarget) setActive(on ? null : note); }}
-                style={{ flexShrink: 0, textAlign: 'left', cursor: 'pointer', padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 6, borderRadius: 12, border: '1px solid ' + (open ? '#2F62C4' : CL.ink1), background: on && !open ? CL.panel : '#fff', opacity: stale ? 0.6 : 1, transition: 'background-color .2s, border-color .2s' }}>
+                style={{ flexShrink: 0, textAlign: 'left', cursor: 'pointer', padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 6, borderRadius: 12, border: '1px solid ' + (open ? '#2F62C4' : CL.ink1), background: on && !open ? CL.panel : '#fff', opacity: stale && !open ? 0.6 : 1, transition: 'background-color .2s, border-color .2s' }}>
                 <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                   <span style={{ width: 3, height: 13, borderRadius: 2, background: solved ? CL.green : st.line }} />
                   <span style={{ fontFamily: CL.sans, fontSize: 13, fontWeight: 600, color: CL.ink }}>{note.item.label || CRIT_SHORT[note.crit]}</span>
@@ -481,8 +495,9 @@ export function WriteScreen({ prompt, chains, setChains, essay, setEssay, toolba
                 </span>
                 {note.item.quote && <span style={{ fontFamily: CL.serif, fontSize: 12.5, fontStyle: 'italic', lineHeight: 1.5, color: CL.ink6 }}>“{note.item.quote}”</span>}
                 <span style={{ fontFamily: CL.sans, fontSize: 12.5, lineHeight: 1.5, color: CL.ink7 }}>{note.item.text.replace(/\*\*/g, '')}</span>
-                {note.item.fix && <span style={{ fontFamily: CL.sans, fontSize: 12.5, lineHeight: 1.5, color: CL.greenText }}>Sửa: <i style={{ fontFamily: CL.serif }}>{note.item.fix}</i></span>}
-                {note.item.example && <span style={{ fontFamily: CL.sans, fontSize: 12.5, lineHeight: 1.5, color: CL.greenText }}>Ví dụ: <i style={{ fontFamily: CL.serif }}>{note.item.example}</i></span>}
+                {/* The fix is the answer to type: hidden here, shown only as first-letter hints inside "Sửa". */}
+                {note.item.fix && !t && <span style={{ fontFamily: CL.sans, fontSize: 12.5, lineHeight: 1.5, color: CL.greenText }}>Sửa: <i style={{ fontFamily: CL.serif }}>{note.item.fix}</i></span>}
+                {note.item.example && !t && <span style={{ fontFamily: CL.sans, fontSize: 12.5, lineHeight: 1.5, color: CL.greenText }}>Ví dụ: <i style={{ fontFamily: CL.serif }}>{note.item.example}</i></span>}
                 {t && !editing && (open ? (
                   <div onClick={(e) => e.stopPropagation()} onKeyDown={(e) => e.stopPropagation()} style={{ display: 'flex', flexDirection: 'column', gap: 9, cursor: 'default', marginTop: 2 }}>
                     <FixBody task={t} edit={edits[key] || ''} setEdit={(v) => setEdit(key, v)} solved={solved} verdict={essay.fix?.checks?.[key]}
