@@ -5,6 +5,7 @@ import { CL } from '../chainlab/constants';
 import { miniBtn } from '../coach/ChainEditor';
 import type { ChainIn } from '../coach/useCoach';
 import { AI_ERROR_TEXT, AiRequestError, postAi } from '../ai/request';
+import { findPrompt } from '@/content/prompts';
 
 interface Phrase { en: string; vi: string }
 interface Scan { used: string[]; parts: { text: string; phrases: Phrase[] }[] }
@@ -16,11 +17,21 @@ const panel: React.CSSProperties = { borderRadius: 12, border: '1px solid #DCE7F
 const label: React.CSSProperties = { fontFamily: CL.sans, fontSize: 12, fontWeight: 500, color: CL.ink5 };
 const linkBtn: React.CSSProperties = { marginLeft: 'auto', border: 'none', background: 'none', padding: '2px 4px', cursor: 'pointer', fontFamily: CL.sans, fontSize: 12, fontWeight: 500, color: CL.ink5 };
 
-function PhraseRow({ p, used }: { p: Phrase; used?: boolean }) {
+type SaveState = 'saving' | 'saved' | 'full' | 'error';
+const SAVE_LABEL: Record<SaveState, string> = { saving: 'Đang lưu…', saved: 'Đã lưu', full: 'Sổ từ đã đầy', error: 'Thử lại' };
+
+/** A phrase with its meaning, and "Lưu" to file it under Từ vựng › Đã lưu. */
+function PhraseRow({ p, used, save, state }: { p: Phrase; used?: boolean; save?: () => void; state?: SaveState }) {
   return (
     <span style={{ display: 'flex', alignItems: 'baseline', gap: 10, flexWrap: 'wrap' }}>
       <b style={{ borderRadius: 6, padding: '3px 8px', fontFamily: CL.sans, fontSize: 13.5, fontWeight: 500, background: used ? CL.mintSoft : '#EEF3FC', color: used ? CL.greenText : '#2F62C4' }}>{p.en}</b>
       <span style={{ fontFamily: CL.sans, fontSize: 12.5, color: CL.ink5 }}>{used ? 'bạn đã dùng' : p.vi}</span>
+      {save && (
+        <button type="button" className="cl-btn" onClick={save} disabled={state === 'saving' || state === 'saved' || state === 'full'}
+          style={{ ...linkBtn, color: state === 'saved' ? CL.greenText : state === 'full' || state === 'error' ? CL.redText : CL.ink5 }}>
+          {state ? SAVE_LABEL[state] : 'Lưu'}
+        </button>
+      )}
     </span>
   );
 }
@@ -36,6 +47,21 @@ export function useStepHelp(promptId: string, base: Omit<ChainIn, 'steps'>, step
   const [scans, setScans] = useState<Record<number, { text: string; load: Load<Scan> }>>({});
   const [closed, setClosed] = useState<Record<number, boolean>>({});
   const key = promptId + '|' + base.start + '|' + base.end;
+  // Saving a phrase to Từ vựng › Đã lưu, filed under the essay question's topic (kept across statements).
+  const [saved, setSaved] = useState<Record<string, SaveState>>({});
+  const topic = findPrompt(promptId)?.topic;
+  const savePhrase = async (p: Phrase) => {
+    if (saved[p.en] === 'saving' || saved[p.en] === 'saved') return;
+    setSaved((s) => ({ ...s, [p.en]: 'saving' }));
+    let state: SaveState = 'error';
+    try {
+      const r = await fetch('/api/vocab/mine', { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'same-origin', body: JSON.stringify({ en: p.en, vi: p.vi, skill: 'task2', topic }) });
+      state = r.ok ? 'saved' : r.status === 409 ? 'full' : 'error';
+    } catch { /* stays "error": the button offers to try again */ }
+    setSaved((s) => ({ ...s, [p.en]: state }));
+  };
+  const saveAll = async (list: Phrase[]) => { for (const p of list) { if (saved[p.en] !== 'saved') await savePhrase(p); } };
+  const row = (p: Phrase, used?: boolean) => <PhraseRow key={p.en} p={p} used={used} save={() => savePhrase(p)} state={saved[p.en]} />;
   useEffect(() => { setVocab({}); setHidden({}); setScans({}); setClosed({}); }, [key]);
 
   const chainUpTo = (i: number): ChainIn => ({ ...base, steps: steps.slice(0, i).map((x) => x.trim()).filter(Boolean) });
@@ -86,12 +112,12 @@ export function useStepHelp(promptId: string, base: Omit<ChainIn, 'steps'>, step
             <span style={label}>Cách nói hay hơn cho bước bạn vừa gõ</span>
             <button type="button" className="cl-btn" style={linkBtn} onClick={() => setClosed((c) => ({ ...c, [i]: true }))}>Thu gọn</button>
           </span>
-          {usedPhrases.map((p) => <PhraseRow key={p.en} p={p} used />)}
+          {usedPhrases.map((p) => row(p, true))}
           {usedPhrases.length > 0 && d.parts.length > 0 && <span style={{ height: 1, background: '#DCE7F7' }} />}
           {d.parts.map((part) => (
             <span key={part.text} style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
               <span style={label}>Cho phần “{part.text}”:</span>
-              {part.phrases.map((p) => <PhraseRow key={p.en} p={p} />)}
+              {part.phrases.map((p) => row(p))}
             </span>
           ))}
           {d.parts.length === 0 && usedPhrases.length === 0 && <span style={{ fontFamily: CL.sans, fontSize: 13, color: CL.greenText }}>Bước này đã viết tốt.</span>}
@@ -110,9 +136,10 @@ export function useStepHelp(promptId: string, base: Omit<ChainIn, 'steps'>, step
       <div className="co-unfold" style={card}>
         <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <span style={label}>Từ vựng cho bước này</span>
-          <button type="button" className="cl-btn" style={linkBtn} onClick={() => setHidden((h) => ({ ...h, [i]: true }))}>Ẩn</button>
+          {v.data.phrases.some((p) => saved[p.en] !== 'saved') && <button type="button" className="cl-btn" style={linkBtn} onClick={() => saveAll(v.data.phrases)}>Lưu cả</button>}
+          <button type="button" className="cl-btn" style={{ ...linkBtn, marginLeft: 0 }} onClick={() => setHidden((h) => ({ ...h, [i]: true }))}>Ẩn</button>
         </span>
-        {v.data.phrases.map((p) => <PhraseRow key={p.en} p={p} />)}
+        {v.data.phrases.map((p) => row(p))}
       </div>
     );
   };
