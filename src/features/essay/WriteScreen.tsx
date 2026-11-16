@@ -484,7 +484,7 @@ export function WriteScreen({ prompt, chains, setChains, essay, setEssay, toolba
                   <span style={{ fontFamily: CL.sans, fontSize: 13, fontWeight: 600, color: CL.ink }}>{note.item.label || CRIT_SHORT[note.crit]}</span>
                   <span style={{ marginLeft: 'auto', fontFamily: CL.sans, fontSize: 10.5, color: CL.ink5, textAlign: 'right' }}>{note.item.where.split(' · Mạch')[0]}</span>
                 </span>
-                {note.item.quote && <Clamp lines={2} style={{ fontFamily: CL.serif, fontSize: 12.5, fontStyle: 'italic', lineHeight: 1.5, color: CL.ink6 }}>“{note.item.quote}”</Clamp>}
+                {/* No quote: the words are marked in the essay, and picking the card highlights them there. */}
                 <Clamp lines={3} style={{ fontFamily: CL.sans, fontSize: 12.5, lineHeight: 1.5, color: CL.ink7 }}>{note.item.text.replace(/\*\*/g, '')}</Clamp>
                 {/* The fix is the answer to type: hidden here, shown only as first-letter hints inside "Sửa". */}
                 {note.item.fix && !t && <span style={{ fontFamily: CL.sans, fontSize: 12.5, lineHeight: 1.5, color: CL.greenText }}>Sửa: <i style={{ fontFamily: CL.serif }}>{note.item.fix}</i></span>}
