@@ -218,7 +218,7 @@ export function WriteScreen({ prompt, chains, setChains, essay, setEssay, toolba
     if (matchesFix(t, edits[key] || '')) { verdict({ solved: true, reply: 'Đã sửa đúng chỗ này.', ask: '' }); return; }
     // Vocabulary and grammar have one right fix: not matching it is not solved yet.
     if ((t.crit === 'lr' || t.crit === 'gra') && t.model) {
-      verdict({ solved: false, reply: 'Chưa khớp cách sửa. Bật "Gợi ý cách viết" để xem chữ cái đầu của từng từ.', ask: '' });
+      verdict({ solved: false, reply: 'Chưa khớp cách sửa. Bấm "Gợi ý thêm" để xem chữ cái đầu của từng từ.', ask: '' });
       return;
     }
     // Ideas and flow in an AI review: checked by the AI, with the planned task or the comment itself.

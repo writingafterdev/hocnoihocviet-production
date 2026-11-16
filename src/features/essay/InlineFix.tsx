@@ -92,14 +92,13 @@ export function FixCard({ task, where, comment, open, onOpen, edit, setEdit, sol
 }
 
 /**
- * The fix itself, inside a comment: the guiding question on top, "Gợi ý cách viết" for the model rewrite's meaning and
- * the first letter of each word, the box for the new words, "Gợi ý thêm" and "Kiểm tra". `preparing`: the AI's
+ * The fix itself, inside a comment: one guiding question on top, then "Gợi ý thêm" opens the model rewrite's meaning and
+ * the first letter of each word; then the box for the new words and "Kiểm tra" (both gone once fixed). `preparing`: the AI's
  * questions and hints are still on their way (the comment's own text stands in until then).
  */
 export function FixBody({ task, edit, setEdit, solved, verdict, checking, error, onCheck, preparing }: {
   task: FixTask; edit: string; setEdit: (v: string) => void; solved: boolean; verdict?: CheckOut; checking: boolean; error: string; onCheck: () => void; preparing?: boolean;
 }) {
-  const [more, setMore] = useState(0);
   const [hints, setHints] = useState(false);
   /** First-letter words the student tapped to see in full: one word at a time. */
   const [peek, setPeek] = useState<Set<number>>(new Set());
@@ -110,23 +109,12 @@ export function FixBody({ task, edit, setEdit, solved, verdict, checking, error,
   const tokens = model ? splitWords(model) : [];
   const states = model ? wordStates(model, edit) : [];
   const ok = states.filter((x) => x.s === 'ok').length;
-  const extra = Math.max(0, task.ask.length - 1) + (task.starter ? 1 : 0);
   return (
     <>
       <div style={{ borderRadius: 10, background: '#F7F9FD', border: '1px solid #DCE7F7', padding: '10px 12px', display: 'flex', flexDirection: 'column', gap: 8 }}>
         {preparing && <span role="status" style={label}>Đang chuẩn bị câu hỏi gợi mở…</span>}
         {task.ask[0] && <span style={{ fontFamily: CL.sans, fontSize: 13.5, fontWeight: 600, lineHeight: 1.45, color: CL.ink }}>{task.ask[0]}</span>}
-        {task.ask.slice(1, 1 + more).map((q) => <span key={q} className="co-unfold" style={{ fontFamily: CL.sans, fontSize: 13, fontWeight: 600, lineHeight: 1.45, color: CL.ink7 }}>{q}</span>)}
-        {task.starter && more >= task.ask.length && <span className="co-unfold" style={{ fontFamily: CL.sans, fontSize: 12.5, lineHeight: 1.5, color: CL.ink6 }}>Thử mở câu bằng: <i style={{ fontFamily: CL.serif, fontSize: 13.5, color: CL.ink8 }}>{task.starter}</i></span>}
-        {model && (
-          <button type="button" role="switch" aria-checked={hints} className="cl-btn" onClick={() => setHints(!hints)} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: 0, border: 'none', background: 'none', fontFamily: CL.sans, fontSize: 12.5, color: CL.ink7, textAlign: 'left' }}>
-            <span aria-hidden="true" style={{ position: 'relative', width: 30, height: 18, flexShrink: 0, borderRadius: 99, background: hints ? '#2F62C4' : CL.ink2, transition: 'background-color .15s' }}>
-              <span style={{ position: 'absolute', top: 2, left: hints ? 14 : 2, width: 14, height: 14, borderRadius: 99, background: '#fff', transition: 'left .15s' }} />
-            </span>
-            Gợi ý cách viết
-            {hints && <span style={{ ...label, marginLeft: 'auto' }}>bấm một từ để xem · {ok}/{tokens.length} từ đúng</span>}
-          </button>
-        )}
+        {hints && model && <span className="co-unfold" style={{ ...label, display: 'flex' }}>Gợi ý cách viết<span style={{ marginLeft: 'auto' }}>bấm một từ để xem · {ok}/{tokens.length} từ đúng</span></span>}
         {hints && model && <>
           {vi && <span style={{ fontFamily: CL.sans, fontSize: 13, lineHeight: 1.45, color: CL.ink7 }}>{vi}</span>}
           <span style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
@@ -154,10 +142,11 @@ export function FixBody({ task, edit, setEdit, solved, verdict, checking, error,
         </span>
       )}
       {error && <span role="alert" style={{ fontFamily: CL.sans, fontSize: 12.5, color: CL.redText }}>{error}</span>}
-      <span style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-        {extra > 0 && <button type="button" className="cl-btn" onClick={() => setMore(more + 1)} disabled={more >= extra} style={{ ...smallBtn, opacity: more >= extra ? 0.4 : 1 }}>Gợi ý thêm</button>}
+      {/* Fixed: nothing left to do here. Two layers of help only: the guiding question, then "Gợi ý thêm" for the first-letter hints. */}
+      {!solved && <span style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+        {model && !hints && <button type="button" className="cl-btn" onClick={() => setHints(true)} style={smallBtn}>Gợi ý thêm</button>}
         <button type="button" className="cl-btn cl-primary" onClick={onCheck} disabled={checking || !edit.trim()} style={{ ...primaryBtn, height: 32, fontSize: 13, marginLeft: 'auto', opacity: checking || !edit.trim() ? 0.45 : 1 }}>{checking ? 'Đang kiểm tra…' : 'Kiểm tra'}</button>
-      </span>
+      </span>}
     </>
   );
 }
