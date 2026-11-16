@@ -157,14 +157,14 @@ export function useCoach(promptId: string, chain: ChainIn, initial?: CheckResult
   const allFixed = !!result && result.notes.length > 0 && result.notes.every((n) => fixed.includes(noteKey(n)));
 
   /**
-   * Enter on step `i` after a check: the open notes on that step, and a missing step right before it (the step opened
-   * at a gap), are each checked quickly. A fixed note is marked fixed (its card folds and is crossed off); one that
+   * Enter on step `i` after a check: the open notes on that step are each checked quickly. A missing step ("Nhảy bước")
+   * is checked only from the step right after it (the one opened at the gap), never from the step above it. A fixed note is marked fixed (its card folds and is crossed off); one that
    * isn't says what is still missing.
    */
   const checkStep = async (i: number, steps: string[]) => {
     if (!result || !steps[i]?.trim()) return;
     const live = place(steps, result.notes, checkedSteps(result.snap));
-    const todo = live.filter((n) => !fixed.includes(noteKey(n)) && !noteBusy.includes(noteKey(n)) && (n.step === i || (n.type === 'jump' && n.step === i - 1)));
+    const todo = live.filter((n) => !fixed.includes(noteKey(n)) && !noteBusy.includes(noteKey(n)) && (n.type === 'jump' ? n.step === i - 1 : n.step === i));
     if (!todo.length) return;
     const now: ChainIn = { ...chain, steps };
     await Promise.all(todo.map(async (n) => {
