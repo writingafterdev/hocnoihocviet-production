@@ -281,6 +281,9 @@ a:hover { color: #404040; }
 .co-dot.co-ping { animation: co-ping var(--duration-very-slow) var(--co-ease); }
 .co-dot.co-ok > span { background: #2D881A !important; }
 .co-unfold { transform-origin: top left; animation: co-unfold var(--duration-slow) var(--co-ease) both; }
+/* A body that slides open and closed: rows 0fr → 1fr animates to the content's real height, with a fade. */
+.co-fold { display: grid; grid-template-rows: 0fr; opacity: 0; transition: grid-template-rows .38s cubic-bezier(.22,1,.36,1), opacity .25s ease; }
+.co-fold[data-open] { grid-template-rows: 1fr; opacity: 1; }
 /* Skeleton: grey blocks in the shape of the coming content, with a soft shimmer. */
 .co-skel { display: block; border-radius: 6px; background: linear-gradient(90deg, #EEEEEB 25%, #F8F8F6 40%, #EEEEEB 60%); background-size: 300% 100%; animation: co-shimmer 1.5s ease-in-out infinite; }
 .co-skel-in { animation: co-fade var(--duration-medium) ease both; }
@@ -320,6 +323,7 @@ a:hover { color: #404040; }
   .co-grid, .co-side-in, .co-stack, .co-dot, .co-reel-win { transition: none !important; }
   .co-skel { animation: none; }
   .co-enter *, .co-noted, .co-badge, .co-jump, .co-unfold, .co-rise, .co-slidein, .co-pop, .co-bump, .co-flip, .co-fade, .co-hl, .co-dot.co-ping { animation: none !important; }
+  .co-fold { transition: none !important; }
   .co-hl { background-size: 100% 100%; }
   .co-tick { stroke-dashoffset: 0; }
   .co-scan, .co-trail, .co-sweep { display: none; }

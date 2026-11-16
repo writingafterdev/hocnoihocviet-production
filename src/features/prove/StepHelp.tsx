@@ -115,18 +115,18 @@ export function useStepHelp(promptId: string, base: Omit<ChainIn, 'steps'>, step
       const d = sc.load.data;
       const vd = vocab[i];
       const usedPhrases = vd && vd.state === 'done' ? vd.data.phrases.filter((p) => d.used.some((u) => u.toLowerCase() === p.en.toLowerCase())) : [];
-      if (closed[i]) return (
-        <div style={{ ...panel, flexDirection: 'row', alignItems: 'center' }}>
-          <span style={label}>Cách nói hay hơn{d.parts.length ? ' · ' + d.parts.length + ' chỗ' : ''}</span>
-          <button type="button" className="cl-btn" style={linkBtn} onClick={() => setClosed((c) => ({ ...c, [i]: false }))}>Mở</button>
-        </div>
-      );
+      // One panel that stays mounted: "Thu gọn" / "Mở" slide its body closed and open (height and fade), so the steps
+      // below glide instead of jumping.
+      const open = !closed[i];
       return (
-        <div className="co-unfold" style={panel}>
+        <div className="co-unfold" style={{ ...panel, gap: 0 }}>
           <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <span style={label}>Cách nói hay hơn cho bước bạn vừa gõ</span>
-            <button type="button" className="cl-btn" style={linkBtn} onClick={() => setClosed((c) => ({ ...c, [i]: true }))}>Thu gọn</button>
+            <span style={label}>{open ? 'Cách nói hay hơn cho bước bạn vừa gõ' : 'Cách nói hay hơn' + (d.parts.length ? ' · ' + d.parts.length + ' chỗ' : '')}</span>
+            <button type="button" className="cl-btn" style={linkBtn} aria-expanded={open} onClick={() => setClosed((c) => ({ ...c, [i]: open }))}>{open ? 'Thu gọn' : 'Mở'}</button>
           </span>
+          <div className="co-fold" data-open={open || undefined}>
+          <div style={{ minHeight: 0, overflow: 'hidden' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, paddingTop: 8 }}>
           {usedPhrases.map((p) => row(p, true))}
           {usedPhrases.length > 0 && d.parts.length > 0 && <span style={{ height: 1, background: '#DCE7F7' }} />}
           {d.parts.map((part) => (
@@ -136,6 +136,9 @@ export function useStepHelp(promptId: string, base: Omit<ChainIn, 'steps'>, step
             </span>
           ))}
           {d.parts.length === 0 && usedPhrases.length === 0 && <span style={{ fontFamily: CL.sans, fontSize: 13, color: CL.greenText }}>Bước này đã viết tốt.</span>}
+          </div>
+          </div>
+          </div>
         </div>
       );
     }
