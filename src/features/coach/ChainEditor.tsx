@@ -4,7 +4,7 @@ import { Fragment, useEffect, useRef, useState, type ReactNode } from 'react';
 import { CL } from '../chainlab/constants';
 import { ClIcon, ClLabel } from '../chainlab/ui/primitives';
 import { CheckSummary, NoteCard } from './NotesPanel';
-import { NOTE_STYLE, place, type CheckResult, type Hint, type PlacedNote } from './useCoach';
+import { NOTE_STYLE, checkedSteps, place, type CheckResult, type Hint, type PlacedNote } from './useCoach';
 import { ProBeam } from '@/components/ui/pro-beam';
 
 const DOT = 17;
@@ -83,8 +83,8 @@ export function ChainEditor(p: ChainEditorProps) {
   /** Steps added since the last render get the entrance (line grows, dot pops, text rises). */
   const entering = useRef<Set<number>>(new Set());
   const [green, setGreen] = useState(false);
-  /** The check's notes, placed on the steps as they are now (an inserted empty step does not move them). */
-  const live = p.check?.result ? place(p.steps, p.check.result.notes) : [];
+  /** The check's notes, kept on the steps the check read: typing into an inserted step or rewriting one doesn't move them. */
+  const live = p.check?.result ? place(p.steps, p.check.result.notes, checkedSteps(p.check.result.snap)) : [];
   const notes = p.check ? (p.check.fresh ? live : []) : p.notes;
   // After a check with a jump: open an empty step right where the step is missing, so the student can type it there.
   const opened = useRef('');

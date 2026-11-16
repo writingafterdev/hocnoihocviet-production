@@ -21,20 +21,76 @@ export interface Hint { q: string; why: string }
 
 const snapOf = (c: ChainIn) => JSON.stringify([c.start, c.end, c.steps.map((s) => s.trim()).filter(Boolean)]);
 
-/** Maps the AI's positions (0 = start, 1…n = filled steps, n+1 = end) to indexes in `steps` (empty steps skipped, so inserting one keeps notes in place). */
-export function place(steps: string[], notes: ChainNote[]): PlacedNote[] {
+/** The filled steps a check read (from its snapshot). */
+export function checkedSteps(snap: string): string[] | null {
+  try { const s = JSON.parse(snap)[2]; return Array.isArray(s) ? s : null; } catch { return null; }
+}
+
+const words = (t: string) => new Set(t.toLowerCase().match(/[\p{L}\p{N}]+/gu) || []);
+const overlap = (a: string, b: string) => { const A = words(a), B = words(b); let n = 0; A.forEach((w) => { if (B.has(w)) n++; }); return n / Math.max(1, Math.min(A.size, B.size)); };
+
+/** Pairs each item of `few` with one of `many` (few.length <= many.length), in order, picking the most similar. */
+function pairInOrder(few: string[], many: string[]): number[] {
+  const out: number[] = [];
+  let from = 0;
+  few.forEach((t, k) => {
+    const last = many.length - (few.length - k); // leave room for the rest
+    let best = from, score = -1;
+    for (let j = from; j <= last; j++) { const sc = overlap(t, many[j]); if (sc > score) { score = sc; best = j; } }
+    out.push(best); from = best + 1;
+  });
+  return out;
+}
+
+/**
+ * For each step the check read, its index in `steps` now (-1 = deleted). Steps still word for word the same are
+ * matched first (longest common run); the ones between them pair up in order by the words they share, so a step
+ * the student is rewriting keeps its notes and a newly typed step (e.g. at a jump) takes none.
+ */
+export function align(old: string[], steps: string[]): number[] {
+  const cur = steps.map((s, i) => [s.trim(), i] as const).filter(([s]) => s);
+  const m = old.length, n = cur.length;
+  const dp = Array.from({ length: m + 1 }, () => new Array<number>(n + 1).fill(0));
+  for (let a = m - 1; a >= 0; a--) for (let b = n - 1; b >= 0; b--) dp[a][b] = old[a].trim() === cur[b][0] ? dp[a + 1][b + 1] + 1 : Math.max(dp[a + 1][b], dp[a][b + 1]);
+  const anchors: [number, number][] = [];
+  for (let a = 0, b = 0; a < m && b < n;) {
+    if (old[a].trim() === cur[b][0]) { anchors.push([a, b]); a++; b++; } else if (dp[a + 1][b] >= dp[a][b + 1]) a++; else b++;
+  }
+  const map = new Array<number>(m).fill(-1);
+  let pa = 0, pb = 0;
+  [...anchors, [m, n] as [number, number]].forEach(([a, b]) => {
+    const oa = old.slice(pa, a), cb = cur.slice(pb, b).map(([t]) => t);
+    if (oa.length && cb.length) {
+      if (oa.length <= cb.length) pairInOrder(oa, cb).forEach((j, k) => { map[pa + k] = cur[pb + j][1]; });
+      else pairInOrder(cb, oa).forEach((k, j) => { map[pa + k] = cur[pb + j][1]; });
+    }
+    if (a < m) map[a] = cur[b][1];
+    pa = a + 1; pb = b + 1;
+  });
+  return map;
+}
+
+/**
+ * Maps the AI's positions (0 = start, 1…n = the filled steps it read, n+1 = end) to indexes in `steps` as they are
+ * now. With `checked` (the steps the check read) notes follow their own step through edits and inserted steps;
+ * a note whose step was deleted is dropped. Without it, positions count the filled steps now.
+ */
+export function place(steps: string[], notes: ChainNote[], checked?: string[] | null): PlacedNote[] {
   const filled = steps.map((s, i) => [s, i] as const).filter(([s]) => s.trim()).map(([, i]) => i);
-  const n = filled.length;
+  const map = checked ? align(checked, steps) : filled;
+  const n = checked ? checked.length : filled.length;
+  const num = (i: number) => filled.indexOf(i) + 1;
   // Down the chain in order; on the same step, what to add to the step itself comes before the missing step after it.
   const ordered = [...notes].sort((a, b) => a.at - b.at || (a.type === 'jump' ? 1 : 0) - (b.type === 'jump' ? 1 : 0));
-  return ordered.map((x) => {
-    const step = x.at === 0 ? -1 : filled[x.at - 1] ?? -1;
+  return ordered.flatMap((x) => {
+    const step = x.at === 0 ? -1 : map[x.at - 1] ?? -1;
+    if (x.at > 0 && step < 0) return [];
     if (x.type === 'jump') {
-      const from = x.at === 0 ? 'Điểm đầu' : 'Bước ' + x.at;
-      const to = x.at >= n ? 'điểm cuối' : 'bước ' + (x.at + 1);
-      return { ...x, step, toEnd: x.at >= n, where: from + ' → ' + to };
+      const from = step < 0 ? 'Điểm đầu' : 'Bước ' + num(step);
+      const toEnd = x.at >= n;
+      return [{ ...x, step, toEnd, where: from + ' → ' + (toEnd ? 'điểm cuối' : 'bước ' + ((step < 0 ? 0 : num(step)) + 1)) }];
     }
-    return { ...x, step, where: 'Bước ' + x.at };
+    return [{ ...x, step, where: 'Bước ' + num(step) }];
   });
 }
 
