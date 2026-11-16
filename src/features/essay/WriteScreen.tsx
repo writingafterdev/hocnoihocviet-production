@@ -155,6 +155,8 @@ export function WriteScreen({ prompt, chains, setChains, essay, setEssay, toolba
   const guided = useGuidedPlan(prompt, chains, essay, setEssay);
   const gPlan = essay.guided?.plan || null;
   const gNow = guidedOn && gPlan ? gPlan[essay.guided!.at] : null;
+  /** Handed over with "Tự viết phần còn lại": sentences are still left in the plan, so the student can go back to them. */
+  const canResume = !review && !!essay.guided?.done && !!gPlan && essay.guided!.at < gPlan.length;
   // The white tab behind the active criterion slides to the new one (transitions.dev "Tabs sliding").
   const tabsRef = useRef<HTMLDivElement>(null);
   const [ind, setInd] = useState<{ left: number; width: number } | null>(null);
@@ -389,7 +391,9 @@ export function WriteScreen({ prompt, chains, setChains, essay, setEssay, toolba
               <ClLabel color={CL.ink}>Bài viết</ClLabel>
               {guidedOn ? <GuidedHeader essay={essay} setEssay={setEssay} total={gPlan?.length || 0} /> : <>
               <span style={{ fontFamily: CL.sans, fontSize: 12, color: CL.ink5 }}>{editing ? '' : 'Bấm chỗ tô màu để xem nhận xét.'}{stale && editing ? 'Bạn đã sửa bài, nộp lại để chấm bản mới.' : ''}</span>
-              <span style={{ marginLeft: 'auto', fontFamily: CL.sans, fontSize: 12, color: CL.ink5 }}>Số từ: <b style={{ color: words >= 250 ? CL.green : CL.ink }}>{words}</b> / 250</span>
+              {canResume && <button type="button" className="cl-btn" onClick={() => setEssay((e) => (e.guided ? { ...e, guided: { ...e.guided, done: false } } : e))}
+                style={{ marginLeft: 'auto', whiteSpace: 'nowrap', border: 'none', background: '#EEF3FC', borderRadius: 6, padding: '4px 10px', cursor: 'pointer', fontFamily: CL.sans, fontSize: 12.5, fontWeight: 500, color: '#2F62C4' }}>Quay lại viết có hướng dẫn</button>}
+              <span style={{ marginLeft: canResume ? 0 : 'auto', fontFamily: CL.sans, fontSize: 12, color: CL.ink5 }}>Số từ: <b style={{ color: words >= 250 ? CL.green : CL.ink }}>{words}</b> / 250</span>
               </>}
             </div>
             {guidedOn

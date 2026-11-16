@@ -61,7 +61,8 @@ export function GuidedWriter({ sections, essay, setEssay, plan, error, loading, 
 }) {
   const g = essay.guided!;
   const [typed, setTyped] = useState('');
-  const [reveal, setReveal] = useState(false);
+  /** Words the student tapped to see in full (Chi tiết): one word at a time, never the whole sentence. */
+  const [peek, setPeek] = useState<Set<number>>(new Set());
   const ta = useRef<HTMLTextAreaElement>(null);
   const at = g.at;
   useEffect(() => { ta.current?.focus(); }, [at]);
@@ -94,12 +95,13 @@ export function GuidedWriter({ sections, essay, setEssay, plan, error, loading, 
   const tokens = splitWords(s.en);
   const states = wordStates(s.en, typed);
   const ok = states.filter((x) => x.s === 'ok').length;
-  const canNext = detail ? ok === tokens.length || (reveal && !!typed.trim()) : !!typed.trim();
+  // Chi tiết: every word typed right, or the ones still wrong were looked at.
+  const canNext = detail ? ok === tokens.length || (!!typed.trim() && tokens.every((_, i) => states[i]?.s === 'ok' || peek.has(i))) : !!typed.trim();
   const next = () => {
     if (!canNext) return;
     const text = typed.trim();
     // Cleared here, not in an effect after the render, so a key pressed right after Enter starts the new sentence.
-    setTyped(''); setReveal(false);
+    setTyped(''); setPeek(new Set());
     setEssay((e) => {
       if (!e.guided || e.guided.at !== at) return e;
       const prev = (e.drafts[s.section] || '').trim();
@@ -124,7 +126,7 @@ export function GuidedWriter({ sections, essay, setEssay, plan, error, loading, 
           {detail ? (
             <>
               <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <span style={label}>{sec?.label} · nghĩa của câu</span>
+                <span style={label}>{sec?.label} · nghĩa của câu · bấm một từ để xem cả từ</span>
                 <span style={{ ...label, marginLeft: 'auto' }}>{ok}/{tokens.length} từ đúng</span>
               </span>
               <span style={{ fontFamily: CL.sans, fontSize: 15.5, fontWeight: 600, lineHeight: 1.5, color: CL.ink }}>{s.vi}</span>
@@ -132,10 +134,13 @@ export function GuidedWriter({ sections, essay, setEssay, plan, error, loading, 
                 {tokens.map((w, i) => {
                   const st = states[i];
                   const good = st?.s === 'ok', bad = st?.s === 'bad';
+                  const seen = peek.has(i);
                   return (
-                    <span key={i} style={{ display: 'inline-block', borderRadius: 6, padding: '3px 8px', fontFamily: 'ui-monospace, Menlo, monospace', fontSize: 13, border: '1px solid ' + (good ? '#BFE0B5' : bad ? '#F0C7BE' : '#E5E5E5'), background: good ? '#EDF7EA' : bad ? CL.redSoft : '#fff', color: good ? '#2D6E1E' : bad ? CL.redText : reveal ? CL.ink8 : '#737373' }}>
-                      {good || reveal ? w : hint(w)}
-                    </span>
+                    <button key={i} type="button" className="cl-btn" disabled={good || seen} aria-label={good || seen ? w : 'Xem từ thứ ' + (i + 1)}
+                      onClick={() => { setPeek((p) => new Set(p).add(i)); ta.current?.focus(); }}
+                      style={{ display: 'inline-block', borderRadius: 6, padding: '3px 8px', fontFamily: 'ui-monospace, Menlo, monospace', fontSize: 13, cursor: good || seen ? 'default' : 'pointer', border: '1px solid ' + (good ? '#BFE0B5' : bad ? '#F0C7BE' : '#E5E5E5'), background: good ? '#EDF7EA' : bad ? CL.redSoft : '#fff', color: good ? '#2D6E1E' : bad ? CL.redText : seen ? CL.ink8 : '#737373' }}>
+                      {good || seen ? w : hint(w)}
+                    </button>
                   );
                 })}
               </span>
@@ -168,9 +173,7 @@ export function GuidedWriter({ sections, essay, setEssay, plan, error, loading, 
           style={{ flexShrink: 0, minHeight: 84, resize: 'none', border: '1px solid #77A1DD', borderRadius: 12, boxShadow: '0 0 0 3px #EEF3FC', outline: 'none', padding: '12px 14px', fontFamily: CL.serif, fontSize: 15, lineHeight: 1.6, color: CL.ink, background: '#fff', fieldSizing: 'content' } as React.CSSProperties} />
       </div>
       <div style={{ flexShrink: 0, padding: '12px 20px', borderTop: '1px solid ' + CL.ink1, background: CL.panel, display: 'flex', alignItems: 'center', gap: 8 }}>
-        {detail
-          ? <button type="button" className="cl-btn" onClick={() => setReveal(!reveal)} style={ghostBtn}>{reveal ? 'Ẩn đáp án' : 'Hiện đáp án'}</button>
-          : <button type="button" className="cl-btn" onClick={() => setLevel('detail')} style={ghostBtn}>Vẫn bí? Gợi ý chi tiết</button>}
+        {!detail && <button type="button" className="cl-btn" onClick={() => setLevel('detail')} style={ghostBtn}>Vẫn bí? Gợi ý chi tiết</button>}
         <button type="button" className="cl-btn" onClick={handOver} style={linkBtn}>Tự viết phần còn lại</button>
         <button type="button" className="cl-btn cl-primary" onClick={next} disabled={!canNext} style={{ ...primaryBtn, ...nowrap, marginLeft: 'auto', opacity: canNext ? 1 : 0.45 }}>{last ? 'Xong' : 'Câu tiếp'}</button>
       </div>
