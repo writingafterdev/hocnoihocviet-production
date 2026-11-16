@@ -32,7 +32,7 @@ export interface ParagraphDraft { essay: EssayState; review: Review | null }
  * sentence by sentence ("Viết có hướng dẫn"). "Nhận xét đoạn văn" gives idea/flow comments, no score; each is fixed
  * inside its comment, the old words struck through in the paragraph with the rewrite after them.
  */
-export function DrillParagraph({ s, prompt, steps, guided: startGuided, onBack, saved, onSave }: { s: Statement; prompt: Prompt; steps: string[]; guided: boolean; onBack: () => void; saved?: ParagraphDraft; onSave?: (d: ParagraphDraft) => void }) {
+export function DrillParagraph({ s, prompt, steps, guided: startGuided, onBack, onNext, saved, onSave }: { s: Statement; prompt: Prompt; steps: string[]; guided: boolean; onBack: () => void; onNext?: () => void; saved?: ParagraphDraft; onSave?: (d: ParagraphDraft) => void }) {
   const chain: Chain = { id: 'para', q: 1, title: '', tone: s.tone || null, area: '', split: null, findings: [], steps: [s.start, ...steps.map((x) => x.trim()).filter(Boolean), s.end], mine: 'start', built: true };
   const sentence = plainSentence(s.sentence);
   const [essay, setEssay] = useState<EssayState>(saved?.essay || { bodies: [], drafts: { para: '' }, seconds: 0, review: null, guided: startGuided ? { plan: null, at: 0, level: 'frame' } : null });
@@ -51,6 +51,7 @@ export function DrillParagraph({ s, prompt, steps, guided: startGuided, onBack, 
   const guidedOn = !!essay.guided && !essay.guided.done;
   const gNow = guidedOn && essay.guided!.plan ? essay.guided!.plan[essay.guided!.at] : null;
   const solvedN = review ? review.tasks.filter((t) => review.solved.includes(t.item.key)).length : 0;
+  const allFixed = !!review && solvedN === review.tasks.length;
 
   /** Comments on the paragraph (with every solved rewrite put in place first, when asked again). */
   const askReview = async () => {
@@ -100,8 +101,12 @@ export function DrillParagraph({ s, prompt, steps, guided: startGuided, onBack, 
           {error && <span role="alert" style={{ fontFamily: CL.sans, fontSize: 12, color: CL.redText, marginRight: 4 }}>{error}</span>}
           {review && review.tasks.length > 0 && <span style={{ fontFamily: CL.sans, fontSize: 12.5, color: CL.ink5, marginRight: 4 }}>Đã sửa <b style={{ color: CL.ink }}>{solvedN}</b> / {review.tasks.length}</span>}
           <button type="button" className="cl-btn" onClick={() => setChat(!chat)} aria-pressed={chat} style={toolbarBtn(chat)}>Dịch</button>
-          {review
-            ? <ProBeam><button type="button" className="cl-btn cl-primary" onClick={askReview} disabled={reviewing || !solvedN} style={{ ...primaryBtn, opacity: reviewing || !solvedN ? 0.45 : 1 }}>{reviewing ? 'Đang đọc…' : 'Nhận xét lại'}</button></ProBeam>
+          {/* Once every comment is fixed (or there were none), "Câu tiếp" leads; before that it's there to move on anyway. */}
+          {review && (allFixed
+            ? <button type="button" className="cl-btn" onClick={askReview} disabled={reviewing || !solvedN} style={{ ...toolbarBtn(false), opacity: reviewing || !solvedN ? 0.45 : 1 }}>{reviewing ? 'Đang đọc…' : 'Nhận xét lại'}</button>
+            : <ProBeam><button type="button" className="cl-btn cl-primary" onClick={askReview} disabled={reviewing || !solvedN} style={{ ...primaryBtn, opacity: reviewing || !solvedN ? 0.45 : 1 }}>{reviewing ? 'Đang đọc…' : 'Nhận xét lại'}</button></ProBeam>)}
+          {review && onNext && <button type="button" className={'cl-btn' + (allFixed ? ' cl-primary' : '')} onClick={onNext} disabled={reviewing} style={allFixed ? primaryBtn : toolbarBtn(false)}>Câu tiếp<ClIcon name="right" size={13} /></button>}
+          {review ? null
             : <ProBeam><button type="button" className="cl-btn cl-primary" onClick={askReview} disabled={reviewing || guidedOn || !text.trim()} style={{ ...primaryBtn, opacity: reviewing || guidedOn || !text.trim() ? 0.45 : 1 }}>{reviewing ? 'Đang đọc…' : 'Nhận xét đoạn văn'}</button></ProBeam>}
         </div>
       </div>

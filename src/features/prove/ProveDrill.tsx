@@ -157,6 +157,9 @@ export function ProveDrill() {
   const backToPick = () => { if (rolling) return; setDeck(null); setI(0); setSteps(['']); setActive(null); coach.reset(); };
 
   /** Spin to the next statement: other statements slide past, slow down, and the new one eases into place. */
+  /** "Câu tiếp" on the paragraph screen: back to the drill, then spin to the next statement once it's on screen. */
+  const nextAfter = useRef(false);
+  useEffect(() => { if (!para && nextAfter.current) { nextAfter.current = false; go(); } }, [para]); // eslint-disable-line react-hooks/exhaustive-deps
   const go = () => {
     if (!deck || !s || rolling) return;
     const k = i + 1, target = deck[k % deck.length];
@@ -207,7 +210,7 @@ export function ProveDrill() {
     <div style={{ height: '100%', background: '#fff', display: 'flex', flexDirection: 'column' }}>
       <WorkspaceHeader />
       <div style={{ flex: 1, minHeight: 0, width: '100%', maxWidth: 1560, margin: '0 auto', padding: '24px 32px 24px', display: 'flex', flexDirection: 'column' }}>
-        {para && s && prompt ? <DrillParagraph key={s.id + para} s={s} prompt={prompt} steps={steps} guided={para === 'guided'} onBack={() => setPara(null)}
+        {para && s && prompt ? <DrillParagraph key={s.id + para} s={s} prompt={prompt} steps={steps} guided={para === 'guided'} onBack={() => setPara(null)} onNext={() => { nextAfter.current = true; setPara(null); }}
           saved={drafts.current.get([s.id, para, ...steps.map((x) => x.trim()).filter(Boolean)].join('|'))}
           onSave={(d) => drafts.current.set([s.id, para, ...steps.map((x) => x.trim()).filter(Boolean)].join('|'), d)} /> : <>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10, minHeight: 42, paddingBottom: 12 }}>
