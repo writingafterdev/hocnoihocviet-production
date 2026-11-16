@@ -121,6 +121,8 @@ export interface ReviewItem {
   vi?: string;
   /** Essay feedback on ideas or flow: guiding questions that lead to `fix`, from the same grading call. */
   ask?: string[];
+  /** Ideas and flow: what to do, as an instruction (newer gradings; older ones carry `ask` questions). */
+  how?: string;
   /** Essay feedback on ideas or flow: an example sentence in the student's own idea, showing what the fix looks like. */
   example?: string;
   /** A guided fix (the sample review): questions, a sentence starter, and a model rewrite of the quote with its meaning (the copy-hints in "Gợi ý cách viết"). */

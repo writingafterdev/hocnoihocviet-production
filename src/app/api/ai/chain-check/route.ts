@@ -7,9 +7,9 @@ function readPrev(x: unknown): PrevCheck | null {
   const p = x as { steps?: unknown; notes?: unknown } | null;
   if (!p || !Array.isArray(p.steps) || !Array.isArray(p.notes) || p.steps.length > 12 || p.notes.length > 20) return null;
   const steps = p.steps.filter((s): s is string => typeof s === 'string' && s.length <= 600);
-  const notes = p.notes.map((n) => n as { type?: unknown; at?: unknown; text?: unknown })
+  const notes = p.notes.map((n) => n as { type?: unknown; at?: unknown; text?: unknown; fix?: unknown })
     .filter((n) => (n.type === 'jump' || n.type === 'trait' || n.type === 'detail') && Number.isInteger(n.at) && typeof n.text === 'string' && n.text.length <= 1000)
-    .map((n) => ({ type: n.type as 'jump' | 'trait' | 'detail', at: n.at as number, text: n.text as string }));
+    .map((n) => ({ type: n.type as 'jump' | 'trait' | 'detail', at: n.at as number, text: n.text as string, fix: typeof n.fix === 'string' ? n.fix.slice(0, 1000) : '' }));
   return steps.length === p.steps.length && notes.length ? { steps, notes } : null;
 }
 

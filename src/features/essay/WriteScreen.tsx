@@ -188,15 +188,15 @@ export function WriteScreen({ prompt, chains, setChains, essay, setEssay, toolba
   /** Every comment that quotes the essay is fixed in place ("Sửa" on its card); guiding questions come with the idea/flow ones. */
   const isFixable = (n: Note) => !!n.item.quote && !!n.item.sectionId;
   /** The comment carries its own fix (and questions) from the grading, so they belong together. */
-  const ownFix = (n: Note) => !!(n.item.fix || n.item.ask?.length || n.item.task?.model);
+  const ownFix = (n: Note) => !!(n.item.fix || n.item.how || n.item.ask?.length || n.item.task?.model);
   const fixKey = (n: Note) => n.crit + ':' + n.item.key;
   /** The comment as a fix task: its own fix, meaning and questions from the grading (or the comment's words as the question). */
   const taskFor = (n: Note): FixTask => {
     const item = { ...n.item, key: fixKey(n) };
-    const own = { item, crit: n.crit, title: n.item.label || 'Sửa', ask: n.item.ask?.length ? n.item.ask : n.item.task?.ask || [], starter: n.item.task?.starter, ok: n.item.task?.ok || 'Đã sửa xong chỗ này.', model: n.item.task?.model || n.item.fix, vi: n.item.task?.vi || n.item.vi };
+    const own = { item, crit: n.crit, title: n.item.label || 'Sửa', how: n.item.how || undefined, ask: n.item.ask?.length ? n.item.ask : n.item.task?.ask || [], starter: n.item.task?.starter, ok: n.item.task?.ok || 'Đã sửa xong chỗ này.', model: n.item.task?.model || n.item.fix, vi: n.item.task?.vi || n.item.vi };
     if (ownFix(n) || n.crit === 'lr' || n.crit === 'gra') return own;
     // A comment graded before comments carried their own fix: its explanation stands in as the question.
-    return { ...own, ask: own.ask.length ? own.ask : [n.item.text.replace(/\*\*/g, '')] };
+    return { ...own, ask: own.ask.length || own.how ? own.ask : [n.item.text.replace(/\*\*/g, '')] };
   };
   const tasks = useMemo(() => (sending ? [] : notes.filter(isFixable).map(taskFor)), [notes, sending]); // eslint-disable-line react-hooks/exhaustive-deps
   const taskOf = (n: Note) => tasks.find((t) => t.item.key === fixKey(n)) || null;
@@ -222,10 +222,10 @@ export function WriteScreen({ prompt, chains, setChains, essay, setEssay, toolba
       return;
     }
     // Ideas and flow in an AI review: checked by the AI, with the planned task or the comment itself.
-    const task = (review?.source === 'ai' ? { sectionId: sec, criterion: t.crit as 'tr' | 'cc', quote: t.item.quote!, title: t.title, ask: t.ask, starter: t.starter || '', aim: t.item.text.replace(/\*\*/g, '') } : null);
+    const task = (review?.source === 'ai' ? { sectionId: sec, criterion: t.crit as 'tr' | 'cc', quote: t.item.quote!, title: t.title, ask: t.ask, how: t.how, starter: t.starter || '', aim: t.item.text.replace(/\*\*/g, '') } : null);
     if (!task) {
       const ok = passes(t, after, before);
-      verdict({ solved: ok, reply: ok ? t.ok : 'Câu mới còn ngắn quá. Trả lời câu hỏi ở trên thay vì chỉ xoá câu cũ.', ask: '' });
+      verdict({ solved: ok, reply: ok ? t.ok : 'Câu mới còn ngắn quá. Làm theo cách sửa ở trên thay vì chỉ xoá câu cũ.', ask: '' });
       return;
     }
     setCheckingFix(key); setFixError('');

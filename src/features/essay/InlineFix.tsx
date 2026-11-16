@@ -112,8 +112,11 @@ export function FixBody({ task, edit, setEdit, solved, verdict, checking, error,
   return (
     <>
       <div style={{ borderRadius: 10, background: '#F7F9FD', border: '1px solid #DCE7F7', padding: '10px 12px', display: 'flex', flexDirection: 'column', gap: 8 }}>
-        {preparing && <span role="status" style={label}>Đang chuẩn bị câu hỏi gợi mở…</span>}
-        {task.ask[0] && <span style={{ fontFamily: CL.sans, fontSize: 13.5, fontWeight: 600, lineHeight: 1.45, color: CL.ink }}>{task.ask[0]}</span>}
+        {preparing && <span role="status" style={label}>Đang chuẩn bị cách sửa…</span>}
+        {/* Newer reviews say what to do ("Cách sửa"); older ones asked a guiding question instead. */}
+        {task.how
+          ? <span style={{ fontFamily: CL.sans, fontSize: 13.5, fontWeight: 600, lineHeight: 1.45, color: CL.ink }}><span style={{ fontWeight: 500, color: CL.ink5 }}>Cách sửa: </span>{task.how}</span>
+          : task.ask[0] && <span style={{ fontFamily: CL.sans, fontSize: 13.5, fontWeight: 600, lineHeight: 1.45, color: CL.ink }}>{task.ask[0]}</span>}
         {hints && model && <span className="co-unfold" style={{ ...label, display: 'flex' }}>Gợi ý cách viết<span style={{ marginLeft: 'auto' }}>bấm một từ để xem · {ok}/{tokens.length} từ đúng</span></span>}
         {hints && model && <>
           {vi && <span style={{ fontFamily: CL.sans, fontSize: 13, lineHeight: 1.45, color: CL.ink7 }}>{vi}</span>}
@@ -137,7 +140,7 @@ export function FixBody({ task, edit, setEdit, solved, verdict, checking, error,
       {!solved && verdict && <span role="status" key={verdict.reply} className="co-unfold" style={{ borderRadius: 10, background: '#F5F5F5', padding: '9px 12px', fontFamily: CL.sans, fontSize: 13, lineHeight: 1.5, color: CL.ink7 }}>Chưa được: {verdict.reply}</span>}
       {!solved && verdict?.ask && (
         <span key={verdict.ask} className="co-unfold" style={{ display: 'flex', flexDirection: 'column', gap: 4, borderRadius: 10, background: '#F7F9FD', border: '1px solid #DCE7F7', padding: '10px 12px' }}>
-          <span style={label}>Gợi ý tiếp</span>
+          <span style={label}>Làm tiếp</span>
           <span style={{ fontFamily: CL.sans, fontSize: 13.5, fontWeight: 600, lineHeight: 1.45, color: CL.ink }}>{verdict.ask}</span>
         </span>
       )}

@@ -284,6 +284,13 @@ a:hover { color: #404040; }
 /* A body that slides open and closed: rows 0fr → 1fr animates to the content's real height, with a fade. */
 .co-fold { display: grid; grid-template-rows: 0fr; opacity: 0; transition: grid-template-rows .38s cubic-bezier(.22,1,.36,1), opacity .25s ease; }
 .co-fold[data-open] { grid-template-rows: 1fr; opacity: 1; }
+/* A check note fixed on Enter: its body folds away, then its label is crossed off like a done to-do. */
+.co-note-fold { display: grid; grid-template-rows: 1fr; opacity: 1; transition: grid-template-rows .45s cubic-bezier(.22,1,.36,1), opacity .3s ease; }
+.co-note.done .co-note-fold { grid-template-rows: 0fr; opacity: 0; }
+.co-note-label { position: relative; transition: color .3s ease .35s; }
+.co-note-label::after { content: ''; position: absolute; left: -2px; right: -2px; top: 52%; height: 1.5px; border-radius: 2px; background: currentColor; transform: scaleX(0); transform-origin: left center; transition: transform .4s cubic-bezier(.22,1,.36,1) .4s; }
+.co-note.done .co-note-label::after { transform: scaleX(1); }
+.co-note-badge { transition: background-color .3s ease .35s, color .3s ease .35s; }
 /* Skeleton: grey blocks in the shape of the coming content, with a soft shimmer. */
 .co-skel { display: block; border-radius: 6px; background: linear-gradient(90deg, #EEEEEB 25%, #F8F8F6 40%, #EEEEEB 60%); background-size: 300% 100%; animation: co-shimmer 1.5s ease-in-out infinite; }
 .co-skel-in { animation: co-fade var(--duration-medium) ease both; }
@@ -323,7 +330,7 @@ a:hover { color: #404040; }
   .co-grid, .co-side-in, .co-stack, .co-dot, .co-reel-win { transition: none !important; }
   .co-skel { animation: none; }
   .co-enter *, .co-noted, .co-badge, .co-jump, .co-unfold, .co-rise, .co-slidein, .co-pop, .co-bump, .co-flip, .co-fade, .co-hl, .co-dot.co-ping { animation: none !important; }
-  .co-fold { transition: none !important; }
+  .co-fold, .co-note-fold, .co-note-label, .co-note-label::after, .co-note-badge { transition: none !important; }
   .co-hl { background-size: 100% 100%; }
   .co-tick { stroke-dashoffset: 0; }
   .co-scan, .co-trail, .co-sweep { display: none; }

@@ -12,7 +12,7 @@ const TASK = ASSESS_TASK;
 const COMMENT = (criterion: string) => ({
   type: 'object',
   additionalProperties: false,
-  required: ['criterion', 'sectionId', 'quote', 'label', 'text', 'fix', 'vi', 'ask', 'example', 'chainId', 'step'],
+  required: ['criterion', 'sectionId', 'quote', 'label', 'text', 'fix', 'vi', 'how', 'example', 'chainId', 'step'],
   properties: {
     criterion: { type: 'string', enum: [criterion] },
     sectionId: { type: 'string' },
@@ -21,7 +21,7 @@ const COMMENT = (criterion: string) => ({
     text: { type: 'string' },
     fix: { type: 'string' },
     vi: { type: 'string' },
-    ask: { type: 'array', items: { type: 'string' } },
+    how: { type: 'string' },
     example: { type: 'string' },
     chainId: { type: 'string' },
     step: { type: 'integer' },
@@ -62,7 +62,7 @@ const ONLY_COMMENTS = (id: string, name: string) => `\n\n# LẦN GỌI NÀY\nCh�
 
 /**
  * Each comment is fixed where it stands: the student rewrites the quoted words, with the fix hidden behind first-letter
- * hints and, for ideas and flow, guiding questions. All of it comes from this one call, so the questions lead to the fix.
+ * hints and, for ideas and flow, a direct instruction. All of it comes from this one call, so the instruction leads to the fix.
  */
 const FIX_FIELDS = (id: string) => `
 
@@ -71,7 +71,7 @@ Học sinh sửa ngay trong nhận xét: chữ trong quote bị gạch đi, họ
 - label: vấn đề, ngắn. text: giải thích vì sao đó là vấn đề.
 - fix: chữ thay THẲNG cho toàn bộ quote, đọc liền mạch với phần trước và sau quote trong đoạn, sửa xong đúng vấn đề đã nêu. Luôn có fix, kể cả nhận xét về ý và mạch (khi đó fix là câu hoặc đoạn viết lại hoàn chỉnh, band 8 đến 9, bám chữ và ý của học sinh, dài bao nhiêu tuỳ chỗ cần sửa).
 - vi: nghĩa tiếng Việt tự nhiên của fix.
-- ask: ${id === 'tr' || id === 'cc' ? 'đúng 2 câu hỏi gợi mở tiếng Việt dẫn học sinh tự nghĩ ra CHÍNH fix ở trên (cùng người, cùng việc, cùng ý với fix). ask[0] chạm đúng chỗ thiếu; ask[1] hẹp hơn, đặt vào một cảnh cụ thể. Câu hỏi mở, không có/không, không chứa sẵn đáp án.' : 'mảng rỗng [] (lỗi từ vựng, ngữ pháp dễ hiểu, không cần câu hỏi).'}
+- how: ${id === 'tr' || id === 'cc' ? 'CÁCH SỬA: MỘT câu chỉ dẫn tiếng Việt, viết thường ở đầu, bắt đầu bằng động từ ("viết lại…", "thêm…", "nói rõ…", "bỏ…"), nói đúng ý mà fix ở trên thêm vào (cùng người, cùng việc với fix). Không đặt câu hỏi, không chép sẵn câu tiếng Anh.' : 'chuỗi rỗng "" (lỗi từ vựng, ngữ pháp: chữ cái đầu của fix là đủ).'}
 - example: chuỗi rỗng "".`;
 
 const essayInput = (prompt: Prompt, sections: SectionIn[], chains: Chain[], stance: string) => {

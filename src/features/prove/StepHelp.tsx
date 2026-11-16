@@ -41,8 +41,17 @@ function PhraseRow({ p, used, save, state }: { p: Phrase; used?: boolean; save?:
  * Enter, the AI reads the step: which suggested phrases were used, and better wording for every rough part (the next
  * step's question comes only from "Gợi ý"). Students always type the phrases themselves; nothing is inserted on click.
  */
-export function useStepHelp(promptId: string, base: Omit<ChainIn, 'steps'>, steps: string[], firstQuestion: string) {
-  const [vocab, setVocab] = useState<Record<number, Load<{ question: string; phrases: Phrase[] }>>>({});
+interface Vocab { question: string; phrases: Phrase[]; sample?: string; sampleVi?: string }
+
+/**
+ * `limit`: how many times "Gợi ý" can be used per statement (the drill: 2), after which the button goes away; none =
+ * unlimited. Each use also carries a sample sentence behind "Xem câu mẫu", for when the question doesn't help.
+ */
+export function useStepHelp(promptId: string, base: Omit<ChainIn, 'steps'>, steps: string[], firstQuestion: string, limit?: number) {
+  const [vocab, setVocab] = useState<Record<number, Load<Vocab>>>({});
+  /** "Gợi ý" uses so far for this statement, and the steps whose sample sentence is open. */
+  const [uses, setUses] = useState(0);
+  const [sampleOpen, setSampleOpen] = useState<Record<number, boolean>>({});
   const [hidden, setHidden] = useState<Record<number, boolean>>({});
   /** Per step: the text that was scanned, the scan, and how many steps there were then (to tell whether this step moved). */
   const [scans, setScans] = useState<Record<number, { text: string; count: number; load: Load<Scan> }>>({});
@@ -63,7 +72,7 @@ export function useStepHelp(promptId: string, base: Omit<ChainIn, 'steps'>, step
   };
   const saveAll = async (list: Phrase[]) => { for (const p of list) { if (saved[p.en] !== 'saved') await savePhrase(p); } };
   const row = (p: Phrase, used?: boolean) => <PhraseRow key={p.en} p={p} used={used} save={() => savePhrase(p)} state={saved[p.en]} />;
-  useEffect(() => { setVocab({}); setHidden({}); setScans({}); setClosed({}); }, [key]);
+  useEffect(() => { setVocab({}); setHidden({}); setScans({}); setClosed({}); setUses(0); setSampleOpen({}); }, [key]);
   // While a step still reads exactly as scanned it is known to be in place: re-anchor its step count, so later steps
   // added elsewhere don't hide its panel when the student then rewrites it.
   useEffect(() => {
@@ -84,11 +93,13 @@ export function useStepHelp(promptId: string, base: Omit<ChainIn, 'steps'>, step
   };
 
   const askVocab = async (i: number) => {
-    if (vocab[i]?.state === 'loading') return;
-    setVocab((v) => ({ ...v, [i]: { state: 'loading' } })); setHidden((h) => ({ ...h, [i]: false }));
+    if (vocab[i]?.state === 'loading' || (limit != null && uses >= limit)) return;
+    setVocab((v) => ({ ...v, [i]: { state: 'loading' } })); setHidden((h) => ({ ...h, [i]: false })); setSampleOpen((o) => ({ ...o, [i]: false }));
     try {
-      const r = await postAi<{ question: string; phrases: Phrase[] }>('step-vocab', { promptId, chain: chainUpTo(i), index: i, question: question(i) || '' });
-      setVocab((v) => ({ ...v, [i]: { state: 'done', data: { question: r.question || '', phrases: r.phrases || [] } } }));
+      const r = await postAi<Vocab>('step-vocab', { promptId, chain: chainUpTo(i), index: i, question: question(i) || '' });
+      setVocab((v) => ({ ...v, [i]: { state: 'done', data: { question: r.question || '', phrases: r.phrases || [], sample: r.sample || '', sampleVi: r.sampleVi || '' } } }));
+      // Only an answered request counts against the limit; a failed one can be tried again.
+      setUses((n) => n + 1);
     } catch (e) { setVocab((v) => ({ ...v, [i]: { state: 'error', error: errText(e) } })); }
   };
 
@@ -145,9 +156,20 @@ export function useStepHelp(promptId: string, base: Omit<ChainIn, 'steps'>, step
     // The step being written gets the vocabulary button: the last one, or an empty one (e.g. opened at a missing step).
     if (i !== steps.length - 1 && steps[i]?.trim()) return null;
     const v = vocab[i];
-    if (!v || hidden[i]) return (
-      <button type="button" className="cl-btn" onClick={() => (v && v.state === 'done' ? setHidden((h) => ({ ...h, [i]: false })) : askVocab(i))} style={{ ...miniBtn, boxShadow: 'none', background: '#EEF3FC', color: '#2F62C4' }}>Gợi ý</button>
+    // Reopening a hidden card costs nothing; a new "Gợi ý" counts against the limit, and once it's used up the button goes.
+    const left = limit == null ? null : limit - uses;
+    if (v && v.state === 'done' && hidden[i]) return (
+      <button type="button" className="cl-btn" onClick={() => setHidden((h) => ({ ...h, [i]: false }))} style={{ ...miniBtn, boxShadow: 'none', background: '#EEF3FC', color: '#2F62C4' }}>Gợi ý</button>
     );
+    if (!v || v.state === 'error' && left === 0) {
+      if (left === 0) return <span style={label}>Đã dùng hết {limit} lượt gợi ý cho câu này</span>;
+      return (
+        <span style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <button type="button" className="cl-btn" onClick={() => askVocab(i)} style={{ ...miniBtn, boxShadow: 'none', background: '#EEF3FC', color: '#2F62C4' }}>Gợi ý</button>
+          {left != null && <span style={label}>còn {left} lượt cho câu này</span>}
+        </span>
+      );
+    }
     if (v.state === 'loading') return <div style={card}><span style={label}>Đang tìm gợi ý…</span></div>;
     if (v.state === 'error') return <div style={card}><span style={{ ...label, color: CL.redText }}>{v.error}</span></div>;
     return (
@@ -158,9 +180,32 @@ export function useStepHelp(promptId: string, base: Omit<ChainIn, 'steps'>, step
           <button type="button" className="cl-btn" style={{ ...linkBtn, marginLeft: 0 }} onClick={() => setHidden((h) => ({ ...h, [i]: true }))}>Ẩn</button>
         </span>
         {v.data.phrases.map((p) => row(p))}
+        {v.data.sample && <>
+          <span style={{ height: 1, background: CL.ink1, margin: '2px 0' }} />
+          {sampleOpen[i] ? (
+            <span className="co-unfold" style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+              <span style={label}>Câu mẫu · gõ lại bằng tay</span>
+              {/* Not selectable and not copyable: the student retypes it (a paste of it into the step is refused too). */}
+              <span onCopy={(e) => e.preventDefault()} style={{ fontFamily: CL.serif, fontSize: 15, lineHeight: 1.55, color: CL.ink8, userSelect: 'none', WebkitUserSelect: 'none' }}>{v.data.sample}</span>
+              {v.data.sampleVi && <span style={{ fontFamily: CL.sans, fontSize: 12.5, lineHeight: 1.5, color: CL.ink5 }}>{v.data.sampleVi}</span>}
+            </span>
+          ) : (
+            <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span style={label}>Vẫn chưa biết viết gì?</span>
+              <button type="button" className="cl-btn" style={{ ...linkBtn, color: '#2F62C4' }} onClick={() => setSampleOpen((o) => ({ ...o, [i]: true }))}>Xem câu mẫu</button>
+            </span>
+          )}
+        </>}
       </div>
     );
   };
 
-  return { belowStep, stepQuestion: question, onSubmitStep };
+  /** A paste of a sample sentence shown here (or most of one) is refused: the sample is there to be retyped. */
+  const isSamplePaste = (text: string) => {
+    const t = text.trim().toLowerCase().replace(/\s+/g, ' ');
+    if (t.length < 12) return false;
+    return Object.values(vocab).some((v) => v.state === 'done' && !!v.data.sample && v.data.sample.toLowerCase().replace(/\s+/g, ' ').includes(t));
+  };
+
+  return { belowStep, stepQuestion: question, onSubmitStep, isSamplePaste };
 }

@@ -16,7 +16,11 @@ export interface PlacedNote extends ChainNote {
   where: string;
 }
 
-export interface CheckResult extends ChainCheckOut { snap: string; placed: PlacedNote[] }
+/** `fixed`: keys (noteKey) of the notes the student has since fixed, each confirmed by a quick check on Enter. */
+export interface CheckResult extends ChainCheckOut { snap: string; placed: PlacedNote[]; fixed?: string[] }
+
+/** A note's identity within one check result. */
+export const noteKey = (n: ChainNote) => n.type + '|' + n.at + '|' + n.text;
 export interface Hint { q: string; why: string }
 
 const snapOf = (c: ChainIn) => JSON.stringify([c.start, c.end, c.steps.map((s) => s.trim()).filter(Boolean)]);
@@ -110,6 +114,9 @@ export function useCoach(promptId: string, chain: ChainIn, initial?: CheckResult
   const [checking, setChecking] = useState(false);
   const [result, setResultState] = useState<CheckResult | null>(initial || null);
   const [error, setError] = useState('');
+  /** Notes being re-checked after Enter, and what is still missing on the ones that weren't fixed yet. */
+  const [noteBusy, setNoteBusy] = useState<string[]>([]);
+  const [noteMiss, setNoteMiss] = useState<Record<string, string>>({});
 
   const setResult = (r: CheckResult | null) => { setResultState(r); onCheck?.(r); };
   const snap = snapOf(chain);
@@ -131,21 +138,58 @@ export function useCoach(promptId: string, chain: ChainIn, initial?: CheckResult
     setChecking(true); setError('');
     try {
       // "Kiểm tra lại" after an edit: send what the last check said, so the server only judges those notes (fast).
+      // Notes already fixed on Enter are left out: only the open ones need judging again.
       let prev: { steps: string[]; notes: ChainNote[] } | undefined;
-      if (result && result.notes.length && result.snap !== snap) {
-        try { prev = { steps: JSON.parse(result.snap)[2] as string[], notes: result.notes.map(({ type, at, text }) => ({ type, at, text })) }; } catch { prev = undefined; }
+      const open = result ? result.notes.filter((n) => !(result.fixed || []).includes(noteKey(n))) : [];
+      if (result && open.length && result.snap !== snap) {
+        try { prev = { steps: JSON.parse(result.snap)[2] as string[], notes: open.map(({ type, at, text, fix }) => ({ type, at, text, fix })) }; } catch { prev = undefined; }
       }
       const r = await postAi<ChainCheckOut>('chain-check', { promptId, chain, ...(prev ? { prev } : {}) });
-      setResult({ ...r, snap, placed: place(chain.steps, r.notes) });
+      setResult({ ...r, snap, placed: place(chain.steps, r.notes), fixed: [] });
+      setNoteMiss({});
       setHint(null);
     } catch (e) { setError(errText(e)); }
     setChecking(false);
   };
 
-  /** Clears everything when the chain is replaced (next statement, another body paragraph). */
-  const reset = () => { setHint(null); setAsked([]); setResult(null); setError(''); };
+  const fixed = result?.fixed || [];
+  /** Every note of the last check has been fixed since: the chain counts as clean. */
+  const allFixed = !!result && result.notes.length > 0 && result.notes.every((n) => fixed.includes(noteKey(n)));
 
-  return { hint, asking, askHint, closeHint: () => setHint(null), checking, runCheck, result, fresh, filled, error, reset };
+  /**
+   * Enter on step `i` after a check: the open notes on that step, and a missing step right before it (the step opened
+   * at a gap), are each checked quickly. A fixed note is marked fixed (its card folds and is crossed off); one that
+   * isn't says what is still missing.
+   */
+  const checkStep = async (i: number, steps: string[]) => {
+    if (!result || !steps[i]?.trim()) return;
+    const live = place(steps, result.notes, checkedSteps(result.snap));
+    const todo = live.filter((n) => !fixed.includes(noteKey(n)) && !noteBusy.includes(noteKey(n)) && (n.step === i || (n.type === 'jump' && n.step === i - 1)));
+    if (!todo.length) return;
+    const now: ChainIn = { ...chain, steps };
+    await Promise.all(todo.map(async (n) => {
+      const key = noteKey(n);
+      setNoteBusy((b) => [...b, key]);
+      setNoteMiss((m) => { const x = { ...m }; delete x[key]; return x; });
+      try {
+        const v = await postAi<{ fixed: boolean; why: string }>('note-check', { promptId, chain: now, note: { type: n.type, at: n.at, text: n.text, fix: n.fix || '' } });
+        if (v.fixed) {
+          setResultState((r) => {
+            if (!r || (r.fixed || []).includes(key)) return r;
+            const next = { ...r, fixed: [...(r.fixed || []), key] };
+            onCheck?.(next);
+            return next;
+          });
+        } else setNoteMiss((m) => ({ ...m, [key]: v.why || 'Chưa đủ, làm đúng theo cách sửa ở trên.' }));
+      } catch (e) { setError(errText(e)); }
+      setNoteBusy((b) => b.filter((x) => x !== key));
+    }));
+  };
+
+  /** Clears everything when the chain is replaced (next statement, another body paragraph). */
+  const reset = () => { setHint(null); setAsked([]); setResult(null); setError(''); setNoteBusy([]); setNoteMiss({}); };
+
+  return { hint, asking, askHint, closeHint: () => setHint(null), checking, runCheck, result, fresh, filled, error, reset, allFixed, checkStep, noteBusy, noteMiss };
 }
 
 export const NOTE_STYLE: Record<ChainNote['type'], { label: string; bg: string; fg: string }> = {

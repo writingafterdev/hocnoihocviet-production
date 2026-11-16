@@ -157,8 +157,8 @@ function BodyCard({ prompt, chain, num, canDelete, onChange, onDelete, check, on
               hint={coach.hint} asking={coach.asking} onHint={coach.askHint} onCloseHint={coach.closeHint} hideHint
               stepQuestion={help.stepQuestion} onSubmitStep={help.onSubmitStep} belowStep={help.belowStep}
               helper={coach.error}
-              check={{ result: coach.result, fresh: coach.fresh, checking: coach.checking }}
-              checking={coach.checking} clean={coach.fresh && !!coach.result && coach.result.placed.length === 0}
+              check={{ result: coach.result, fresh: coach.fresh, checking: coach.checking, busy: coach.noteBusy, miss: coach.noteMiss, onStepEnter: (k, now) => coach.checkStep(k, now) }}
+              checking={coach.checking} clean={!!coach.result && ((coach.fresh && coach.result.placed.length === 0) || coach.allFixed)}
             />
           </div>
           <div style={{ borderTop: '1px solid ' + CL.ink1, background: CL.panel, padding: '10px 22px', display: 'flex', alignItems: 'center', gap: 8 }}>

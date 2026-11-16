@@ -6,7 +6,7 @@ import type { Chain, ReviewItem } from '../chainlab/types';
 import { bandOf, CRITERIA, type EssayReview } from './scoring';
 
 export interface SectionIn { id: string; label: string; text: string }
-interface Comment { criterion: string; sectionId: string; quote: string; label?: string; text: string; fix: string; vi?: string; ask?: string[]; example?: string; chainId: string; step?: number }
+interface Comment { criterion: string; sectionId: string; quote: string; label?: string; text: string; fix: string; vi?: string; ask?: string[]; how?: string; example?: string; chainId: string; step?: number }
 type Criteria = Record<'tr' | 'cc' | 'lr' | 'gra', { score: number; why: string; gap?: string; next: string; band_quote?: string; next_quote?: string }>;
 
 const norm = (s: string) => s.replace(/[‘’]/g, "'").replace(/[“”]/g, '"').replace(/\s+/g, ' ').toLowerCase();
@@ -69,6 +69,7 @@ export function toItems(criterion: string, out: { comments?: Comment[] }, sectio
     const label = typeof c.label === 'string' ? c.label.trim().slice(0, 60) : '';
     const vi = typeof c.vi === 'string' ? c.vi.trim().slice(0, 1200) : '';
     const ask = (Array.isArray(c.ask) ? c.ask : []).map((q) => (typeof q === 'string' ? q.trim().slice(0, 400) : '')).filter(Boolean).slice(0, 2);
+    const how = typeof c.how === 'string' ? c.how.trim().slice(0, 500) : '';
     items.push({
       key: criterion + items.length,
       sectionId: hit.id,
@@ -81,6 +82,7 @@ export function toItems(criterion: string, out: { comments?: Comment[] }, sectio
       ...(label ? { label } : {}),
       ...(fix && fix !== hit.text ? { fix, ...(vi ? { vi } : {}) } : {}),
       ...(ask.length ? { ask } : {}),
+      ...(how ? { how } : {}),
       ...(example && example !== fix ? { example } : {}),
       snap: s.text,
       text,

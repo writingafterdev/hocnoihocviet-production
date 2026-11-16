@@ -9,7 +9,7 @@ import type { Prompt } from '@/content/prompts';
 import { ask } from './claude';
 import { describePrompt } from './describe';
 import { BANK_TASK, CHECK_TASK, HINT_TASK } from './prompts';
-import { CHAIN_RECHECK_TASK, STEP_SCAN_TASK, STEP_VOCAB_TASK } from './prompts-drill';
+import { CHAIN_RECHECK_TASK, NOTE_CHECK_TASK, STEP_SCAN_TASK, STEP_VOCAB_TASK } from './prompts-drill';
 
 const PHRASES_SCHEMA = { type: 'array', items: { type: 'object', additionalProperties: false, required: ['en', 'vi'], properties: { en: { type: 'string' }, vi: { type: 'string' } } } };
 const cleanPhrases = (xs: unknown, max: number): { en: string; vi: string }[] => {
@@ -20,15 +20,20 @@ const cleanPhrases = (xs: unknown, max: number): { en: string; vi: string }[] =>
     .slice(0, max);
 };
 
-/** Quick drill, "Gợi ý" on step `index` (0-based among the middle steps): a guiding question and three phrases. */
-export async function aiStepVocab(userId: string, prompt: Prompt, chain: ChainIn, index: number, question: string): Promise<{ question: string; phrases: { en: string; vi: string }[] }> {
+export interface StepVocab { question: string; phrases: { en: string; vi: string }[]; sample: string; sampleVi: string }
+
+/** Quick drill, "Gợi ý" on step `index` (0-based among the middle steps): a guiding question, three phrases, and a sample sentence kept behind "Xem câu mẫu". */
+export async function aiStepVocab(userId: string, prompt: Prompt, chain: ChainIn, index: number, question: string): Promise<StepVocab> {
   const { text } = describeChain(chain);
-  const out = await ask<{ question: unknown; phrases: unknown }>({
-    userId, kind: 'hint', task: STEP_VOCAB_TASK, effort: 'low', maxTokens: 1500,
-    schema: { type: 'object', additionalProperties: false, required: ['question', 'phrases'], properties: { question: { type: 'string' }, phrases: PHRASES_SCHEMA } },
+  const out = await ask<{ question: unknown; phrases: unknown; sample: unknown; sample_vi: unknown }>({
+    userId, kind: 'hint', task: STEP_VOCAB_TASK, effort: 'low', maxTokens: 1800,
+    schema: { type: 'object', additionalProperties: false, required: ['question', 'phrases', 'sample', 'sample_vi'], properties: { question: { type: 'string' }, phrases: PHRASES_SCHEMA, sample: { type: 'string' }, sample_vi: { type: 'string' } } },
     input: describePrompt(prompt) + '\n\n' + text + '\n\nBƯỚC ĐANG VIẾT: vị trí ' + (index + 1) + (question ? ' · câu hỏi: ' + question : ''),
   });
-  return { question: String(out.question || '').trim().slice(0, 200), phrases: cleanPhrases(out.phrases, 3) };
+  return {
+    question: String(out.question || '').trim().slice(0, 200), phrases: cleanPhrases(out.phrases, 3),
+    sample: String(out.sample || '').trim().slice(0, 400), sampleVi: String(out.sample_vi || '').trim().slice(0, 400),
+  };
 }
 
 export interface StepScan { used: string[]; parts: { text: string; phrases: { en: string; vi: string }[] }[] }
@@ -69,8 +74,11 @@ export interface ChainIn {
 }
 
 export type NoteType = 'jump' | 'trait' | 'detail';
-export interface ChainNote { type: NoteType; at: number; text: string }
-export interface ChainCheckOut { notes: ChainNote[]; summary: string; good: boolean }
+/** `text`: what is wrong; `fix`: what to do about it (an instruction, never a question). Older saved checks have no `fix`. */
+export interface ChainNote { type: NoteType; at: number; text: string; fix?: string }
+/** One step of the sample chain built on the student's own (middle steps only): kept as written, edited, or added. */
+export interface SampleStep { text: string; tag: 'keep' | 'edit' | 'add' }
+export interface ChainCheckOut { notes: ChainNote[]; summary: string; good: boolean; sample?: SampleStep[] }
 
 const KIND_VI: Record<ChainKind, string> = {
   cause: 'nguyên nhân (điểm đầu là một nguyên nhân, điểm cuối là hiện tượng đề hỏi)',
@@ -95,16 +103,19 @@ const HINT_SCHEMA = {
 };
 
 const CHECK_SCHEMA = {
-  type: 'object', additionalProperties: false, required: ['summary', 'good', 'notes'],
+  type: 'object', additionalProperties: false, required: ['good', 'notes', 'sample'],
   properties: {
-    summary: { type: 'string' },
     good: { type: 'boolean' },
     notes: {
       type: 'array',
       items: {
-        type: 'object', additionalProperties: false, required: ['type', 'at', 'text'],
-        properties: { type: { type: 'string', enum: ['jump', 'trait', 'detail'] }, at: { type: 'integer' }, text: { type: 'string' } },
+        type: 'object', additionalProperties: false, required: ['type', 'at', 'text', 'fix'],
+        properties: { type: { type: 'string', enum: ['jump', 'trait', 'detail'] }, at: { type: 'integer' }, text: { type: 'string' }, fix: { type: 'string' } },
       },
+    },
+    sample: {
+      type: 'array',
+      items: { type: 'object', additionalProperties: false, required: ['text', 'tag'], properties: { text: { type: 'string' }, tag: { type: 'string', enum: ['keep', 'edit', 'add'] } } },
     },
   },
 };
@@ -158,10 +169,30 @@ export async function aiChainCheck(userId: string, prompt: Prompt, chain: ChainI
       input: describePrompt(prompt) + '\n\n' + text,
     });
   const notes = (out.notes || [])
-    .map((x) => ({ type: x.type, at: Math.round(Number(x.at)), text: (x.text || '').trim() }))
+    .map((x) => ({ type: x.type, at: Math.round(Number(x.at)), text: (x.text || '').trim(), fix: (x.fix || '').trim() }))
     // A jump sits between `at` and `at + 1`, so it can't start at the ending point; a trait or detail is on a middle step.
     .filter((x) => x.text && ['jump', 'trait', 'detail'].includes(x.type) && (x.type === 'jump' ? x.at >= 0 && x.at <= n : x.at >= 1 && x.at <= n));
-  return { notes, summary: (out.summary || '').trim(), good: !!out.good && !notes.some((x) => x.type === 'jump') };
+  // The sample chain only comes with notes (a clean chain needs none), and only from steps that say something.
+  const sample = notes.length ? (Array.isArray(out.sample) ? out.sample : [])
+    .map((x) => ({ text: String(x?.text || '').trim().slice(0, 400), tag: (x?.tag === 'edit' || x?.tag === 'add' ? x.tag : 'keep') as SampleStep['tag'] }))
+    .filter((x) => x.text).slice(0, 10) : [];
+  return { notes, summary: '', good: !!out.good && !notes.some((x) => x.type === 'jump'), sample };
+}
+
+export interface NoteCheckOut { fixed: boolean; why: string }
+
+/**
+ * Enter on a step that had a note: does the chain now do what the note asked? One note, a short prompt, low effort,
+ * so the card can collapse (or say what is still missing) right away.
+ */
+export async function aiNoteCheck(userId: string, prompt: Prompt, chain: ChainIn, note: ChainNote): Promise<NoteCheckOut> {
+  const { text } = describeChain(chain);
+  const out = await ask<{ fixed: unknown; why: unknown }>({
+    userId, kind: 'chain', task: NOTE_CHECK_TASK, effort: 'low', maxTokens: 500, grounded: false,
+    schema: { type: 'object', additionalProperties: false, required: ['fixed', 'why'], properties: { fixed: { type: 'boolean' }, why: { type: 'string' } } },
+    input: 'ĐỀ BÀI\n' + prompt.text + '\n\nNHẬN XÉT CẦN XÉT\nloại: ' + note.type + ' · vị trí lúc nhận xét: ' + note.at + '\nvấn đề: ' + note.text + '\ncách sửa: ' + (note.fix || '(không có)') + '\n\n' + text,
+  });
+  return { fixed: !!out.fixed, why: out.fixed ? '' : String(out.why || '').trim().slice(0, 300) };
 }
 
 /** Rough guard against oversized or malformed chain input from the browser. */

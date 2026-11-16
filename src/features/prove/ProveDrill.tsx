@@ -17,6 +17,7 @@ import { TranslatorChat } from '../coach/TranslatorChat';
 import { useCoach } from '../coach/useCoach';
 import { DrillParagraph, type ParagraphDraft } from './DrillParagraph';
 import { useStepHelp } from './StepHelp';
+import { SampleChain } from './SampleChain';
 import { primaryBtn } from '../coach/ui';
 import { ProBeam } from '@/components/ui/pro-beam';
 
@@ -117,7 +118,11 @@ export function ProveDrill() {
   const coach = useCoach(s?.promptId || '', { kind: s?.kind || 'impact', tone: s?.tone || null, start: s?.start || '', end: s?.end || '', steps, sentence: s ? plainSentence(s.sentence) : '', stakeholder: s?.stakeholder });
   const rolling = !!reel;
   /** Per-step help: vocabulary when asked, then a rewording panel and the next question after each Enter. */
-  const help = useStepHelp(s?.promptId || '', { kind: s?.kind || 'impact', tone: s?.tone || null, start: s?.start || '', end: s?.end || '', stakeholder: s?.stakeholder }, steps, s?.ask || '');
+  const help = useStepHelp(s?.promptId || '', { kind: s?.kind || 'impact', tone: s?.tone || null, start: s?.start || '', end: s?.end || '', stakeholder: s?.stakeholder }, steps, s?.ask || '', 2);
+  /** The sample chain beside the notes: "Sửa chuỗi" (or any edit) hides its edited and added steps; "Hiện các bước mẫu" peeks. */
+  const [fixMode, setFixMode] = useState(false);
+  const [peek, setPeek] = useState(false);
+  useEffect(() => { setFixMode(false); setPeek(false); }, [coach.result?.snap]);
   useEffect(() => { if (coach.error) toast.error(coach.error); }, [coach.error]);
 
   // Sounds: on by default, muted with the speaker button (remembered).
@@ -131,7 +136,11 @@ export function ProveDrill() {
   useEffect(() => {
     if (!coach.result || !coach.fresh) return;
     if (coach.result.placed.length === 0) sfx.success(); else sfx.note();
-  }, [coach.result]); // eslint-disable-line react-hooks/exhaustive-deps
+    // Notes came with a sample chain: it takes the side panel (the translator stays one click away).
+    if (coach.result.sample?.length) setChat(false);
+  }, [coach.result?.snap]); // eslint-disable-line react-hooks/exhaustive-deps
+  // Every note fixed on Enter: the chain is clean now.
+  useEffect(() => { if (coach.allFixed) sfx.success(); }, [coach.allFixed]);
 
   const land = (k: number) => {
     setI(k); setSteps(['']); setActive(null); setReel(null); setPara(null); setPromptOut(false); setLanded((n) => n + 1);
@@ -203,7 +212,8 @@ export function ProveDrill() {
 
   const checked = !!coach.result;
   const notes = coach.fresh && coach.result ? coach.result.placed : [];
-  const clean = coach.fresh && !!coach.result && coach.result.placed.length === 0;
+  const clean = !!coach.result && ((coach.fresh && coach.result.placed.length === 0) || coach.allFixed);
+  const showSample = !!coach.result?.sample?.length && !coach.allFixed && !rolling && !!s;
   const chip = s ? kindChip(s) : null;
 
   return (
@@ -233,7 +243,7 @@ export function ProveDrill() {
         </div>
 
         <CoachGrid
-          open={chat}
+          open={chat || showSample}
           main={
             <main className="co-col" style={{ minWidth: 0 }}>
               <section style={{ flex: '1 1 0', minHeight: 0, display: 'flex', flexDirection: 'column', borderRadius: 12, border: '1px solid ' + CL.border, background: '#fff', overflow: 'hidden' }}>
@@ -264,7 +274,8 @@ export function ProveDrill() {
                         notes={notes} active={active} onPick={setActive}
                         hint={coach.hint} asking={coach.asking} onHint={coach.askHint} onCloseHint={coach.closeHint}
                         checking={coach.checking} clean={clean} hideHint
-                        check={{ result: coach.result, fresh: coach.fresh, checking: coach.checking }}
+                        check={{ result: coach.result, fresh: coach.fresh, checking: coach.checking, busy: coach.noteBusy, miss: coach.noteMiss, onStepEnter: (k, now) => coach.checkStep(k, now) }}
+                        blockPaste={help.isSamplePaste} onBlockedPaste={() => toast('Không dán được câu mẫu: hãy gõ lại bằng tay.')}
                         stepQuestion={help.stepQuestion} onSubmitStep={help.onSubmitStep} belowStep={help.belowStep}
                       />
                     </div>
@@ -286,6 +297,9 @@ export function ProveDrill() {
             <>
               <SidePanel on={chat} grow={2}>
                 <TranslatorChat onClose={() => setChat(false)} />
+              </SidePanel>
+              <SidePanel on={showSample && !chat} grow={2}>
+                {showSample && s && <SampleChain start={s.start} end={s.end} steps={coach.result!.sample!} hiding={fixMode || !coach.fresh} peek={peek} onFix={() => setFixMode(true)} onPeek={() => setPeek(!peek)} />}
               </SidePanel>
             </>
           }

@@ -4,7 +4,7 @@ import { Fragment, useEffect, useRef, useState, type ReactNode } from 'react';
 import { CL } from '../chainlab/constants';
 import { ClIcon, ClLabel } from '../chainlab/ui/primitives';
 import { CheckSummary, NoteCard } from './NotesPanel';
-import { NOTE_STYLE, checkedSteps, place, type CheckResult, type Hint, type PlacedNote } from './useCoach';
+import { NOTE_STYLE, checkedSteps, noteKey, place, type CheckResult, type Hint, type PlacedNote } from './useCoach';
 import { ProBeam } from '@/components/ui/pro-beam';
 
 const DOT = 17;
@@ -48,10 +48,14 @@ export interface ChainEditorProps {
   /** Drill: no "Bí? Gợi ý" row (help lives in each step instead). */
   hideHint?: boolean;
   /**
-   * The latest "Kiểm tra", shown on the chain itself: the summary above it, each note right under its step, and an
-   * empty step opened where a step is missing. Notes fade once the chain changes. Replaces `notes` when given.
+   * The latest "Kiểm tra", shown on the chain itself: each note right under its step, and an empty step opened where a
+   * step is missing. Notes stay on their steps while the student edits; Enter on a step with a note runs
+   * `onStepEnter` (a quick check of that note), and a fixed note (`fixed`) folds and is crossed off. Replaces `notes`.
    */
-  check?: { result: CheckResult | null; fresh: boolean; checking: boolean };
+  check?: { result: CheckResult | null; fresh: boolean; checking: boolean; busy?: string[]; miss?: Record<string, string>; onStepEnter?: (i: number, steps: string[]) => void };
+  /** Drill: a paste that copies the sample sentence is refused (the student retypes it); return true to refuse. */
+  blockPaste?: (text: string) => boolean;
+  onBlockedPaste?: () => void;
 }
 
 const reduced = () => typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -85,7 +89,10 @@ export function ChainEditor(p: ChainEditorProps) {
   const [green, setGreen] = useState(false);
   /** The check's notes, kept on the steps the check read: typing into an inserted step or rewriting one doesn't move them. */
   const live = p.check?.result ? place(p.steps, p.check.result.notes, checkedSteps(p.check.result.snap)) : [];
-  const notes = p.check ? (p.check.fresh ? live : []) : p.notes;
+  const fixedKeys = p.check?.result?.fixed || [];
+  const notes = p.check ? live : p.notes;
+  /** A note still to fix: tints its step, carries a number badge, draws the jump bar. A fixed one only shows as a crossed-off card. */
+  const open = (n: PlacedNote) => !p.check || !fixedKeys.includes(noteKey(n));
   // After a check with a jump: open an empty step right where the step is missing, so the student can type it there.
   const opened = useRef('');
   useEffect(() => {
@@ -148,7 +155,7 @@ export function ChainEditor(p: ChainEditorProps) {
     return () => { a.cancel(); line.remove(); timers.forEach(clearTimeout); dots.forEach((d) => d.classList.remove('co-ok')); };
   }, [p.clean]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const notesOn = (i: number) => notes.map((n, k) => ({ n, k })).filter(({ n }) => n.step === i);
+  const notesOn = (i: number) => notes.map((n, k) => ({ n, k })).filter(({ n }) => n.step === i && open(n));
   const edit = (i: number, v: string) => p.setSteps(p.steps.map((s, j) => (j === i ? v : s)));
   const insertAfter = (i: number) => { const next = [...p.steps]; next.splice(i + 1, 0, ''); focusAt.current = i + 1; entering.current.add(i + 1); p.setSteps(next); };
   const remove = (i: number) => {
@@ -168,13 +175,13 @@ export function ChainEditor(p: ChainEditorProps) {
     return { background: NOTE_STYLE[pick.n.type].bg, ['--d' as string]: noteDelay(pick.k) };
   };
   const tinted = (i: number) => (notesOn(i).length ? ' co-noted' : '');
-  const jumpAt = (i: number) => { const k = notes.findIndex((n) => n.type === 'jump' && n.step === i); return k >= 0 ? noteDelay(k) : null; };
+  const jumpAt = (i: number) => { const k = notes.findIndex((n) => n.type === 'jump' && n.step === i && open(n)); return k >= 0 ? noteDelay(k) : null; };
   /** The note cards under row `i` (−1 = the starting point), on the chain's line; a jump keeps its red bar running past them. */
   const cards = (i: number) => {
     if (!p.check) return null;
     const here = live.map((n, k) => ({ n, k })).filter(({ n }) => n.step === i);
     if (!here.length) return null;
-    const bar = p.check.fresh && here.some(({ n }) => n.type === 'jump');
+    const bar = here.some(({ n }) => n.type === 'jump' && open(n));
     return (
       <li style={{ display: 'flex', gap: 18 }}>
         <div aria-hidden="true" style={{ position: 'relative', width: DOT, flexShrink: 0 }}>
@@ -182,7 +189,7 @@ export function ChainEditor(p: ChainEditorProps) {
           {bar && <span style={{ position: 'absolute', left: DOT / 2 - 1.5, width: 3, borderRadius: 2, background: CL.red, top: 0, bottom: 0, zIndex: 1 }} />}
         </div>
         <div style={{ flex: 1, minWidth: 0, padding: '2px 0 10px', display: 'flex', flexDirection: 'column', gap: 8 }}>
-          {here.map(({ n, k }) => <NoteCard key={k} note={n} k={k} on={p.active === k && !!p.check?.fresh} faded={!p.check?.fresh} onPick={() => p.onPick(p.active === k ? null : k)} delay={noteDelay(k)} />)}
+          {here.map(({ n, k }) => { const key = noteKey(n); return <NoteCard key={k} note={n} k={k} on={p.active === k} faded={false} onPick={() => p.onPick(p.active === k ? null : k)} delay={noteDelay(k)} done={!open(n)} busy={p.check?.busy?.includes(key)} miss={p.check?.miss?.[key]} />; })}
         </div>
       </li>
     );
@@ -194,7 +201,7 @@ export function ChainEditor(p: ChainEditorProps) {
   const n = p.steps.length;
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-    {p.check && <CheckSummary result={p.check.result} fresh={p.check.fresh} checking={p.check.checking} />}
+    {p.check && <CheckSummary checking={p.check.checking} />}
     <ol ref={listRef} style={{ position: 'relative', listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column' }}>
       <li style={{ display: 'flex', gap: 18 }}>
         <Rail first center={CENTER.end} jump={jumpAt(-1)} dot={plainDot(CL.green)} ok={green} />
@@ -217,8 +224,9 @@ export function ChainEditor(p: ChainEditorProps) {
               placeholder={p.stepQuestion?.(i) || (i === 0 ? p.firstQuestion || 'Điểm đầu chạm tới ai, ra sao?' : 'Rồi chuyện gì xảy ra tiếp?')}
               onFocus={() => { lastStep.current = i; p.onFocusStep?.(i); }}
               onChange={(e) => edit(i, e.target.value)}
+              onPaste={(e) => { if (p.blockPaste?.(e.clipboardData.getData('text'))) { e.preventDefault(); p.onBlockedPaste?.(); } }}
               onKeyDown={(e) => {
-                if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) { e.preventDefault(); if (s.trim()) { p.onSubmitStep?.(i, s.trim()); if (i === n - 1 || p.steps[i + 1]?.trim()) insertAfter(i); else { focusAt.current = i + 1; refs.current[i + 1]?.focus(); } } }
+                if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) { e.preventDefault(); if (s.trim()) { p.onSubmitStep?.(i, s.trim()); p.check?.onStepEnter?.(i, p.steps); if (i === n - 1 || p.steps[i + 1]?.trim()) insertAfter(i); else { focusAt.current = i + 1; refs.current[i + 1]?.focus(); } } }
                 else if (e.key === 'Backspace' && !s && n > 1) { e.preventDefault(); remove(i); }
               }}
               style={{ flex: 1, minWidth: 0, minHeight: 24, resize: 'none', border: 'none', outline: 'none', background: 'transparent', padding: 0, fontFamily: CL.serif, fontSize: 15, lineHeight: 1.55, color: CL.ink8 }} />
