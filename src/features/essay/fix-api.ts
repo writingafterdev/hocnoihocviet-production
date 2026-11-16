@@ -4,7 +4,7 @@ import { postAi } from '../ai/request';
 import type { Chain } from '../chainlab/types';
 import { bandOf, type BandScores, type EssayReview, type EssaySection } from '../desk/scoring';
 
-export interface PlanTask { sectionId: string; criterion: 'tr' | 'cc'; quote: string; title: string; ask: string[]; starter: string; aim: string; model?: string; vi?: string }
+export interface PlanTask { sectionId: string; criterion: 'tr' | 'cc'; quote: string; title: string; ask: string[]; starter: string; aim: string; model?: string; vi?: string; why?: string }
 export interface CheckOut { solved: boolean; reply: string; ask: string }
 
 const base = (prompt: Prompt, chains: Chain[]) => ({ promptId: prompt.id, chains: chains.map(({ check, ...c }) => c), stance: '' });

@@ -84,8 +84,8 @@ export function FixCard({ task, where, comment, open, onOpen, edit, setEdit, sol
         <b style={{ fontFamily: CL.sans, fontSize: 13.5, fontWeight: 600, color: CL.ink }}>{task.title}</b>
         <span style={{ ...label, marginLeft: 'auto' }}>{where}</span>
       </span>
-      {task.item.quote && <span style={{ fontFamily: CL.serif, fontSize: 12.5, fontStyle: 'italic', color: CL.ink6 }}>“{task.item.quote}”</span>}
-      {comment && <span style={{ fontFamily: CL.sans, fontSize: 13, lineHeight: 1.5, color: CL.ink7 }}>{comment}</span>}
+      {/* Why it's wrong first (the struck words are already marked in the paragraph, so no quote here), then the question. */}
+      {(comment || task.plan?.why) && <span style={{ fontFamily: CL.sans, fontSize: 13, lineHeight: 1.55, color: CL.ink7 }}>{comment || task.plan?.why}</span>}
       <FixBody task={task} edit={edit} setEdit={setEdit} solved={solved} verdict={verdict} checking={checking} error={error} onCheck={onCheck} />
     </div>
   );

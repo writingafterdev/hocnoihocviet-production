@@ -10,7 +10,7 @@ import { describePrompt } from './describe';
 import type { SectionIn } from './essay-review';
 import { RESCORE_TASK } from './prompts';
 
-export interface PlanTask { sectionId: string; criterion: 'tr' | 'cc'; quote: string; title: string; ask: string[]; starter: string; aim: string; model?: string; vi?: string }
+export interface PlanTask { sectionId: string; criterion: 'tr' | 'cc'; quote: string; title: string; ask: string[]; starter: string; aim: string; model?: string; vi?: string; why?: string }
 export interface CheckOut { solved: boolean; reply: string; ask: string }
 export interface RescoreTask { title: string; criterion: string; aim: string; solved: boolean }
 export interface Scores { tr: number; cc: number; lr: number; gra: number }
