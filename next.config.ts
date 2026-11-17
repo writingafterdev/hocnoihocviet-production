@@ -1,3 +1,4 @@
+import path from 'node:path';
 import type { NextConfig } from 'next';
 import { initOpenNextCloudflareForDev } from '@opennextjs/cloudflare';
 
@@ -13,5 +14,7 @@ const nextConfig: NextConfig = {
 
 export default nextConfig;
 
-// Lets `next dev` read Cloudflare bindings (D1, R2…) from wrangler.jsonc.
-initOpenNextCloudflareForDev();
+// Lets `next dev` read Cloudflare bindings (D1, R2…) from wrangler.jsonc. The local data lives next to the project, not
+// in .wrangler/state: Next 16.4.6's dev server watches the whole project and reloaded the page on every database write.
+// Wrangler commands on local data take the same folder (--persist-to ../hocnoihocviet-dev-state, see db:migrate:local).
+initOpenNextCloudflareForDev({ persist: { path: path.resolve(process.cwd(), '..', 'hocnoihocviet-dev-state', 'v3') } });
