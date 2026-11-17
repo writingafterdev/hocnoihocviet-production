@@ -139,7 +139,7 @@ export function ChainEditor(p: ChainEditorProps) {
     return () => { a1.cancel(); a2.cancel(); scan.remove(); trail.remove(); clearInterval(loop); timers.forEach(clearTimeout); dots.forEach((d) => d.classList.remove('co-ping')); };
   }, [p.checking]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // A clean chain: the line turns green from start to end, the dots follow, then "Mạch đi liền".
+  // A clean chain: the line turns green from start to end, the dots follow, then "Mạch ý đi liền".
   useEffect(() => {
     if (!p.clean) { setGreen(false); return; }
     if (reduced()) { setGreen(true); return; }
@@ -274,7 +274,7 @@ export function ChainEditor(p: ChainEditorProps) {
           {p.endNode ?? <span style={{ fontFamily: CL.sans, fontSize: 15, fontWeight: 500, lineHeight: 1.5, color: '#B33A1A' }}>{p.end}</span>}
           {green && (
             <span className="co-pop" style={{ alignSelf: 'flex-start', marginTop: 8, display: 'inline-flex', alignItems: 'center', gap: 6, borderRadius: 8, background: CL.mintSoft, color: CL.greenText, padding: '4px 12px', fontFamily: CL.sans, fontSize: 12, fontWeight: 600 }}>
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path className="co-tick" d="M5 12l5 5 9-10" /></svg>Mạch đi liền
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path className="co-tick" d="M5 12l5 5 9-10" /></svg>Mạch ý đi liền
             </span>
           )}
         </div>
