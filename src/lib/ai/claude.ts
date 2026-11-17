@@ -83,6 +83,8 @@ interface Ask {
   counted?: boolean;
   /** Gemini: try the strongest model first. Default: any call that isn't low effort (chain check, grading). */
   quality?: boolean;
+  /** Gemini: never fall back to the Flash Lite models (they answer feedback tasks too thinly). */
+  noLite?: boolean;
 }
 
 const TICKET_MS = 15 * 60_000;
@@ -128,7 +130,7 @@ export async function refundTicket(userId: string, ticket: string) {
  * One Claude call grounded in the book. With `schema`, returns the parsed JSON; otherwise the text.
  * Counts against the student's daily allowance (refunded if the call fails).
  */
-export async function ask<T = string>({ userId, kind, task, input, schema, effort = 'medium', maxTokens = 16000, grounded = true, counted = true, quality }: Ask): Promise<T> {
+export async function ask<T = string>({ userId, kind, task, input, schema, effort = 'medium', maxTokens = 16000, grounded = true, counted = true, quality, noLite }: Ask): Promise<T> {
   const e = await env();
   if (!configured(e)) throw new AiError('not_configured');
   const quota = counted ? await reserve(userId, kind) : null;
@@ -138,7 +140,7 @@ export async function ask<T = string>({ userId, kind, task, input, schema, effor
     if (geminiKeys(e).length) {
       const started = Date.now();
       let r;
-      try { r = await callGemini(e, { system: systemText(task, schema, grounded), input, maxTokens, timeoutMs: TIMEOUT_MS[kind], effort, quality: quality ?? effort !== 'low' }); }
+      try { r = await callGemini(e, { system: systemText(task, schema, grounded), input, maxTokens, timeoutMs: TIMEOUT_MS[kind], effort, quality: quality ?? effort !== 'low', noLite }); }
       catch (err) { throw err instanceof GeminiError ? new AiError(err.code, err.message) : err; }
       console.log('ai_call', kind, r.model, (Date.now() - started) + 'ms', 'in=' + r.input, 'out=' + r.output, r.stop);
       await (quota ? quota.record({ input: r.input, output: r.output }) : recordTokens(DB, userId, kind, { input: r.input, output: r.output })).catch(() => {});

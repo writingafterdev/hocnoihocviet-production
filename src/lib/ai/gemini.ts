@@ -73,8 +73,9 @@ export type Effort = 'low' | 'medium' | 'high';
 export const QUALITY_FIRST = ['gemini-4-hydrogen'];
 
 /** `quality`: the strongest model goes first; otherwise the fast ones lead (hints, scans, quick checks). */
-export async function callGemini(e: CloudflareEnv, { system, input, maxTokens, timeoutMs, effort, quality }: { system: string; input: string; maxTokens: number; timeoutMs: number; effort?: Effort; quality?: boolean }): Promise<GeminiReply> {
-  const keys = geminiKeys(e), all = geminiModels(e);
+/** `noLite`: never the Flash Lite models (for feedback they tend to skip, e.g. answering an empty list). */
+export async function callGemini(e: CloudflareEnv, { system, input, maxTokens, timeoutMs, effort, quality, noLite }: { system: string; input: string; maxTokens: number; timeoutMs: number; effort?: Effort; quality?: boolean; noLite?: boolean }): Promise<GeminiReply> {
+  const keys = geminiKeys(e), all = geminiModels(e).filter((m) => !noLite || !m.includes('-lite'));
   const models = quality ? [...all.filter((m) => QUALITY_FIRST.includes(m)), ...all.filter((m) => !QUALITY_FIRST.includes(m))] : all;
   const deadline = Date.now() + timeoutMs;
   let last = 'no_model';
