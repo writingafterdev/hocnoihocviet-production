@@ -58,7 +58,16 @@ const COMMENTS_SCHEMA = (criterion: string) => ({
 });
 
 const ONLY_SCORES = '\n\n# LẦN GỌI NÀY\nChỉ trả về criteria, summary và praise. KHÔNG viết comments; các nhận xét chi tiết do những lần gọi khác viết. Vẫn đọc kỹ cả bài và chấm đúng theo bảng mô tả band ở trên. Trả về JSON: {"criteria": {...}, "summary": string, "praise": string}.';
-const ONLY_COMMENTS = (id: string, name: string) => `\n\n# LẦN GỌI NÀY\nChỉ viết nhận xét chi tiết (comments) cho MỘT tiêu chí: ${name} (criterion = "${id}"). Không chấm điểm, không viết summary hay praise, không nhận xét tiêu chí khác (các lần gọi khác làm phần đó). Đọc hết cả bài và nêu mọi chỗ làm bài mất điểm ở tiêu chí này.` + FIX_FIELDS(id) + `\nTrả về JSON: {"comments": [...]}.`;
+const ONLY_COMMENTS = (id: string, name: string) => `\n\n# LẦN GỌI NÀY\nChỉ viết nhận xét chi tiết (comments) cho MỘT tiêu chí: ${name} (criterion = "${id}"). Không chấm điểm, không viết summary hay praise, không nhận xét tiêu chí khác (các lần gọi khác làm phần đó). Đọc hết cả bài và nêu mọi chỗ làm bài mất điểm ở tiêu chí này.` + (id === 'lr' || id === 'gra' ? LR_GRA_SPLIT : '') + FIX_FIELDS(id) + `\nTrả về JSON: {"comments": [...]}.`;
+
+/** LR and GRA are written by separate calls that can't see each other: each error has one owner, so one phrase never gets two fixes. */
+const LR_GRA_SPLIT = `
+
+# LỖI NÀO THUỘC TIÊU CHÍ NÀO
+Lần gọi viết nhận xét cho tiêu chí kia không thấy nhận xét của bạn, nên mỗi lỗi chỉ được nêu ở ĐÚNG MỘT tiêu chí:
+- Lexical Resource: chọn từ sai nghĩa hoặc chưa chính xác, collocation, chính tả, cấu tạo từ (word form), văn phong không trang trọng.
+- Grammar: hoà hợp chủ ngữ và động từ, mạo từ, thì, số ít / số nhiều, từ chỉ lượng với danh từ đếm được và không đếm được (less / fewer, much / many), cấu trúc câu, dấu câu.
+Chỉ nêu lỗi thuộc tiêu chí của lần gọi này. Lexical Resource KHÔNG BAO GIỜ nêu: thiếu hay thừa -s số nhiều ("many student"), thiếu mạo từ ("economy is growing" thiếu "the"), less / fewer, is / are; đó là việc của Grammar. Sửa chính tả thì chỉ sửa chữ cái, không thêm -s, không đổi từ ("enviroment" → "environment", không phải "environments"). quote chỉ gồm những chữ của đúng lỗi đó, ngắn nhất có thể. Nếu trong quote có sẵn một lỗi thuộc tiêu chí kia (vd một từ sai chính tả nằm trong cụm bạn sửa ngữ pháp), fix vẫn viết đúng luôn từ đó nhưng giữ nguyên nghĩa, số ít / số nhiều và thì của nó.`;
 
 /**
  * Each comment is fixed where it stands: the student rewrites the quoted words, with the fix hidden behind first-letter

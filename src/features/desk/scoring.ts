@@ -47,6 +47,33 @@ export interface EssayReview {
 /** Feedback groups, one per IELTS criterion. */
 export const CRITERIA: [string, string][] = [['tr', 'Task Response'], ['cc', 'Coherence & Cohesion'], ['lr', 'Lexical Resource'], ['gra', 'Grammatical Range & Accuracy']];
 
+/** Where an item's quote sits in its section, as [from, to); null if it can't be found. */
+function span(it: ReviewItem): [number, number] | null {
+  const q = it.quote || '', a = q ? (it.snap || '').indexOf(q) : -1;
+  return a < 0 ? null : [a, a + q.length];
+}
+const overlaps = (a: ReviewItem, b: ReviewItem) => {
+  if (a.sectionId !== b.sectionId) return false;
+  const x = span(a), y = span(b);
+  return x && y ? x[0] < y[1] && y[0] < x[1] : a.quote === b.quote;
+};
+const covers = (a: ReviewItem, b: ReviewItem) => { const x = span(a), y = span(b); return !!x && !!y && x[0] <= y[0] && y[1] <= x[1] && x[1] - x[0] > y[1] - y[0]; };
+
+/**
+ * Comments from different criteria whose quoted words overlap would stack two highlights and two different fixes on one
+ * phrase (e.g. LR "goverment" → "governments", GRA "goverment should build" → "the government should build"). One stays:
+ * the one whose quote contains all the others it overlaps (its fix rewrites those words too), else the earlier criterion.
+ */
+function dropOverlaps(items: ReviewItem[]): Set<ReviewItem> {
+  const kept: ReviewItem[] = [];
+  for (const it of items) {
+    const hit = kept.filter((k) => overlaps(k, it));
+    if (!hit.length) kept.push(it);
+    else if (hit.every((k) => covers(it, k))) { hit.forEach((k) => kept.splice(kept.indexOf(k), 1)); kept.push(it); }
+  }
+  return new Set(kept);
+}
+
 /** Per criterion: short code, underline/bar colour, soft background and text colour. */
 export const CRITERION_STYLE: Record<string, { short: string; line: string; soft: string; fg: string }> = {
   tr: { short: 'TR', line: '#D2401B', soft: '#FADAD4', fg: '#B33A1A' },
@@ -173,18 +200,8 @@ export async function requestEssayReview(spec: PromptSpec, sections: EssaySectio
     )),
   ]);
   if (scored.status === 'rejected') throw scored.reason;
-  // Two criteria can quote the same words; keep the first (TR, CC, LR, GRA order) so highlights don't stack.
-  const taken = new Set<string>();
-  const groups = CRITERIA.map(([id, title], k) => {
-    const r = parts[k];
-    const items = r.status === 'fulfilled' ? (r.value.items || []).filter((it) => {
-      const at = it.sectionId + '|' + it.quote;
-      if (taken.has(at)) return false;
-      taken.add(at);
-      return true;
-    }) : [];
-    return { id, title, items };
-  });
+  const kept = dropOverlaps(CRITERIA.flatMap((_, k) => { const r = parts[k]; return r.status === 'fulfilled' ? r.value.items || [] : []; }));
+  const groups = CRITERIA.map(([id, title], k) => ({ id, title, items: parts[k].status === 'fulfilled' ? (parts[k] as PromiseFulfilledResult<{ items: ReviewItem[] }>).value.items.filter((it) => kept.has(it)) : [] }));
   const failed = CRITERIA.filter((_, k) => parts[k].status === 'rejected').map(([id]) => id);
   return { ...scored.value, key: draftsKey(drafts), source: 'ai', groups, ...(failed.length ? { failed, ticket } : {}) };
 }
@@ -195,6 +212,6 @@ export async function retryEssayCriterion(review: EssayReview, spec: PromptSpec,
   const { text, stop } = await postAiStream('essay-review', { ...body, part: id, ticket: review.ticket });
   let out: Record<string, unknown>;
   try { out = parseReply<Record<string, unknown>>(text, stop, ['comments']); } catch { throw new AiRequestError('bad_output'); }
-  const taken = new Set(review.groups.flatMap((g) => g.items.map((it) => it.sectionId + '|' + it.quote)));
-  return toItems(id, out, body.sections, body.chains).filter((it) => !taken.has(it.sectionId + '|' + it.quote));
+  const others = review.groups.flatMap((g) => g.items);
+  return toItems(id, out, body.sections, body.chains).filter((it) => !others.some((o) => overlaps(o, it)));
 }
