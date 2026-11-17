@@ -67,6 +67,11 @@ export class GeminiError extends Error {
  * gets none; a model that rejects the setting is retried once without it and remembered.
  */
 const noEffort = new Set<string>();
+/**
+ * Gemini counts its thinking inside max_tokens, so a feature's own limit (sized for the answer, e.g. 500 for the note
+ * check) would cut the answer off mid-sentence once the model has thought. This much room is added on top for thinking.
+ */
+const THINK_ROOM: Record<'low' | 'medium' | 'high', number> = { low: 2000, medium: 6000, high: 12000 };
 export type Effort = 'low' | 'medium' | 'high';
 
 /** Tried first when the answer's quality matters most (grading, feedback, guided samples): the strongest model, ~5 s at low thinking. */
@@ -94,7 +99,7 @@ export async function callGemini(e: CloudflareEnv, { system, input, maxTokens, t
       const send = (withEffort: boolean) => fetch(URL_CHAT, {
         method: 'POST',
         headers: { 'content-type': 'application/json', authorization: 'Bearer ' + keys[k] },
-        body: JSON.stringify({ model, messages, max_tokens: Math.min(maxTokens, gemma ? 8192 : 32768), ...(withEffort ? { reasoning_effort: effort } : {}) }),
+        body: JSON.stringify({ model, messages, max_tokens: Math.min(maxTokens + (gemma ? 0 : THINK_ROOM[withEffort && effort ? effort : 'high']), gemma ? 8192 : 32768), ...(withEffort ? { reasoning_effort: effort } : {}) }),
         signal: AbortSignal.timeout(Math.max(1000, cap - (Date.now() - t0))),
       });
       try {
