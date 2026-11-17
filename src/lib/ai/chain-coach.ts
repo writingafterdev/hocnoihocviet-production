@@ -165,7 +165,7 @@ export async function aiChainCheck(userId: string, prompt: Prompt, chain: ChainI
         + '\n\nNHẬN XÉT LẦN TRƯỚC\n' + JSON.stringify(prev.notes) + '\n\nCHUỖI MỚI\n' + text,
     })
     : await ask<ChainCheckOut>({
-      userId, kind: 'chain', task: CHECK_TASK, schema: CHECK_SCHEMA, effort: 'medium', maxTokens: 8000,
+      userId, kind: 'chain', task: CHECK_TASK, schema: CHECK_SCHEMA, effort: 'medium', maxTokens: 8000, modelCapMs: 30_000,
       input: describePrompt(prompt) + '\n\n' + text,
     });
   const notes = (out.notes || [])

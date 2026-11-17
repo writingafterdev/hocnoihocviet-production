@@ -81,8 +81,11 @@ interface Ask {
   grounded?: boolean;
   /** false = don't take a use from the allowance: the caller already did, via `startTicket` (one essay = several calls). */
   counted?: boolean;
-  /** Gemini: try the strongest model first. Default: any call that isn't low effort (chain check, grading). */
-  quality?: boolean;
+  /**
+   * Gemini: how long one model may take before the next is tried. Default: 25 s for short replies (up to 6000 tokens),
+   * else half the call's time limit. The strongest (slowest) model goes first only for essay grading (askStream).
+   */
+  modelCapMs?: number;
   /** Gemini: never fall back to the Flash Lite models (they answer feedback tasks too thinly). */
   noLite?: boolean;
 }
@@ -130,7 +133,7 @@ export async function refundTicket(userId: string, ticket: string) {
  * One Claude call grounded in the book. With `schema`, returns the parsed JSON; otherwise the text.
  * Counts against the student's daily allowance (refunded if the call fails).
  */
-export async function ask<T = string>({ userId, kind, task, input, schema, effort = 'medium', maxTokens = 16000, grounded = true, counted = true, quality, noLite }: Ask): Promise<T> {
+export async function ask<T = string>({ userId, kind, task, input, schema, effort = 'medium', maxTokens = 16000, grounded = true, counted = true, modelCapMs, noLite }: Ask): Promise<T> {
   const e = await env();
   if (!configured(e)) throw new AiError('not_configured');
   const quota = counted ? await reserve(userId, kind) : null;
@@ -140,7 +143,7 @@ export async function ask<T = string>({ userId, kind, task, input, schema, effor
     if (geminiKeys(e).length) {
       const started = Date.now();
       let r;
-      try { r = await callGemini(e, { system: systemText(task, schema, grounded), input, maxTokens, timeoutMs: TIMEOUT_MS[kind], effort, quality: quality ?? effort !== 'low', noLite }); }
+      try { r = await callGemini(e, { system: systemText(task, schema, grounded), input, maxTokens, timeoutMs: TIMEOUT_MS[kind], effort, noLite, modelCapMs }); }
       catch (err) { throw err instanceof GeminiError ? new AiError(err.code, err.message) : err; }
       console.log('ai_call', kind, r.model, (Date.now() - started) + 'ms', 'in=' + r.input, 'out=' + r.output, r.stop);
       await (quota ? quota.record({ input: r.input, output: r.output }) : recordTokens(DB, userId, kind, { input: r.input, output: r.output })).catch(() => {});

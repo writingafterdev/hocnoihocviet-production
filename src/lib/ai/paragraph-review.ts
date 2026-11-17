@@ -49,7 +49,7 @@ const clip = (x: unknown, max: number) => (typeof x === 'string' ? x.trim().slic
 
 export async function aiParagraphReview(userId: string, prompt: Prompt, chain: Chain, sentence: string, text: string): Promise<PlanTask[]> {
   const out = await ask<{ tasks: unknown }>({
-    userId, kind: 'fix', task: TASK, schema: SCHEMA, effort: 'low', quality: true, noLite: true, maxTokens: 8000,
+    userId, kind: 'fix', task: TASK, schema: SCHEMA, effort: 'low', noLite: true, maxTokens: 8000,
     input: describePrompt(prompt) + '\n\n' + describeChains(prompt, [chain], '') + '\n\nCÂU CHỦ ĐỀ: ' + sentence + '\n\nĐOẠN VĂN CỦA HỌC SINH\n' + text,
   });
   return (Array.isArray(out.tasks) ? out.tasks : [])

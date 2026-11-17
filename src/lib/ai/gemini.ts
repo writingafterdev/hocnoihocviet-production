@@ -52,6 +52,22 @@ export async function modelUse(e: CloudflareEnv, fromDay: string) {
   return (await e.DB.prepare('select * from ai_model_use where day >= ? order by day').bind(fromDay).all<{ day: string; model: string; ok: number; limited: number; failed: number; inputTokens: number; outputTokens: number; ms: number; lastStatus: string | null; lastAt: number | null }>()).results;
 }
 
+/**
+ * Models that timed out or answered 5xx in the last 5 minutes on any Worker instance (from ai_model_use), so a fresh
+ * instance doesn't wait on the same stuck model again. Only model-wide trouble counts (429 is per key). If every model
+ * is on the list, none is skipped. Best effort: a failed read skips nothing.
+ */
+async function recentlyHanging(e: CloudflareEnv, models: string[]): Promise<Set<string>> {
+  try {
+    if (!e.DB) return new Set();
+    tableReady = tableReady || e.DB.prepare(USE_TABLE).run();
+    await tableReady;
+    const rows = (await e.DB.prepare("select model from ai_model_use where day = ? and lastAt > ? and (lastStatus = 'timeout' or lastStatus like '5%')").bind(vnToday(), Date.now() - 5 * 60_000).all<{ model: string }>()).results;
+    const out = new Set(rows.map((r) => r.model).filter((m) => models.includes(m)));
+    return out.size >= models.length ? new Set() : out;
+  } catch { return new Set(); }
+}
+
 export class GeminiError extends Error {
   code: 'timeout' | 'upstream';
   constructor(code: 'timeout' | 'upstream', message: string) { super(message); this.code = code; }
@@ -74,24 +90,33 @@ const noEffort = new Set<string>();
 const THINK_ROOM: Record<'low' | 'medium' | 'high', number> = { low: 2000, medium: 6000, high: 12000 };
 export type Effort = 'low' | 'medium' | 'high';
 
-/** Tried first when the answer's quality matters most (grading, feedback, guided samples): the strongest model, ~5 s at low thinking. */
+/**
+ * Tried first only for essay grading (streamed, so the wait is expected): the strongest model, but slow (production,
+ * Nov 2026: about 31 s a call on average, up to a minute). Everything else starts with the fast Flash models.
+ */
 export const QUALITY_FIRST = ['gemini-4-hydrogen'];
 
-/** `quality`: the strongest model goes first; otherwise the fast ones lead (hints, scans, quick checks). */
-/** `noLite`: never the Flash Lite models (for feedback they tend to skip, e.g. answering an empty list). */
-export async function callGemini(e: CloudflareEnv, { system, input, maxTokens, timeoutMs, effort, quality, noLite }: { system: string; input: string; maxTokens: number; timeoutMs: number; effort?: Effort; quality?: boolean; noLite?: boolean }): Promise<GeminiReply> {
+/** `quality` (essay grading only): the strongest model goes first; otherwise the fast ones lead. */
+/**
+ * `noLite`: never the Flash Lite models (for feedback they tend to skip, e.g. answering an empty list). `modelCapMs`: how
+ * long one model may take before the next is tried (default: 25 s for short replies, else half of `timeoutMs`).
+ */
+export async function callGemini(e: CloudflareEnv, { system, input, maxTokens, timeoutMs, effort, quality, noLite, modelCapMs }: { system: string; input: string; maxTokens: number; timeoutMs: number; effort?: Effort; quality?: boolean; noLite?: boolean; modelCapMs?: number }): Promise<GeminiReply> {
   const keys = geminiKeys(e), all = geminiModels(e).filter((m) => !noLite || !m.includes('-lite'));
   const models = quality ? [...all.filter((m) => QUALITY_FIRST.includes(m)), ...all.filter((m) => !QUALITY_FIRST.includes(m))] : all;
   const deadline = Date.now() + timeoutMs;
+  const hanging = await recentlyHanging(e, models);
   let last = 'no_model';
   for (const model of models) {
+    if (hanging.has(model)) continue;
     for (let k = 0; k < keys.length; k++) {
       const id = model + '|' + k;
       if ((skip.get(id) || 0) > Date.now()) continue;
       const left = deadline - Date.now();
       if (left < 3000) throw new GeminiError('timeout', last);
-      // One slow model can't use up the whole wait: it gets half the budget, then the next model is tried.
-      const cap = Math.min(left, Math.max(20_000, Math.round(timeoutMs / 2)));
+      // One slow model can't use up the whole wait. A short reply that hasn't come in 25 s means the model is stuck, so
+      // the next one is tried; long replies (samples, grading) get half the budget.
+      const cap = Math.min(left, modelCapMs ?? (maxTokens <= 6000 ? 25_000 : Math.max(20_000, Math.round(timeoutMs / 2))));
       const gemma = model.startsWith('gemma');
       const messages = gemma ? [{ role: 'user', content: system + '\n\n---\n\n' + input }] : [{ role: 'system', content: system }, { role: 'user', content: input }];
       let res: Response;
