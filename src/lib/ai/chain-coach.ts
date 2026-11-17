@@ -188,7 +188,7 @@ export interface NoteCheckOut { fixed: boolean; why: string }
 export async function aiNoteCheck(userId: string, prompt: Prompt, chain: ChainIn, note: ChainNote): Promise<NoteCheckOut> {
   const { text } = describeChain(chain);
   const out = await ask<{ fixed: unknown; why: unknown }>({
-    userId, kind: 'chain', task: NOTE_CHECK_TASK, effort: 'low', maxTokens: 500, grounded: false,
+    userId, kind: 'chain', task: NOTE_CHECK_TASK, effort: 'low', noLite: true, maxTokens: 500, grounded: false,
     schema: { type: 'object', additionalProperties: false, required: ['fixed', 'why'], properties: { fixed: { type: 'boolean' }, why: { type: 'string' } } },
     input: 'ĐỀ BÀI\n' + prompt.text + '\n\nNHẬN XÉT CẦN XÉT\nloại: ' + note.type + ' · vị trí lúc nhận xét: ' + note.at + '\nvấn đề: ' + note.text + '\ncách sửa: ' + (note.fix || '(không có)') + '\n\n' + text,
   });
