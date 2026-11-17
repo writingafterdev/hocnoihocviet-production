@@ -173,7 +173,7 @@ export function Dashboard() {
                         <p className="m-0 truncate text-xs text-ink-soft">{p.category} · {p.topic} · {words} từ</p>
                       </div>
                       {band != null ? <span className="shrink-0 text-lg font-semibold leading-none tracking-[-0.02em] text-blue-deep tabular-nums">{band.toFixed(1)}</span>
-                        : <span className="shrink-0 text-xs font-medium text-ink-soft">{words ? 'Chưa nộp' : 'Đang dựng mạch'}</span>}
+                        : <span className="shrink-0 text-xs font-medium text-ink-soft">{words ? 'Chưa nộp' : 'Đang dựng mạch ý'}</span>}
                     </Link>
                   );
                 })}

@@ -29,7 +29,7 @@ const plainDot = (bg: string) => <span style={{ width: DOT, height: DOT, boxSizi
 
 /**
  * "Kiểm tra" found something: beside the student's chain, a sample chain built on it (their steps kept, edited, or
- * added where one was missing), so the two can be compared. "Sửa chuỗi" hides the edited and added steps (they show as
+ * added where one was missing), so the two can be compared. "Sửa mạch ý" hides the edited and added steps (they show as
  * blank lines) so the student writes them on their own; "Hiện các bước mẫu" brings them back for a look.
  */
 export function SampleChain({ start, end, steps, hiding, peek, onFix, onPeek }: {
@@ -39,8 +39,8 @@ export function SampleChain({ start, end, steps, hiding, peek, onFix, onPeek }: 
     <section style={{ height: '100%', display: 'flex', flexDirection: 'column', borderRadius: 12, border: '1px solid ' + CL.border, background: '#fff', overflow: 'hidden' }}>
       <div style={{ minHeight: 46, padding: '0 16px', borderBottom: '1px solid ' + CL.ink1, display: 'flex', alignItems: 'center', gap: 8 }}>
         <span aria-hidden="true" style={{ width: 7, height: 7, borderRadius: 99, background: CL.mint }} />
-        <span style={{ fontFamily: CL.sans, fontSize: 12, fontWeight: 500, color: CL.ink }}>Chuỗi mẫu</span>
-        <span style={{ borderRadius: 5, padding: '3px 7px', background: '#F5F5F5', fontFamily: CL.sans, fontSize: 12, fontWeight: 500, color: CL.ink7 }}>dựa trên chuỗi của bạn</span>
+        <span style={{ fontFamily: CL.sans, fontSize: 12, fontWeight: 500, color: CL.ink }}>Mạch ý mẫu</span>
+        <span style={{ borderRadius: 5, padding: '3px 7px', background: '#F5F5F5', fontFamily: CL.sans, fontSize: 12, fontWeight: 500, color: CL.ink7 }}>dựa trên mạch ý của bạn</span>
       </div>
       <ol className="cl-scroll" style={{ flex: 1, minHeight: 0, overflowY: 'auto', listStyle: 'none', margin: 0, padding: '14px 16px' }}>
         <Row first dot={plainDot(CL.green)}>
@@ -70,7 +70,7 @@ export function SampleChain({ start, end, steps, hiding, peek, onFix, onPeek }: 
       <div style={{ borderTop: '1px solid ' + CL.ink1, background: CL.panel, padding: '12px 16px', display: 'flex', justifyContent: 'flex-end' }}>
         {hiding
           ? <button type="button" className="cl-btn" onClick={onPeek} aria-pressed={peek} style={toolbarBtn(false)}>{peek ? 'Ẩn các bước mẫu' : 'Hiện các bước mẫu'}</button>
-          : <button type="button" className="cl-btn cl-primary" onClick={onFix} style={primaryBtn}>Sửa chuỗi</button>}
+          : <button type="button" className="cl-btn cl-primary" onClick={onFix} style={primaryBtn}>Sửa mạch ý</button>}
       </div>
     </section>
   );

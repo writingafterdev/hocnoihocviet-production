@@ -20,6 +20,7 @@ import { useStepHelp } from './StepHelp';
 import { SampleChain } from './SampleChain';
 import { primaryBtn } from '../coach/ui';
 import { ProBeam } from '@/components/ui/pro-beam';
+import { ENDS } from '../coach/ends';
 
 const shuffle = <T,>(xs: T[]) => { const a = [...xs]; for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
 /** A brand drawing for each kind of statement: why (a question), what it does (charts), what to do (brainstorm). */
@@ -37,9 +38,9 @@ const sentenceStyle: React.CSSProperties = { margin: 0, fontFamily: CL.serif, fo
 
 /** Highlights in the statement: the starting point, the stakeholder and the ending point, swept in in reading order. */
 const MARK = {
-  start: { title: 'Điểm đầu', fg: CL.greenText, bg: CL.mintSoft, delay: '.15s' },
-  who: { title: 'Stakeholder', fg: '#17667A', bg: '#E4F5FA', delay: '.45s' },
-  end: { title: 'Điểm cuối', fg: '#B33A1A', bg: CL.yellowSoft, delay: '.75s' },
+  start: { fg: CL.greenText, bg: CL.mintSoft, delay: '.15s' },
+  who: { fg: '#17667A', bg: '#E4F5FA', delay: '.45s' },
+  end: { fg: '#B33A1A', bg: CL.yellowSoft, delay: '.75s' },
 } as const;
 
 /** The statement with its start (mint), stakeholder (sky) and end (yellow) highlighted; `still` skips the highlighter sweep. */
@@ -49,7 +50,8 @@ function Sentence({ s, still }: { s: Statement; still?: boolean }) {
       {sentenceParts(s.sentence).map((part, k) => {
         if (!part.mark) return <span key={k}>{part.text}</span>;
         const m = MARK[part.mark];
-        return <span key={k} title={m.title} className={'co-hl' + (still ? ' still' : '')} style={{ color: m.fg, ['--d' as string]: m.delay }}>{part.text}</span>;
+        const title = part.mark === 'who' ? 'Nhóm người' : ENDS[s.kind][part.mark];
+        return <span key={k} title={title} className={'co-hl' + (still ? ' still' : '')} style={{ color: m.fg, ['--d' as string]: m.delay }}>{part.text}</span>;
       })}
     </>
   );
@@ -102,7 +104,7 @@ export function ProveDrill() {
   const [steps, setSteps] = useState<string[]>(['']);
   const [active, setActive] = useState<number | null>(null);
   const [chat, setChat] = useState(true);
-  /** "Viết chuỗi này thành một đoạn văn": the paragraph screen, written alone or guided. */
+  /** "Viết mạch ý này thành một đoạn văn": the paragraph screen, written alone or guided. */
   const [para, setPara] = useState<'free' | 'guided' | null>(null);
   /** Paragraphs in progress, per statement, chain and way of writing: going back to the chain and returning resumes them. */
   const drafts = useRef(new Map<string, ParagraphDraft>());
@@ -269,7 +271,7 @@ export function ProveDrill() {
                     </div>
                     <div key={'b' + s.id} className={'cl-scroll' + (landed ? ' co-rise' : '')} style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: '20px 32px 16px 34px', opacity: rolling ? 0 : 1, transform: rolling ? 'translateY(6px)' : 'none', transition: 'opacity .5s ease, transform .5s ease' }}>
                       <ChainEditor
-                        start={s.start} end={s.end} startLabel="Điểm đầu · đề cho" endLabel="Điểm cuối · đề cho"
+                        start={s.start} end={s.end} startLabel={ENDS[s.kind].start + ' · đề cho'} endLabel={ENDS[s.kind].end + ' · đề cho'}
                         steps={steps} setSteps={setSteps}
                         notes={notes} active={active} onPick={setActive}
                         hint={coach.hint} asking={coach.asking} onHint={coach.askHint} onCloseHint={coach.closeHint}
@@ -281,7 +283,7 @@ export function ProveDrill() {
                     </div>
                     {checked && !rolling && (
                       <div className="co-rise" style={{ borderTop: '1px solid ' + CL.ink1, background: CL.panel, padding: '14px 22px', display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-                        <span style={{ marginRight: 'auto', fontFamily: CL.sans, fontSize: 14, fontWeight: 600, color: CL.ink }}>Viết chuỗi này thành một đoạn văn</span>
+                        <span style={{ marginRight: 'auto', fontFamily: CL.sans, fontSize: 14, fontWeight: 600, color: CL.ink }}>Viết mạch ý này thành một đoạn văn</span>
                         <button type="button" className="cl-btn" onClick={() => setPara('free')} style={toolbarBtn(false)}>Tự viết</button>
                         <button type="button" className="cl-btn cl-primary" onClick={() => setPara('guided')} style={primaryBtn}>Viết có hướng dẫn</button>
                       </div>

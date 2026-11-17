@@ -6,7 +6,7 @@ import { NOTE_STYLE, type CheckResult, type PlacedNote } from './useCoach';
 
 /** Above the chain while "Kiểm tra" runs: a status line. (The notes themselves sit on the chain, each under its step.) */
 export function CheckSummary({ checking }: { result?: CheckResult | null; fresh?: boolean; checking: boolean }) {
-  if (checking) return <AiStatus state="analyzing" states={{ analyzing: { label: 'Đang đọc mạch', active: true } }} className="text-[13px]" />;
+  if (checking) return <AiStatus state="analyzing" states={{ analyzing: { label: 'Đang đọc mạch ý', active: true } }} className="text-[13px]" />;
   return null;
 }
 

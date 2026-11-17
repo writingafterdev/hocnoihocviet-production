@@ -73,7 +73,7 @@ export function toItems(criterion: string, out: { comments?: Comment[] }, sectio
     items.push({
       key: criterion + items.length,
       sectionId: hit.id,
-      where: s.label + (k >= 0 ? ' · Mạch ' + (k + 1) : ''),
+      where: s.label + (k >= 0 ? ' · Mạch ý ' + (k + 1) : ''),
       ...(k >= 0 ? { chainId: chains[k].id } : {}),
       // The model counts steps from 1 (step 1 = the starting point).
       ...(k >= 0 && Number.isInteger(c.step) && c.step >= 1 && c.step <= chains[k].steps.length ? { at: c.step - 1 } : {}),

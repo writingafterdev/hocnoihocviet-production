@@ -40,7 +40,7 @@ const mmss = (s: number) => String(Math.floor(s / 60)).padStart(2, '0') + ':' + 
 export function sectionsFor(chains: Chain[]): EssaySection[] {
   return [
     { id: 'intro', label: 'Mở bài', guide: '40–55 từ', placeholder: 'Nhắc lại đề bằng lời của bạn, rồi nêu lập trường hoặc câu trả lời.' },
-    ...chains.map((c, i) => ({ id: c.id, label: 'Thân bài ' + (i + 1), guide: '85–100 từ', placeholder: 'Câu chủ đề, rồi đi theo mạch bên trái: điểm đầu → từng bước → điểm cuối.' })),
+    ...chains.map((c, i) => ({ id: c.id, label: 'Thân bài ' + (i + 1), guide: '85–100 từ', placeholder: 'Câu chủ đề, rồi đi theo mạch ý bên trái, lần lượt từng bước.' })),
     { id: 'conclusion', label: 'Kết bài', guide: '30–45 từ', placeholder: 'Nói lại câu trả lời và lý do chính.' },
   ];
 }
@@ -378,12 +378,12 @@ export function WriteScreen({ prompt, chains, setChains, essay, setEssay, toolba
             <PromptText text={prompt.text} style={{ padding: '18px 20px 16px', borderBottom: '1px solid ' + CL.ink1 }} />
             <div className="cl-scroll" style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: '14px 16px 18px', display: 'flex', flexDirection: 'column', gap: 12 }}>
               <ClLabel>Dàn bài · {chains.length} thân bài</ClLabel>
-              <div style={{ borderRadius: 10, border: '1px dashed ' + CL.ink2, padding: '9px 12px', fontFamily: CL.sans, fontSize: 12, color: CL.ink4 }}>Mở bài · không cần mạch</div>
+              <div style={{ borderRadius: 10, border: '1px dashed ' + CL.ink2, padding: '9px 12px', fontFamily: CL.sans, fontSize: 12, color: CL.ink4 }}>Mở bài · không cần mạch ý</div>
               {chains.map((c, i) => (
                 <MiniChain key={c.id} prompt={prompt} chain={c} num={i + 1} first={i === 0} last={i === chains.length - 1} onMove={(d) => move(i, d)} hit={hitFor(c)}
                   focused={gNow ? gNow.section === c.id : focus === c.id} onOpen={() => openPara(c.id)} chainsHref={chainsHref} />
               ))}
-              <div style={{ borderRadius: 10, border: '1px dashed ' + CL.ink2, padding: '9px 12px', fontFamily: CL.sans, fontSize: 12, color: CL.ink4 }}>Kết bài · không cần mạch</div>
+              <div style={{ borderRadius: 10, border: '1px dashed ' + CL.ink2, padding: '9px 12px', fontFamily: CL.sans, fontSize: 12, color: CL.ink4 }}>Kết bài · không cần mạch ý</div>
             </div>
           </aside>
           <section style={{ minHeight: 0, display: 'flex', flexDirection: 'column', borderRadius: 12, border: '1px solid ' + CL.border, background: '#fff', overflow: 'hidden' }}>

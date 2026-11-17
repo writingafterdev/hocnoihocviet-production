@@ -31,7 +31,7 @@ export function MiniChain({ prompt, chain, num, first = true, last = true, onMov
       </div>
       {!built && (
         <div style={{ padding: '10px 14px', borderBottom: '1px solid ' + CL.ink1, background: CL.yellowSoft, fontFamily: CL.sans, fontSize: 12, lineHeight: 1.5, color: CL.yellowText }}>
-          Mạch này chưa có bước nào ở giữa. <Link href={chainsHref} onClick={(e) => e.stopPropagation()} style={{ fontWeight: 600, textDecoration: 'underline', color: CL.yellowText }}>Quay lại dựng mạch</Link>
+          Mạch ý này chưa có bước nào ở giữa. <Link href={chainsHref} onClick={(e) => e.stopPropagation()} style={{ fontWeight: 600, textDecoration: 'underline', color: CL.yellowText }}>Quay lại dựng mạch</Link>
         </div>
       )}
       <ol style={{ position: 'relative', listStyle: 'none', margin: 0, padding: '10px 10px 12px' }}>

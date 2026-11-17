@@ -20,10 +20,10 @@ export function describePrompt(p: Prompt) {
 export function describeChains(p: Prompt, chains: Chain[], stance: string) {
   const [left, right] = sidesOf(p);
   const side = (s?: Side) => (s === 'left' ? left : s === 'right' ? right : 'chưa xếp');
-  const out: string[] = ['CÁC MẠCH CỦA HỌC SINH (mỗi mạch là một đoạn thân bài, theo đúng thứ tự: Mạch 1 = Thân bài 1…; bước 1 là điểm đầu, bước cuối là điểm cuối)'];
+  const out: string[] = ['CÁC MẠCH Ý CỦA HỌC SINH (mỗi mạch ý là một đoạn thân bài, theo đúng thứ tự: Mạch ý 1 = Thân bài 1…; bước 1 là điểm đầu, bước cuối là điểm cuối)'];
   chains.forEach((c, i) => {
     const sh = shapeOf(p, c);
-    out.push('', `[Mạch ${i + 1}] id=${c.id} · câu ${c.q || 1} (${CL_SHAPE_LABEL[sh]}) · tên: ${c.title || '(chưa đặt)'}${c.drv ? ' · xuất phát từ driver ' + c.drv : ''}${sh === 'verdict' ? ` · tông: ${c.tone === 'cost' ? 'tác hại' : 'lợi ích'}` : ''}${sh === 'cause' ? ' · loại nguyên nhân: ' + (levelOf(c) || '(chưa viết)') + (upstreamSteps(c).length ? ' (bước 1–' + upstreamSteps(c).length + ' là nguyên nhân thượng nguồn thuộc hệ thống, các bước sau là của người trong cuộc)' : '') : ''}${c.area ? ' · vùng: ' + c.area : ''}${c.cell ? ' · ô bản đồ: ' + String(c.cell.r).slice(0, 60) + ' × ' + String(c.cell.c).slice(0, 60) : ''}`);
+    out.push('', `[Mạch ý ${i + 1}] id=${c.id} · câu ${c.q || 1} (${CL_SHAPE_LABEL[sh]}) · tên: ${c.title || '(chưa đặt)'}${c.drv ? ' · xuất phát từ driver ' + c.drv : ''}${sh === 'verdict' ? ` · tông: ${c.tone === 'cost' ? 'tác hại' : 'lợi ích'}` : ''}${sh === 'cause' ? ' · loại nguyên nhân: ' + (levelOf(c) || '(chưa viết)') + (upstreamSteps(c).length ? ' (bước 1–' + upstreamSteps(c).length + ' là nguyên nhân thượng nguồn thuộc hệ thống, các bước sau là của người trong cuộc)' : '') : ''}${c.area ? ' · vùng: ' + c.area : ''}${c.cell ? ' · ô bản đồ: ' + String(c.cell.r).slice(0, 60) + ' × ' + String(c.cell.c).slice(0, 60) : ''}`);
     c.steps.forEach((s, k) => out.push(`  bước ${k + 1}: ${s.trim() || '(trống)'}`));
     if (c.split) {
       out.push(`  Scope: tách theo "${c.split.noun}" sau bước ${c.split.at + 1}`);
@@ -32,7 +32,7 @@ export function describeChains(p: Prompt, chains: Chain[], stance: string) {
     c.findings.filter((f) => !f.empty && f.text.trim()).forEach((f) => out.push(`  góc nhìn ${f.kind}${f.target === 'all' ? '' : ' (nhánh ' + String.fromCharCode(97 + (f.target as number)) + ')'}${sh === 'verdict' ? ' · phía: ' + side(f.side) : ''}: ${f.text}`));
     if (sh === 'solution') {
       const k = chains.findIndex((x) => x.id === c.fixes);
-      out.push('  xử lý: ' + (k >= 0 ? 'Mạch ' + (k + 1) : '(chưa chọn)'));
+      out.push('  xử lý: ' + (k >= 0 ? 'Mạch ý ' + (k + 1) : '(chưa chọn)'));
     }
   });
   if (stance.trim()) out.push('', 'LẬP TRƯỜNG: ' + stance.trim());

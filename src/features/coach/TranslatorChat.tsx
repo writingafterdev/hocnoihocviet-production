@@ -64,7 +64,7 @@ export function TranslatorChat({ ideas = [], onClose, skill = 'task2', vocab }: 
   const askVocab = async () => {
     if (!vocab || pending) return;
     const id = Date.now(), key = vocab.key;
-    setMsgs((xs) => [...xs, { id, dir: 'vi-en', source: 'Gợi ý từ vựng cho chuỗi này', bank: { key } }]);
+    setMsgs((xs) => [...xs, { id, dir: 'vi-en', source: 'Gợi ý từ vựng cho mạch ý này', bank: { key } }]);
     setPending(true);
     try {
       const phrases = await vocab.ask();
@@ -188,7 +188,7 @@ export function TranslatorChat({ ideas = [], onClose, skill = 'task2', vocab }: 
 
       <div style={{ padding: '10px 12px 12px' }}>
         {vocab && !asked && (
-          <button type="button" className="cl-btn cl-add" onClick={askVocab} disabled={pending} style={{ marginBottom: 8, borderRadius: 8, border: '1px solid ' + CL.ink2, padding: '5px 12px', fontFamily: CL.sans, fontSize: 12, fontWeight: 600, color: CL.ink6, opacity: pending ? 0.5 : 1 }}>Gợi ý từ vựng cho chuỗi này</button>
+          <button type="button" className="cl-btn cl-add" onClick={askVocab} disabled={pending} style={{ marginBottom: 8, borderRadius: 8, border: '1px solid ' + CL.ink2, padding: '5px 12px', fontFamily: CL.sans, fontSize: 12, fontWeight: 600, color: CL.ink6, opacity: pending ? 0.5 : 1 }}>Gợi ý từ vựng cho mạch ý này</button>
         )}
         <div className="cl-askbox" style={{ display: 'flex', alignItems: 'flex-end', gap: 8, borderRadius: 12, border: '1px solid ' + CL.ink2, background: CL.panel, padding: '7px 7px 7px 14px' }}>
           <textarea className="co-ta" value={text} onChange={(e) => setText(e.target.value)} maxLength={MAX} rows={1} placeholder="Nhắn để dịch…" aria-label="Văn bản cần dịch"

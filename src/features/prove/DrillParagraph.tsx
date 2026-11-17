@@ -93,9 +93,9 @@ export function DrillParagraph({ s, prompt, steps, guided: startGuided, onBack, 
     <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10, minHeight: 42, paddingBottom: 12 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 18 }}>
-          <button type="button" className="cl-btn cl-link" onClick={onBack} style={backLinkStyle}><ClIcon name="left" size={14} />Về chuỗi</button>
+          <button type="button" className="cl-btn cl-link" onClick={onBack} style={backLinkStyle}><ClIcon name="left" size={14} />Về mạch ý</button>
           <Chip variant="subtle" color="blue">Chứng minh nhanh</Chip>
-          <span style={{ fontFamily: CL.sans, fontSize: 12.5, color: CL.ink5 }}>Viết đoạn văn từ chuỗi</span>
+          <span style={{ fontFamily: CL.sans, fontSize: 12.5, color: CL.ink5 }}>Viết đoạn văn từ mạch ý</span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           {error && <span role="alert" style={{ fontFamily: CL.sans, fontSize: 12, color: CL.redText, marginRight: 4 }}>{error}</span>}
@@ -118,7 +118,7 @@ export function DrillParagraph({ s, prompt, steps, guided: startGuided, onBack, 
             <span style={{ fontFamily: CL.sans, fontSize: 14, lineHeight: 1.5, color: CL.ink }}>{sentence}</span>
           </div>
           <div className="cl-scroll" style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: '14px 12px' }}>
-            <span style={{ ...label, display: 'block', padding: '0 6px 6px' }}>Chuỗi của bạn</span>
+            <span style={{ ...label, display: 'block', padding: '0 6px 6px' }}>Mạch ý của bạn</span>
             <ol style={{ position: 'relative', listStyle: 'none', margin: 0, padding: 0 }}>
               <span aria-hidden="true" style={{ position: 'absolute', left: 11.5, top: 14, bottom: 14, width: 1, background: CL.ink2 }} />
               {thread.map((x, k) => {
@@ -151,7 +151,7 @@ export function DrillParagraph({ s, prompt, steps, guided: startGuided, onBack, 
                 {review
                   ? <p style={{ margin: 0, whiteSpace: 'pre-wrap', fontFamily: CL.serif, fontSize: 15, lineHeight: 1.8, color: CL.ink8 }}><FixParagraph text={text} tasks={review.tasks} edits={review.edits} open={open} onOpen={setOpen} /></p>
                   : <textarea className="co-ta" autoFocus value={text} readOnly={reviewing} onChange={(e) => { const v = e.target.value; setEssay((x) => ({ ...x, drafts: { para: v } })); }} aria-label="Đoạn văn"
-                    placeholder="Câu chủ đề, rồi đi theo chuỗi bên trái: điểm đầu → từng bước → điểm cuối."
+                    placeholder="Câu chủ đề, rồi đi theo mạch ý bên trái, lần lượt từng bước."
                     style={{ display: 'block', width: '100%', minHeight: 240, resize: 'none', border: 'none', outline: 'none', background: 'transparent', padding: 0, fontFamily: CL.serif, fontSize: 15.5, lineHeight: 1.8, color: CL.ink8, fieldSizing: 'content' } as React.CSSProperties} />}
               </div>
             )}
@@ -163,7 +163,7 @@ export function DrillParagraph({ s, prompt, steps, guided: startGuided, onBack, 
               : reviewing ? (
                 <section style={{ ...card, padding: '18px 20px', gap: 10 }}><ClLabel color={CL.ink}>Nhận xét</ClLabel><AiStatus state="analyzing" states={{ analyzing: { label: 'Đang đọc đoạn văn', active: true } }} className="text-[13px]" /></section>
               ) : review && (review.tasks.length ? <>
-                <ClLabel>{review.tasks.length} nhận xét về ý và mạch</ClLabel>
+                <ClLabel>{review.tasks.length} nhận xét về lập luận và độ mạch lạc</ClLabel>
                 {review.tasks.map((t) => (
                   <FixCard key={t.item.key} task={t} where="Đoạn văn" open={open === t.item.key} onOpen={() => { setOpen(t.item.key); setFixError(''); }}
                     edit={review.edits[t.item.key] || ''} setEdit={(v) => setReview((r) => (r ? { ...r, edits: { ...r.edits, [t.item.key]: v } } : r))}
@@ -173,7 +173,7 @@ export function DrillParagraph({ s, prompt, steps, guided: startGuided, onBack, 
               </> : (
                 <section style={{ ...card, padding: '16px 18px', gap: 6 }}>
                   <ClLabel color={CL.ink}>Nhận xét</ClLabel>
-                  <span style={{ fontFamily: CL.sans, fontSize: 13.5, lineHeight: 1.55, color: CL.greenText }}>Đoạn văn đi liền theo chuỗi, không có chỗ cần sửa về ý và mạch.</span>
+                  <span style={{ fontFamily: CL.sans, fontSize: 13.5, lineHeight: 1.55, color: CL.greenText }}>Đoạn văn đi liền theo mạch ý, không có chỗ cần sửa về ý và mạch.</span>
                 </section>
               ))}
           </aside>

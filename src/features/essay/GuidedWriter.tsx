@@ -82,7 +82,7 @@ export function GuidedWriter({ sections, essay, setEssay, plan, error, loading, 
             </span>
           </>
         ) : (
-          <span role="status" style={label}>{loading ? 'Đang soạn từng câu theo mạch của bạn…' : ''}</span>
+          <span role="status" style={label}>{loading ? 'Đang soạn từng câu theo mạch ý của bạn…' : ''}</span>
         )}
       </div>
     );

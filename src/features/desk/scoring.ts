@@ -141,10 +141,10 @@ export function reviewEssay(spec: PromptSpec, sections: EssaySection[], drafts: 
   chains.forEach((c, i) => {
     const bid = bodies[Math.min(i, bodies.length - 1)].id;
     const key = (c.steps[1] || c.title || '').toLowerCase().split(/\s+/).filter((x) => x.length > 5).slice(0, 3);
-    if (key.length && !key.some((k) => all.includes(k))) push('plan', { sectionId: bid, where: 'Mạch ' + (i + 1), snap: drafts[bid] || '', para: true, text: 'Chưa thấy mạch "' + (c.title || 'Mạch ' + (i + 1)) + '" trong bài. Bạn bỏ nó có chủ ý không?' });
+    if (key.length && !key.some((k) => all.includes(k))) push('plan', { sectionId: bid, where: 'Mạch ý ' + (i + 1), snap: drafts[bid] || '', para: true, text: 'Chưa thấy mạch ý "' + (c.title || 'Mạch ' + (i + 1)) + '" trong bài. Bạn bỏ nó có chủ ý không?' });
     if (c.split) c.split.branches.forEach((b, k) => {
       const kw = (b.label + ' ' + b.steps.join(' ')).toLowerCase().split(/\s+/).filter((x) => x.length > 5);
-      if (kw.length && !kw.some((x) => all.includes(x))) push('plan', { sectionId: bid, where: 'Mạch ' + (i + 1) + String.fromCharCode(97 + k), snap: drafts[bid] || '', para: true, text: 'Trường hợp "' + (b.label || '') + '" có trong mạch nhưng chưa có trong bài. Thiếu nó, ý này có bị nói quá không?' });
+      if (kw.length && !kw.some((x) => all.includes(x))) push('plan', { sectionId: bid, where: 'Mạch ý ' + (i + 1) + String.fromCharCode(97 + k), snap: drafts[bid] || '', para: true, text: 'Trường hợp "' + (b.label || '') + '" có trong mạch nhưng chưa có trong bài. Thiếu nó, ý này có bị nói quá không?' });
     });
   });
 

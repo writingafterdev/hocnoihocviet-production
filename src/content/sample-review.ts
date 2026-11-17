@@ -34,9 +34,9 @@ type Note = { sec: string; quote: string; label: string; text: string; chain?: s
 
 const NOTES: Record<'tr' | 'cc' | 'lr' | 'gra', Note[]> = {
   tr: [
-    { sec: B1, chain: B1, at: 4, quote: 'This makes them more open-minded and confident, which is a very good thing for society.', label: 'Kết đoạn chưa về điểm cuối', text: 'Mạch đi tới "cởi mở, tự tin" rồi dừng ở một lời khen chung cho xã hội. Điểm cuối trong dàn bài là **du lịch không còn là đặc quyền của người giàu**: câu cuối đoạn nên quay về đúng điều đó, vì đó là lý do bạn nói xu hướng này tích cực.',
-      task: { title: 'Chưa về điểm cuối', ask: ['Khi người trẻ đã cởi mở và tự tin hơn, điều đó nói gì về việc ai được đi du lịch bây giờ?', 'Trước đây chỉ ai mới đi nước ngoài được? Giờ thêm những ai?'], starter: 'This shows that travel is no longer…', model: 'This shows that seeing the world is no longer a privilege of the rich, but an opportunity open to ordinary young people.', vi: 'Điều này cho thấy đi khắp thế giới không còn là đặc quyền của người giàu, mà là cơ hội mở ra cho cả những người trẻ bình thường.', ok: 'Đoạn đã về đúng điểm cuối của mạch: du lịch không còn là đặc quyền của người giàu.' } },
-    { sec: B2, chain: B2, at: 2, quote: 'It also causes a lot of pollution.', label: 'Câu lặp, không thêm bước', text: 'Câu này nói lại "đốt nhiên liệu" bằng từ khác, không thêm bước nào. Trong mạch, bước còn thiếu là khí thải làm môi trường bị hại **ra sao, ở đâu**. Thay câu này bằng một hậu quả cụ thể.',
+    { sec: B1, chain: B1, at: 4, quote: 'This makes them more open-minded and confident, which is a very good thing for society.', label: 'Kết đoạn chưa về tác động', text: 'Mạch ý đi tới "cởi mở, tự tin" rồi dừng ở một lời khen chung cho xã hội. Tác động trong dàn bài là **du lịch không còn là đặc quyền của người giàu**: câu cuối đoạn nên quay về đúng điều đó, vì đó là lý do bạn nói xu hướng này tích cực.',
+      task: { title: 'Chưa về tác động', ask: ['Khi người trẻ đã cởi mở và tự tin hơn, điều đó nói gì về việc ai được đi du lịch bây giờ?', 'Trước đây chỉ ai mới đi nước ngoài được? Giờ thêm những ai?'], starter: 'This shows that travel is no longer…', model: 'This shows that seeing the world is no longer a privilege of the rich, but an opportunity open to ordinary young people.', vi: 'Điều này cho thấy đi khắp thế giới không còn là đặc quyền của người giàu, mà là cơ hội mở ra cho cả những người trẻ bình thường.', ok: 'Đoạn đã về đúng tác động của mạch ý: du lịch không còn là đặc quyền của người giàu.' } },
+    { sec: B2, chain: B2, at: 2, quote: 'It also causes a lot of pollution.', label: 'Câu lặp, không thêm bước', text: 'Câu này nói lại "đốt nhiên liệu" bằng từ khác, không thêm bước nào. Trong mạch ý, bước còn thiếu là khí thải làm môi trường bị hại **ra sao, ở đâu**. Thay câu này bằng một hậu quả cụ thể.',
       task: { title: 'Câu lặp ý', ask: ['Khí thải từ máy bay làm hại cụ thể điều gì, ở đâu, cho ai?', 'Nếu chỉ được thêm một hậu quả, hậu quả nào người đọc thấy rõ nhất?'], starter: 'These emissions add to…', model: 'These emissions add to global warming, which brings more floods and heatwaves to low-lying countries such as Vietnam.', vi: 'Lượng khí thải này làm Trái Đất nóng lên, kéo theo nhiều lũ lụt và nắng nóng hơn ở những nước thấp như Việt Nam.', ok: 'Câu mới thêm đúng bước còn thiếu: khí thải làm hại môi trường ra sao, cho ai.' } },
   ],
   cc: [
@@ -62,7 +62,7 @@ export function sampleReview(): EssayReview {
     key: draftsKey(SAMPLE_DRAFTS),
     source: 'sample',
     scores: { ...scores, band: bandOf(scores.tr, scores.cc, scores.lr, scores.gra) },
-    summary: 'Lập trường rõ và cả hai thân bài đều có mạch thật, nên bài đứng ở band 7. Task Response kéo điểm xuống nhiều nhất.',
+    summary: 'Lập trường rõ và cả hai thân bài đều có mạch ý thật, nên bài đứng ở band 7. Lập luận kéo điểm xuống nhiều nhất.',
     criteria: {
       tr: { why: 'Bài trả lời đúng câu hỏi tích cực hay tiêu cực, có lập trường rõ ở mở bài và kết bài, và có so hai bên.', gap: 'Chưa lên 7 vì thân bài 1 kết bằng một nhận xét chung và thân bài 2 có câu không thêm bước nào.', next: 'Kết mỗi đoạn bằng **điểm cuối** của mạch.' },
       cc: { why: 'Thứ tự đoạn hợp lý, có câu phản biện ở thân bài 2.', gap: 'Một từ nối sai quan hệ và một chữ trỏ mơ hồ.', next: 'Chọn từ nối theo đúng bước trong mạch.' },
@@ -72,7 +72,7 @@ export function sampleReview(): EssayReview {
     groups: (['tr', 'cc', 'lr', 'gra'] as const).map((id) => ({
       id, title: TITLE[id],
       items: NOTES[id].map((n, k): ReviewItem => ({
-        key: id + k, sectionId: n.sec, where: LABEL[n.sec] + (n.chain ? ' · Mạch ' + (n.chain === B1 ? 1 : 2) : ''),
+        key: id + k, sectionId: n.sec, where: LABEL[n.sec] + (n.chain ? ' · Mạch ý ' + (n.chain === B1 ? 1 : 2) : ''),
         ...(n.chain ? { chainId: n.chain } : {}), ...(n.at != null ? { at: n.at } : {}),
         word: n.quote, quote: n.quote, label: n.label, ...(n.fix ? { fix: n.fix } : {}), ...(n.task ? { task: n.task } : {}), snap: SAMPLE_DRAFTS[n.sec], text: n.text,
       })),

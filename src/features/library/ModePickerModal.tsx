@@ -72,7 +72,7 @@ export function ModePickerModal({ prompt, onClose, onStart, onResume, only }: { 
           <>
         <p id="mode-title" style={{ fontFamily: 'var(--font-sans)', fontSize: 15, fontWeight: 600, color: '#171717', margin: '0 0 14px' }}>Chọn chế độ làm bài</p>
         <div role="radiogroup" aria-labelledby="mode-title" style={{ display: 'flex', flexWrap: 'wrap', gap: 14, marginBottom: 22 }}>
-          <ModeOption kind="free" selected={mode === 'free'} onClick={() => setMode('free')} title="Tự viết" desc="Dựng một mạch cho mỗi thân bài (đề gợi ý sẵn một đầu), rồi viết bài với mạch nằm cạnh từng đoạn. Chấm TR / CC / LR / GRA khi nộp." />
+          <ModeOption kind="free" selected={mode === 'free'} onClick={() => setMode('free')} title="Tự viết" desc="Dựng một mạch ý cho mỗi thân bài (đề gợi ý sẵn một đầu), rồi viết bài với mạch ý nằm cạnh từng đoạn. Chấm TR / CC / LR / GRA khi nộp." />
           <ModeOption kind="guided" selected={mode === 'guided'} onClick={() => setMode('guided')} title="Chép mẫu" desc="Viết lại bài mẫu từng câu từ nghĩa tiếng Việt, chữ cái đầu và công cụ lập luận. Không chấm điểm." disabled={!SAMPLE_IDS.has(prompt.id)} badge={SAMPLE_IDS.has(prompt.id) ? undefined : 'Chưa có bài mẫu'} />
         </div>
           </>

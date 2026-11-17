@@ -86,7 +86,7 @@ export function AttemptHistory() {
                 <div style={{ width: 132, flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 2, textAlign: 'center', padding: 8 }}>
                   {band != null ? (
                     <span style={{ fontSize: 34, fontWeight: 600, letterSpacing: '-0.02em', lineHeight: 1, color: '#2F62C4', fontVariantNumeric: 'tabular-nums' }}>{band.toFixed(1)}</span>
-                  ) : <span style={{ fontSize: 13, fontWeight: 600, color: '#737373' }}>{words ? 'Chưa nộp' : 'Đang dựng mạch'}</span>}
+                  ) : <span style={{ fontSize: 13, fontWeight: 600, color: '#737373' }}>{words ? 'Chưa nộp' : 'Đang dựng mạch ý'}</span>}
                 </div>
               </Link>
             );

@@ -117,7 +117,7 @@ export function AttemptWorkspace({ attemptId }: { attemptId: string }) {
   // ② Viết bài opens only through "Viết bài" on ① Dựng mạch (two built chains, then the Tự viết / có hướng dẫn choice),
   // or once the essay has started. Until then the step is shown locked.
   const started = essayOpen(attempt);
-  const steps = [{ label: '① Dựng mạch', href: base + '/chains' }, { label: '② Viết bài', href: base + '/essay', locked: !started, title: 'Dựng xong ít nhất ' + NEED + ' mạch rồi bấm "Viết bài".' }];
+  const steps = [{ label: '① Dựng mạch ý', href: base + '/chains' }, { label: '② Viết bài', href: base + '/essay', locked: !started, title: 'Dựng xong ít nhất ' + NEED + ' mạch rồi bấm "Viết bài".' }];
   const left = (back: string, label: string, k: number) => (
     <div style={{ display: 'flex', alignItems: 'center', gap: 18 }}>
       <Link href={back} className="cl-link" style={backLinkStyle}><ClIcon name="left" size={14} />{label}</Link>
@@ -141,7 +141,7 @@ export function AttemptWorkspace({ attemptId }: { attemptId: string }) {
             }} />
         ) : (
           <WriteScreen prompt={prompt} chains={attempt.chains} setChains={setChains} essay={attempt.essay} setEssay={setEssay}
-            toolbarLeft={left(base + '/chains', 'Dựng mạch', 1)} chainsHref={base + '/chains'} />
+            toolbarLeft={left(base + '/chains', 'Dựng mạch ý', 1)} chainsHref={base + '/chains'} />
         )}
       </div>
     </div>

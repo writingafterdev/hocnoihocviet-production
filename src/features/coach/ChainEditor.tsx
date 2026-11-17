@@ -221,7 +221,7 @@ export function ChainEditor(p: ChainEditorProps) {
           <Rail center={CENTER.step} jump={jumpAt(i)} dot={plainDot(s.trim() ? CL.ink3 : CL.ink2)} track={!!s.trim()} ok={green} />
           <div className={'co-content' + tinted(i)} style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'flex-start', gap: 8, padding: '6px 10px', margin: '2px 0', borderRadius: 10, ...tint(i), transition: 'background-color .3s' }}>
             <textarea ref={(el) => { refs.current[i] = el; }} className="co-ta" value={s} rows={1} aria-label={'Bước ' + (i + 1)}
-              placeholder={p.stepQuestion?.(i) || (i === 0 ? p.firstQuestion || 'Điểm đầu chạm tới ai, ra sao?' : 'Rồi chuyện gì xảy ra tiếp?')}
+              placeholder={p.stepQuestion?.(i) || (i === 0 ? p.firstQuestion || 'Chuyện này chạm tới ai, ra sao?' : 'Rồi chuyện gì xảy ra tiếp?')}
               onFocus={() => { lastStep.current = i; p.onFocusStep?.(i); }}
               onChange={(e) => edit(i, e.target.value)}
               onPaste={(e) => { if (p.blockPaste?.(e.clipboardData.getData('text'))) { e.preventDefault(); p.onBlockedPaste?.(); } }}

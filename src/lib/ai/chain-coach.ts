@@ -89,7 +89,7 @@ const KIND_VI: Record<ChainKind, string> = {
 export function describeChain(c: ChainIn) {
   const mid = c.steps.map((s) => s.trim()).filter(Boolean);
   const lines = ['MẠCH CỦA HỌC SINH', 'Loại mạch: ' + KIND_VI[c.kind] + (c.kind === 'impact' && c.tone ? ' · tông: ' + (c.tone === 'cost' ? 'tác hại' : 'lợi ích') : '')];
-  if (c.sentence) lines.push('Câu cần chứng minh: ' + c.sentence);
+  if (c.sentence) lines.push('Câu chủ đề: ' + c.sentence);
   if (c.stakeholder) lines.push('Stakeholder trong câu: ' + c.stakeholder);
   lines.push('vị trí 0 · điểm đầu: ' + (c.start.trim() || '(trống)'));
   mid.forEach((s, i) => lines.push('vị trí ' + (i + 1) + ': ' + s));

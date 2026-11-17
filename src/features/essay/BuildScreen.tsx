@@ -14,6 +14,7 @@ import { useStepHelp } from '../prove/StepHelp';
 import { chainIn, endOf, KIND_ASK, kindOf, middleOf, newBody, questionOf, startOf, withEnds, withMiddle } from './model';
 import { Chip } from '@/components/base/badges/chip';
 import { ProBeam } from '@/components/ui/pro-beam';
+import { ENDS } from '../coach/ends';
 
 export interface BuildProps {
   prompt: Prompt;
@@ -59,10 +60,10 @@ function ModeDialog({ onPick, onClose }: { onPick: (m: 'free' | 'guided') => voi
     <div role="dialog" aria-modal="true" aria-label="Chọn cách viết" onClick={onClose} onKeyDown={(e) => { if (e.key === 'Escape') onClose(); }}
       style={{ position: 'fixed', inset: 0, zIndex: 60, background: 'rgba(20,20,19,.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
       <div onClick={(e) => e.stopPropagation()} style={{ width: 640, maxWidth: '100%', boxSizing: 'border-box', background: '#fff', borderRadius: 20, padding: '28px 28px 24px', display: 'flex', flexDirection: 'column', gap: 16 }}>
-        <p style={{ margin: 0, fontFamily: CL.sans, fontSize: 17, fontWeight: 600, lineHeight: 1.4, color: CL.ink }}>Mạch đã xong. Bạn muốn viết thế nào?</p>
+        <p style={{ margin: 0, fontFamily: CL.sans, fontSize: 17, fontWeight: 600, lineHeight: 1.4, color: CL.ink }}>Mạch ý đã xong. Bạn muốn viết thế nào?</p>
         <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap' }}>
-          {opt('free', picFree, 'Tự viết', 'Viết cả bài với mạch nằm cạnh, rồi nộp để chấm theo bốn tiêu chí.')}
-          {opt('guided', picGuided, 'Viết có hướng dẫn', 'Viết từng câu theo mạch của bạn. Mỗi câu có gợi ý cấu trúc và từ vựng; vẫn bí thì bật gợi ý chi tiết.')}
+          {opt('free', picFree, 'Tự viết', 'Viết cả bài với mạch ý nằm cạnh, rồi nộp để chấm theo bốn tiêu chí.')}
+          {opt('guided', picGuided, 'Viết có hướng dẫn', 'Viết từng câu theo mạch ý của bạn. Mỗi câu có gợi ý cấu trúc và từ vựng; vẫn bí thì bật gợi ý chi tiết.')}
         </div>
         <button type="button" autoFocus className="cl-btn cl-primary" onClick={() => onPick(mode)} style={{ ...primaryBtn, height: 46, justifyContent: 'center' }}>Bắt đầu viết</button>
       </div>
@@ -111,10 +112,10 @@ function BodyCard({ prompt, chain, num, canDelete, onChange, onDelete, check, on
     return (
       <div className={isMine ? 'cl-field' : undefined} style={box(isMine, !!value.trim())}>
         <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <ClLabel color={isMine ? CL.ink : CL.ink5}>{which === 'start' ? 'Điểm đầu' : 'Điểm cuối'}{isMine ? ' · bạn viết' : ''}</ClLabel>
+          <ClLabel color={isMine ? CL.ink : CL.ink5}>{ENDS[kind][which]}{isMine ? ' · bạn viết' : ''}</ClLabel>
           {!isMine && <span style={{ borderRadius: 5, padding: '2px 6px', background: '#E4F5FA', color: '#17667A', fontFamily: CL.sans, fontSize: 12, fontWeight: 500 }}>Gợi ý từ đề</span>}
         </span>
-        <textarea className="co-ta" value={value} rows={1} autoFocus={isMine && !value} aria-label={which === 'start' ? 'Điểm đầu' : 'Điểm cuối'} placeholder={isMine ? info.ph : ''}
+        <textarea className="co-ta" value={value} rows={1} autoFocus={isMine && !value} aria-label={ENDS[kind][which]} placeholder={isMine ? info.ph : ''}
           onChange={(e) => setEnd(which, e.target.value)} onFocus={onFocus}
           onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) { e.preventDefault(); build(); } }}
           style={fieldStyle} />
@@ -150,8 +151,8 @@ function BodyCard({ prompt, chain, num, canDelete, onChange, onDelete, check, on
           <div style={{ padding: '18px 26px 12px 26px' }}>
             <ChainEditor
               start={start} end={end}
-              startLabel={'Điểm đầu · ' + (mine === 'start' ? 'bạn viết' : 'gợi ý từ đề')}
-              endLabel={'Điểm cuối · ' + (mine === 'end' ? 'bạn viết' : 'gợi ý từ đề')}
+              startLabel={ENDS[kind].start + ' · ' + (mine === 'start' ? 'bạn viết' : 'gợi ý từ đề')}
+              endLabel={ENDS[kind].end + ' · ' + (mine === 'end' ? 'bạn viết' : 'gợi ý từ đề')}
               steps={middle.length ? middle : ['']} setSteps={(m) => onChange(withMiddle(chain, m))}
               notes={notes} active={focused ? active : null} onPick={(k) => { onFocus(); onPick(k); }}
               hint={coach.hint} asking={coach.asking} onHint={coach.askHint} onCloseHint={coach.closeHint} hideHint
@@ -163,7 +164,7 @@ function BodyCard({ prompt, chain, num, canDelete, onChange, onDelete, check, on
           </div>
           <div style={{ borderTop: '1px solid ' + CL.ink1, background: CL.panel, padding: '10px 22px', display: 'flex', alignItems: 'center', gap: 8 }}>
             <button type="button" className="cl-btn cl-link" onClick={() => onChange({ ...chain, built: false })} style={{ ...miniBtn, border: 'none', background: 'transparent', color: CL.ink5 }}>Đổi hai đầu</button>
-            {coach.result && !coach.fresh && <span style={{ fontFamily: CL.sans, fontSize: 11.5, color: CL.ink4 }}>Bạn đã sửa mạch sau lần kiểm tra trước.</span>}
+            {coach.result && !coach.fresh && <span style={{ fontFamily: CL.sans, fontSize: 11.5, color: CL.ink4 }}>Bạn đã sửa mạch ý sau lần kiểm tra trước.</span>}
             <ProBeam className="ml-auto"><button type="button" className="cl-btn cl-add" onClick={() => { onFocus(); onPick(null); coach.runCheck(); }} disabled={!filled || coach.checking || coach.fresh}
               style={{ ...miniBtn, marginLeft: 'auto', color: CL.ink, opacity: !filled || coach.checking || coach.fresh ? 0.4 : 1 }}>{coach.checking ? 'Đang kiểm tra…' : coach.result ? 'Kiểm tra lại' : 'Kiểm tra mạch'}</button></ProBeam>
           </div>
@@ -192,10 +193,10 @@ export function BuildScreen({ prompt, chains, setChains, checks, setCheck, toolb
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10, minHeight: 42, paddingBottom: 12 }}>
         {toolbarLeft}
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          {!started && <Chip variant="caption" color={ready >= NEED ? 'lime' : 'gray'}>{Math.min(ready, NEED)}/{NEED} mạch đã dựng</Chip>}
+          {!started && <Chip variant="caption" color={ready >= NEED ? 'lime' : 'gray'}>{Math.min(ready, NEED)}/{NEED} mạch ý đã dựng</Chip>}
           <button type="button" className="cl-btn" onClick={() => setChat(!chat)} aria-pressed={chat} style={toolbarBtn(chat)}>Dịch</button>
           <button type="button" className="cl-btn cl-primary" onClick={() => (started ? onNext() : setPicking(true))} disabled={!canWrite}
-            title={canWrite ? '' : 'Dựng xong ít nhất ' + NEED + ' mạch (có điểm đầu, điểm cuối và một bước ở giữa) để viết bài.'}
+            title={canWrite ? '' : 'Dựng xong ít nhất ' + NEED + ' mạch ý (đủ hai đầu và ít nhất một bước ở giữa) để viết bài.'}
             style={{ ...primaryBtn, opacity: canWrite ? 1 : 0.4 }}>Viết bài<ClIcon name="right" size={13} /></button>
         </div>
       </div>
