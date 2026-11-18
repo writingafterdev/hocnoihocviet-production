@@ -267,7 +267,7 @@ export function ProveDrill() {
                       <div className="co-rise" style={{ borderTop: '1px solid ' + CL.ink1, background: CL.panel, padding: '14px 22px', display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
                         <span style={{ marginRight: 'auto', fontFamily: CL.sans, fontSize: 14, fontWeight: 600, color: CL.ink }}>Viết mạch ý này thành một đoạn văn</span>
                         <button type="button" className="cl-btn" onClick={() => setPara('free')} style={toolbarBtn(false)}>Tự viết</button>
-                        <button type="button" className="cl-btn cl-primary" onClick={() => setPara('guided')} style={primaryBtn}>Viết có hướng dẫn</button>
+                        <ProBeam><button type="button" className="cl-btn cl-primary" onClick={() => setPara('guided')} style={primaryBtn}>Viết có hướng dẫn</button></ProBeam>
                       </div>
                     )}
                   </>

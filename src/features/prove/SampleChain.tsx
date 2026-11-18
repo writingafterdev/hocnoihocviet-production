@@ -1,5 +1,6 @@
 'use client';
 
+import { ProBeam } from '@/components/ui/pro-beam';
 import { CL } from '../chainlab/constants';
 import type { SampleStep } from '@/lib/ai/chain-coach';
 import { toolbarBtn } from '../chainlab/ui/primitives';
@@ -70,7 +71,7 @@ export function SampleChain({ start, end, steps, hiding, peek, onFix, onPeek }: 
       <div style={{ borderTop: '1px solid ' + CL.ink1, background: CL.panel, padding: '12px 16px', display: 'flex', justifyContent: 'flex-end' }}>
         {hiding
           ? <button type="button" className="cl-btn" onClick={onPeek} aria-pressed={peek} style={toolbarBtn(false)}>{peek ? 'Ẩn các bước mẫu' : 'Hiện các bước mẫu'}</button>
-          : <button type="button" className="cl-btn cl-primary" onClick={onFix} style={primaryBtn}>Sửa mạch ý</button>}
+          : <ProBeam><button type="button" className="cl-btn cl-primary" onClick={onFix} style={primaryBtn}>Sửa mạch ý</button></ProBeam>}
       </div>
     </section>
   );
