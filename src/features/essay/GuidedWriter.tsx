@@ -10,6 +10,25 @@ import type { Chain } from '../chainlab/types';
 import { primaryBtn } from '../coach/ui';
 import type { EssaySection } from '../desk/scoring';
 import { hint, wordStates, words as splitWords } from '../guided/matching';
+import { Skeleton } from '@/components/base/skeleton/skeleton';
+import { ThinkingLoader } from '@/components/ui/thinking-loader';
+
+const Bone = ({ w = '100%', h = 11 }: { w?: number | string; h?: number }) => <Skeleton shape="text" style={{ width: w, height: h }} />;
+
+/** While the sentences are being written: the shape of the first sentence card and the box under it. */
+function GuidedBone() {
+  return (
+    <div style={{ padding: '18px 22px', display: 'flex', flexDirection: 'column', gap: 14 }}>
+      <ThinkingLoader phases={['Đang đọc mạch ý', 'Đang soạn từng câu', 'Đang chọn từ vựng']} interval={2200} />
+      <div className="co-skel-in" style={{ borderRadius: 12, border: '1px solid #DCE7F7', background: '#F7F9FD', padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <span style={{ display: 'flex', gap: 8 }}><Bone w={64} /><Bone w="45%" h={13} /></span>
+        <span style={{ display: 'flex', flexDirection: 'column', gap: 7 }}><Bone w={56} /><Bone w="88%" h={14} /><Bone w="62%" h={14} /></span>
+        <span style={{ display: 'flex', gap: 6 }}><Bone w={84} h={26} /><Bone w={108} h={26} /><Bone w={72} h={26} /></span>
+      </div>
+      <div className="co-skel-in" style={{ height: 84, borderRadius: 12, border: '1px solid ' + CL.ink1 }} />
+    </div>
+  );
+}
 
 const label: React.CSSProperties = { fontFamily: CL.sans, fontSize: 12, fontWeight: 500, color: CL.ink5 };
 const nowrap: React.CSSProperties = { whiteSpace: 'nowrap', flexShrink: 0 };
@@ -72,7 +91,7 @@ export function GuidedWriter({ sections, essay, setEssay, plan, error, loading, 
 
   if (!plan) {
     return (
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 12, padding: 24, textAlign: 'center' }}>
+      <div style={error ? { flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 12, padding: 24, textAlign: 'center' } : { flex: 1, display: 'flex', flexDirection: 'column' }}>
         {error ? (
           <>
             <span role="alert" style={{ fontFamily: CL.sans, fontSize: 13, color: CL.redText }}>{error}</span>
@@ -82,7 +101,7 @@ export function GuidedWriter({ sections, essay, setEssay, plan, error, loading, 
             </span>
           </>
         ) : (
-          <span role="status" style={label}>{loading ? 'Đang soạn từng câu theo mạch ý của bạn…' : ''}</span>
+          loading ? <GuidedBone /> : null
         )}
       </div>
     );

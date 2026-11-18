@@ -1,5 +1,6 @@
 'use client';
 
+import { WorkspaceBone } from '@/components/ui/page-bone';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
@@ -88,6 +89,7 @@ export function AttemptWorkspace({ attemptId }: { attemptId: string }) {
     return (
       <div style={{ height: '100%', background: '#fff', display: 'flex', flexDirection: 'column' }}>
         <WorkspaceHeader />
+        {status === 'loading' && <WorkspaceBone />}
         {status === 'error' && (
           <main style={{ maxWidth: 520, margin: '96px auto 0', padding: '0 24px', fontFamily: 'var(--font-sans)', color: '#171717' }}>
             <h1 style={{ fontSize: 22, fontWeight: 600, margin: '0 0 10px' }}>Chưa tải được bài viết</h1>

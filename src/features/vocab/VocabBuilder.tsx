@@ -9,6 +9,7 @@ import { Checkbox } from '@/components/base/checkbox/checkbox';
 import { SegmentedControl, SegmentedControlItem } from '@/components/base/segmented-control/segmented-control';
 import { GW_VOCAB_PALETTE, type GuidedSample } from '../guided/data';
 import { GuidedWriting } from '../guided/GuidedWriting';
+import { GuidedBone } from '../guided/GuidedBone';
 import { AI_ERROR_TEXT, AiRequestError, postAi } from '../ai/request';
 import { SignedOutError } from '../attempts/store';
 import { topicsFor } from '@/lib/vocab-topics';
@@ -133,9 +134,14 @@ function SavedRow({ it, topics, onTopic, onDelete, onEnrich }: { it: MinePhrase;
             ))}
           </ul>
         </td>
+      </>) : filling === 'busy' ? (<>
+        {/* Being written: the shape of the meaning, collocations and examples. */}
+        <td style={td} aria-busy="true"><SkeletonText lines={3} lineClassName="h-3" /></td>
+        <td style={td} aria-busy="true"><SkeletonText lines={2} lineClassName="h-3" /></td>
+        <td style={td} aria-busy="true"><span role="status" className="sr-only">Đang viết</span><SkeletonText lines={3} lineClassName="h-3" /></td>
       </>) : (
         <td style={td} colSpan={3}>
-          <button type="button" className="cl-btn cl-link" onClick={fill} disabled={filling === 'busy'} style={{ fontSize: 13, fontWeight: 600, color: '#2B6BE8' }}>{filling === 'busy' ? 'Đang viết…' : filling === 'error' ? 'Chưa được, thử lại' : 'Bổ sung chi tiết'}</button>
+          <button type="button" className="cl-btn cl-link" onClick={fill} style={{ fontSize: 13, fontWeight: 600, color: '#2B6BE8' }}>{filling === 'error' ? 'Chưa được, thử lại' : 'Bổ sung chi tiết'}</button>
           <span style={{ marginLeft: 10, fontSize: 12.5, color: VB.ink4 }}>IPA, loại từ, cách dùng, collocation và ví dụ</span>
         </td>
       )}
@@ -385,6 +391,8 @@ export function VocabBuilder({ onBack }: { onBack: () => void }) {
     }
     await paragraph(groups, 0, null);
   };
+
+  if (making) return shell(<GuidedBone phases={['Đang đọc các cụm bạn chọn', 'Đang viết đoạn mẫu', 'Đang chia câu']} />);
 
   if (practice) {
     const all = skill.topics.flatMap((t) => t.items);

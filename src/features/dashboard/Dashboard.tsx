@@ -1,5 +1,6 @@
 'use client';
 
+import { Skeleton, SkeletonText } from '@/components/base/skeleton/skeleton';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useRef, useState } from 'react';
@@ -155,7 +156,11 @@ export function Dashboard() {
               <Link href="/attempts" className="inline-flex items-center gap-0.5 hover:text-ink">Bài đang viết<ChevronRight className="size-3.5" /></Link>
             </div>
             <div className="flex flex-col gap-2">
-              {attempts === null ? <Empty>Đang tải…</Empty>
+              {attempts === null ? [0, 1].map((i) => (
+                <div key={i} aria-hidden className="flex items-center gap-3 rounded-xl bg-white p-2 pr-4 shadow-ring">
+                  <Skeleton shape="text" className="size-14 rounded-lg" />
+                  <span className="flex flex-1 flex-col gap-2"><Skeleton shape="text" className="h-3.5 w-3/4" /><Skeleton shape="text" className="h-3 w-1/3" /></span>
+                </div>))
                 : recent.length === 0 ? <Empty>Chưa có bài nào. Chọn một đề ở trên để bắt đầu.</Empty>
                 : recent.map((a) => {
                   const p = findPrompt(a.promptId);
@@ -185,7 +190,7 @@ export function Dashboard() {
               {PRACTICE.map((p) => <Row key={p.href} href={p.href} icon={<NavIcon name={p.icon} />}>{p.label}</Row>)}
             </Column>
             <Column title="Từ vựng đã lưu" href="/vocab">
-              {words === null ? <Empty>Đang tải…</Empty>
+              {words === null ? <div aria-hidden className="py-3"><SkeletonText lines={3} /></div>
                 : saved.length === 0 ? <Empty>Chưa lưu từ nào. Lưu từ khi dịch hoặc xin gợi ý từ vựng.</Empty>
                 : saved.map((w) => <Row key={w.id} href="/vocab" note={w.vi}>{w.en}</Row>)}
             </Column>
