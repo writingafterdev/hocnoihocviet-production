@@ -6,6 +6,7 @@ import { CL } from '../chainlab/constants';
 import { ClIcon, ClLabel } from '../chainlab/ui/primitives';
 import { AI_ERROR_TEXT, AiRequestError, postAi } from '../ai/request';
 import { Chip } from '@/components/base/badges/chip';
+import { ThinkingLoader } from '@/components/ui/thinking-loader';
 import type { BankPhrase } from './useCoach';
 
 type Dir = 'vi-en' | 'en-vi';
@@ -163,7 +164,7 @@ export function TranslatorChat({ ideas = [], onClose, skill = 'task2', vocab }: 
                       )}
                     </div>
                   ) : (
-                    <div aria-live="polite" style={{ borderRadius: '4px 16px 16px 16px', border: '1px solid ' + CL.ink1, padding: '9px 13px', fontFamily: CL.sans, fontSize: 12.5, color: CL.ink4 }}>Đang tìm từ vựng…</div>
+                    <div style={{ alignSelf: 'flex-start' }}><ThinkingLoader size="sm" phases={['Đang đọc câu của bạn', 'Đang tìm từ vựng']} interval={1800} /></div>
                   )
                 ) : m.translation != null ? (
                   <>
@@ -178,7 +179,7 @@ export function TranslatorChat({ ideas = [], onClose, skill = 'task2', vocab }: 
                 ) : m.error ? (
                   <div style={{ borderRadius: '4px 16px 16px 16px', background: CL.redSoft, padding: '9px 13px', fontFamily: CL.sans, fontSize: 12.5, lineHeight: 1.5, color: CL.redText }}>{m.error}</div>
                 ) : (
-                  <div aria-live="polite" style={{ borderRadius: '4px 16px 16px 16px', border: '1px solid ' + CL.ink1, padding: '9px 13px', fontFamily: CL.sans, fontSize: 12.5, color: CL.ink4 }}>Đang dịch…</div>
+                  <div style={{ alignSelf: 'flex-start' }}><ThinkingLoader size="sm" phases={['Đang đọc câu của bạn', 'Đang dịch']} interval={1800} /></div>
                 )}
               </div>
             </div>

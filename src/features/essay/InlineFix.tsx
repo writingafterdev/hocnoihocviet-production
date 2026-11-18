@@ -5,6 +5,7 @@ import { CL } from '../chainlab/constants';
 import { primaryBtn } from '../coach/ui';
 import { CRITERION_STYLE } from '../desk/scoring';
 import { hint, wordStates, words as splitWords } from '../guided/matching';
+import { ThinkingLoader } from '@/components/ui/thinking-loader';
 import type { CheckOut } from './fix-api';
 import type { FixTask } from './FixFlow';
 
@@ -146,7 +147,7 @@ export function FixBody({ task, edit, setEdit, solved, verdict, checking, error,
   return (
     <>
       <div style={{ borderRadius: 10, background: '#F7F9FD', border: '1px solid #DCE7F7', padding: '10px 12px', display: 'flex', flexDirection: 'column', gap: 8 }}>
-        {preparing && <span role="status" style={label}>Đang chuẩn bị cách sửa…</span>}
+        {preparing && <span style={{ alignSelf: 'flex-start' }}><ThinkingLoader size="sm" phases={['Đang đọc chỗ cần sửa', 'Đang chuẩn bị cách sửa']} interval={1800} /></span>}
         {/* Newer reviews say what to do ("Cách sửa"); older ones asked a guiding question instead. */}
         {task.how
           ? <span style={{ fontFamily: CL.sans, fontSize: 13.5, fontWeight: 600, lineHeight: 1.45, color: CL.ink }}><span style={{ fontWeight: 500, color: CL.ink5 }}>Cách sửa: </span>{task.how}</span>
@@ -182,7 +183,9 @@ export function FixBody({ task, edit, setEdit, solved, verdict, checking, error,
       {/* Fixed: nothing left to do here. Two layers of help only: the guiding question, then "Gợi ý thêm" for the first-letter hints. */}
       {!solved && <span style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
         {model && !hints && <button type="button" className="cl-btn" onClick={() => setHints(true)} style={smallBtn}>Gợi ý thêm</button>}
-        <button type="button" className="cl-btn cl-primary" onClick={onCheck} disabled={checking || !edit.trim()} style={{ ...primaryBtn, height: 32, fontSize: 13, marginLeft: 'auto', opacity: checking || !edit.trim() ? 0.45 : 1 }}>{checking ? 'Đang kiểm tra…' : 'Kiểm tra'}</button>
+        {checking
+          ? <span style={{ marginLeft: 'auto' }}><ThinkingLoader size="sm" phases={['Đang đọc câu bạn sửa', 'Đang so với nhận xét']} interval={1800} /></span>
+          : <button type="button" className="cl-btn cl-primary" onClick={onCheck} disabled={!edit.trim()} style={{ ...primaryBtn, height: 32, fontSize: 13, marginLeft: 'auto', opacity: !edit.trim() ? 0.45 : 1 }}>Kiểm tra</button>}
       </span>}
     </>
   );

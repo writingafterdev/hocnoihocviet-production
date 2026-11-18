@@ -18,7 +18,10 @@ import { Clamp } from './Clamp';
 import { GuidedHeader, GuidedWriter, useGuidedPlan } from './GuidedWriter';
 import { MiniChain } from './MiniChain';
 import { Skeleton } from '@/components/base/skeleton/skeleton';
-import { AiStatus } from '@/components/ui/ai-status';
+import { ScanText, wordCount as scanWords } from '@/components/ui/scan-text';
+import { ThinkingLoader } from '@/components/ui/thinking-loader';
+
+const GRADING_PHASES = ['Đang đọc bài', 'Đang chấm lập luận', 'Đang chấm độ mạch lạc', 'Đang chấm từ vựng', 'Đang chấm ngữ pháp', 'Đang viết nhận xét'];
 import { ProBeam } from '@/components/ui/pro-beam';
 
 export interface WriteProps {
@@ -117,7 +120,7 @@ function ReviewBone() {
           <Bone w="76%" h={10} /><Bone /><Bone w="94%" /><Bone w="58%" h={10} /><Bone w="82%" />
         </div>
       </section>
-      <AiStatus state="analyzing" states={{ analyzing: { label: 'Đang chấm bài', active: true } }} className="text-[13px]" />
+      <ThinkingLoader phases={GRADING_PHASES} interval={2600} />
       <CommentBone /><CommentBone /><CommentBone />
     </>
   );
@@ -314,6 +317,11 @@ export function WriteScreen({ prompt, chains, setChains, essay, setEssay, toolba
     : active && active.item.chainId === c.id ? { at: active.item.at ?? null, bg: CRITERION_STYLE[active.crit].soft } : null);
   const scores = panel?.scores;
 
+  // While grading (or re-grading) the essay is read as one text, section after section (ScanText).
+  const readCounts = sections.map((x) => scanWords(essay.drafts[x.id] || ''));
+  const readTotal = readCounts.reduce((t, n) => t + n, 0);
+  const readAt = (id: string) => { const k = sections.findIndex((x) => x.id === id); return readCounts.slice(0, k).reduce((t, n) => t + n, 0); };
+
   const paragraph = (s: EssaySection) => {
     const text = essay.drafts[s.id] || '';
     const wc = wordCount(text);
@@ -328,7 +336,9 @@ export function WriteScreen({ prompt, chains, setChains, essay, setEssay, toolba
           <span style={{ marginLeft: 'auto', fontFamily: CL.sans, fontSize: 11, fontWeight: 600, color: wc >= range[0] && wc <= range[1] ? CL.green : CL.ink4 }}>{wc} từ</span>
         </span>
         <div style={{ borderRadius: 12, border: '1px solid ' + CL.ink2, background: '#fff', padding: '14px 18px' }}>
-          {editing ? (
+          {sending && text.trim() ? (
+            <p style={{ margin: 0, whiteSpace: 'pre-wrap', fontFamily: CL.serif, fontSize: 15, lineHeight: 1.75, color: CL.ink8 }}><ScanText text={text} offset={readAt(s.id)} total={readTotal} /></p>
+          ) : editing ? (
             <textarea className="co-ta" value={text} readOnly={sending} onChange={(e) => setDraft(s.id, e.target.value)} onFocus={() => setFocus(s.id)} rows={3} placeholder={s.placeholder} aria-label={s.label}
               style={{ display: 'block', width: '100%', minHeight: 72, resize: 'none', border: 'none', outline: 'none', background: 'transparent', padding: 0, fontFamily: CL.serif, fontSize: 15, lineHeight: 1.75, color: CL.ink8 }} />
           ) : (
@@ -362,6 +372,7 @@ export function WriteScreen({ prompt, chains, setChains, essay, setEssay, toolba
           <button type="button" className="cl-btn" onClick={() => setChat(!chat)} aria-pressed={chat} style={toolbarBtn(chat)}>Dịch</button>
           {editing
             ? <ProBeam><button type="button" className="cl-btn cl-primary" onClick={() => submit()} disabled={sending || !words || guidedOn} style={{ ...primaryBtn, opacity: sending || !words || guidedOn ? 0.4 : 1 }}>{sending ? 'Đang chấm…' : review ? 'Nộp lại' : 'Nộp bài'}</button></ProBeam>
+            : sending ? <ProBeam><button type="button" className="cl-btn cl-primary" disabled style={{ ...primaryBtn, opacity: 0.45 }}>Đang chấm…</button></ProBeam>
             : tasks.length ? <>
               <span style={{ fontFamily: CL.sans, fontSize: 12.5, color: CL.ink5, marginRight: 4 }}>Đã sửa <b style={{ color: CL.ink }}>{solvedN}</b> / {tasks.length}</span>
               <ProBeam><button type="button" className="cl-btn cl-primary" onClick={resubmitFix} disabled={sending || !solvedN} style={{ ...primaryBtn, opacity: sending || !solvedN ? 0.45 : 1 }}>{sending ? 'Đang chấm…' : 'Nộp lại'}</button></ProBeam>
@@ -470,7 +481,7 @@ export function WriteScreen({ prompt, chains, setChains, essay, setEssay, toolba
             </section>
           )}
           {panel && (panel.loading?.includes(tab)
-            ? <><span role="status" style={{ fontFamily: CL.sans, fontSize: 12, fontWeight: 500, color: CL.ink5 }}>Đang viết nhận xét…</span><CommentBone /><CommentBone /></>
+            ? <><span style={{ alignSelf: 'flex-start' }}><ThinkingLoader size="sm" phases={['Đang viết nhận xét']} /></span><CommentBone /><CommentBone /></>
             : <ClLabel>{tabNotes.length ? tabNotes.length + ' nhận xét' : 'Không có nhận xét'}</ClLabel>)}
           {panel && tabNotes.map((note) => {
             const on = active === note, st = CRITERION_STYLE[note.crit];

@@ -16,7 +16,8 @@ import { planTasks, type FixTask } from '../essay/FixFlow';
 import { GuidedHeader, GuidedWriter, useGuidedPlan } from '../essay/GuidedWriter';
 import { applyEdits, FixCard, FixParagraph, matchesFix } from '../essay/InlineFix';
 import { Chip } from '@/components/base/badges/chip';
-import { AiStatus } from '@/components/ui/ai-status';
+import { ScanText } from '@/components/ui/scan-text';
+import { ThinkingLoader } from '@/components/ui/thinking-loader';
 import { ProBeam } from '@/components/ui/pro-beam';
 
 const SECTIONS = [{ id: 'para', label: 'Đoạn văn', guide: '', placeholder: '' }];
@@ -148,7 +149,10 @@ export function DrillParagraph({ s, prompt, steps, guided: startGuided, onBack, 
             ? <GuidedWriter sections={SECTIONS} essay={essay} setEssay={setEssay} plan={essay.guided?.plan || null} error={plan.error} loading={plan.loading} retry={plan.retry} />
             : (
               <div className="cl-scroll" style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: '18px 22px' }}>
-                {review
+                {reviewing && text.trim()
+                  // Being read by the AI: the paragraph fades and its words come into view one by one.
+                  ? <p style={{ margin: 0, whiteSpace: 'pre-wrap', fontFamily: CL.serif, fontSize: 15.5, lineHeight: 1.8, color: CL.ink8 }}><ScanText text={text} /></p>
+                  : review
                   ? <p style={{ margin: 0, whiteSpace: 'pre-wrap', fontFamily: CL.serif, fontSize: 15, lineHeight: 1.8, color: CL.ink8 }}><FixParagraph text={text} tasks={review.tasks} edits={review.edits} open={open} onOpen={setOpen} /></p>
                   : <textarea className="co-ta" autoFocus value={text} readOnly={reviewing} onChange={(e) => { const v = e.target.value; setEssay((x) => ({ ...x, drafts: { para: v } })); }} aria-label="Đoạn văn"
                     placeholder="Câu chủ đề, rồi đi theo mạch ý bên trái, lần lượt từng bước."
@@ -161,7 +165,7 @@ export function DrillParagraph({ s, prompt, steps, guided: startGuided, onBack, 
           <aside className="cl-scroll" style={{ minHeight: 0, overflowY: chat ? 'hidden' : 'auto', display: 'flex', flexDirection: 'column', gap: 12, padding: 2 }}>
             {chat ? <TranslatorChat onClose={() => setChat(false)} />
               : reviewing ? (
-                <section style={{ ...card, padding: '18px 20px', gap: 10 }}><ClLabel color={CL.ink}>Nhận xét</ClLabel><AiStatus state="analyzing" states={{ analyzing: { label: 'Đang đọc đoạn văn', active: true } }} className="text-[13px]" /></section>
+                <section style={{ ...card, padding: '18px 20px', gap: 12, alignItems: 'flex-start' }}><ClLabel color={CL.ink}>Nhận xét</ClLabel><ThinkingLoader phases={['Đang đọc đoạn văn', 'Đang so với mạch ý', 'Đang tìm chỗ cần sửa', 'Đang viết nhận xét']} interval={2400} /></section>
               ) : review && (review.tasks.length ? <>
                 <ClLabel>{review.tasks.length} nhận xét về lập luận và độ mạch lạc</ClLabel>
                 {review.tasks.map((t) => (
