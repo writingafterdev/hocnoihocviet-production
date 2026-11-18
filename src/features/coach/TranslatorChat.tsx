@@ -164,7 +164,7 @@ export function TranslatorChat({ ideas = [], onClose, skill = 'task2', vocab }: 
                       )}
                     </div>
                   ) : (
-                    <div style={{ alignSelf: 'flex-start' }}><ThinkingLoader size="sm" phases={['Đang đọc câu của bạn', 'Đang tìm từ vựng']} interval={1800} /></div>
+                    <div style={{ alignSelf: 'flex-start' }}><ThinkingLoader size="sm" phases={['Đang đọc câu của bạn', 'Đang tìm từ vựng', 'Đang chọn collocation']} interval={1800} /></div>
                   )
                 ) : m.translation != null ? (
                   <>
@@ -179,7 +179,7 @@ export function TranslatorChat({ ideas = [], onClose, skill = 'task2', vocab }: 
                 ) : m.error ? (
                   <div style={{ borderRadius: '4px 16px 16px 16px', background: CL.redSoft, padding: '9px 13px', fontFamily: CL.sans, fontSize: 12.5, lineHeight: 1.5, color: CL.redText }}>{m.error}</div>
                 ) : (
-                  <div style={{ alignSelf: 'flex-start' }}><ThinkingLoader size="sm" phases={['Đang đọc câu của bạn', 'Đang dịch']} interval={1800} /></div>
+                  <div style={{ alignSelf: 'flex-start' }}><ThinkingLoader size="sm" phases={['Đang đọc câu của bạn', 'Đang dịch', 'Đang chọn từ cho tự nhiên']} interval={1800} /></div>
                 )}
               </div>
             </div>

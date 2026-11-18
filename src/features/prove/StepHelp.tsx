@@ -10,7 +10,7 @@ import { ProBeam } from '@/components/ui/pro-beam';
 import { ThinkingLoader } from '@/components/ui/thinking-loader';
 
 const VOCAB_PHASES = ['Đang đọc bước này', 'Đang nghĩ câu hỏi', 'Đang chọn từ vựng'];
-const SCAN_PHASES = ['Đang đọc bước này', 'Đang tìm cách nói hay hơn'];
+const SCAN_PHASES = ['Đang đọc bước này', 'Đang tìm cách diễn đạt hay hơn', 'Đang chọn từ vựng'];
 
 interface Phrase { en: string; vi: string }
 interface Scan { used: string[]; parts: { text: string; phrases: Phrase[] }[] }
@@ -137,7 +137,7 @@ export function useStepHelp(promptId: string, base: Omit<ChainIn, 'steps'>, step
       return (
         <div className="co-unfold" style={{ ...panel, gap: 0 }}>
           <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <span style={label}>{open ? 'Cách nói hay hơn cho bước bạn vừa gõ' : 'Cách nói hay hơn' + (d.parts.length ? ' · ' + d.parts.length + ' chỗ' : '')}</span>
+            <span style={label}>{open ? 'Cách diễn đạt hay hơn cho bước bạn vừa gõ' : 'Cách diễn đạt hay hơn' + (d.parts.length ? ' · ' + d.parts.length + ' chỗ' : '')}</span>
             <button type="button" className="cl-btn" style={linkBtn} aria-expanded={open} onClick={() => setClosed((c) => ({ ...c, [i]: open }))}>{open ? 'Thu gọn' : 'Mở'}</button>
           </span>
           <div className="co-fold" data-open={open || undefined}>

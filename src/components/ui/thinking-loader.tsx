@@ -47,7 +47,7 @@ export function ThinkingLoader({
   phases: phasesProp = DEFAULT_PHASES,
   interval: intervalProp = 2200,
   phase,
-  loop = false,
+  loop = true,
   done = false,
   doneLabel = (s) => `Xong sau ${took(s)}`,
   size = "md",

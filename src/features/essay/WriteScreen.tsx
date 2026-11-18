@@ -481,7 +481,7 @@ export function WriteScreen({ prompt, chains, setChains, essay, setEssay, toolba
             </section>
           )}
           {panel && (panel.loading?.includes(tab)
-            ? <><span style={{ alignSelf: 'flex-start' }}><ThinkingLoader size="sm" phases={['Đang viết nhận xét']} /></span><CommentBone /><CommentBone /></>
+            ? <><span style={{ alignSelf: 'flex-start' }}><ThinkingLoader size="sm" phases={['Đang đọc lại bài', 'Đang chọn chỗ cần sửa', 'Đang viết nhận xét']} /></span><CommentBone /><CommentBone /></>
             : <ClLabel>{tabNotes.length ? tabNotes.length + ' nhận xét' : 'Không có nhận xét'}</ClLabel>)}
           {panel && tabNotes.map((note) => {
             const on = active === note, st = CRITERION_STYLE[note.crit];

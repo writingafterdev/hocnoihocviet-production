@@ -9,7 +9,7 @@ import { ProBeam } from '@/components/ui/pro-beam';
 import { ScanText, wordCount } from '@/components/ui/scan-text';
 import { ThinkingLoader } from '@/components/ui/thinking-loader';
 
-const HINT_PHASES = ['Đang đọc mạch ý', 'Đang nghĩ câu hỏi'];
+const HINT_PHASES = ['Đang đọc mạch ý', 'Đang nghĩ câu hỏi', 'Đang chọn gợi ý'];
 
 const DOT = 17;
 /** Where the dot's centre sits in each kind of row, so the dot lines up with the row's main text line. */
