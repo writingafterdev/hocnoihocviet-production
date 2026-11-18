@@ -19,7 +19,7 @@ const Bone = ({ w = '100%', h = 11 }: { w?: number | string; h?: number }) => <S
 function GuidedBone() {
   return (
     <div style={{ padding: '18px 22px', display: 'flex', flexDirection: 'column', gap: 14 }}>
-      <ThinkingLoader phases={['Đang đọc mạch ý', 'Đang soạn từng câu', 'Đang chọn từ vựng']} interval={2200} />
+      <span style={{ alignSelf: 'flex-start' }}><ThinkingLoader phases={['Đang đọc mạch ý', 'Đang soạn từng câu', 'Đang chọn từ vựng']} interval={2200} /></span>
       <div className="co-skel-in" style={{ borderRadius: 12, border: '1px solid #DCE7F7', background: '#F7F9FD', padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 12 }}>
         <span style={{ display: 'flex', gap: 8 }}><Bone w={64} /><Bone w="45%" h={13} /></span>
         <span style={{ display: 'flex', flexDirection: 'column', gap: 7 }}><Bone w={56} /><Bone w="88%" h={14} /><Bone w="62%" h={14} /></span>

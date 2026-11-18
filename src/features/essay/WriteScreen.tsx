@@ -120,7 +120,7 @@ function ReviewBone() {
           <Bone w="76%" h={10} /><Bone /><Bone w="94%" /><Bone w="58%" h={10} /><Bone w="82%" />
         </div>
       </section>
-      <ThinkingLoader phases={GRADING_PHASES} interval={2600} />
+      <span style={{ alignSelf: 'flex-start' }}><ThinkingLoader phases={GRADING_PHASES} interval={2600} /></span>
       <CommentBone /><CommentBone /><CommentBone />
     </>
   );
