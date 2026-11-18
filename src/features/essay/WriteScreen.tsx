@@ -371,11 +371,11 @@ export function WriteScreen({ prompt, chains, setChains, essay, setEssay, toolba
           {error && <span role="alert" style={{ fontFamily: CL.sans, fontSize: 12, color: CL.redText, marginRight: 4 }}>{error}</span>}
           <button type="button" className="cl-btn" onClick={() => setChat(!chat)} aria-pressed={chat} style={toolbarBtn(chat)}>Dịch</button>
           {editing
-            ? <ProBeam><button type="button" className="cl-btn cl-primary" onClick={() => submit()} disabled={sending || !words || guidedOn} style={{ ...primaryBtn, opacity: sending || !words || guidedOn ? 0.4 : 1 }}>{sending ? 'Đang chấm…' : review ? 'Nộp lại' : 'Nộp bài'}</button></ProBeam>
+            ? <ProBeam><button type="button" className="cl-btn cl-primary" onClick={() => submit()} disabled={sending || !words || guidedOn} style={{ ...primaryBtn, opacity: sending || !words || guidedOn ? 0.4 : 1 }}>{sending ? 'Đang chấm…' : review ? 'Viết lại' : 'Nộp bài'}</button></ProBeam>
             : sending ? <ProBeam><button type="button" className="cl-btn cl-primary" disabled style={{ ...primaryBtn, opacity: 0.45 }}>Đang chấm…</button></ProBeam>
             : tasks.length ? <>
               <span style={{ fontFamily: CL.sans, fontSize: 12.5, color: CL.ink5, marginRight: 4 }}>Đã sửa <b style={{ color: CL.ink }}>{solvedN}</b> / {tasks.length}</span>
-              <ProBeam><button type="button" className="cl-btn cl-primary" onClick={resubmitFix} disabled={sending || !solvedN} style={{ ...primaryBtn, opacity: sending || !solvedN ? 0.45 : 1 }}>{sending ? 'Đang chấm…' : 'Nộp lại'}</button></ProBeam>
+              <ProBeam><button type="button" className="cl-btn cl-primary" onClick={resubmitFix} disabled={sending || !solvedN} style={{ ...primaryBtn, opacity: sending || !solvedN ? 0.45 : 1 }}>{sending ? 'Đang chấm…' : 'Viết lại'}</button></ProBeam>
             </>
             : <ProBeam><button type="button" className="cl-btn cl-primary" onClick={startFix} style={primaryBtn}>Sửa bài</button></ProBeam>}
         </div>
