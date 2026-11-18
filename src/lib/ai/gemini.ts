@@ -108,10 +108,14 @@ export async function callGemini(e: CloudflareEnv, { system, input, maxTokens, t
   const models = quality ? [...all.filter((m) => QUALITY_FIRST.includes(m)), ...all.filter((m) => !QUALITY_FIRST.includes(m))] : all;
   const deadline = Date.now() + timeoutMs;
   const hanging = await recentlyHanging(e, models);
+  // Each call starts at a different key, so traffic spreads over all of them (each key has its own per-minute and
+  // daily allowance) instead of using up the first one before the next is touched.
+  const first = Math.floor(Math.random() * Math.max(1, keys.length));
   let last = 'no_model';
   for (const model of models) {
     if (hanging.has(model)) continue;
-    for (let k = 0; k < keys.length; k++) {
+    for (let j = 0; j < keys.length; j++) {
+      const k = (first + j) % keys.length;
       const id = model + '|' + k;
       if ((skip.get(id) || 0) > Date.now()) continue;
       const left = deadline - Date.now();
