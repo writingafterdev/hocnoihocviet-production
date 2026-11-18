@@ -28,7 +28,7 @@ const GROUPS: Group[] = [
   { label: 'Từ vựng', items: [{ label: 'Từ vựng theo chủ đề', href: '/vocab', match: ['/vocab'], icon: <NavIcon name="vocab" /> }] },
   { label: 'Của bạn', items: [
     { label: 'Bài đã viết', href: '/attempts', match: ['/attempts'], icon: <NavIcon name="essays" /> },
-    { label: 'Mạch ý đã chứng minh', href: '/drills', match: ['/drills'], icon: <NavIcon name="drill" /> },
+    { label: 'Mạch ý đã chứng minh', href: '/drills', match: ['/drills'], icon: <NavIcon name="chains" /> },
   ] },
 ];
 

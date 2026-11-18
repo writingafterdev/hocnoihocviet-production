@@ -26,6 +26,10 @@
       "essays": {
         "id": "Cuz0gckUKJ98",
         "commonName": "document"
+      },
+      "chains": {
+        "id": "0MftJBCtFvP0",
+        "commonName": "serial-tasks"
       }
     }
   }
