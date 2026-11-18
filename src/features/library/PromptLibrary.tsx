@@ -73,7 +73,7 @@ function RandomReel({ target, others, onDone }: { target: Prompt; others: Prompt
 /** 'Government & Criminal Justice' -> 'government-and-criminal-justice': the file name of the option's icon in /icons/filters. */
 const iconSlug = (label: string) => label.toLowerCase().replace(/&/g, 'and').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 
-/** A checkbox filter column (title, then one row per option with its icon). `labels` and `icons` override an option's text and icon file. */
+/** A checkbox filter column (title, then one row per option with its icon). `labels` and `icons` override an option's text and icon file (an empty icon: none). */
 export function Filter({ title, options, selected, onToggle, labels, icons }: { title: string; options: readonly string[]; selected: string[]; onToggle: (v: string) => void; labels?: Record<string, string>; icons?: Record<string, string> }) {
   return (
     <fieldset style={{ marginBottom: 32, border: 'none', padding: 0, minWidth: 0 }}>
@@ -85,7 +85,7 @@ export function Filter({ title, options, selected, onToggle, labels, icons }: { 
             <Checkbox key={opt} isSelected={on} onChange={() => onToggle(opt)} className="items-center">
               <span className="flex items-center gap-3">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={'/icons/filters/' + (icons?.[opt] || iconSlug(opt)) + '.png'} alt="" width={24} height={24} draggable={false} onError={(e) => { e.currentTarget.style.display = 'none'; }} style={{ flexShrink: 0 }} />
+                {(icons && opt in icons ? icons[opt] : iconSlug(opt)) && <img src={'/icons/filters/' + (icons && opt in icons ? icons[opt] : iconSlug(opt)) + '.png'} alt="" width={24} height={24} draggable={false} onError={(e) => { e.currentTarget.style.display = 'none'; }} style={{ flexShrink: 0 }} />}
                 <span style={{ fontFamily: 'var(--font-sans)', fontSize: 15, fontWeight: 500, color: 'rgba(44,51,56,0.8)', lineHeight: 1.3 }}>{labels?.[opt] || opt}</span>
               </span>
             </Checkbox>

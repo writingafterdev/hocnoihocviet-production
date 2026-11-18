@@ -58,12 +58,17 @@ interface Reel { items: string[]; target: Statement; startH: number; endH: numbe
 /**
  * "Chứng minh nhanh": a ready-made statement, picked in the library (or "Câu ngẫu nhiên"), with its two ends given; the
  * student writes the middle, checks it, then moves on. "Đổi câu" / "Câu tiếp" spin the statement like a reel and land on another one.
- * Nothing is saved; the counter is for this visit only.
+ * A statement whose mạch ý passes Kiểm tra is saved as finished (✓ in the library).
  */
 export function ProveDrill() {
   const [deck, setDeck] = useState<Statement[] | null>(null);
   /** The library's filters and page, kept while a statement is open so "Thư viện" returns to the same list. */
   const [view, setView] = useState<LibraryView>(EMPTY_VIEW);
+  /** Statements this student has finished (saved to their account): ✓ in the library. */
+  const [done, setDone] = useState<Set<string>>(new Set());
+  useEffect(() => {
+    fetch('/api/drill/done', { credentials: 'same-origin' }).then((r) => (r.ok ? r.json() : null)).then((d: { ids?: string[] } | null) => { if (d?.ids) setDone(new Set(d.ids)); }).catch(() => {});
+  }, []);
   const [i, setI] = useState(0);
   const [steps, setSteps] = useState<string[]>(['']);
   const [active, setActive] = useState<number | null>(null);
@@ -186,13 +191,20 @@ export function ProveDrill() {
   const notes = coach.fresh && coach.result ? coach.result.placed : [];
   const clean = !!coach.result && ((coach.fresh && coach.result.placed.length === 0) || coach.allFixed);
   const showSample = !!coach.result?.sample?.length && !coach.allFixed && !rolling && !!s;
+  // Its mạch ý passed Kiểm tra (no notes, or every note fixed): the statement counts as finished, once.
+  useEffect(() => {
+    if (!clean || !s || done.has(s.id)) return;
+    const id = s.id;
+    setDone((d) => new Set(d).add(id));
+    fetch('/api/drill/done', { method: 'POST', credentials: 'same-origin', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ statementId: id }) }).catch(() => {});
+  }, [clean, s?.id]); // eslint-disable-line react-hooks/exhaustive-deps
   const chip = s ? kindChip(s) : null;
 
   return (
     <div style={{ height: '100%', background: '#fff', display: 'flex', flexDirection: 'column' }}>
       <WorkspaceHeader />
       <div style={{ flex: 1, minHeight: 0, width: '100%', maxWidth: 1560, margin: '0 auto', padding: '24px 32px 24px', display: 'flex', flexDirection: 'column' }}>
-        {!deck ? <StatementLibrary view={view} setView={setView} onOpen={open} onRandom={choose} /> : para && s && prompt ? <DrillParagraph key={s.id + para} s={s} prompt={prompt} steps={steps} guided={para === 'guided'} onBack={() => setPara(null)} onNext={() => { nextAfter.current = true; setPara(null); }}
+        {!deck ? <StatementLibrary view={view} setView={setView} done={done} onOpen={open} onRandom={choose} /> : para && s && prompt ? <DrillParagraph key={s.id + para} s={s} prompt={prompt} steps={steps} guided={para === 'guided'} onBack={() => setPara(null)} onNext={() => { nextAfter.current = true; setPara(null); }}
           saved={drafts.current.get([s.id, para, ...steps.map((x) => x.trim()).filter(Boolean)].join('|'))}
           onSave={(d) => drafts.current.set([s.id, para, ...steps.map((x) => x.trim()).filter(Boolean)].join('|'), d)} /> : <>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10, minHeight: 42, paddingBottom: 12 }}>

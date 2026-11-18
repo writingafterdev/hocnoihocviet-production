@@ -31,15 +31,22 @@ function Sentence({ s }: { s: Statement }) {
  * type and topic filters, "Câu ngẫu nhiên" (a random one from the filtered list, with the reel) and one row per statement.
  * `onOpen` gets the statement and the filtered list (what "Câu tiếp" goes on to); `onRandom` gets the filtered list.
  */
-export interface LibraryView { kinds: string[]; topics: string[]; page: number }
-export const EMPTY_VIEW: LibraryView = { kinds: [], topics: [], page: 0 };
+export interface LibraryView { kinds: string[]; topics: string[]; status: string[]; page: number }
+export const EMPTY_VIEW: LibraryView = { kinds: [], topics: [], status: [], page: 0 };
+const STATUS = ['todo', 'done'];
+const STATUS_LABEL: Record<string, string> = { todo: 'Chưa làm', done: 'Đã làm' };
+/** The progress filter has no icons. */
+const STATUS_ICON: Record<string, string> = { todo: '', done: '' };
 
-/** `view`/`setView`: the filters and page, kept by the drill so "Thư viện" comes back to the same list. */
-export function StatementLibrary({ view, setView, onOpen, onRandom }: { view: LibraryView; setView: (v: LibraryView) => void; onOpen: (s: Statement, pool: Statement[]) => void; onRandom: (pool: Statement[]) => void }) {
-  const { kinds, topics, page } = view;
+/**
+ * `view`/`setView`: the filters and page, kept by the drill so "Thư viện" comes back to the same list. `done`: the
+ * statements the student has finished (✓ on their rows, and the Tiến độ filter).
+ */
+export function StatementLibrary({ view, setView, done, onOpen, onRandom }: { view: LibraryView; setView: (v: LibraryView) => void; done: ReadonlySet<string>; onOpen: (s: Statement, pool: Statement[]) => void; onRandom: (pool: Statement[]) => void }) {
+  const { kinds, topics, status, page } = view;
   const setPage = (n: number) => setView({ ...view, page: n });
-  const toggle = (key: 'kinds' | 'topics', v: string) => { const arr = view[key]; setView({ ...view, [key]: arr.includes(v) ? arr.filter((x) => x !== v) : [...arr, v], page: 0 }); };
-  const filtered = STATEMENTS.filter((s) => (!kinds.length || kinds.includes(s.kind)) && (!topics.length || topics.includes(topicOf(s) || '')));
+  const toggle = (key: 'kinds' | 'topics' | 'status', v: string) => { const arr = view[key]; setView({ ...view, [key]: arr.includes(v) ? arr.filter((x) => x !== v) : [...arr, v], page: 0 }); };
+  const filtered = STATEMENTS.filter((s) => (!kinds.length || kinds.includes(s.kind)) && (!topics.length || topics.includes(topicOf(s) || '')) && (!status.length || status.includes(done.has(s.id) ? 'done' : 'todo')));
   const pages = Math.ceil(filtered.length / PAGE);
   const pager = (className: string) => <Pagination className={className} previousLabel="Trang trước" nextLabel="Trang sau" aria-label="Chọn trang" page={page + 1} totalPages={pages} onChange={(n) => { setPage(n - 1); document.querySelector('main')?.scrollTo({ top: 0 }); }} />;
 
@@ -59,6 +66,8 @@ export function StatementLibrary({ view, setView, onOpen, onRandom }: { view: Li
           <Filter title="Loại" options={KINDS} labels={KIND_LABEL} icons={KIND_ICON} selected={kinds} onToggle={(v) => toggle('kinds', v)} />
           <div style={{ height: 1, background: 'rgba(0,0,0,0.05)', marginBottom: 32 }} />
           <Filter title="Chủ đề" options={TOPICS} selected={topics} onToggle={(v) => toggle('topics', v)} />
+          <div style={{ height: 1, background: 'rgba(0,0,0,0.05)', marginBottom: 32 }} />
+          <Filter title="Tiến độ" options={STATUS} labels={STATUS_LABEL} icons={STATUS_ICON} selected={status} onToggle={(v) => toggle('status', v)} />
         </aside>
         <div style={{ flex: 1, minWidth: 0, width: '100%', display: 'flex', flexDirection: 'column', gap: 12 }}>
           {filtered.length > 0 ? (
@@ -86,6 +95,7 @@ export function StatementLibrary({ view, setView, onOpen, onRandom }: { view: Li
                       </div>
                       <p style={{ fontFamily: 'var(--font-sans)', fontSize: 14, fontWeight: 500, lineHeight: 1.5, margin: 0 }}><Sentence s={s} /></p>
                     </div>
+                    {done.has(s.id) && <span aria-label="Đã làm" style={{ flexShrink: 0, width: 24, marginRight: 8, textAlign: 'center', fontSize: 15, fontWeight: 700, color: '#2D6E1E' }}>✓</span>}
                   </button>
                 );
               })}
