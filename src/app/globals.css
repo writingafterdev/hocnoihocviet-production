@@ -341,23 +341,23 @@ a:hover { color: #404040; }
 @property --pro-a { syntax: '<angle>'; inherits: false; initial-value: 0deg; }
 @keyframes pro-spin { to { --pro-a: 360deg; } }
 /*
- * Pro buttons: the button face itself is a slow-moving gradient (the app's blues, violet and a soft pink, deep enough for
- * white text) under a fine white grain. Pro avatars keep a thin ring in the same colours.
+ * Pro buttons: the button face itself is a slow-moving gradient in the brand colours (blue, tomato, sun, leaf; deep
+ * enough for white text) under a fine white grain. Pro avatars keep a thin ring in the same colours.
  */
 @keyframes pro-flow { 0% { background-position: 0% 30%; } 50% { background-position: 100% 60%; } 100% { background-position: 30% 100%; } }
 .pro-fill { display: inline-flex; flex-shrink: 0; }
 .pro-fill > button:not(:disabled) {
   position: relative; overflow: hidden; isolation: isolate;
   border: none !important; color: #fff !important;
-  background-color: #5B79E6 !important;
+  background-color: #2F62C4 !important;
   background-image:
-    radial-gradient(60% 90% at 15% 20%, #4C74E4 0%, transparent 70%),
-    radial-gradient(55% 85% at 85% 15%, #8B6EEA 0%, transparent 70%),
-    radial-gradient(60% 90% at 75% 95%, #D97AB4 0%, transparent 70%),
-    radial-gradient(60% 90% at 20% 90%, #6F93EE 0%, transparent 70%) !important;
-  background-size: 240% 240% !important;
+    radial-gradient(60% 90% at 12% 25%, #4C7FE0 0%, transparent 70%),
+    radial-gradient(50% 80% at 88% 20%, #E5532A 0%, transparent 70%),
+    radial-gradient(45% 75% at 70% 95%, #F2B033 0%, transparent 70%),
+    radial-gradient(55% 85% at 25% 95%, #2F8F24 0%, transparent 70%) !important;
+  background-size: 150% 150% !important;
   animation: pro-flow 9s ease-in-out infinite alternate;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .32), 0 4px 12px -6px rgba(91, 111, 240, .6) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .32), 0 4px 12px -6px rgba(47, 98, 196, .6) !important;
   text-shadow: 0 1px 1px rgba(30, 36, 110, .28);
 }
 /* The grain: fractal noise, white, softly blended over the colour. */
@@ -367,7 +367,7 @@ a:hover { color: #404040; }
 }
 .pro-ring {
   --pro-r: 14px;
-  --pro-grad: conic-gradient(from var(--pro-a), #4C74E4 0%, #6F93EE 25%, #8B6EEA 50%, #D97AB4 75%, #4C74E4 100%);
+  --pro-grad: conic-gradient(from var(--pro-a), #2F62C4 0%, #E5532A 25%, #F2B033 50%, #2F8F24 75%, #2F62C4 100%);
   position: relative; display: inline-flex; flex-shrink: 0; padding: 2px; border-radius: var(--pro-r);
   background: var(--pro-grad); animation: pro-spin 6s linear infinite;
 }
