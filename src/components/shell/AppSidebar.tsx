@@ -28,6 +28,7 @@ const GROUPS: Group[] = [
   { label: 'Từ vựng', items: [{ label: 'Từ vựng theo chủ đề', href: '/vocab', match: ['/vocab'], icon: <NavIcon name="vocab" /> }] },
   { label: 'Của bạn', items: [
     { label: 'Bài đã viết', href: '/attempts', match: ['/attempts'], icon: <NavIcon name="essays" /> },
+    { label: 'Mạch ý đã chứng minh', href: '/drills', match: ['/drills'], icon: <NavIcon name="drill" /> },
   ] },
 ];
 
@@ -45,6 +46,7 @@ function titleOf(path: string): { section?: string; page: string } {
   if (inside(path, '/write')) return { section: 'Task 2', page: 'Luyện viết' };
   if (inside(path, '/vocab')) return { page: 'Từ vựng' };
   if (inside(path, '/attempts')) return { page: 'Bài đã viết' };
+  if (inside(path, '/drills')) return { page: 'Mạch ý đã chứng minh' };
   if (inside(path, '/admin')) return { page: 'Quản trị' };
   return { page: 'Trang chủ' };
 }

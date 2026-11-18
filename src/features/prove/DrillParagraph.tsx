@@ -33,7 +33,7 @@ export interface ParagraphDraft { essay: EssayState; review: Review | null }
  * sentence by sentence ("Viết có hướng dẫn"). "Nhận xét đoạn văn" gives idea/flow comments, no score; each is fixed
  * inside its comment, the old words struck through in the paragraph with the rewrite after them.
  */
-export function DrillParagraph({ s, prompt, steps, guided: startGuided, onBack, onNext, saved, onSave }: { s: Statement; prompt: Prompt; steps: string[]; guided: boolean; onBack: () => void; onNext?: () => void; saved?: ParagraphDraft; onSave?: (d: ParagraphDraft) => void }) {
+export function DrillParagraph({ s, prompt, steps, guided: startGuided, onBack, onNext, saved, onSave, onReviewed }: { s: Statement; prompt: Prompt; steps: string[]; guided: boolean; onBack: () => void; onNext?: () => void; saved?: ParagraphDraft; onSave?: (d: ParagraphDraft) => void; onReviewed?: (text: string, tasks: FixTask[]) => void }) {
   const chain: Chain = { id: 'para', q: 1, title: '', tone: s.tone || null, area: '', split: null, findings: [], steps: [s.start, ...steps.map((x) => x.trim()).filter(Boolean), s.end], mine: 'start', built: true };
   const sentence = plainSentence(s.sentence);
   const [essay, setEssay] = useState<EssayState>(saved?.essay || { bodies: [], drafts: { para: '' }, seconds: 0, review: null, guided: startGuided ? { plan: null, at: 0, level: 'frame' } : null });
@@ -66,6 +66,7 @@ export function DrillParagraph({ s, prompt, steps, guided: startGuided, onBack, 
       const tasks = planTasks(r.tasks || []);
       setReview({ tasks, solved: [], checks: {}, edits: {} });
       setOpen(tasks[0]?.item.key || null);
+      onReviewed?.(body, tasks);
     } catch (e) { setError(e instanceof AiRequestError ? AI_ERROR_TEXT[e.code] : AI_ERROR_TEXT.network); }
     setReviewing(false);
   };

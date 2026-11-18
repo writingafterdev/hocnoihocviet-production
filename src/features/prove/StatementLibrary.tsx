@@ -8,15 +8,15 @@ import { Filter } from '../library/PromptLibrary';
 import { kindChip } from './kind';
 
 const PAGE = 20;
-const KINDS: StatementKind[] = ['cause', 'impact', 'solution'];
+export const KINDS: StatementKind[] = ['cause', 'impact', 'solution'];
 /** The type filter's icons, from /icons/filters: a question mark for causes, a chart for impacts, a light bulb for solutions. */
-const KIND_ICON: Record<string, string> = { cause: 'two-part-question', impact: 'positive-or-negative-development', solution: 'causes-problems-and-solutions' };
-const topicOf = (s: Statement) => findPrompt(s.promptId)?.topic as Topic | undefined;
+export const KIND_ICON: Record<string, string> = { cause: 'two-part-question', impact: 'positive-or-negative-development', solution: 'causes-problems-and-solutions' };
+export const topicOf = (s: Statement) => findPrompt(s.promptId)?.topic as Topic | undefined;
 /** Only the topics some statement belongs to, in the library's order. */
 const TOPICS = TOPICS_TASK2.filter((t) => STATEMENTS.some((s) => topicOf(s) === t));
 
 /** The statement with its starting point in green and its ending point in red, as the drill shows it. */
-function Sentence({ s }: { s: Statement }) {
+export function Sentence({ s }: { s: Statement }) {
   return (
     <>
       {sentenceParts(s.sentence).map((p, k) => (

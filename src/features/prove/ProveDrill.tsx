@@ -6,14 +6,16 @@ import { Illustration } from '@/components/brand/Illustration';
 import { setSfxEnabled, sfx, sfxEnabled } from '@/lib/sfx';
 import { WorkspaceHeader } from '@/components/shell/BrandHeader';
 import { findPrompt } from '@/content/prompts';
-import { sentenceParts, plainSentence, STATEMENTS, type Statement } from '@/content/statements';
+import { findStatement, sentenceParts, plainSentence, STATEMENTS, type Statement } from '@/content/statements';
 import { toast } from '@/components/ui/toast';
 import { CL } from '../chainlab/constants';
 import { ClIcon, ClLabel, toolbarBtn } from '../chainlab/ui/primitives';
 import { ChainEditor } from '../coach/ChainEditor';
 import { CoachGrid, SidePanel } from '../coach/CoachGrid';
 import { TranslatorChat } from '../coach/TranslatorChat';
-import { useCoach } from '../coach/useCoach';
+import { NOTE_STYLE, useCoach } from '../coach/useCoach';
+import type { FixTask } from '../essay/FixFlow';
+import { saveAttempt, saveParagraph, type DrillErr } from './drill-attempts';
 import { DrillParagraph, type ParagraphDraft } from './DrillParagraph';
 import { kindChip } from './kind';
 import { EMPTY_VIEW, StatementLibrary, type LibraryView } from './StatementLibrary';
@@ -215,20 +217,49 @@ export function ProveDrill() {
   const notes = coach.fresh && coach.result ? coach.result.placed : [];
   const clean = !!coach.result && ((coach.fresh && coach.result.placed.length === 0) || coach.allFixed);
   const showSample = !!coach.result?.sample?.length && !coach.allFixed && !rolling && !!s;
-  // Its mạch ý passed Kiểm tra (no notes, or every note fixed): the statement counts as finished, once.
+  /** This visit's mistakes: every note a Kiểm tra raised on the way, saved with the attempt once the mạch ý passes. */
+  const errs = useRef(new Map<string, DrillErr>());
+  /** The attempt saved for this visit (statement + landing), so its paragraph can be added to it later. */
+  const attempt = useRef<{ key: string; id: Promise<string | null> } | null>(null);
+  useEffect(() => { errs.current = new Map(); }, [s?.id, landed]);
   useEffect(() => {
-    if (!clean || !s || done.has(s.id)) return;
+    if (!coach.result || !coach.fresh || !s) return;
+    for (const n of coach.result.placed) {
+      const where = n.step < 0 ? ENDS[s.kind].start : 'Bước ' + (n.step + 1);
+      errs.current.set(n.type + '|' + n.text, { where, label: NOTE_STYLE[n.type].label, quote: n.step < 0 ? s.start : steps[n.step] || '', fix: n.fix || '' });
+    }
+  }, [coach.result]); // eslint-disable-line react-hooks/exhaustive-deps
+  // Its mạch ý passed Kiểm tra (no notes, or every note fixed): saved as an attempt (✓ in the library), once per visit.
+  useEffect(() => {
+    if (!clean || !s) return;
+    const key = s.id + ':' + landed;
+    if (attempt.current?.key === key) return;
     const id = s.id;
     setDone((d) => new Set(d).add(id));
-    fetch('/api/drill/done', { method: 'POST', credentials: 'same-origin', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ statementId: id }) }).catch(() => {});
+    attempt.current = { key, id: saveAttempt(id, steps.map((x) => x.trim()).filter(Boolean), [...errs.current.values()]) };
   }, [clean, s?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+  /** The paragraph's first review: its text and comments go onto this visit's attempt. */
+  const onReviewed = (text: string, tasks: FixTask[]) => {
+    const a = attempt.current;
+    if (!a) return;
+    const paraErrs = tasks.map((t) => ({ where: 'Đoạn văn', label: t.title, quote: t.item.quote || '', fix: t.how || '' }));
+    a.id.then((aid) => { if (aid) saveParagraph(aid, text, paraErrs); });
+  };
+  // "Làm lại câu này" from Mạch ý đã chứng minh: /prove?s=<id> opens that statement straight away.
+  useEffect(() => {
+    const sid = new URLSearchParams(location.search).get('s');
+    const target = sid ? findStatement(sid) : null;
+    if (!target) return;
+    history.replaceState(null, '', location.pathname);
+    open(target, STATEMENTS);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
   const chip = s ? kindChip(s) : null;
 
   return (
     <div style={{ height: '100%', background: '#fff', display: 'flex', flexDirection: 'column' }}>
       <WorkspaceHeader />
       <div style={{ flex: 1, minHeight: 0, width: '100%', maxWidth: 1560, margin: '0 auto', padding: '24px 32px 24px', display: 'flex', flexDirection: 'column' }}>
-        {!deck ? <StatementLibrary view={view} setView={setView} done={done} onOpen={open} onRandom={choose} /> : para && s && prompt ? <DrillParagraph key={s.id + para} s={s} prompt={prompt} steps={steps} guided={para === 'guided'} onBack={() => setPara(null)} onNext={() => { nextAfter.current = true; setPara(null); }}
+        {!deck ? <StatementLibrary view={view} setView={setView} done={done} onOpen={open} onRandom={choose} /> : para && s && prompt ? <DrillParagraph key={s.id + para} s={s} prompt={prompt} steps={steps} guided={para === 'guided'} onReviewed={onReviewed} onBack={() => setPara(null)} onNext={() => { nextAfter.current = true; setPara(null); }}
           saved={drafts.current.get([s.id, para, ...steps.map((x) => x.trim()).filter(Boolean)].join('|'))}
           onSave={(d) => drafts.current.set([s.id, para, ...steps.map((x) => x.trim()).filter(Boolean)].join('|'), d)} /> : <>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10, minHeight: 42, paddingBottom: 12 }}>
