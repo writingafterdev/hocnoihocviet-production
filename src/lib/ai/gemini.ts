@@ -134,6 +134,7 @@ export async function callGemini(e: CloudflareEnv, { system, input, maxTokens, t
   // daily allowance) instead of using up the first one before the next is touched.
   const first = Math.floor(Math.random() * Math.max(1, keys.length));
   let last = 'no_model';
+  const setAside = (model: string, ms: number) => { for (let i = 0; i < keys.length; i++) skip.set(model + '|' + i, Date.now() + ms); };
   for (const model of models) {
     if (hanging.has(model)) continue;
     for (let j = 0; j < keys.length; j++) {
@@ -167,7 +168,9 @@ export async function callGemini(e: CloudflareEnv, { system, input, maxTokens, t
         const timedOut = err instanceof Error && (err.name === 'TimeoutError' || err.name === 'AbortError');
         console.error('gemini_failed', model, k, timedOut ? 'timeout' : err instanceof Error ? err.message : err);
         await logModelUse(e, model, 'failed', { ms: Date.now() - t0, status: timedOut ? 'timeout' : 'network' });
-        if (timedOut) { skip.set(id, Date.now() + 10 * 60_000); last = model + ':timeout'; continue; } // too slow now: set aside, try the next
+        // Too slow now: the model itself is stuck (not this key), so it is set aside for every key and the next model is
+        // tried at once. Trying it key after key would spend the whole wait on one hanging model.
+        if (timedOut) { setAside(model, 10 * 60_000); last = model + ':timeout'; break; }
         last = model + ':network';
         continue;
       }
@@ -192,7 +195,7 @@ export async function callGemini(e: CloudflareEnv, { system, input, maxTokens, t
       // A bad key (Google answers 400 "Please pass a valid API key", or 401/403): set it aside for every model.
       else if (badKey) { for (const m of models) skip.set(m + '|' + k, Date.now() + 6 * 3600_000); }
       else if (res.status === 404 || res.status === 400) skip.set(id, Date.now() + 6 * 3600_000); // unknown or unsupported model id
-      else skip.set(id, Date.now() + 30_000); // 5xx: busy, try the next one
+      else { setAside(model, 30_000); break; } // 5xx: the model is busy for everyone, try the next model
     }
   }
   throw new GeminiError(last.endsWith(':timeout') ? 'timeout' : 'upstream', 'all_models_failed:' + last);
