@@ -1,13 +1,13 @@
 'use client';
 
 import { CL } from '../chainlab/constants';
-import { AiStatus } from '@/components/ui/ai-status';
+import { ThinkingLoader } from '@/components/ui/thinking-loader';
 import { NOTE_STYLE, type CheckResult, type PlacedNote } from './useCoach';
 
-/** Above the chain while "Kiểm tra" runs: a status line. (The notes themselves sit on the chain, each under its step.) */
+/** While "Kiểm tra" runs: a status for screen readers (the mạch ý itself shows the reading). */
 export function CheckSummary({ checking }: { result?: CheckResult | null; fresh?: boolean; checking: boolean }) {
-  if (checking) return <AiStatus state="analyzing" states={{ analyzing: { label: 'Đang đọc mạch ý', active: true } }} className="text-[13px]" />;
-  return null;
+  // The reading itself is shown on the mạch ý (ScanText); this only tells screen readers.
+  return checking ? <span role="status" className="sr-only">Đang kiểm tra mạch ý</span> : null;
 }
 
 /**
@@ -23,7 +23,7 @@ export function NoteCard({ note, k, on, faded, onPick, delay, done, busy, miss }
       <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
         <span className="co-note-badge" style={{ minWidth: 22, height: 20, padding: '0 6px', borderRadius: 5, background: done ? CL.mintSoft : st.bg, color: done ? CL.greenText : st.fg, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontFamily: CL.sans, fontSize: 10.5, fontWeight: 700 }}>{done ? '✓' : k + 1}</span>
         <span className="co-note-label" style={{ fontFamily: CL.sans, fontSize: 13, fontWeight: 600, color: done ? CL.greenText : st.fg }}>{st.label}</span>
-        {busy && <span role="status" style={{ marginLeft: 'auto', fontFamily: CL.sans, fontSize: 12, fontWeight: 500, color: CL.ink5 }}>Đang kiểm tra…</span>}
+        {busy && <span style={{ marginLeft: 'auto' }}><ThinkingLoader size="sm" phases={['Đang kiểm tra']} /></span>}
       </span>
       <span className="co-note-fold" aria-hidden={done || undefined}>
         <span style={{ minHeight: 0, overflow: 'hidden' }}>

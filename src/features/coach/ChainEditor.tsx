@@ -6,6 +6,10 @@ import { ClIcon, ClLabel } from '../chainlab/ui/primitives';
 import { CheckSummary, NoteCard } from './NotesPanel';
 import { NOTE_STYLE, checkedSteps, noteKey, place, type CheckResult, type Hint, type PlacedNote } from './useCoach';
 import { ProBeam } from '@/components/ui/pro-beam';
+import { ScanText, wordCount } from '@/components/ui/scan-text';
+import { ThinkingLoader } from '@/components/ui/thinking-loader';
+
+const HINT_PHASES = ['Đang đọc mạch ý', 'Đang nghĩ câu hỏi'];
 
 const DOT = 17;
 /** Where the dot's centre sits in each kind of row, so the dot lines up with the row's main text line. */
@@ -93,6 +97,15 @@ export function ChainEditor(p: ChainEditorProps) {
   const notes = p.check ? live : p.notes;
   /** A note still to fix: tints its step, carries a number badge, draws the jump bar. A fixed one only shows as a crossed-off card. */
   const open = (n: PlacedNote) => !p.check || !fixedKeys.includes(noteKey(n));
+  /**
+   * While "Kiểm tra" runs, the whole mạch ý is read (ScanText): start, steps, end as one text. While one note is being
+   * checked after Enter, only its step is read (a missing step's note: the step typed below the gap).
+   */
+  const reading = !!(p.checking || p.check?.checking);
+  const busySteps = new Set(live.filter((n) => p.check?.busy?.includes(noteKey(n))).map((n) => (n.type === 'jump' ? n.step + 1 : n.step)));
+  const readParts = [p.startNode ? '' : p.start, ...p.steps.map((x) => x.trim()), p.endNode ? '' : p.end];
+  const readTotal = readParts.reduce((t, x) => t + wordCount(x), 0);
+  const readAt = readParts.map((_, k) => readParts.slice(0, k).reduce((t, x) => t + wordCount(x), 0));
   // After a check with a jump: open an empty step right where the step is missing, so the student can type it there.
   const opened = useRef('');
   useEffect(() => {
@@ -119,25 +132,6 @@ export function ChainEditor(p: ChainEditorProps) {
     const dots = [...ol.querySelectorAll<HTMLElement>('[data-dot]')];
     return { ol, dots, ys: dots.map((d) => { const r = d.getBoundingClientRect(); return r.top + r.height / 2 - box.top; }) };
   };
-
-  // While checking: a light runs down the line, again and again, touching each dot, until the result arrives.
-  useEffect(() => {
-    if (!p.checking || reduced()) return;
-    const { ol, dots, ys } = dotYs();
-    if (!ol || ys.length < 2) return;
-    const dur = 450 + ys.length * 240;
-    const scan = document.createElement('span'); scan.className = 'co-scan';
-    const trail = document.createElement('span'); trail.className = 'co-trail';
-    trail.style.top = ys[0] + 'px'; trail.style.height = ys[ys.length - 1] - ys[0] + 'px';
-    ol.append(trail, scan);
-    const a1 = scan.animate([{ transform: 'translateY(' + (ys[0] - 7.5) + 'px)', opacity: 1 }, { transform: 'translateY(' + (ys[ys.length - 1] - 7.5) + 'px)', opacity: 1, offset: 0.92 }, { transform: 'translateY(' + (ys[ys.length - 1] - 7.5) + 'px)', opacity: 0 }], { duration: dur, easing: 'cubic-bezier(.45,0,.25,1)', iterations: Infinity });
-    const a2 = trail.animate([{ transform: 'scaleY(0)', opacity: 1 }, { transform: 'scaleY(1)', opacity: 1, offset: 0.85 }, { transform: 'scaleY(1)', opacity: 0 }], { duration: dur, easing: 'cubic-bezier(.45,0,.25,1)', iterations: Infinity });
-    const timers: number[] = [];
-    const pings = () => dots.forEach((d, k) => timers.push(window.setTimeout(() => { d.classList.remove('co-ping'); void d.offsetWidth; d.classList.add('co-ping'); }, (k / (dots.length - 1)) * dur * 0.9)));
-    pings();
-    const loop = window.setInterval(pings, dur);
-    return () => { a1.cancel(); a2.cancel(); scan.remove(); trail.remove(); clearInterval(loop); timers.forEach(clearTimeout); dots.forEach((d) => d.classList.remove('co-ping')); };
-  }, [p.checking]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // A clean chain: the line turns green from start to end, the dots follow, then "Mạch ý đi liền".
   useEffect(() => {
@@ -208,7 +202,7 @@ export function ChainEditor(p: ChainEditorProps) {
         <div className={tinted(-1).trim()} style={{ flex: 1, minWidth: 0, padding: '6px 10px 10px', borderRadius: 10, ...tint(-1), display: 'flex', alignItems: 'flex-start', gap: 8 }}>
           <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 4 }}>
             <ClLabel color={CL.greenText}>{p.startLabel}</ClLabel>
-            {p.startNode ?? <span style={{ fontFamily: CL.sans, fontSize: 15, fontWeight: 500, lineHeight: 1.5, color: CL.greenText }}>{p.start}</span>}
+            {p.startNode ?? <span style={{ fontFamily: CL.sans, fontSize: 15, fontWeight: 500, lineHeight: 1.5, color: CL.greenText }}>{reading ? <ScanText text={p.start} offset={0} total={readTotal} /> : p.start}</span>}
           </div>
           {marks(-1)}
         </div>
@@ -220,7 +214,11 @@ export function ChainEditor(p: ChainEditorProps) {
         <li className={'cl-node' + (entering.current.has(i) ? ' co-enter' : '')} style={{ display: 'flex', gap: 18, minHeight: 46 }}>
           <Rail center={CENTER.step} jump={jumpAt(i)} dot={plainDot(s.trim() ? CL.ink3 : CL.ink2)} track={!!s.trim()} ok={green} />
           <div className={'co-content' + tinted(i)} style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'flex-start', gap: 8, padding: '6px 10px', margin: '2px 0', borderRadius: 10, ...tint(i), transition: 'background-color .3s' }}>
-            <textarea ref={(el) => { refs.current[i] = el; }} className="co-ta" value={s} rows={1} aria-label={'Bước ' + (i + 1)}
+            {(reading || busySteps.has(i)) && s.trim() ? (
+              <span style={{ flex: 1, minWidth: 0, minHeight: 24, whiteSpace: 'pre-wrap', fontFamily: CL.serif, fontSize: 15, lineHeight: 1.55, color: CL.ink8 }}>
+                {reading ? <ScanText text={s.trim()} offset={readAt[i + 1]} total={readTotal} /> : <ScanText text={s.trim()} />}
+              </span>
+            ) : <textarea ref={(el) => { refs.current[i] = el; }} className="co-ta" value={s} rows={1} aria-label={'Bước ' + (i + 1)}
               placeholder={p.stepQuestion?.(i) || (i === 0 ? p.firstQuestion || 'Chuyện này chạm tới ai, ra sao?' : 'Rồi chuyện gì xảy ra tiếp?')}
               onFocus={() => { lastStep.current = i; p.onFocusStep?.(i); }}
               onChange={(e) => edit(i, e.target.value)}
@@ -229,7 +227,7 @@ export function ChainEditor(p: ChainEditorProps) {
                 if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) { e.preventDefault(); if (s.trim()) { p.onSubmitStep?.(i, s.trim()); p.check?.onStepEnter?.(i, p.steps); if (i === n - 1 || p.steps[i + 1]?.trim()) insertAfter(i); else { focusAt.current = i + 1; refs.current[i + 1]?.focus(); } } }
                 else if (e.key === 'Backspace' && !s && n > 1) { e.preventDefault(); remove(i); }
               }}
-              style={{ flex: 1, minWidth: 0, minHeight: 24, resize: 'none', border: 'none', outline: 'none', background: 'transparent', padding: 0, fontFamily: CL.serif, fontSize: 15, lineHeight: 1.55, color: CL.ink8 }} />
+              style={{ flex: 1, minWidth: 0, minHeight: 24, resize: 'none', border: 'none', outline: 'none', background: 'transparent', padding: 0, fontFamily: CL.serif, fontSize: 15, lineHeight: 1.55, color: CL.ink8 }} />}
             {marks(i)}
             <button type="button" className="cl-btn cl-del cl-reveal" onClick={() => remove(i)} aria-label={'Xoá bước ' + (i + 1)} style={{ flexShrink: 0, width: 24, height: 24, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', color: CL.ink3 }}><ClIcon name="trash" size={13} /></button>
           </div>
@@ -247,7 +245,9 @@ export function ChainEditor(p: ChainEditorProps) {
       {!p.hideHint && <li style={{ display: 'flex', gap: 18, minHeight: 44 }}>
         <Rail center={CENTER.add} track={false} dot={<span style={{ width: DOT, height: DOT, borderRadius: 999, border: '1.5px solid ' + CL.ink2, background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', color: CL.ink4 }}><ClIcon name="plus" size={9} /></span>} />
         <div style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 6, padding: '6px 0' }}>
-          <ProBeam><button type="button" className="cl-btn" onClick={p.onHint} disabled={p.asking} style={{ ...miniBtn, border: 'none', boxShadow: 'none', background: '#EEF3FC', color: '#2F62C4', opacity: p.asking ? 0.6 : 1 }}>{p.asking ? 'Đang nghĩ…' : 'Bí? Gợi ý'}</button></ProBeam>
+          {p.asking
+            ? <ThinkingLoader phases={HINT_PHASES} interval={1800} />
+            : <ProBeam><button type="button" className="cl-btn" onClick={p.onHint} style={{ ...miniBtn, border: 'none', boxShadow: 'none', background: '#EEF3FC', color: '#2F62C4' }}>Bí? Gợi ý</button></ProBeam>}
           {p.helper && <span style={{ marginLeft: 6, fontFamily: CL.sans, fontSize: 11.5, lineHeight: 1.4, color: CL.ink4 }}>{p.helper}</span>}
         </div>
       </li>}
@@ -260,7 +260,7 @@ export function ChainEditor(p: ChainEditorProps) {
             {p.hint.why && <span style={{ fontFamily: CL.sans, fontSize: 11.5, lineHeight: 1.45, color: CL.ink4 }}>{p.hint.why}</span>}
             <span style={{ display: 'flex', gap: 6, marginTop: 6, flexWrap: 'wrap' }}>
               <button type="button" className="cl-btn cl-add" onClick={() => { addStep(); p.onCloseHint(); }} style={{ ...miniBtn, borderColor: '#EBDDA8', color: CL.yellowText }}>Trả lời ở bước mới</button>
-              <button type="button" className="cl-btn cl-add" onClick={p.onHint} disabled={p.asking} style={miniBtn}>{p.asking ? 'Đang nghĩ…' : 'Hỏi cách khác'}</button>
+              {p.asking ? <ThinkingLoader size="sm" phases={HINT_PHASES} interval={1800} /> : <button type="button" className="cl-btn cl-add" onClick={p.onHint} style={miniBtn}>Hỏi cách khác</button>}
               <button type="button" className="cl-btn cl-link" onClick={p.onCloseHint} style={{ marginLeft: 'auto', fontFamily: CL.sans, fontSize: 10.5, fontWeight: 600, color: CL.ink4 }}>Ẩn</button>
             </span>
           </div>
@@ -271,7 +271,7 @@ export function ChainEditor(p: ChainEditorProps) {
         <Rail last center={CENTER.end} ok={green} dot={<span style={{ width: 9, height: 9, borderRadius: 2, background: '#B8862B', boxShadow: '0 0 0 4px #fff' }} />} />
         <div style={{ flex: 1, minWidth: 0, padding: '6px 10px', display: 'flex', flexDirection: 'column', gap: 4 }}>
           <ClLabel color="#B33A1A">{p.endLabel}</ClLabel>
-          {p.endNode ?? <span style={{ fontFamily: CL.sans, fontSize: 15, fontWeight: 500, lineHeight: 1.5, color: '#B33A1A' }}>{p.end}</span>}
+          {p.endNode ?? <span style={{ fontFamily: CL.sans, fontSize: 15, fontWeight: 500, lineHeight: 1.5, color: '#B33A1A' }}>{reading ? <ScanText text={p.end} offset={readAt[readAt.length - 1]} total={readTotal} /> : p.end}</span>}
           {green && (
             <span className="co-pop" style={{ alignSelf: 'flex-start', marginTop: 8, display: 'inline-flex', alignItems: 'center', gap: 6, borderRadius: 8, background: CL.mintSoft, color: CL.greenText, padding: '4px 12px', fontFamily: CL.sans, fontSize: 12, fontWeight: 600 }}>
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path className="co-tick" d="M5 12l5 5 9-10" /></svg>Mạch ý đi liền

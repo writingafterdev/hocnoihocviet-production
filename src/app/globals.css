@@ -374,6 +374,11 @@ a:hover { color: #404040; }
 .pro-ring-in { display: inline-flex; padding: 2px; border-radius: calc(var(--pro-r) - 2px); background: #fff; }
 @media (prefers-reduced-motion: reduce) { .pro-fill > button, .pro-ring { animation: none !important; } }
 
+/* ScanText: the AI reading a text: faded, words come into view one by one and stay, then the whole fades back. */
+@keyframes scan-read { 0% { opacity: .28; } 4%, 82% { opacity: 1; } 100% { opacity: .28; } }
+.scan-read { animation-name: scan-read; animation-timing-function: ease-out; animation-iteration-count: infinite; animation-fill-mode: both; }
+@media (prefers-reduced-motion: reduce) { .scan-read { animation: none; opacity: .55; } }
+
 /* Text fields: solid border, soft blue ring on focus (BoardUI input feel). */
 .cl-field { transition: border-color var(--duration-quick) ease, box-shadow var(--duration-quick) ease; }
 .cl-field:focus-within { border-color: var(--color-accent-500) !important; box-shadow: 0 0 0 3px rgba(47, 98, 196, .16) !important; }

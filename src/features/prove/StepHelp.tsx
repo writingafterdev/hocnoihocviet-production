@@ -10,6 +10,7 @@ import { ProBeam } from '@/components/ui/pro-beam';
 import { ThinkingLoader } from '@/components/ui/thinking-loader';
 
 const VOCAB_PHASES = ['Đang đọc bước này', 'Đang nghĩ câu hỏi', 'Đang chọn từ vựng'];
+const SCAN_PHASES = ['Đang đọc bước này', 'Đang tìm cách nói hay hơn'];
 
 interface Phrase { en: string; vi: string }
 interface Scan { used: string[]; parts: { text: string; phrases: Phrase[] }[] }
@@ -125,7 +126,7 @@ export function useStepHelp(promptId: string, base: Omit<ChainIn, 'steps'>, step
     // Enter adds one empty step right after a scan, so one more step than at the last anchor still counts as the same place.
     const samePlace = !!sc && (steps[i]?.trim() === sc.text || (i < steps.length && steps.length - sc.count >= 0 && steps.length - sc.count <= 1));
     if (sc && samePlace) {
-      if (sc.load.state === 'loading') return <div style={panel}><span style={label}>Đang đọc bước này…</span></div>;
+      if (sc.load.state === 'loading') return <ThinkingLoader phases={SCAN_PHASES} interval={1800} />;
       if (sc.load.state === 'error') return <div style={panel}><span style={{ ...label, color: CL.redText }}>{sc.load.error}</span></div>;
       const d = sc.load.data;
       const vd = vocab[i];
