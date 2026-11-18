@@ -13,7 +13,7 @@ import { primaryBtn } from '../coach/ui';
 import { bandText, CRITERIA, markStyle, CRITERION_STYLE, draftsKey, requestEssayReview, retryEssayCriterion, wordCount, type EssayReview, type EssaySection } from '../desk/scoring';
 import { passes, type FixTask } from './FixFlow';
 import { checkFix, rescore } from './fix-api';
-import { applyEdits, FixBody, matchesFix } from './InlineFix';
+import { applyEdits, DoneTick, FixBody, Folded, matchesFix } from './InlineFix';
 import { Clamp } from './Clamp';
 import { GuidedHeader, GuidedWriter, useGuidedPlan } from './GuidedWriter';
 import { MiniChain } from './MiniChain';
@@ -476,14 +476,17 @@ export function WriteScreen({ prompt, chains, setChains, essay, setEssay, toolba
             const on = active === note, st = CRITERION_STYLE[note.crit];
             const t = taskOf(note), key = t?.item.key || '', open = !!t && openFix === key && !editing, solved = !!t && !!essay.fix?.solved.includes(key);
             return (
-              <div key={note.item.key + note.crit} role="button" tabIndex={0} aria-pressed={on} className={'cl-btn' + (sending ? ' co-skel-in' : '')}
+              <Folded key={note.item.key + note.crit} solved={solved}>{(folded) => (
+              <div role="button" tabIndex={0} aria-pressed={on} className={'cl-btn co-note' + (folded ? ' done' : '') + (sending ? ' co-skel-in' : '')}
                 onClick={() => setActive(on ? null : note)} onKeyDown={(e) => { if (e.key === 'Enter' && e.target === e.currentTarget) setActive(on ? null : note); }}
-                style={{ flexShrink: 0, textAlign: 'left', cursor: 'pointer', padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 6, borderRadius: 12, border: '1px solid ' + (open ? '#2F62C4' : CL.ink1), background: on && !open ? CL.panel : '#fff', opacity: stale && !open ? 0.6 : 1, transition: 'background-color .2s, border-color .2s' }}>
+                style={{ flexShrink: 0, textAlign: 'left', cursor: 'pointer', padding: '12px 14px', display: 'flex', flexDirection: 'column', borderRadius: 12, border: '1px solid ' + (open ? '#2F62C4' : CL.ink1), background: on && !open ? CL.panel : '#fff', opacity: stale && !open ? 0.6 : 1, transition: 'background-color .2s, border-color .2s' }}>
                 <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <span style={{ width: 3, height: 13, borderRadius: 2, background: solved ? CL.green : st.line }} />
-                  <span style={{ fontFamily: CL.sans, fontSize: 13, fontWeight: 600, color: CL.ink }}>{note.item.label || CRIT_SHORT[note.crit]}</span>
+                  {folded ? <DoneTick /> : <span style={{ width: 3, height: 13, borderRadius: 2, background: solved ? CL.green : st.line }} />}
+                  <span className="co-note-label" style={{ fontFamily: CL.sans, fontSize: 13, fontWeight: 600, color: folded ? CL.greenText : CL.ink }}>{note.item.label || CRIT_SHORT[note.crit]}</span>
                   <span style={{ marginLeft: 'auto', fontFamily: CL.sans, fontSize: 10.5, color: CL.ink5, textAlign: 'right' }}>{note.item.where.split(' · Mạch')[0]}</span>
                 </span>
+                {/* Fixed: everything below the title folds away and the title is crossed off. */}
+                <span className="co-note-fold" aria-hidden={folded || undefined}><span style={{ minHeight: 0, overflow: 'hidden' }}><span style={{ display: 'flex', flexDirection: 'column', gap: 6, paddingTop: 6 }}>
                 {/* No quote: the words are marked in the essay, and picking the card highlights them there. */}
                 <Clamp lines={3} style={{ fontFamily: CL.sans, fontSize: 12.5, lineHeight: 1.5, color: CL.ink7 }}>{note.item.text.replace(/\*\*/g, '')}</Clamp>
                 {/* The fix is the answer to type: hidden here, shown only as first-letter hints inside "Sửa". */}
@@ -501,7 +504,9 @@ export function WriteScreen({ prompt, chains, setChains, essay, setEssay, toolba
                       style={{ marginLeft: 'auto', height: 30, padding: '0 12px', borderRadius: 10, border: '1px solid rgba(0,0,0,.12)', background: '#fff', boxShadow: '0 1px 2px rgba(0,0,0,.05)', fontFamily: CL.sans, fontSize: 13, fontWeight: 500, color: CL.ink }}>{solved ? 'Xem lại' : 'Sửa'}</button>
                   </span>
                 ))}
+                </span></span></span>
               </div>
+              )}</Folded>
             );
           })}
               </div>

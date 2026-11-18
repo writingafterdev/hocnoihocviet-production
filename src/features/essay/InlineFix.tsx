@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { CL } from '../chainlab/constants';
 import { primaryBtn } from '../coach/ui';
 import { CRITERION_STYLE } from '../desk/scoring';
@@ -54,6 +54,30 @@ export function applyEdits(text: string, tasks: FixTask[], edits: Record<string,
 }
 
 /**
+ * A comment that has just been fixed: its green line shows for a moment, then the card folds down to its title, crossed
+ * off with a ✓ (the same motion as a chain note fixed on Enter). One that was already fixed shows folded at once.
+ */
+export function useFolded(solved: boolean) {
+  const [folded, setFolded] = useState(solved);
+  useEffect(() => {
+    if (!solved) { setFolded(false); return; }
+    const t = setTimeout(() => setFolded(true), 1800);
+    return () => clearTimeout(t);
+  }, [solved]);
+  return folded;
+}
+
+/** `useFolded` for places that render cards in a loop. */
+export function Folded({ solved, children }: { solved: boolean; children: (folded: boolean) => ReactNode }) {
+  return <>{children(useFolded(solved))}</>;
+}
+
+/** The ✓ badge a folded comment shows in place of its colour bar. */
+export const DoneTick = () => (
+  <span className="co-note-badge co-unfold" style={{ minWidth: 20, height: 18, borderRadius: 5, background: CL.mintSoft, color: CL.greenText, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontFamily: CL.sans, fontSize: 10.5, fontWeight: 700 }}>✓</span>
+);
+
+/**
  * One comment that is fixed where it stands: "Sửa" opens it; the guiding question sits on top, "Gợi ý cách viết"
  * shows the model rewrite's meaning and the first letter of each word, the student types the new words, "Kiểm tra".
  */
@@ -62,31 +86,41 @@ export function FixCard({ task, where, comment, open, onOpen, edit, setEdit, sol
   edit: string; setEdit: (v: string) => void; solved: boolean; verdict?: CheckOut; checking: boolean; error: string; onCheck: () => void;
 }) {
   const st = CRITERION_STYLE[task.crit] || CRITERION_STYLE.tr;
+  const folded = useFolded(solved);
 
-  if (!open) {
+  if (!open && !solved) {
     return (
       <div style={{ flexShrink: 0, borderRadius: 12, border: '1px solid ' + CL.border, background: '#fff', padding: '12px 14px', display: 'flex', alignItems: 'center', gap: 10 }}>
-        <span style={{ width: 3, alignSelf: 'stretch', borderRadius: 2, background: solved ? CL.green : st.line }} />
+        <span style={{ width: 3, alignSelf: 'stretch', borderRadius: 2, background: st.line }} />
         <span style={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 }}>
           <b style={{ fontFamily: CL.sans, fontSize: 13.5, fontWeight: 600, color: CL.ink }}>{task.title}</b>
           <span style={label}>{where}</span>
         </span>
-        {solved
-          ? <span style={{ marginLeft: 'auto', borderRadius: 6, padding: '3px 8px', background: CL.mintSoft, color: CL.greenText, fontFamily: CL.sans, fontSize: 12, fontWeight: 600, whiteSpace: 'nowrap' }}>Đã sửa</span>
-          : <button type="button" className="cl-btn" onClick={onOpen} style={{ ...smallBtn, marginLeft: 'auto', height: 30 }}>Sửa</button>}
+        <button type="button" className="cl-btn" onClick={onOpen} style={{ ...smallBtn, marginLeft: 'auto', height: 30 }}>Sửa</button>
       </div>
     );
   }
 
+  // Open for fixing, or fixed: once fixed it folds down to its crossed-off title.
+  const active = open && !folded;
   return (
-    <div className="co-unfold" style={{ flexShrink: 0, borderRadius: 12, border: '1px solid #2F62C4', background: '#fff', padding: 14, display: 'flex', flexDirection: 'column', gap: 9 }}>
+    <div className={'co-note' + (folded ? ' done' : '')} style={{ flexShrink: 0, borderRadius: 12, border: '1px solid ' + (active ? '#2F62C4' : CL.border), background: '#fff', padding: active ? 14 : '12px 14px', display: 'flex', flexDirection: 'column', transition: 'border-color .3s ease, padding .3s ease' }}>
       <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-        <b style={{ fontFamily: CL.sans, fontSize: 13.5, fontWeight: 600, color: CL.ink }}>{task.title}</b>
+        {folded && <DoneTick />}
+        <b className="co-note-label" style={{ fontFamily: CL.sans, fontSize: 13.5, fontWeight: 600, color: folded ? CL.greenText : CL.ink }}>{task.title}</b>
         <span style={{ ...label, marginLeft: 'auto' }}>{where}</span>
       </span>
-      {/* Why it's wrong first (the struck words are already marked in the paragraph, so no quote here), then the question. */}
-      {(comment || task.plan?.why) && <span style={{ fontFamily: CL.sans, fontSize: 13, lineHeight: 1.55, color: CL.ink7 }}>{comment || task.plan?.why}</span>}
-      <FixBody task={task} edit={edit} setEdit={setEdit} solved={solved} verdict={verdict} checking={checking} error={error} onCheck={onCheck} />
+      {open && (
+        <span className="co-note-fold" aria-hidden={folded || undefined}>
+          <span style={{ minHeight: 0, overflow: 'hidden' }}>
+            <span style={{ display: 'flex', flexDirection: 'column', gap: 9, paddingTop: 9 }}>
+              {/* Why it's wrong first (the struck words are already marked in the paragraph, so no quote here), then the fix. */}
+              {(comment || task.plan?.why) && <span style={{ fontFamily: CL.sans, fontSize: 13, lineHeight: 1.55, color: CL.ink7 }}>{comment || task.plan?.why}</span>}
+              <FixBody task={task} edit={edit} setEdit={setEdit} solved={solved} verdict={verdict} checking={checking} error={error} onCheck={onCheck} />
+            </span>
+          </span>
+        </span>
+      )}
     </div>
   );
 }
