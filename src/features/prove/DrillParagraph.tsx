@@ -39,7 +39,7 @@ export function DrillParagraph({ s, prompt, steps, guided: startGuided, onBack, 
   const plan = useGuidedPlan(prompt, [chain], essay, setEssay, sentence);
   const [chat, setChat] = useState(!startGuided);
   const [review, setReview] = useState<Review | null>(saved?.review || null);
-  // Kept for "Về chuỗi" and back: the draft, the guided round and the comments with their rewrites.
+  // Kept for "Về mạch ý" and back: the draft, the guided round and the comments with their rewrites.
   useEffect(() => { onSave?.({ essay, review }); }, [essay, review]); // eslint-disable-line react-hooks/exhaustive-deps
   const [reviewing, setReviewing] = useState(false);
   const [error, setError] = useState('');
@@ -114,7 +114,7 @@ export function DrillParagraph({ s, prompt, steps, guided: startGuided, onBack, 
       <div style={{ flex: 1, minHeight: 0, display: 'grid', gridTemplateColumns: '300px minmax(0,1fr)' + (chat || review || reviewing ? ' 360px' : ''), gap: 18 }}>
         <aside style={card}>
           <div style={{ padding: '16px 18px', borderBottom: '1px solid ' + CL.ink1, display: 'flex', flexDirection: 'column', gap: 6 }}>
-            <ClLabel>Câu cần chứng minh</ClLabel>
+            <ClLabel>Câu chủ đề</ClLabel>
             <span style={{ fontFamily: CL.sans, fontSize: 14, lineHeight: 1.5, color: CL.ink }}>{sentence}</span>
           </div>
           <div className="cl-scroll" style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: '14px 12px' }}>
