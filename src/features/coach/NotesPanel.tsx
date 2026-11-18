@@ -1,7 +1,6 @@
 'use client';
 
 import { CL } from '../chainlab/constants';
-import { ThinkingLoader } from '@/components/ui/thinking-loader';
 import { NOTE_STYLE, type CheckResult, type PlacedNote } from './useCoach';
 
 /** While "Kiểm tra" runs: a status for screen readers (the mạch ý itself shows the reading). */
@@ -23,7 +22,7 @@ export function NoteCard({ note, k, on, faded, onPick, delay, done, busy, miss }
       <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
         <span className="co-note-badge" style={{ minWidth: 22, height: 20, padding: '0 6px', borderRadius: 5, background: done ? CL.mintSoft : st.bg, color: done ? CL.greenText : st.fg, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontFamily: CL.sans, fontSize: 10.5, fontWeight: 700 }}>{done ? '✓' : k + 1}</span>
         <span className="co-note-label" style={{ fontFamily: CL.sans, fontSize: 13, fontWeight: 600, color: done ? CL.greenText : st.fg }}>{st.label}</span>
-        {busy && <span style={{ marginLeft: 'auto' }}><ThinkingLoader size="sm" phases={['Đang đọc bước này', 'Đang xem có nhảy cóc không', 'Đang kiểm tra chi tiết']} /></span>}
+        {busy && <span role="status" className="sr-only">Đang kiểm tra</span>}
       </span>
       <span className="co-note-fold" aria-hidden={done || undefined}>
         <span style={{ minHeight: 0, overflow: 'hidden' }}>

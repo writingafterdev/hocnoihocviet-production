@@ -102,6 +102,8 @@ export function ChainEditor(p: ChainEditorProps) {
    * checked after Enter, only its step is read (a missing step's note: the step typed below the gap).
    */
   const reading = !!(p.checking || p.check?.checking);
+  // One signal per Enter: a step with an open note gets only its note check (the step is read), not the phrasing help too.
+  const noteOn = (i: number) => live.some((n) => open(n) && (n.type === 'jump' ? n.step === i - 1 : n.step === i));
   const busySteps = new Set(live.filter((n) => p.check?.busy?.includes(noteKey(n))).map((n) => (n.type === 'jump' ? n.step + 1 : n.step)));
   const readParts = [p.startNode ? '' : p.start, ...p.steps.map((x) => x.trim()), p.endNode ? '' : p.end];
   const readTotal = readParts.reduce((t, x) => t + wordCount(x), 0);
@@ -224,7 +226,7 @@ export function ChainEditor(p: ChainEditorProps) {
               onChange={(e) => edit(i, e.target.value)}
               onPaste={(e) => { if (p.blockPaste?.(e.clipboardData.getData('text'))) { e.preventDefault(); p.onBlockedPaste?.(); } }}
               onKeyDown={(e) => {
-                if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) { e.preventDefault(); if (s.trim()) { p.onSubmitStep?.(i, s.trim()); p.check?.onStepEnter?.(i, p.steps); if (i === n - 1 || p.steps[i + 1]?.trim()) insertAfter(i); else { focusAt.current = i + 1; refs.current[i + 1]?.focus(); } } }
+                if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) { e.preventDefault(); if (s.trim()) { if (!noteOn(i)) p.onSubmitStep?.(i, s.trim()); p.check?.onStepEnter?.(i, p.steps); if (i === n - 1 || p.steps[i + 1]?.trim()) insertAfter(i); else { focusAt.current = i + 1; refs.current[i + 1]?.focus(); } } }
                 else if (e.key === 'Backspace' && !s && n > 1) { e.preventDefault(); remove(i); }
               }}
               style={{ flex: 1, minWidth: 0, minHeight: 24, resize: 'none', border: 'none', outline: 'none', background: 'transparent', padding: 0, fontFamily: CL.serif, fontSize: 15, lineHeight: 1.55, color: CL.ink8 }} />}
