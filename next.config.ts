@@ -10,6 +10,10 @@ const nextConfig: NextConfig = {
   devIndicators: { position: 'bottom-right' },
   // Dev server only: extra hostnames allowed to load dev assets (e.g. a preview proxy), comma-separated in DEV_ORIGINS.
   allowedDevOrigins: (process.env.DEV_ORIGINS || '').split(',').map((s) => s.trim()).filter(Boolean),
+  // Production builds: Turbopack's scope hoisting (16.4.6) merged the thinking loader and the Chip badge into one module
+  // and exported both as the same minified name, so the grading screen rendered an empty Chip instead of its loader.
+  // Off until that is fixed upstream; modules stay separate and every import gets the component it asked for.
+  experimental: { turbopackScopeHoisting: false },
 };
 
 export default nextConfig;
