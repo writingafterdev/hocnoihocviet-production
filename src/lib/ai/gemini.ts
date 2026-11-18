@@ -12,12 +12,14 @@ export interface GeminiReply { text: string; stop: 'end_turn' | 'max_tokens'; in
 const URL_CHAT = 'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions';
 
 /**
- * Tried in this order, fastest first (measured from the Worker, Nov 2026: about 2 s for a short reply), then the slower
- * models (3.8 Flash about 25 s; Gemini 4 Hydrogen and Gemma 4 31B over 30 s). Free tier: Flash about 20 requests a day,
- * Flash Lite about 500, Gemma about 14,400. Override with GEMINI_MODELS (comma-separated ids).
+ * Tried in this order. 3 Flash leads: the fastest model whose answers hold up (production, Nov 2026: about 3 s a call,
+ * almost no failures). 3.6 Flash is slower and often times out or answers 503; the Flash Lite models are fastest but
+ * answer feedback too thinly, so they only stand in for quick replies (see `noLite`). Essay grading puts the strongest
+ * model first instead (QUALITY_FIRST). Free tier: each Flash model about 20 requests a day per key, Flash Lite about 500,
+ * Gemma about 14,400. Override with GEMINI_MODELS (comma-separated ids).
  */
 export const DEFAULT_MODELS = [
-  'gemini-3.6-flash', 'gemini-3-flash-preview', 'gemini-3.5-flash-lite', 'gemini-3.1-flash-lite',
+  'gemini-3-flash-preview', 'gemini-3.6-flash', 'gemini-3.5-flash-lite', 'gemini-3.1-flash-lite',
   'gemini-3.8-flash', 'gemini-4-hydrogen', 'gemma-4-31b-it',
 ];
 
