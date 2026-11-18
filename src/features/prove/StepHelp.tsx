@@ -6,6 +6,7 @@ import { miniBtn } from '../coach/ChainEditor';
 import type { ChainIn } from '../coach/useCoach';
 import { AI_ERROR_TEXT, AiRequestError, postAi } from '../ai/request';
 import { findPrompt } from '@/content/prompts';
+import { ProBeam } from '@/components/ui/pro-beam';
 
 interface Phrase { en: string; vi: string }
 interface Scan { used: string[]; parts: { text: string; phrases: Phrase[] }[] }
@@ -159,13 +160,13 @@ export function useStepHelp(promptId: string, base: Omit<ChainIn, 'steps'>, step
     // Reopening a hidden card costs nothing; a new "Gợi ý" counts against the limit, and once it's used up the button goes.
     const left = limit == null ? null : limit - uses;
     if (v && v.state === 'done' && hidden[i]) return (
-      <button type="button" className="cl-btn" onClick={() => setHidden((h) => ({ ...h, [i]: false }))} style={{ ...miniBtn, boxShadow: 'none', background: '#EEF3FC', color: '#2F62C4' }}>Gợi ý</button>
+      <ProBeam><button type="button" className="cl-btn" onClick={() => setHidden((h) => ({ ...h, [i]: false }))} style={{ ...miniBtn, boxShadow: 'none', background: '#EEF3FC', color: '#2F62C4' }}>Gợi ý</button></ProBeam>
     );
     if (!v || v.state === 'error' && left === 0) {
       if (left === 0) return <span style={label}>Đã dùng hết {limit} lượt gợi ý cho câu này</span>;
       return (
         <span style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <button type="button" className="cl-btn" onClick={() => askVocab(i)} style={{ ...miniBtn, boxShadow: 'none', background: '#EEF3FC', color: '#2F62C4' }}>Gợi ý</button>
+          <ProBeam><button type="button" className="cl-btn" onClick={() => askVocab(i)} style={{ ...miniBtn, boxShadow: 'none', background: '#EEF3FC', color: '#2F62C4' }}>Gợi ý</button></ProBeam>
           {left != null && <span style={label}>còn {left} lượt cho câu này</span>}
         </span>
       );
