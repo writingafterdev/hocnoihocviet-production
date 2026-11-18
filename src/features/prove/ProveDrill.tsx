@@ -1,6 +1,7 @@
 'use client';
 
 import { Volume2, VolumeX } from 'lucide-react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Illustration } from '@/components/brand/Illustration';
 import { setSfxEnabled, sfx, sfxEnabled } from '@/lib/sfx';
@@ -245,14 +246,19 @@ export function ProveDrill() {
     const paraErrs = tasks.map((t) => ({ where: 'Đoạn văn', label: t.title, quote: t.item.quote || '', fix: t.how || '' }));
     a.id.then((aid) => { if (aid) saveParagraph(aid, text, paraErrs); });
   };
-  // "Làm lại câu này" from Mạch ý đã chứng minh: /prove?s=<id> opens that statement straight away.
+  // "Làm lại câu này" from Mạch ý đã chứng minh: /prove?s=<id> opens that statement straight away. Read through the
+  // router (not location.search, which still holds the previous address while a client navigation's effects run).
+  const router = useRouter();
+  const params = useSearchParams();
+  const wanted = params.get('s');
+  const opened = useRef<string | null>(null);
   useEffect(() => {
-    const sid = new URLSearchParams(location.search).get('s');
-    const target = sid ? findStatement(sid) : null;
-    if (!target) return;
-    history.replaceState(null, '', location.pathname);
+    const target = wanted ? findStatement(wanted) : null;
+    if (!target || opened.current === target.id) return;
+    opened.current = target.id;
     open(target, STATEMENTS);
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+    router.replace('/prove', { scroll: false });
+  }, [wanted]); // eslint-disable-line react-hooks/exhaustive-deps
   const chip = s ? kindChip(s) : null;
 
   return (
