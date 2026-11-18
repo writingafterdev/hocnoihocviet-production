@@ -7,6 +7,9 @@ import type { ChainIn } from '../coach/useCoach';
 import { AI_ERROR_TEXT, AiRequestError, postAi } from '../ai/request';
 import { findPrompt } from '@/content/prompts';
 import { ProBeam } from '@/components/ui/pro-beam';
+import { ThinkingLoader } from '@/components/ui/thinking-loader';
+
+const VOCAB_PHASES = ['Đang đọc bước này', 'Đang nghĩ câu hỏi', 'Đang chọn từ vựng'];
 
 interface Phrase { en: string; vi: string }
 interface Scan { used: string[]; parts: { text: string; phrases: Phrase[] }[] }
@@ -171,7 +174,8 @@ export function useStepHelp(promptId: string, base: Omit<ChainIn, 'steps'>, step
         </span>
       );
     }
-    if (v.state === 'loading') return <div style={card}><span style={label}>Đang tìm gợi ý…</span></div>;
+    // While the AI works: a small chip whose label walks through what it is doing.
+    if (v.state === 'loading') return <ThinkingLoader phases={VOCAB_PHASES} interval={1800} />;
     if (v.state === 'error') return <div style={card}><span style={{ ...label, color: CL.redText }}>{v.error}</span></div>;
     return (
       <div className="co-unfold" style={card}>
