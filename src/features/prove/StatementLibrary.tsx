@@ -51,7 +51,8 @@ export function StatementLibrary({ view, setView, done, onOpen, onRandom }: { vi
   const pager = (className: string) => <Pagination className={className} previousLabel="Trang trước" nextLabel="Trang sau" aria-label="Chọn trang" page={page + 1} totalPages={pages} onChange={(n) => { setPage(n - 1); document.querySelector('main')?.scrollTo({ top: 0 }); }} />;
 
   return (
-    <div className="co-rise" style={{ flex: 1, minHeight: 0, overflowY: 'auto' }}>
+    // Scrolls on its own: a few px of padding so the cards' outline (drawn just outside them) isn't cut at the edges.
+    <div className="co-rise" style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: '2px 4px 24px 2px' }}>
       <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 24, marginBottom: 24 }}>
         <div style={{ width: 96, height: 96, borderRadius: 12, background: '#FFF0EB', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
           <img src="/illustrations/man-sitting-on-question-mark-and-thinking.svg" style={{ width: 84, height: 84, objectFit: 'contain', mixBlendMode: 'multiply' }} alt="" />
