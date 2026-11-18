@@ -82,7 +82,7 @@ export function StatementLibrary({ view, setView, done, onOpen, onRandom }: { vi
                 <RiShuffleLine size={20} style={{ flexShrink: 0, marginRight: 8, color: '#525252' }} />
               </button>
               {filtered.slice(page * PAGE, (page + 1) * PAGE).map((s) => {
-                const chip = kindChip(s), topic = topicOf(s);
+                const chip = kindChip(s), topic = topicOf(s), prompt = findPrompt(s.promptId);
                 return (
                   <button key={s.id} type="button" onClick={() => onOpen(s, filtered)} className="pl-card" style={{ display: 'flex', alignItems: 'center', gap: 14, padding: 10, width: '100%', textAlign: 'left', font: 'inherit', color: '#171717', cursor: 'pointer', border: 'none', borderRadius: 12, background: '#fff', boxShadow: '0 0 0 1px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.05)' }}>
                     <div style={{ width: 84, height: 84, borderRadius: 8, background: '#F5F5F5', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -94,6 +94,7 @@ export function StatementLibrary({ view, setView, done, onOpen, onRandom }: { vi
                         {topic && <span style={{ borderRadius: 4, background: '#EDF7EA', padding: '2px 7px', fontSize: 11.5, fontWeight: 600, color: '#167A59' }}>{topic}</span>}
                       </div>
                       <p style={{ fontFamily: 'var(--font-sans)', fontSize: 14, fontWeight: 500, lineHeight: 1.5, margin: 0 }}><Sentence s={s} /></p>
+                      {prompt && <p style={{ fontFamily: 'var(--font-sans)', fontSize: 12.5, fontStyle: 'italic', lineHeight: 1.5, color: '#737373', margin: 0, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{prompt.text}</p>}
                     </div>
                     {done.has(s.id) && <span aria-label="Đã làm" style={{ flexShrink: 0, width: 24, marginRight: 8, textAlign: 'center', fontSize: 15, fontWeight: 700, color: '#2D6E1E' }}>✓</span>}
                   </button>
