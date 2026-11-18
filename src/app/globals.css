@@ -340,34 +340,39 @@ a:hover { color: #404040; }
  * colour wheel from the button's own blue, so it harmonises), and a faint blurred copy behind as a glow. */
 @property --pro-a { syntax: '<angle>'; inherits: false; initial-value: 0deg; }
 @keyframes pro-spin { to { --pro-a: 360deg; } }
+/*
+ * Pro buttons: the button face itself is a slow-moving gradient (the app's blues, violet and a soft pink, deep enough for
+ * white text) under a fine white grain. Pro avatars keep a thin ring in the same colours.
+ */
+@keyframes pro-flow { 0% { background-position: 0% 30%; } 50% { background-position: 100% 60%; } 100% { background-position: 30% 100%; } }
+.pro-fill { display: inline-flex; flex-shrink: 0; }
+.pro-fill > button:not(:disabled) {
+  position: relative; overflow: hidden; isolation: isolate;
+  border: none !important; color: #fff !important;
+  background-color: #5B79E6 !important;
+  background-image:
+    radial-gradient(60% 90% at 15% 20%, #4C74E4 0%, transparent 70%),
+    radial-gradient(55% 85% at 85% 15%, #8B6EEA 0%, transparent 70%),
+    radial-gradient(60% 90% at 75% 95%, #D97AB4 0%, transparent 70%),
+    radial-gradient(60% 90% at 20% 90%, #6F93EE 0%, transparent 70%) !important;
+  background-size: 240% 240% !important;
+  animation: pro-flow 9s ease-in-out infinite alternate;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .32), 0 4px 12px -6px rgba(91, 111, 240, .6) !important;
+  text-shadow: 0 1px 1px rgba(30, 36, 110, .28);
+}
+/* The grain: fractal noise, white, softly blended over the colour. */
+.pro-fill > button:not(:disabled)::before {
+  content: ''; position: absolute; inset: 0; z-index: -1; pointer-events: none; opacity: .38; mix-blend-mode: soft-light;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 1.6 -.35'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
 .pro-ring {
   --pro-r: 14px;
-  --pro-grad: conic-gradient(from var(--pro-a), #E6ECF8 0%, #E6ECF8 38%, #77A1DD 54%, #5B6FF0 68%, #A06BEA 82%, #F07AB8 93%, #E6ECF8 100%);
-  position: relative; isolation: isolate; display: inline-flex; flex-shrink: 0; padding: 2px; border-radius: var(--pro-r);
-  background: var(--pro-grad); animation: pro-spin 3.4s linear infinite;
+  --pro-grad: conic-gradient(from var(--pro-a), #4C74E4 0%, #6F93EE 25%, #8B6EEA 50%, #D97AB4 75%, #4C74E4 100%);
+  position: relative; display: inline-flex; flex-shrink: 0; padding: 2px; border-radius: var(--pro-r);
+  background: var(--pro-grad); animation: pro-spin 6s linear infinite;
 }
-.pro-ring::before {
-  content: ''; position: absolute; inset: -2px; z-index: -1; border-radius: calc(var(--pro-r) + 2px);
-  background: var(--pro-grad); filter: blur(9px); opacity: .55; animation: pro-spin 3.4s linear infinite;
-}
-.pro-ring-in { display: inline-flex; padding: 2px; border-radius: calc(var(--pro-r) - 2px); background: transparent; }
-
-/* A Pro button itself: a deeper, richer royal blue with a glassy top edge, a coloured lift and a slow shine sweep. */
-@keyframes pro-shine { 0%, 55% { transform: translateX(-130%); } 100% { transform: translateX(130%); } }
-.pro-ring-in > .cl-primary {
-  overflow: hidden;
-  background-image: linear-gradient(180deg, #7FA0EA 0%, #6B8DE0 100%);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .35), 0 3px 8px -5px rgba(53, 99, 233, .35);
-  text-shadow: none;
-}
-.pro-ring-in > .cl-primary:disabled { background-image: var(--gradient-button-primary-disabled); box-shadow: none; text-shadow: none; }
-.pro-ring-in > .cl-primary:not(:disabled)::after {
-  content: ''; position: absolute; inset: 0; pointer-events: none;
-  background: linear-gradient(105deg, transparent 38%, rgba(255, 255, 255, .22) 50%, transparent 62%);
-  transform: translateX(-130%); animation: pro-shine 3.8s ease-in-out infinite;
-}
-@media (prefers-reduced-motion: reduce) { .pro-ring-in > .cl-primary::after { animation: none; display: none; } }
-@media (prefers-reduced-motion: reduce) { .pro-ring, .pro-ring::before { animation: none; } }
+.pro-ring-in { display: inline-flex; padding: 2px; border-radius: calc(var(--pro-r) - 2px); background: #fff; }
+@media (prefers-reduced-motion: reduce) { .pro-fill > button, .pro-ring { animation: none !important; } }
 
 /* Text fields: solid border, soft blue ring on focus (BoardUI input feel). */
 .cl-field { transition: border-color var(--duration-quick) ease, box-shadow var(--duration-quick) ease; }

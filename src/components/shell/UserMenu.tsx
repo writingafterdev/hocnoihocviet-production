@@ -44,7 +44,7 @@ export function UserMenu({ placement = 'down', variant = 'avatar' }: { placement
     <div ref={ref} style={{ position: 'relative' }}>
       {variant === 'row' ? (
         <button type="button" onClick={() => setOpen(!open)} aria-haspopup="menu" aria-expanded={open} aria-label="Tài khoản" className="cl-rv" style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%', padding: 8, border: 'none', borderRadius: 10, background: open ? 'rgba(0,0,0,0.045)' : 'none', cursor: 'pointer', textAlign: 'left', fontFamily: 'var(--font-sans)' }}>
-          <ProBeam radius={18}>
+          <ProBeam radius={18} kind="avatar">
             <span style={{ width: 32, height: 32, borderRadius: 9999, background: 'var(--brand-blue-soft)', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 600, color: 'var(--brand-blue-deep)', flexShrink: 0 }}>
               {user.image ? <img src={user.image} alt="" referrerPolicy="no-referrer" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : initials(user.name || user.email)}
             </span>
@@ -55,7 +55,7 @@ export function UserMenu({ placement = 'down', variant = 'avatar' }: { placement
           </span>
         </button>
       ) : (
-      <ProBeam radius={18}>
+      <ProBeam radius={18} kind="avatar">
       <button type="button" onClick={() => setOpen(!open)} aria-haspopup="menu" aria-expanded={open} aria-label="Tài khoản" style={{ width: 40, height: 40, padding: 0, border: 'none', borderRadius: 9999, background: 'var(--brand-blue-soft)', overflow: 'hidden', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--font-sans)', fontSize: 12, fontWeight: 600, color: 'var(--brand-blue-deep)' }}>
         {user.image ? <img src={user.image} alt="" referrerPolicy="no-referrer" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : initials(user.name || user.email)}
       </button>
