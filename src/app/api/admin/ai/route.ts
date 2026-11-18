@@ -1,7 +1,7 @@
 import { getCloudflareContext } from '@opennextjs/cloudflare';
 import { getAdmin, notFound } from '@/lib/admin';
 import { vnDay } from '@/lib/ai/claude';
-import { geminiKeys, geminiModels, modelUse, probeModels } from '@/lib/ai/gemini';
+import { geminiKeys, geminiModels, keyTail, keyUse, modelUse, probeKeys, probeModels } from '@/lib/ai/gemini';
 
 const json = (body: unknown) => Response.json(body, { headers: { 'Cache-Control': 'no-store' } });
 
@@ -25,7 +25,14 @@ export async function GET(request: Request) {
       last: t?.lastStatus ? { status: t.lastStatus, at: t.lastAt } : null,
     };
   });
+  // Each key by its last 4 characters (never the key itself): today's answered, used-up and refused calls, and the last status.
+  const keyRows = gemini ? await keyUse(env, today).catch(() => []) : [];
+  const keyList = geminiKeys(env).map((key, i) => {
+    const r = keyRows.find((x) => x.tail === keyTail(key));
+    return { n: i + 1, tail: keyTail(key), today: { ok: r?.ok || 0, limited: r?.limited || 0, bad: r?.bad || 0 }, last: r?.lastStatus ? { status: r.lastStatus, at: r.lastAt } : null };
+  });
   return json({
+    keyList: gemini ? keyList : [],
     provider: gemini ? 'gemini' : env.ANTHROPIC_API_KEY ? 'anthropic' : 'none',
     keys: geminiKeys(env).length,
     custom: !!env.GEMINI_MODELS,
@@ -34,9 +41,13 @@ export async function GET(request: Request) {
   });
 }
 
-/** "Kiểm tra từng mô hình": one tiny request per model (uses one request of each model's free allowance). */
+/**
+ * "Kiểm tra từng mô hình": one tiny request per model (uses one request of each model's free allowance).
+ * With ?what=keys, "Kiểm tra từng khoá": one tiny request per key instead.
+ */
 export async function POST(request: Request) {
   if (!(await getAdmin(request))) return notFound();
   const { env } = await getCloudflareContext({ async: true });
+  if (new URL(request.url).searchParams.get('what') === 'keys') return json({ keys: await probeKeys(env) });
   return json({ results: await probeModels(env) });
 }

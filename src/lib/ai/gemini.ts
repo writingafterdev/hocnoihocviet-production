@@ -70,6 +70,28 @@ async function recentlyHanging(e: CloudflareEnv, models: string[]): Promise<Set<
   } catch { return new Set(); }
 }
 
+/**
+ * Per key and day: answered, used up (429), refused as invalid, and the last status. A key is known by its last 4
+ * characters only (the full key is never stored). The admin panel's "Khoá API" rows read it. Best effort, like logModelUse.
+ */
+let keyTableReady: Promise<unknown> | null = null;
+const KEY_TABLE = 'create table if not exists ai_key_use (day text not null, tail text not null, ok integer not null default 0, limited integer not null default 0, bad integer not null default 0, lastStatus text, lastAt integer, primary key (day, tail))';
+export const keyTail = (key: string) => key.trim().slice(-4);
+async function logKeyUse(e: CloudflareEnv, key: string, outcome: 'ok' | 'limited' | 'bad', status: string) {
+  try {
+    if (!e.DB) return;
+    keyTableReady = keyTableReady || e.DB.prepare(KEY_TABLE).run();
+    await keyTableReady;
+    await e.DB.prepare('insert into ai_key_use (day, tail, ok, limited, bad, lastStatus, lastAt) values (?1, ?2, ?3, ?4, ?5, ?6, ?7) on conflict (day, tail) do update set ok = ok + ?3, limited = limited + ?4, bad = bad + ?5, lastStatus = ?6, lastAt = ?7')
+      .bind(vnToday(), keyTail(key), outcome === 'ok' ? 1 : 0, outcome === 'limited' ? 1 : 0, outcome === 'bad' ? 1 : 0, status.slice(0, 200), Date.now()).run();
+  } catch { keyTableReady = null; }
+}
+export async function keyUse(e: CloudflareEnv, fromDay: string) {
+  keyTableReady = keyTableReady || e.DB.prepare(KEY_TABLE).run();
+  await keyTableReady;
+  return (await e.DB.prepare('select * from ai_key_use where day >= ? order by day').bind(fromDay).all<{ day: string; tail: string; ok: number; limited: number; bad: number; lastStatus: string | null; lastAt: number | null }>()).results;
+}
+
 export class GeminiError extends Error {
   code: 'timeout' | 'upstream';
   constructor(code: 'timeout' | 'upstream', message: string) { super(message); this.code = code; }
@@ -155,6 +177,7 @@ export async function callGemini(e: CloudflareEnv, { system, input, maxTokens, t
         const text = c?.message?.content || '';
         if (!text) { last = model + ':empty'; skip.set(id, Date.now() + 60_000); await logModelUse(e, model, 'failed', { ms: Date.now() - t0, status: 'empty' }); continue; }
         await logModelUse(e, model, 'ok', { input: data.usage?.prompt_tokens, output: data.usage?.completion_tokens, ms: Date.now() - t0, status: '200' });
+        await logKeyUse(e, keys[k], 'ok', '200 · ' + model);
         return { text, stop: c?.finish_reason === 'length' ? 'max_tokens' : 'end_turn', input: data.usage?.prompt_tokens || 0, output: data.usage?.completion_tokens || 0, model };
       }
       const detail = (await res.text().catch(() => '')).slice(0, 400);
@@ -163,9 +186,11 @@ export async function callGemini(e: CloudflareEnv, { system, input, maxTokens, t
       // Keep Google's own message with the status, so the admin card can say why (bad key, unknown model, used up…).
       const why = (detail.match(/"message"\s*:\s*"([^"]+)/)?.[1] || '').slice(0, 140);
       await logModelUse(e, model, res.status === 429 ? 'limited' : 'failed', { ms: Date.now() - t0, status: res.status + (why ? ': ' + why : '') });
+      const badKey = res.status === 401 || res.status === 403 || (res.status === 400 && /api.?key/i.test(detail));
+      if (res.status === 429 || badKey) await logKeyUse(e, keys[k], badKey ? 'bad' : 'limited', res.status + ' · ' + model + (why ? ': ' + why : ''));
       if (res.status === 429) skip.set(id, /per.?day|PerDay|daily/i.test(detail) ? nextReset() : Date.now() + 60_000);
       // A bad key (Google answers 400 "Please pass a valid API key", or 401/403): set it aside for every model.
-      else if (res.status === 401 || res.status === 403 || (res.status === 400 && /api.?key/i.test(detail))) { for (const m of models) skip.set(m + '|' + k, Date.now() + 6 * 3600_000); }
+      else if (badKey) { for (const m of models) skip.set(m + '|' + k, Date.now() + 6 * 3600_000); }
       else if (res.status === 404 || res.status === 400) skip.set(id, Date.now() + 6 * 3600_000); // unknown or unsupported model id
       else skip.set(id, Date.now() + 30_000); // 5xx: busy, try the next one
     }
@@ -220,6 +245,30 @@ export async function probeModels(e: CloudflareEnv): Promise<{ model: string; st
       return { model, status: res.ok ? 'ok' : String(res.status), ms: Date.now() - t0, note };
     } catch (err) {
       return { model, status: 'error', ms: Date.now() - t0, note: err instanceof Error ? err.message.slice(0, 160) : 'error' };
+    }
+  }));
+}
+
+/**
+ * Admin "Kiểm tra từng khoá": one tiny request per key, on a Flash Lite model when the list has one (the largest free
+ * allowance), so an invalid or used-up key shows at once. Returns each key by its last 4 characters only.
+ */
+export async function probeKeys(e: CloudflareEnv): Promise<{ n: number; tail: string; model: string; status: string; ms: number; note: string }[]> {
+  const models = geminiModels(e);
+  const model = models.find((m) => m.includes('-lite')) || models[0];
+  return Promise.all(geminiKeys(e).map(async (key, i) => {
+    const t0 = Date.now();
+    try {
+      const res = await fetch(URL_CHAT, {
+        method: 'POST', headers: { 'content-type': 'application/json', authorization: 'Bearer ' + key },
+        body: JSON.stringify({ model, messages: [{ role: 'user', content: 'Reply with the single word OK.' }], max_tokens: 20, ...(model.startsWith('gemma') ? {} : { reasoning_effort: 'low' }) }),
+        signal: AbortSignal.timeout(30_000),
+      });
+      const body = (await res.text().catch(() => '')).slice(0, 300);
+      const note = res.ok ? '' : (body.match(/"message"\s*:\s*"([^"]+)/)?.[1] || body).slice(0, 160);
+      return { n: i + 1, tail: keyTail(key), model, status: res.ok ? 'ok' : String(res.status), ms: Date.now() - t0, note };
+    } catch (err) {
+      return { n: i + 1, tail: keyTail(key), model, status: 'error', ms: Date.now() - t0, note: err instanceof Error ? err.message.slice(0, 160) : 'error' };
     }
   }));
 }
