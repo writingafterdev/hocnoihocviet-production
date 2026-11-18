@@ -40,6 +40,29 @@ const MARK = {
 } as const;
 
 /** The statement with its start (mint), stakeholder (sky) and end (yellow) highlighted; `still` skips the highlighter sweep. */
+/** The statement card keeps one height (room for a three-line statement and two lines of the prompt) so the mạch ý below never jumps. */
+const STATEMENT_H = 244;
+
+/** The IELTS prompt under the statement: two lines, with Xem thêm / Thu gọn only when it is longer than that. */
+function PromptLine({ text, open, setOpen, hidden }: { text: string; open: boolean; setOpen: (v: boolean) => void; hidden: boolean }) {
+  const ref = useRef<HTMLParagraphElement>(null);
+  const [long, setLong] = useState(false);
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const measure = () => setLong(open || el.scrollHeight > el.clientHeight + 1);
+    measure();
+    const ro = new ResizeObserver(measure); ro.observe(el);
+    return () => ro.disconnect();
+  }, [text, open]);
+  return (
+    <span style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 4, opacity: hidden ? 0 : 1, transition: 'opacity .45s ease' }}>
+      <p ref={ref} style={{ margin: 0, fontFamily: CL.sans, fontSize: 12.5, fontStyle: 'italic', lineHeight: 1.6, color: CL.ink5, ...(open ? {} : { display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }) }}>{text}</p>
+      {long && <button type="button" className="cl-btn cl-link" aria-expanded={open} onClick={() => setOpen(!open)} style={{ fontFamily: CL.sans, fontSize: 12, fontWeight: 600, color: CL.ink5, padding: 0 }}>{open ? 'Thu gọn' : 'Xem thêm'}</button>}
+    </span>
+  );
+}
+
 function Sentence({ s, still }: { s: Statement; still?: boolean }) {
   return (
     <>
@@ -80,6 +103,7 @@ export function ProveDrill() {
   const [reel, setReel] = useState<Reel | null>(null);
   const [landed, setLanded] = useState(0);
   const [promptOut, setPromptOut] = useState(false);
+  const [promptOpen, setPromptOpen] = useState(false);
   const sentenceRef = useRef<HTMLParagraphElement>(null);
   const reelRef = useRef<HTMLDivElement>(null);
 
@@ -114,7 +138,7 @@ export function ProveDrill() {
   useEffect(() => { if (coach.allFixed) sfx.success(); }, [coach.allFixed]);
 
   const land = (k: number) => {
-    setI(k); setSteps(['']); setActive(null); setReel(null); setPara(null); setPromptOut(false); setLanded((n) => n + 1);
+    setI(k); setSteps(['']); setActive(null); setReel(null); setPara(null); setPromptOut(false); setPromptOpen(false); setLanded((n) => n + 1);
     sfx.pop();
     coach.reset();
   };
@@ -229,11 +253,11 @@ export function ProveDrill() {
         <CoachGrid
           open={chat || showSample}
           main={
-            <main className="co-col" style={{ minWidth: 0 }}>
-              <section style={{ flex: '1 1 0', minHeight: 0, display: 'flex', flexDirection: 'column', borderRadius: 12, border: '1px solid ' + CL.border, background: '#fff', overflow: 'hidden' }}>
+            <main className="co-col" style={{ minWidth: 0, display: 'flex', flexDirection: 'column', gap: 12 }}>
                 {s && chip && prompt ? (
                   <>
-                    <div className="relative pb-5 pl-[34px] pr-[34px] pt-[22px] xl:pr-[200px]" style={{ borderBottom: '1px solid ' + CL.ink1, display: 'flex', flexDirection: 'column', gap: 12 }}>
+                    {/* The statement: its own card, always the same height; the full IELTS prompt opens on demand. */}
+                    <section key={'st' + s.id} className="relative pb-5 pl-[34px] pr-[34px] pt-[22px] xl:pr-[200px]" style={{ flexShrink: 0, boxSizing: 'border-box', height: promptOpen ? 'auto' : STATEMENT_H, minHeight: STATEMENT_H, overflow: 'hidden', borderRadius: 12, border: '1px solid ' + CL.border, background: '#fff', display: 'flex', flexDirection: 'column', gap: 12 }}>
                       <Illustration key={'drawing-' + s.id} name={DRAWING[s.kind] || DRAWING.impact} className="co-rise pointer-events-none absolute bottom-3 right-6 top-3 hidden h-[calc(100%-24px)] w-[150px] xl:block" />
                       <span style={{ display: 'flex', alignItems: 'center', gap: 10, perspective: 400 }}>
                         <ClLabel>Chứng minh câu này</ClLabel>
@@ -249,8 +273,9 @@ export function ProveDrill() {
                       ) : (
                         <p key={s.id} ref={sentenceRef} style={sentenceStyle}><Sentence s={s} /></p>
                       )}
-                      <p style={{ margin: 0, fontFamily: CL.sans, fontSize: 12.5, fontStyle: 'italic', lineHeight: 1.6, color: CL.ink5, opacity: promptOut ? 0 : 1, transition: 'opacity .45s ease' }}>{reel && !promptOut ? findPrompt(reel.target.promptId)?.text : prompt.text}</p>
-                    </div>
+                      <PromptLine text={(reel && !promptOut ? findPrompt(reel.target.promptId)?.text : prompt.text) || ''} open={promptOpen} setOpen={setPromptOpen} hidden={promptOut} />
+                    </section>
+                    <section style={{ flex: '1 1 0', minHeight: 0, display: 'flex', flexDirection: 'column', borderRadius: 12, border: '1px solid ' + CL.border, background: '#fff', overflow: 'hidden' }}>
                     <div key={'b' + s.id} className={'cl-scroll' + (landed ? ' co-rise' : '')} style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: '20px 32px 16px 34px', opacity: rolling ? 0 : 1, transform: rolling ? 'translateY(6px)' : 'none', transition: 'opacity .5s ease, transform .5s ease' }}>
                       <ChainEditor
                         start={s.start} end={s.end} startLabel={ENDS[s.kind].start + ' · đề cho'} endLabel={ENDS[s.kind].end + ' · đề cho'}
@@ -270,9 +295,9 @@ export function ProveDrill() {
                         <ProBeam><button type="button" className="cl-btn cl-primary" onClick={() => setPara('guided')} style={primaryBtn}>Viết có hướng dẫn</button></ProBeam>
                       </div>
                     )}
+                    </section>
                   </>
                 ) : null}
-              </section>
             </main>
           }
           side={
