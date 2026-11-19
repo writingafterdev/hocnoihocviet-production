@@ -91,6 +91,7 @@ interface Ask {
 }
 
 const TICKET_MS = 15 * 60_000;
+const TICKET_KEEP_MS = 60 * 24 * 3600_000;
 
 /**
  * Takes one use of the allowance for a request the browser sends in parts (each part is its own Worker
@@ -103,20 +104,23 @@ export async function startTicket(userId: string, kind: AiKind) {
   await reserve(userId, kind);
   const id = crypto.randomUUID();
   await DB.batch([
-    DB.prepare('delete from ai_ticket where created < ?').bind(Date.now() - 24 * 3600_000),
+    // Kept 60 days, so a criterion that failed can still be fetched again when the student comes back later.
+    DB.prepare('delete from ai_ticket where created < ?').bind(Date.now() - TICKET_KEEP_MS),
     DB.prepare('insert into ai_ticket (id, userId, day, kind, created) values (?, ?, ?, ?, ?)').bind(id, userId, today(), kind, Date.now()),
   ]);
   return id;
 }
 
 /**
- * Claims one part of a ticket; false if the ticket is unknown, someone else's, expired, or the part was
- * already claimed twice (a part may be retried once, e.g. after a failed criterion).
+ * Claims one part of a ticket; false if the ticket is unknown, someone else's, or the part was already claimed twice.
+ * A part's first claim must come within 15 minutes of "Nộp bài"; its one retry ("Thử lại" after a failed criterion)
+ * may come any time while the ticket is kept, so comments that failed on a busy day can still be fetched later
+ * without using up another grading.
  */
 export async function claimTicket(userId: string, ticket: string, part: string) {
   const { DB } = await env();
   const tag = '|' + part + ';';
-  const res = await DB.prepare("update ai_ticket set used = used || ?1 where id = ?2 and userId = ?3 and created > ?4 and (length(used) - length(replace(used, ?1, ''))) < 2 * length(?1)")
+  const res = await DB.prepare("update ai_ticket set used = used || ?1 where id = ?2 and userId = ?3 and (created > ?4 or instr(used, ?1) > 0) and (length(used) - length(replace(used, ?1, ''))) < 2 * length(?1)")
     .bind(tag, ticket, userId, Date.now() - TICKET_MS).run();
   return !!res.meta.changes;
 }
