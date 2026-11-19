@@ -28,12 +28,50 @@ def clean(t):
     return t
 
 
+def uncaps(t):
+    """'1. NGHÈO ĐÓI VÀ BẤT BÌNH ĐẲNG (POVERTY AND INEQUALITY)' -> '1. Nghèo đói và bất bình đẳng (poverty and inequality)'."""
+    # an all-caps lead before an English gloss: "A. THỊNH VƯỢNG… (Societal prosperity…)"
+    m = re.match(r'^([^()]+?)(\s*\(.*)$', t)
+    if m and not any(ch.islower() for ch in m.group(1)) and any(ch.islower() for ch in m.group(2)):
+        return uncaps(m.group(1)) + m.group(2)
+    letters = [ch for ch in t if ch.isalpha()]
+    if len(letters) < 8 or any(ch.islower() for ch in letters):
+        return t
+    keep = {'AI', 'STEM', 'CSR', 'MXH', 'TV', 'IELTS', 'EU', 'MNCS', 'GDP', 'VD', 'CO2'}
+    words = [w if re.sub(r'\W', '', w) in keep else w.lower() for w in t.split(' ')]
+    out = ' '.join(words)
+    return cap(out)
+
+
+def cap(t):
+    """Capital first letter, after a leading "A. " / "1. " marker."""
+    m = re.match(r'^((?:[A-Za-z]|\d{1,2})\.\s+)?(.)', t)
+    if not m:
+        return t
+    i = m.start(2)
+    if m.group(1) and m.group(1)[0].isalpha():
+        return m.group(1).upper() + t[i].upper() + t[i + 1:]
+    return t[:i] + t[i].upper() + t[i + 1:]
+
+
+KEY = re.compile(r'\s*\((?:\*\*\s*super important|super important\s*\*\*)\)', re.I)
+
+
 def line(l):
-    t = clean(l['t'])
+    t = uncaps(clean(l['t']))
     if not t:
         return None
+    key = bool(KEY.search(t))
+    t = KEY.sub('', t).strip()
     out = {'t': t}
-    if l['tag'] == 'li':
+    if key:
+        out['key'] = True  # she marked it "super important"; shown as a "Quan trọng" chip
+    m = re.match(r'^[*•-]\s+(.+)$', t)
+    if m and l['tag'] != 'li':
+        # a hand-typed bullet ("* Poverty often…") becomes a real one
+        out['t'] = m.group(1)
+        out['li'] = 0
+    elif l['tag'] == 'li':
         out['li'] = int(l.get('lvl') or 0)
     elif l['tag'].startswith('h'):
         out['h'] = True
@@ -111,8 +149,9 @@ def split_prompt(t):
 
 
 def prompts_from(lines):
-    """Pull exam prompts (with a following hint) out of a cell; keep everything else as its notes."""
-    out, label = [], None
+    """Pull exam prompts (with the hint after them) out of a cell. Returns (prompts, notes): notes are the cell's
+    other lines, e.g. a remark under the prompts or a label no prompt follows."""
+    out, notes, label = [], [], None  # label: [line, used]
     for x in lines:
         t = x['t']
         if is_prompt(t):
@@ -120,19 +159,23 @@ def prompts_from(lines):
             p = {'text': text}
             if hint: p['hint'] = hint
             if date: p['date'] = date
-            if label: p['label'] = label
+            if label:
+                p['label'] = label[0]['t'].rstrip(':').strip()
+                label[1] = True
             out.append(p)
         elif out and (t[:1] in '(→⇒' or t[:1].islower()) and not t.endswith(':'):
             # a Vietnamese note right after a prompt explains how to use the idea for it
-            h = t.strip()
-            h = h.rstrip('.')
+            h = t.strip().rstrip('.')
             if h.startswith('(') and h.endswith(')'): h = h[1:-1]
-            out[-1]['hint'] = (out[-1].get('hint', '') + ' ' + h).strip() if out[-1].get('label') == label else h
+            out[-1]['hint'] = (out[-1].get('hint', '') + ' ' + h).strip()
+        elif len(t) < 140 and not t.startswith('Ví dụ'):
+            # a short line groups the prompts after it ("Ý tưởng về cha mẹ bận:")
+            if label and not label[1]: notes.append(label[0])
+            label = [x, False]
         else:
-            # a short label line groups the prompts after it ("Ý tưởng về cha mẹ bận:")
-            if len(t) < 140:
-                label = t.rstrip(':')
-    return out
+            notes.append(x)
+    if label and not label[1]: notes.append(label[0])
+    return out, notes
 
 
 def table(b, tid):
@@ -163,7 +206,11 @@ def table(b, tid):
             for k in range(1, c['cs']):
                 cells[col + k] = {'span': 'left'}
             col += c['cs']
-        grid.append([c if c is not None else {'lines': []} for c in cells])
+        row = [c if c is not None else {'lines': []} for c in cells]
+        first = row[0].get('lines')
+        if first:
+            first[0]['t'] = cap(first[0]['t'])
+        grid.append(row)
     return {'kind': 'table', 'id': tid, 'head': head, 'rows': grid}
 
 
@@ -203,7 +250,7 @@ HEAD = {'NGUYÊN NHÂN CỐT LÕI': 'Nguyên nhân cốt lõi', 'CỤ THỂ HÓA
         'ACTIONS BY STAKEHOLDERS': 'Hành động của các bên', 'POWER': 'Quyền lực', 'CỤ THỂ HÓA CHÍNH SÁCH': 'Cụ thể hoá chính sách',
         'IMPACT (SUPER IMPORTANT**)': 'Tác động', 'DẠNG ĐỀ': 'Dạng đề', 'VÍ DỤ': 'Ví dụ', 'CÁCH XỬ LÝ': 'Cách xử lý', 'HỌC THÊM': 'Học thêm'}
 PART = {'B-1': ('Công nghệ', 'AI, Internet, mạng xã hội, điện thoại thông minh, tự động hoá, học online…'), 'B-2': ('Toàn cầu hoá', None),
-        'B-3': ('Thực phẩm nội địa và nhập khẩu', 'Phần này là dàn ý định hướng, bạn tự triển khai thêm nhé.'), 'B-4': ('Kho tác động', 'Tác động phổ biến')}
+        'B-3': ('Thực phẩm nội địa và nhập khẩu', 'Phần này là dàn ý định hướng, bạn tự triển khai thêm nhé.'), 'B-4': ('Kho tác động', None)}
 MACRO = {'A': 'Nguyên nhân cốt lõi của mọi vấn đề', 'B': 'Tác động phổ biến', 'C': 'Giải pháp của mọi vấn đề'}
 for mc in macros:
     mc['title'] = MACRO[mc['id']]
@@ -228,9 +275,10 @@ for mc in macros:
                     c = row[ci] if ci < len(row) else None
                     if not c or 'lines' not in c:
                         continue
-                    ps = prompts_from(c['lines'])
+                    ps, notes = prompts_from(c['lines'])
                     if ps:
                         c['prompts'] = ps
+                        c['lines'] = notes
                     for p in ps:
                         prompts.append({**p, 'macro': mc['id'], 'table': blk['id'], 'row': ri})
 

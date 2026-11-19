@@ -14,6 +14,8 @@ export interface DocLine {
   li?: number;
   h?: boolean | string;
   href?: string;
+  /** She marked it "super important". */
+  key?: boolean;
 }
 
 export interface DocPrompt {
