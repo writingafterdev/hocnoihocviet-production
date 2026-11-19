@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { createContext, useContext, useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
+import { createContext, useCallback, useContext, useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import type { DocBlock, DocCell, DocLine, DocMacro, DocPart, DocPrompt, DocTable } from '@/content/missbacxiu';
 import { HistoryHeader } from '@/features/attempts/HistoryUI';
 
@@ -140,7 +140,7 @@ function Blocks({ blocks }: { blocks: DocBlock[] }) {
   return (
     <>
       {groups.map((g, i) => Array.isArray(g)
-        ? <div key={i} style={{ maxWidth: 820, display: 'flex', flexDirection: 'column', gap: 8, color: '#262626' }}>{g.map((l, j) => <Line key={j} l={l} size={15} />)}</div>
+        ? <div key={i} style={{ display: 'flex', flexDirection: 'column', gap: 8, color: '#262626' }}>{g.map((l, j) => <Line key={j} l={l} size={15} />)}</div>
         : <Table key={g.id} t={g} />)}
     </>
   );
@@ -154,11 +154,34 @@ const isVocabCol = (h: string) => /^Từ vựng/.test(h);
 const th: CSSProperties = { textAlign: 'left', padding: '10px 16px', fontSize: 12.5, fontWeight: 600, color: '#737373', borderBottom: '1px solid #EBEBEB', background: '#FAFAFA', verticalAlign: 'bottom' };
 const td: CSSProperties = { padding: '14px 16px', borderTop: '1px solid #EBEBEB', verticalAlign: 'top' };
 
+/**
+ * A row with prompts is as tall as its slideshow: the other cells are cut to that height and open with "Xem thêm"
+ * (the whole row opens, "Thu gọn" closes it). A merged cell is cut to the rows it covers.
+ */
 function Table({ t }: { t: DocTable }) {
   const n = t.head.length;
   // The first column names the idea; a prompt column needs room for one prompt at a time.
   const wide = n >= 6;
   const widths = t.head.map((h, i) => (i === 0 ? (wide ? 180 : 210) : isPromptCol(h) ? (wide ? 320 : 380) : null));
+  /** Each prompt row's slideshow height, and the rows opened with "Xem thêm". */
+  const [hs, setHs] = useState<Record<number, number>>({});
+  const [open, setOpen] = useState<Set<number>>(new Set());
+  const measure = useCallback((ri: number, h: number) => setHs((m) => (m[ri] === h ? m : { ...m, [ri]: h })), []);
+  const toggle = (from: number, rs: number) => setOpen((o) => {
+    const next = new Set(o);
+    const on = !o.has(from);
+    for (let r = from; r < from + rs; r++) { if (on) next.add(r); else next.delete(r); }
+    return next;
+  });
+  /** The height a cell starting at row `ri` and covering `rs` rows may take while closed (null: no limit). */
+  const limitOf = (ri: number, rs: number) => {
+    let h = 0;
+    for (let r = ri; r < ri + rs; r++) {
+      if (hs[r] === undefined) return null;
+      h += hs[r] + (r > ri ? 29 : 0); // the rows between: their padding and border
+    }
+    return h;
+  };
   return (
     <div style={{ borderRadius: 12, boxShadow: '0 0 0 1px rgba(0,0,0,0.1)', overflowX: 'auto' }}>
       <table style={{ width: '100%', minWidth: Math.max(720, n * 170), borderCollapse: 'collapse', tableLayout: 'fixed', fontSize: 13.5, lineHeight: 1.6 }}>
@@ -169,10 +192,12 @@ function Table({ t }: { t: DocTable }) {
             <tr key={ri}>
               {row.map((c, ci) => {
                 if (c.span) return null;
-                const style: CSSProperties = { ...td, borderLeft: ci ? '1px solid #EBEBEB' : undefined, background: ci === 0 ? '#FCFCFC' : undefined };
+                const bg = ci === 0 ? '#FCFCFC' : '#fff';
+                const style: CSSProperties = { ...td, borderLeft: ci ? '1px solid #EBEBEB' : undefined, background: ci === 0 ? bg : undefined };
+                const rs = c.rs ?? 1;
                 return (
                   <td key={ci} rowSpan={c.rs} colSpan={c.cs} style={c.prompts ? { ...style, height: 1 } : style}>
-                    <Cell c={c} head={t.head[ci] ?? ''} first={ci === 0} />
+                    <Cell c={c} head={t.head[ci] ?? ''} first={ci === 0} bg={bg} open={open.has(ri)} onToggle={() => toggle(ri, rs)} limit={c.prompts ? null : limitOf(ri, rs)} onMeasure={c.prompts ? (h) => measure(ri, h) : undefined} />
                   </td>
                 );
               })}
@@ -184,7 +209,35 @@ function Table({ t }: { t: DocTable }) {
   );
 }
 
-function Cell({ c, head, first }: { c: DocCell; head: string; first: boolean }) {
+const moreBtn: CSSProperties = { marginTop: 8, height: 22, padding: 0, border: 'none', background: 'none', color: '#2F62C4', fontFamily: 'inherit', fontSize: 12.5, fontWeight: 600, cursor: 'pointer' };
+const MORE_H = 30;
+
+/** Content cut to `limit` px (leaving room for its button) with a fade, opened and closed by the row's toggle. */
+function Clamp({ limit, open, onToggle, bg, children }: { limit: number | null; open: boolean; onToggle: () => void; bg: string; children: ReactNode }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [full, setFull] = useState(0);
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    setFull(el.offsetHeight);
+    const ro = new ResizeObserver(() => setFull(el.offsetHeight));
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+  const over = limit !== null && full > limit + 2;
+  const cut = over ? Math.max(48, limit - MORE_H) : undefined;
+  return (
+    <>
+      <div style={{ position: 'relative', overflow: 'hidden', maxHeight: over ? (open ? full : cut) : undefined, transition: `max-height .34s ${EASE}` }}>
+        <div ref={ref}>{children}</div>
+        {over && <span aria-hidden style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: 40, background: `linear-gradient(rgba(255,255,255,0), ${bg})`, opacity: open ? 0 : 1, transition: 'opacity .2s ease', pointerEvents: 'none' }} />}
+      </div>
+      {over && <button type="button" onClick={onToggle} aria-expanded={open} style={moreBtn}>{open ? 'Thu gọn' : 'Xem thêm'}</button>}
+    </>
+  );
+}
+
+function Cell({ c, head, first, bg, open, onToggle, limit, onMeasure }: { c: DocCell; head: string; first: boolean; bg: string; open: boolean; onToggle: () => void; limit: number | null; onMeasure?: (h: number) => void }) {
   if (c.blank) return <span aria-hidden style={{ display: 'block', height: 44, borderRadius: 8, border: '1px dashed #E0E0E0' }} />;
   const lines = c.lines ?? [];
   const text = lines.length > 0 && (
@@ -194,11 +247,17 @@ function Cell({ c, head, first }: { c: DocCell; head: string; first: boolean }) 
         : <Line key={i} l={l} size={13.5} labelBold={isVocabCol(head)} />))}
     </div>
   );
-  if (!c.prompts) return text || null;
+  if (!c.prompts) return text ? <Clamp limit={limit} open={open} onToggle={onToggle} bg={bg}>{text}</Clamp> : null;
+  // Her notes under the prompts stay folded with the row; their button counts in the row's height.
   return (
-    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
-      <Slides prompts={c.prompts} />
-      {text && <div style={{ borderRadius: 8, background: '#FAFAFA', padding: '10px 12px' }}>{text}</div>}
+    <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+      <Slides prompts={c.prompts} onSize={(h) => onMeasure?.(h + (text ? MORE_H : 0))} />
+      {text && (
+        <>
+          {open && <div className="co-rise" style={{ marginTop: 14, borderRadius: 8, background: '#FAFAFA', padding: '10px 12px' }}>{text}</div>}
+          <button type="button" onClick={onToggle} aria-expanded={open} style={{ ...moreBtn, alignSelf: 'flex-start' }}>{open ? 'Thu gọn' : 'Xem thêm'}</button>
+        </>
+      )}
     </div>
   );
 }
@@ -206,8 +265,23 @@ function Cell({ c, head, first }: { c: DocCell; head: string; first: boolean }) 
 // ---- prompt slideshow ----------------------------------------------------------------------------------------------
 
 /** One prompt at a time, with her hint and exam date; dots, a counter and arrows sit at the bottom of the cell. */
-function Slides({ prompts }: { prompts: DocPrompt[] }) {
+function Slides({ prompts, onSize }: { prompts: DocPrompt[]; onSize?: (h: number) => void }) {
   const [at, setAt] = useState(0);
+  // Its natural height (the tallest prompt plus the controls), which sets the row's height while the row is closed.
+  const viewRef = useRef<HTMLDivElement>(null);
+  const pagerRef = useRef<HTMLDivElement>(null);
+  const sizeRef = useRef(onSize);
+  sizeRef.current = onSize;
+  useLayoutEffect(() => {
+    const v = viewRef.current;
+    if (!v) return;
+    const report = () => sizeRef.current?.(v.offsetHeight + (pagerRef.current ? 12 + pagerRef.current.offsetHeight : 0));
+    report();
+    const ro = new ResizeObserver(report);
+    ro.observe(v);
+    if (pagerRef.current) ro.observe(pagerRef.current);
+    return () => ro.disconnect();
+  }, []);
   const done = useContext(DoneCtx);
   const n = prompts.length;
   const go = (i: number) => setAt(Math.max(0, Math.min(n - 1, i)));
@@ -221,7 +295,7 @@ function Slides({ prompts }: { prompts: DocPrompt[] }) {
   };
   return (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: 12 }}>
-      <div style={{ overflow: 'hidden' }}>
+      <div ref={viewRef} style={{ overflow: 'hidden' }}>
         <div style={{ display: 'flex', alignItems: 'flex-start', transform: `translateX(-${at * 100}%)`, transition: `transform .38s ${EASE}` }}>
           {prompts.map((p, i) => (
             <div key={i} inert={i !== at} aria-hidden={i !== at} style={{ flex: '0 0 100%', minWidth: 0, display: 'flex', flexDirection: 'column', gap: 8, opacity: i === at ? 1 : 0, transition: 'opacity .3s ease' }}>
@@ -247,7 +321,7 @@ function Slides({ prompts }: { prompts: DocPrompt[] }) {
         </div>
       </div>
       {n > 1 && (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, paddingTop: 10, borderTop: '1px solid #F0F0F0' }}>
+        <div ref={pagerRef} style={{ display: 'flex', alignItems: 'center', gap: 8, paddingTop: 10, borderTop: '1px solid #F0F0F0' }}>
           <span style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 5, flexWrap: 'wrap' }}>
             {prompts.map((_, i) => (
               <button key={i} type="button" onClick={() => go(i)} aria-label={`Đề ${i + 1}`} aria-current={i === at ? 'true' : undefined} style={{ width: i === at ? 16 : 6, height: 6, padding: 0, border: 'none', borderRadius: 3, background: i === at ? '#2F62C4' : '#E0E0E0', cursor: 'pointer', transition: `width .3s ${EASE}, background .3s ease` }} />
