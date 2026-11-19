@@ -5,12 +5,12 @@ import { useRouter } from 'next/navigation';
 import { useLayoutEffect, useRef, useState } from 'react';
 import { Checkbox } from '@/components/base/checkbox/checkbox';
 import { Pagination } from '@/components/base/pagination/pagination';
-import { RiShuffleLine } from '@remixicon/react';
 import { PageHeader } from '@/components/shell/BrandHeader';
 import { sfx } from '@/lib/sfx';
 import { ModePickerModal } from './ModePickerModal';
 import { CATEGORIES_TASK1, CATEGORIES_TASK2, PROMPTS, TOPIC_ILLUSTRATION, TOPICS_TASK2, type Prompt, type Task } from '@/content/prompts';
 import { startFreeAttempt } from '../attempts/start';
+import { RandomCard } from './RandomCard';
 import { SAMPLE_IDS } from '@/content/samples';
 
 const EASE = 'cubic-bezier(.16,1,.3,1)';
@@ -164,17 +164,7 @@ export function PromptLibrary({ mode = 'write' }: { mode?: 'write' | 'copy' }) {
               <>
                 <p style={{ fontFamily: 'var(--font-sans)', fontSize: 13, color: '#737373', margin: '0 0 4px' }}>{filtered.length} đề</p>
                 {filtered.length > PAGE && pager('mb-1')}
-                {/* The random pick is a small card of its own, in the same style as the prompts below it. */}
-                <button type="button" onClick={randomize} disabled={!!reel} className="pl-card t-card-hover" style={{ display: 'flex', alignItems: 'center', gap: 16, padding: 12, textAlign: 'left', fontFamily: 'var(--font-sans)', color: '#171717', background: '#fff', border: 'none', cursor: 'pointer', borderRadius: 12, boxShadow: '0 0 0 1px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.05)' }}>
-                  <div style={{ width: 136, height: 72, borderRadius: 8, background: '#F5F5F5', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <img src="/illustrations/scuba-diver-opening-treasure-chest-of-opportunities.svg" alt="" style={{ width: 64, height: 64, objectFit: 'contain', mixBlendMode: 'multiply' }} />
-                  </div>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <p style={{ margin: 0, fontSize: 14, fontWeight: 600, lineHeight: 1.4 }}>Đề ngẫu nhiên</p>
-                    <p style={{ margin: '2px 0 0', fontSize: 13, color: '#737373', lineHeight: 1.4 }}>Để mình chọn một đề cho bạn, theo bộ lọc đang chọn.</p>
-                  </div>
-                  <RiShuffleLine size={20} style={{ flexShrink: 0, marginRight: 8, color: '#525252' }} />
-                </button>
+                <RandomCard label="Đề ngẫu nhiên" sub="Để mình chọn một đề cho bạn, theo bộ lọc đang chọn." onClick={randomize} disabled={!!reel} />
               </>
             )}
             {filtered.slice(page * PAGE, (page + 1) * PAGE).map((p) => <PromptCard key={p.id} prompt={p} label={mode === 'copy' ? 'Chép mẫu' : 'Viết bài'} onWrite={() => pick(p)} />)}

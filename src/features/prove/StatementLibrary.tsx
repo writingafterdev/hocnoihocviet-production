@@ -1,10 +1,10 @@
 'use client';
 
-import { RiShuffleLine } from '@remixicon/react';
 import { Pagination } from '@/components/base/pagination/pagination';
 import { findPrompt, TOPIC_ILLUSTRATION, TOPICS_TASK2, type Topic } from '@/content/prompts';
 import { KIND_LABEL, sentenceParts, STATEMENTS, type Statement, type StatementKind } from '@/content/statements';
 import { Filter } from '../library/PromptLibrary';
+import { RandomCard } from '../library/RandomCard';
 import { kindChip } from './kind';
 
 const PAGE = 20;
@@ -75,13 +75,7 @@ export function StatementLibrary({ view, setView, done, onOpen, onRandom }: { vi
             <>
               <p style={{ fontFamily: 'var(--font-sans)', fontSize: 13, color: '#737373', margin: '0 0 4px' }}>{filtered.length} câu</p>
               {pages > 1 && pager('mb-1')}
-              <button type="button" onClick={() => onRandom(filtered)} className="pl-card t-card-hover" style={{ display: 'flex', alignItems: 'center', gap: 16, padding: 12, textAlign: 'left', fontFamily: 'var(--font-sans)', color: '#171717', background: '#fff', border: 'none', cursor: 'pointer', borderRadius: 12, boxShadow: '0 0 0 1px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.05)' }}>
-                <div style={{ width: 136, height: 72, borderRadius: 8, background: '#F5F5F5', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <img src="/illustrations/scuba-diver-opening-treasure-chest-of-opportunities.svg" alt="" style={{ width: 64, height: 64, objectFit: 'contain', mixBlendMode: 'multiply' }} />
-                </div>
-                <p style={{ flex: 1, minWidth: 0, margin: 0, fontSize: 14, fontWeight: 600, lineHeight: 1.4 }}>Câu ngẫu nhiên</p>
-                <RiShuffleLine size={20} style={{ flexShrink: 0, marginRight: 8, color: '#525252' }} />
-              </button>
+              <RandomCard label="Câu ngẫu nhiên" onClick={() => onRandom(filtered)} />
               {filtered.slice(page * PAGE, (page + 1) * PAGE).map((s) => {
                 const chip = kindChip(s), topic = topicOf(s), prompt = findPrompt(s.promptId);
                 return (

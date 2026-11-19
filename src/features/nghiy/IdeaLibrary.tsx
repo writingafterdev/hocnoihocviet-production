@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import { HistoryHeader } from '@/features/attempts/HistoryUI';
+import { RandomCard } from '@/features/library/RandomCard';
 import { MACRO_NAME, MACRO_TINT, type IdeaPrompt, type Macro } from './NghiY';
 
 const MACROS: Macro[] = ['A', 'B', 'C'];
@@ -40,9 +41,9 @@ export function IdeaLibrary({ list, done, onOpen }: { list: IdeaPrompt[]; done: 
           })}
         </div>
         <input type="search" value={query} onChange={(e) => { setQuery(e.target.value); setShown(PAGE); }} placeholder="Tìm đề" aria-label="Tìm đề" style={{ flex: '1 1 220px', maxWidth: 360, height: 36, padding: '0 12px', borderRadius: 8, border: '1px solid #E5E5E5', fontFamily: 'inherit', fontSize: 14, outline: 'none' }} />
-        <button type="button" onClick={random} disabled={!rows.length} style={{ marginLeft: 'auto', height: 36, padding: '0 14px', borderRadius: 8, border: 'none', background: '#2F62C4', color: '#fff', fontFamily: 'inherit', fontSize: 13.5, fontWeight: 600, cursor: 'pointer', opacity: rows.length ? 1 : 0.4 }}>Đề ngẫu nhiên</button>
       </div>
 
+      {rows.length > 0 && <div style={{ marginBottom: 12 }}><RandomCard label="Đề ngẫu nhiên" onClick={random} /></div>}
       <ul style={{ listStyle: 'none', margin: 0, padding: 0, borderRadius: 12, boxShadow: '0 0 0 1px rgba(0,0,0,0.1)', overflow: 'hidden' }}>
         {rows.slice(0, shown).map((p, i) => (
           <li key={p.id} style={{ borderTop: i ? '1px solid #F0F0F0' : 'none' }}>
