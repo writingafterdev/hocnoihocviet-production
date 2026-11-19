@@ -18,15 +18,15 @@ const drill = (disabled?: boolean): Item => ({ label: 'Chứng minh nhanh', href
 const write = (disabled?: boolean): Item => ({ label: 'Luyện viết', href: '/writing', match: disabled ? [] : ['/writing', '/write'], icon: <NavIcon name="write" />, disabled });
 const copy = (disabled?: boolean): Item => ({ label: 'Chép mẫu', href: '/copy', match: disabled ? [] : ['/copy'], icon: <NavIcon name="copy" />, disabled });
 
-// Writing holds Task 2 (quick drill, writing practice, copying a sample) and Task 1 (not open yet); vocab and the student's own essays stand apart.
+// Tài liệu missbacxiu (her doc and Nghĩ ý) comes first; Writing holds Task 2 (quick drill, writing practice, copying a sample) and Task 1 (not open yet); vocab and the student's own essays stand apart.
 const GROUPS: Group[] = [
   { items: [{ label: 'Trang chủ', href: '/home', match: ['/home'], icon: <NavIcon name="home" /> }] },
+  { label: 'Tài liệu missbacxiu', items: [{ label: 'Tài liệu', href: '/tai-lieu', match: ['/tai-lieu'], icon: <NavIcon name="essays" /> },
+    { label: 'Nghĩ ý', href: '/nghi-y', match: ['/nghi-y'], icon: <NavIcon name="chains" /> }] },
   { label: 'Writing', sections: [
     { label: 'Task 2', items: [drill(), write(), copy()] },
     { label: 'Task 1', soon: true, items: [drill(true), write(true), copy(true)] },
   ] },
-  { label: 'Tài liệu missbacxiu', items: [{ label: 'Tài liệu', href: '/tai-lieu', match: ['/tai-lieu'], icon: <NavIcon name="essays" /> },
-    { label: 'Nghĩ ý', href: '/nghi-y', match: ['/nghi-y'], icon: <NavIcon name="chains" /> }] },
   { label: 'Từ vựng', items: [{ label: 'Từ vựng theo chủ đề', href: '/vocab', match: ['/vocab'], icon: <NavIcon name="vocab" /> }] },
   { label: 'Của bạn', items: [
     { label: 'Bài đã viết', href: '/attempts', match: ['/attempts'], icon: <NavIcon name="essays" /> },
