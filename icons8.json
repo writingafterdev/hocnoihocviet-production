@@ -30,6 +30,10 @@
       "chains": {
         "id": "0MftJBCtFvP0",
         "commonName": "serial-tasks"
+      },
+      "cafe": {
+        "id": "qVxUFrGyyG3Y",
+        "commonName": "vietnamese-coffee"
       }
     }
   }

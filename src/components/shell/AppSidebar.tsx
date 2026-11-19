@@ -21,7 +21,7 @@ const copy = (disabled?: boolean): Item => ({ label: 'Chép mẫu', href: '/copy
 // Tài liệu missbacxiu (her doc and Nghĩ ý) comes first; Writing holds Task 2 (quick drill, writing practice, copying a sample) and Task 1 (not open yet); vocab and the student's own essays stand apart.
 const GROUPS: Group[] = [
   { items: [{ label: 'Trang chủ', href: '/home', match: ['/home'], icon: <NavIcon name="home" /> }] },
-  { label: 'Tài liệu missbacxiu', items: [{ label: 'Tài liệu', href: '/tai-lieu', match: ['/tai-lieu'], icon: <NavIcon name="essays" /> },
+  { label: 'Tài liệu missbacxiu', items: [{ label: 'Tài liệu', href: '/tai-lieu', match: ['/tai-lieu'], icon: <NavIcon name="cafe" /> },
     { label: 'Nghĩ ý', href: '/nghi-y', match: ['/nghi-y'], icon: <NavIcon name="chains" /> }] },
   { label: 'Writing', sections: [
     { label: 'Task 2', items: [drill(), write(), copy()] },

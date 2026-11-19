@@ -33,7 +33,7 @@ export function DocView({ macro, part, intro, toc, next }: { macro: Pick<DocMacr
   return (
     <DoneCtx.Provider value={done}>
     <main style={{ maxWidth: 1560, margin: '0 auto', padding: '24px 32px 64px', fontFamily: 'var(--font-sans)', color: '#171717' }}>
-      <HistoryHeader img="woman-with-paper-document-thinking" tint="#FFF6DE" title="Tài liệu missbacxiu" />
+      <HistoryHeader img="woman-in-a-window-drinking-tea" tint="#FFF6DE" title="Tài liệu missbacxiu" />
       <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
         <div style={{ display: 'flex', alignItems: 'flex-start', gap: 24, flexWrap: 'wrap' }}>
           <div style={{ flex: '1 1 420px', display: 'flex', flexDirection: 'column', gap: 10 }}>
