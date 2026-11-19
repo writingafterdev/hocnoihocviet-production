@@ -40,8 +40,6 @@ const MARK = {
 } as const;
 
 /** The statement with its start (mint), stakeholder (sky) and end (yellow) highlighted; `still` skips the highlighter sweep. */
-/** The statement card keeps one height (room for a three-line statement and two lines of the prompt) so the mạch ý below never jumps. */
-const STATEMENT_H = 244;
 
 /** The IELTS prompt under the statement: two lines, with Xem thêm / Thu gọn only when it is longer than that. */
 function PromptLine({ text, open, setOpen, hidden }: { text: string; open: boolean; setOpen: (v: boolean) => void; hidden: boolean }) {
@@ -291,7 +289,7 @@ export function ProveDrill() {
                 {s && chip && prompt ? (
                   <>
                     {/* The statement: its own card, always the same height; the full IELTS prompt opens on demand. */}
-                    <section key={'st' + s.id} className="relative pb-5 pl-[34px] pr-[34px] pt-[22px]" style={{ flexShrink: 0, boxSizing: 'border-box', height: promptOpen ? 'auto' : STATEMENT_H, minHeight: STATEMENT_H, overflow: 'hidden', borderRadius: 12, border: '1px solid ' + CL.border, background: '#fff', display: 'flex', flexDirection: 'column', gap: 12 }}>
+                    <section key={'st' + s.id} className="relative px-[34px] py-[22px]" style={{ flexShrink: 0, boxSizing: 'border-box', overflow: 'hidden', borderRadius: 12, border: '1px solid ' + CL.border, background: '#fff', display: 'flex', flexDirection: 'column', gap: 12 }}>
                       <span style={{ display: 'flex', alignItems: 'center', gap: 10, perspective: 400 }}>
                         <ClLabel>Chứng minh câu này</ClLabel>
                         <span key={s.id} className={landed ? 'co-flip' : ''} style={{ display: 'inline-block', borderRadius: 5, padding: '4px 8px', background: chip.bg, color: chip.fg, fontFamily: CL.sans, fontSize: 12, fontWeight: 500 }}>{chip.label}</span>

@@ -174,7 +174,7 @@ export function IdeaExercise({ p, onLibrary, onNext, onDone }: { p: IdeaPrompt; 
           open={chat || showSample}
           main={
             <main className="co-col" style={{ minWidth: 0, display: 'flex', flexDirection: 'column', gap: 12 }}>
-              <section className="relative pb-5 pl-[34px] pr-[34px] pt-[22px]" style={{ flexShrink: 0, boxSizing: 'border-box', borderRadius: 12, border: '1px solid ' + CL.border, background: '#fff', display: 'flex', flexDirection: 'column', gap: 12 }}>
+              <section className="relative px-[34px] py-[22px]" style={{ flexShrink: 0, boxSizing: 'border-box', borderRadius: 12, border: '1px solid ' + CL.border, background: '#fff', display: 'flex', flexDirection: 'column', gap: 12 }}>
                 <span style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
                   <ClLabel>Nghĩ ý cho đề này</ClLabel>
                   <span style={{ borderRadius: 5, padding: '4px 8px', background: MACRO_TINT[p.macro].bg, color: MACRO_TINT[p.macro].fg, fontSize: 12, fontWeight: 500 }}>{MACRO_NAME[p.macro]}</span>
