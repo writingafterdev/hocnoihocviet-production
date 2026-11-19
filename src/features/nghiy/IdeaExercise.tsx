@@ -11,7 +11,7 @@ import { AI_ERROR_TEXT, AiRequestError, postAi } from '../ai/request';
 import { SignedOutError } from '../attempts/store';
 import { CL } from '../chainlab/constants';
 import { ClIcon, ClLabel, toolbarBtn } from '../chainlab/ui/primitives';
-import { ChainEditor } from '../coach/ChainEditor';
+import { ChainEditor, miniBtn } from '../coach/ChainEditor';
 import { CoachGrid, SidePanel } from '../coach/CoachGrid';
 import { ENDS } from '../coach/ends';
 import { TranslatorChat } from '../coach/TranslatorChat';
@@ -56,6 +56,8 @@ export function IdeaExercise({ p, onLibrary, onNext, onDone }: { p: IdeaPrompt; 
   }, [p.id, tries]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const [mine, setMine] = useState('');
+  /** The two ends are set and "Dựng mạch" pressed: the steps between appear. */
+  const [built, setBuilt] = useState(false);
   const [hints, setHints] = useState(0);
   const [steps, setSteps] = useState<string[]>(['']);
   const [active, setActive] = useState<number | null>(null);
@@ -77,7 +79,7 @@ export function IdeaExercise({ p, onLibrary, onNext, onDone }: { p: IdeaPrompt; 
   const notes = coach.fresh && coach.result ? coach.result.placed : [];
   const clean = !!coach.result && ((coach.fresh && coach.result.placed.length === 0) || coach.allFixed);
   const showSample = !!coach.result?.sample?.length && !coach.allFixed;
-  const ready = !!ends && !!mine.trim() && coach.filled > 0;
+  const ready = built && !!ends && !!mine.trim() && coach.filled > 0;
   const check = () => { setActive(null); coach.runCheck(); };
 
   // Every note raised on the way is kept, and saved with the attempt once the mạch ý passes (✓ in the list).
@@ -99,41 +101,53 @@ export function IdeaExercise({ p, onLibrary, onNext, onDone }: { p: IdeaPrompt; 
 
   const labelMine = (mineStart ? ENDS[kind].start : ENDS[kind].end) + ' · bạn tìm';
   const labelGiven = (mineStart ? ENDS[kind].end : ENDS[kind].start) + ' · đề cho';
-  const mineColor = mineStart ? CL.greenText : '#B33A1A';
+  const canBuild = !!ends && !!mine.trim();
+  const build = () => { if (canBuild) setBuilt(true); };
 
-  const givenNode = ends ? (
-    <span style={{ fontFamily: CL.sans, fontSize: 15, fontWeight: 500, lineHeight: 1.5, color: mineStart ? '#B33A1A' : CL.greenText }}>{given}</span>
-  ) : endsErr ? (
-    <span style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', fontFamily: CL.sans, fontSize: 13.5, color: CL.ink5 }}>
-      {endsErr}
-      <button type="button" className="cl-btn" onClick={() => setTries((n) => n + 1)} style={toolbarBtn(false)}>Thử lại</button>
-    </span>
-  ) : (
-    <Skeleton shape="text" style={{ width: '60%', height: 18, marginTop: 3 }} />
+  /** Step one, like Dựng mạch ý: the two ends side by side; the steps between come only after "Dựng mạch". */
+  const givenBox = (
+    <div style={{ minWidth: 0, display: 'flex', flexDirection: 'column', gap: 6, padding: '12px 14px', borderRadius: 10, border: '1px solid ' + CL.ink1, background: CL.panel }}>
+      <ClLabel color={CL.ink5}>{labelGiven}</ClLabel>
+      {ends ? (
+        <span style={{ fontFamily: CL.serif, fontSize: 15, lineHeight: 1.55, color: CL.ink8 }}>{given}</span>
+      ) : endsErr ? (
+        <span style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', fontSize: 13.5, color: CL.ink5 }}>
+          {endsErr}
+          <button type="button" className="cl-btn" onClick={() => setTries((n) => n + 1)} style={toolbarBtn(false)}>Thử lại</button>
+        </span>
+      ) : (
+        <Skeleton shape="text" style={{ width: '70%', height: 18, marginTop: 3 }} />
+      )}
+    </div>
   );
-
-  const mineNode = (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-      <textarea
-        aria-label={labelMine}
-        value={mine}
+  const mineBox = (
+    <div className="cl-field" style={{ minWidth: 0, display: 'flex', flexDirection: 'column', gap: 6, padding: '12px 14px', borderRadius: 10, border: '1px solid ' + (mine.trim() ? 'var(--color-border-button-hover)' : 'var(--color-border-button-default)'), background: '#fff', boxShadow: 'var(--shadow-xs)' }}>
+      <ClLabel color={CL.ink}>{labelMine}</ClLabel>
+      <textarea className="co-ta" aria-label={labelMine} value={mine} rows={2} autoFocus placeholder={ends?.ask || ''} disabled={!ends}
         onChange={(e) => setMine(e.target.value)}
-        rows={2}
-        placeholder={ends?.ask || ''}
-        disabled={!ends}
-        style={{ width: '100%', boxSizing: 'border-box', resize: 'vertical', minHeight: 56, padding: '10px 12px', borderRadius: 10, border: '1px solid ' + (mine.trim() ? CL.ink2 : '#77A1DD'), boxShadow: mine.trim() ? 'none' : '0 0 0 3px #EEF3FC', fontFamily: CL.sans, fontSize: 15, fontWeight: 500, lineHeight: 1.5, color: mineColor, outline: 'none', background: '#fff' }}
-      />
-      {ends && !checked && hints < HINTS && (
+        onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) { e.preventDefault(); build(); } }}
+        style={{ display: 'block', width: '100%', resize: 'none', border: 'none', outline: 'none', background: 'transparent', padding: 0, fontFamily: CL.serif, fontSize: 15, lineHeight: 1.55, color: CL.ink8 }} />
+    </div>
+  );
+  const arrow = (
+    <svg aria-hidden="true" viewBox="0 0 36 12" style={{ width: 36, height: 12, alignSelf: 'center', overflow: 'visible' }}>
+      <line x1="1" y1="6" x2="29" y2="6" stroke={CL.ink6} strokeWidth="1.5" />
+      <path d="M27 1.5 L35 6 L27 10.5 Z" fill={CL.ink6} />
+    </svg>
+  );
+  const hintArea = ends && (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 14 }}>
+      {hints < HINTS && (
         <span style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <ProBeam><button type="button" className="cl-btn cl-primary" onClick={() => setHints((h) => h + 1)} style={{ ...primaryBtn, height: 32 }}>Gợi ý</button></ProBeam>
-          <span style={{ fontFamily: CL.sans, fontSize: 12.5, color: CL.ink5 }}>còn {HINTS - hints} lượt</span>
+          <span style={{ fontSize: 12.5, color: CL.ink5 }}>còn {HINTS - hints} lượt</span>
         </span>
       )}
-      {ends && hints >= 1 && (
-        <div className="co-rise" style={{ borderRadius: 10, background: '#F7F9FD', boxShadow: '0 0 0 1px #DCE7F7', padding: '10px 14px', fontFamily: CL.sans, fontSize: 14, lineHeight: 1.55, color: CL.ink8 }}>{ends.nudge}</div>
+      {hints >= 1 && (
+        <div className="co-rise" style={{ borderRadius: 10, background: '#F7F9FD', boxShadow: '0 0 0 1px #DCE7F7', padding: '10px 14px', fontSize: 14, lineHeight: 1.55, color: CL.ink8 }}>{ends.nudge}</div>
       )}
-      {ends && hints >= 2 && (
-        <div className="co-rise" style={{ borderRadius: 10, background: '#fff', boxShadow: '0 0 0 1px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.05)', padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 8, fontFamily: CL.sans }}>
+      {hints >= 2 && (
+        <div className="co-rise" style={{ borderRadius: 10, background: '#fff', boxShadow: '0 0 0 1px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.05)', padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 8 }}>
           <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <span style={{ borderRadius: 4, padding: '1px 6px', background: MACRO_TINT[p.macro].bg, color: MACRO_TINT[p.macro].fg, fontSize: 11.5, fontWeight: 700 }}>{p.macro}</span>
             <span style={{ fontSize: 12.5, fontWeight: 600, color: CL.ink5 }}>{p.idea}</span>
@@ -148,6 +162,7 @@ export function IdeaExercise({ p, onLibrary, onNext, onDone }: { p: IdeaPrompt; 
       )}
     </div>
   );
+  const footer: React.CSSProperties = { borderTop: '1px solid ' + CL.ink1, background: CL.panel, padding: '12px 22px', display: 'flex', alignItems: 'center', gap: 10 };
 
   return (
     <div style={{ height: '100%', background: '#fff', display: 'flex', flexDirection: 'column' }}>
@@ -183,20 +198,40 @@ export function IdeaExercise({ p, onLibrary, onNext, onDone }: { p: IdeaPrompt; 
                 <p style={{ margin: 0, fontFamily: CL.serif, fontSize: 19, lineHeight: 1.55, color: CL.ink }}>{p.text}</p>
               </section>
               <section style={{ flex: '1 1 0', minHeight: 0, display: 'flex', flexDirection: 'column', borderRadius: 12, border: '1px solid ' + CL.border, background: '#fff', overflow: 'hidden' }}>
-                <div className="cl-scroll co-rise" style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: '20px 32px 16px 34px' }}>
-                  <ChainEditor
-                    start={start} end={end}
-                    startLabel={mineStart ? labelMine : labelGiven} endLabel={mineStart ? labelGiven : labelMine}
-                    startNode={mineStart ? mineNode : givenNode} endNode={mineStart ? givenNode : mineNode}
-                    steps={steps} setSteps={setSteps}
-                    notes={notes} active={active} onPick={setActive}
-                    hint={coach.hint} asking={coach.asking} onHint={coach.askHint} onCloseHint={coach.closeHint}
-                    checking={coach.checking} clean={clean} hideHint
-                    check={{ result: coach.result, fresh: coach.fresh, checking: coach.checking, busy: coach.noteBusy, miss: coach.noteMiss, onStepEnter: (k, now) => coach.checkStep(k, now) }}
-                    blockPaste={help.isSamplePaste} onBlockedPaste={() => toast('Không dán được câu mẫu: hãy gõ lại bằng tay.')}
-                    stepQuestion={help.stepQuestion} onSubmitStep={help.onSubmitStep} belowStep={help.belowStep}
-                  />
-                </div>
+                {!built ? (
+                  <>
+                    <div className="cl-scroll" style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: '20px 24px 18px' }}>
+                      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) 36px minmax(0,1fr)', alignItems: 'stretch' }}>
+                        {mineStart ? mineBox : givenBox}
+                        {arrow}
+                        {mineStart ? givenBox : mineBox}
+                      </div>
+                      {hintArea}
+                    </div>
+                    <div style={footer}>
+                      <button type="button" className="cl-btn cl-primary" onClick={build} disabled={!canBuild} style={{ ...miniBtn, background: undefined, boxShadow: undefined, marginLeft: 'auto', border: 'none', color: '#fff', opacity: canBuild ? 1 : 0.3 }}>Dựng mạch ↵</button>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="cl-scroll co-rise" style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: '20px 32px 16px 34px' }}>
+                      <ChainEditor
+                        start={start} end={end}
+                        startLabel={mineStart ? labelMine : labelGiven} endLabel={mineStart ? labelGiven : labelMine}
+                        steps={steps} setSteps={setSteps}
+                        notes={notes} active={active} onPick={setActive}
+                        hint={coach.hint} asking={coach.asking} onHint={coach.askHint} onCloseHint={coach.closeHint}
+                        checking={coach.checking} clean={clean} hideHint
+                        check={{ result: coach.result, fresh: coach.fresh, checking: coach.checking, busy: coach.noteBusy, miss: coach.noteMiss, onStepEnter: (k, now) => coach.checkStep(k, now) }}
+                        blockPaste={help.isSamplePaste} onBlockedPaste={() => toast('Không dán được câu mẫu: hãy gõ lại bằng tay.')}
+                        stepQuestion={help.stepQuestion} onSubmitStep={help.onSubmitStep} belowStep={help.belowStep}
+                      />
+                    </div>
+                    <div style={footer}>
+                      <button type="button" className="cl-btn cl-link" onClick={() => setBuilt(false)} style={{ ...miniBtn, border: 'none', background: 'transparent', color: CL.ink5 }}>Đổi hai đầu</button>
+                    </div>
+                  </>
+                )}
               </section>
             </main>
           }
