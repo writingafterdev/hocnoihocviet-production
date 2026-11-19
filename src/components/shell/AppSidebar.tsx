@@ -40,19 +40,22 @@ const KEY = 'hnhv-sidebar';
 const WORKSPACE = ['/prove', '/write'];
 const SIDEBAR_W = 232;
 
-/** What the top bar says about the current page: a section (muted) and the page. */
-function titleOf(path: string): { section?: string; page: string } {
-  if (inside(path, '/prove')) return { section: 'Task 2', page: 'Chứng minh nhanh' };
-  if (inside(path, '/copy')) return { section: 'Task 2', page: 'Chép mẫu' };
-  if (inside(path, '/writing')) return { section: 'Task 2', page: 'Thư viện đề' };
-  if (inside(path, '/write')) return { section: 'Task 2', page: 'Luyện viết' };
-  if (inside(path, '/tai-lieu')) return { section: 'Tài liệu missbacxiu', page: 'Tài liệu' };
-  if (inside(path, '/nghi-y')) return { section: 'Tài liệu missbacxiu', page: 'Nghĩ ý' };
-  if (inside(path, '/vocab')) return { page: 'Từ vựng' };
-  if (inside(path, '/attempts')) return { page: 'Bài đã viết' };
-  if (inside(path, '/drills')) return { page: 'Mạch ý đã chứng minh' };
-  if (inside(path, '/admin')) return { page: 'Quản trị' };
-  return { page: 'Trang chủ' };
+/** What the top bar says about the current page: a section (muted) and the page, each a link (the section to its first page, the page to its start). */
+interface Crumb { label: string; href: string }
+function titleOf(path: string): { section?: Crumb; page: Crumb } {
+  const task2: Crumb = { label: 'Task 2', href: '/writing' };
+  const mbx: Crumb = { label: 'Tài liệu missbacxiu', href: '/tai-lieu' };
+  if (inside(path, '/prove')) return { section: task2, page: { label: 'Chứng minh nhanh', href: '/prove' } };
+  if (inside(path, '/copy')) return { section: task2, page: { label: 'Chép mẫu', href: '/copy' } };
+  if (inside(path, '/writing')) return { section: task2, page: { label: 'Thư viện đề', href: '/writing' } };
+  if (inside(path, '/write')) return { section: task2, page: { label: 'Luyện viết', href: '/writing' } };
+  if (inside(path, '/tai-lieu')) return { section: mbx, page: { label: 'Tài liệu', href: '/tai-lieu' } };
+  if (inside(path, '/nghi-y')) return { section: mbx, page: { label: 'Nghĩ ý', href: '/nghi-y' } };
+  if (inside(path, '/vocab')) return { page: { label: 'Từ vựng', href: '/vocab' } };
+  if (inside(path, '/attempts')) return { page: { label: 'Bài đã viết', href: '/attempts' } };
+  if (inside(path, '/drills')) return { page: { label: 'Mạch ý đã chứng minh', href: '/drills' } };
+  if (inside(path, '/admin')) return { page: { label: 'Quản trị', href: '/admin' } };
+  return { page: { label: 'Trang chủ', href: '/home' } };
 }
 
 /** Cloudflare's sidebar toggle icon: a rounded panel with a bar that moves across when the sidebar closes. */
@@ -110,9 +113,12 @@ export function AppSidebar({ children }: { children: React.ReactNode }) {
         </div>
         <div className="flex min-w-0 flex-1 items-center gap-3 px-5">
           {!open && <span className="-ml-2 hidden items-center gap-2 md:flex">{toggleBtn}<Link href="/home" aria-label="hocnoihocviet · Trang chủ"><Logo word={false} /></Link></span>}
-          <h1 className="m-0 truncate text-[15px] font-medium tracking-[-0.01em] text-ink">
-            {title.section && <span className="font-normal text-ink-soft">{title.section} / </span>}{title.page}
-          </h1>
+          <nav aria-label="Vị trí" className="min-w-0">
+            <h1 className="m-0 truncate text-[15px] font-medium tracking-[-0.01em] text-ink">
+              {title.section && <><Link href={title.section.href} className="font-normal text-ink-soft transition-colors hover:text-ink">{title.section.label}</Link><span className="font-normal text-ink-soft"> / </span></>}
+              <Link href={title.page.href} aria-current="page" className="text-ink">{title.page.label}</Link>
+            </h1>
+          </nav>
           <div className={cn('ml-auto flex items-center gap-3', open && 'md:hidden')}><UserMenu /></div>
         </div>
       </header>
