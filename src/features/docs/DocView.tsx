@@ -1,16 +1,16 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
+import { createContext, useContext, useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import type { DocBlock, DocCell, DocLine, DocMacro, DocPart, DocPrompt, DocTable } from '@/content/missbacxiu';
 import { HistoryHeader } from '@/features/attempts/HistoryUI';
 
-/** Nghĩ ý (find the other end of a prompt's mạch ý) is not built yet; its button appears once it is. */
-const NGHI_Y_READY = false;
 
 export interface TocMacro { id: DocMacro['id']; name: string; parts: { id: string; title: string }[] }
 
 const EASE = 'cubic-bezier(.22,1,.36,1)';
+/** Prompts this student has done in Nghĩ ý: ✓ beside their button. */
+const DoneCtx = createContext<Set<string>>(new Set());
 const MACRO_TINT: Record<DocMacro['id'], { bg: string; fg: string }> = {
   A: { bg: '#FFF0EB', fg: '#B33A1A' },
   B: { bg: '#EEF3FC', fg: '#2F62C4' },
@@ -26,7 +26,12 @@ const Letter = ({ id }: { id: DocMacro['id'] }) => (
  * kept); a cell of prompts becomes a slideshow so a long list doesn't stretch its row.
  */
 export function DocView({ macro, part, intro, toc, next }: { macro: Pick<DocMacro, 'id' | 'name' | 'title'>; part: DocPart; intro: DocBlock[]; toc: TocMacro[]; next: { id: string; title: string } | null }) {
+  const [done, setDone] = useState<Set<string>>(new Set());
+  useEffect(() => {
+    fetch('/api/drill/done', { credentials: 'same-origin' }).then((r) => (r.ok ? r.json() : null)).then((d: { ids?: string[] } | null) => { if (d?.ids) setDone(new Set(d.ids)); }).catch(() => {});
+  }, []);
   return (
+    <DoneCtx.Provider value={done}>
     <main style={{ maxWidth: 1560, margin: '0 auto', padding: '24px 32px 64px', fontFamily: 'var(--font-sans)', color: '#171717' }}>
       <HistoryHeader img="woman-with-paper-document-thinking" tint="#FFF6DE" title="Tài liệu missbacxiu" />
       <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
@@ -48,6 +53,7 @@ export function DocView({ macro, part, intro, toc, next }: { macro: Pick<DocMacr
         )}
       </div>
     </main>
+    </DoneCtx.Provider>
   );
 }
 
@@ -202,6 +208,7 @@ function Cell({ c, head, first }: { c: DocCell; head: string; first: boolean }) 
 /** One prompt at a time, with her hint and exam date; dots, a counter and arrows sit at the bottom of the cell. */
 function Slides({ prompts }: { prompts: DocPrompt[] }) {
   const [at, setAt] = useState(0);
+  const done = useContext(DoneCtx);
   const n = prompts.length;
   const go = (i: number) => setAt(Math.max(0, Math.min(n - 1, i)));
   const arrow = (dir: -1 | 1) => {
@@ -226,14 +233,15 @@ function Slides({ prompts }: { prompts: DocPrompt[] }) {
               )}
               <span style={{ fontSize: 14, lineHeight: 1.6, color: '#171717' }}>{p.text}</span>
               {p.hint && <span style={{ fontSize: 13, lineHeight: 1.55, color: '#737373' }}>{p.hint}</span>}
-              {NGHI_Y_READY && (
-                <span className="pro-fill" style={{ alignSelf: 'flex-start', marginTop: 2 }}>
-                  <Link href={'/nghi-y?q=' + encodeURIComponent(p.text)} style={{ height: 34, display: 'inline-flex', alignItems: 'center', gap: 6, padding: '0 14px', borderRadius: 8, fontSize: 13.5, fontWeight: 600, textDecoration: 'none' }}>
+              <span style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 2 }}>
+                <span className="pro-fill">
+                  <Link href={'/nghi-y?q=' + p.id} style={{ height: 34, display: 'inline-flex', alignItems: 'center', gap: 6, padding: '0 14px', borderRadius: 8, fontSize: 13.5, fontWeight: 600, textDecoration: 'none' }}>
                     Nghĩ ý
                     <svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true"><path d="M6 4l4 4-4 4" fill="none" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /></svg>
                   </Link>
                 </span>
-              )}
+                {done.has(p.id) && <svg width="16" height="16" viewBox="0 0 16 16" aria-label="Đã luyện" role="img"><path d="M3.5 8.4l3.1 2.9 5.9-6.4" fill="none" stroke="#2D881A" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /></svg>}
+              </span>
             </div>
           ))}
         </div>

@@ -148,6 +148,19 @@ def split_prompt(t):
     return s, hint, date
 
 
+def prompt_id(text):
+    """Stable id from the prompt's words: 'mbx-' + FNV-1a of the normalized text, base 36."""
+    h = 0x811c9dc5
+    for b in re.sub(r'\W+', ' ', text.lower()).strip().encode():
+        h = ((h ^ b) * 0x01000193) & 0xffffffff
+    n, out = h, ''
+    while True:
+        n, r = divmod(n, 36)
+        out = '0123456789abcdefghijklmnopqrstuvwxyz'[r] + out
+        if not n: break
+    return 'mbx-' + out
+
+
 def prompts_from(lines):
     """Pull exam prompts (with the hint after them) out of a cell. Returns (prompts, notes): notes are the cell's
     other lines, e.g. a remark under the prompts or a label no prompt follows."""
@@ -156,7 +169,7 @@ def prompts_from(lines):
         t = x['t']
         if is_prompt(t):
             text, hint, date = split_prompt(t)
-            p = {'text': text}
+            p = {'id': prompt_id(text), 'text': text}
             if hint: p['hint'] = hint
             if date: p['date'] = date
             if label:

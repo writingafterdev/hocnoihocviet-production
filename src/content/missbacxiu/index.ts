@@ -19,6 +19,8 @@ export interface DocLine {
 }
 
 export interface DocPrompt {
+  /** Stable id from the prompt's words ("mbx-…"), the same wherever the prompt is listed. */
+  id: string;
   text: string;
   /** Her note on how to use the idea for this prompt (Vietnamese). */
   hint?: string;
@@ -69,12 +71,25 @@ export const MBX_MACROS = data.macros as DocMacro[];
 
 export interface IndexedPrompt extends DocPrompt {
   macro: DocMacro['id'];
+  /** The part it sits in (for "Xem trong tài liệu"), its table and row. */
+  part: string;
   table: string;
   row: number;
+  /** Her idea for this row: the first line of its first column, e.g. "2. Đặc điểm của xã hội hiện đại (modern society)". */
+  idea: string;
 }
+
+const ideaCell = (rows: DocCell[][], ri: number): DocCell | undefined => {
+  // A merged first cell sits on the first row it covers.
+  for (let r = ri; r >= 0; r--) if (!rows[r][0]?.span) return rows[r][0];
+  return undefined;
+};
+
+let INDEX: IndexedPrompt[] | null = null;
 
 /** Every prompt in the doc, first occurrence only (several appear under more than one idea). */
 export function mbxPrompts(): IndexedPrompt[] {
+  if (INDEX) return INDEX;
   const seen = new Set<string>();
   const out: IndexedPrompt[] = [];
   for (const m of MBX_MACROS) {
@@ -84,15 +99,27 @@ export function mbxPrompts(): IndexedPrompt[] {
         b.rows.forEach((row, ri) => {
           for (const c of row) {
             for (const pr of c.prompts ?? []) {
-              const key = pr.text.toLowerCase().replace(/\W+/g, ' ').trim();
-              if (seen.has(key)) continue;
-              seen.add(key);
-              out.push({ ...pr, macro: m.id, table: b.id, row: ri });
+              if (seen.has(pr.id)) continue;
+              seen.add(pr.id);
+              const idea = ideaCell(b.rows, ri)?.lines?.[0]?.t ?? '';
+              out.push({ ...pr, macro: m.id, part: p.id, table: b.id, row: ri, idea });
             }
           }
         });
       }
     }
   }
-  return out;
+  return (INDEX = out);
+}
+
+export const findMbxPrompt = (id: string): IndexedPrompt | null => mbxPrompts().find((p) => p.id === id) ?? null;
+
+/** Her notes for the row a prompt sits in (every cell but the prompts), as plain text for the AI, cut to `max` characters. */
+export function mbxRowText(p: IndexedPrompt, max = 3000): string {
+  const t = MBX_MACROS.flatMap((m) => m.parts).flatMap((pt) => pt.blocks).find((b): b is DocTable => b.kind === 'table' && b.id === p.table);
+  if (!t) return '';
+  const row = t.rows[p.row];
+  const cells = row.map((c, ci) => (c.span === 'up' && ci === 0 ? ideaCell(t.rows, p.row) : c));
+  const out = cells.flatMap((c, ci) => (c && !c.span || ci === 0) && c?.lines?.length ? [t.head[ci] + ':\n' + c.lines.map((l) => '- ' + l.t).join('\n')] : []).join('\n\n');
+  return out.length > max ? out.slice(0, max) + '…' : out;
 }

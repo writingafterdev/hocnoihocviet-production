@@ -25,7 +25,8 @@ const GROUPS: Group[] = [
     { label: 'Task 2', items: [drill(), write(), copy()] },
     { label: 'Task 1', soon: true, items: [drill(true), write(true), copy(true)] },
   ] },
-  { label: 'Tài liệu missbacxiu', items: [{ label: 'Tài liệu', href: '/tai-lieu', match: ['/tai-lieu'], icon: <NavIcon name="essays" /> }] },
+  { label: 'Tài liệu missbacxiu', items: [{ label: 'Tài liệu', href: '/tai-lieu', match: ['/tai-lieu'], icon: <NavIcon name="essays" /> },
+    { label: 'Nghĩ ý', href: '/nghi-y', match: ['/nghi-y'], icon: <NavIcon name="chains" /> }] },
   { label: 'Từ vựng', items: [{ label: 'Từ vựng theo chủ đề', href: '/vocab', match: ['/vocab'], icon: <NavIcon name="vocab" /> }] },
   { label: 'Của bạn', items: [
     { label: 'Bài đã viết', href: '/attempts', match: ['/attempts'], icon: <NavIcon name="essays" /> },
@@ -46,6 +47,7 @@ function titleOf(path: string): { section?: string; page: string } {
   if (inside(path, '/writing')) return { section: 'Task 2', page: 'Thư viện đề' };
   if (inside(path, '/write')) return { section: 'Task 2', page: 'Luyện viết' };
   if (inside(path, '/tai-lieu')) return { section: 'Tài liệu missbacxiu', page: 'Tài liệu' };
+  if (inside(path, '/nghi-y')) return { section: 'Tài liệu missbacxiu', page: 'Nghĩ ý' };
   if (inside(path, '/vocab')) return { page: 'Từ vựng' };
   if (inside(path, '/attempts')) return { page: 'Bài đã viết' };
   if (inside(path, '/drills')) return { page: 'Mạch ý đã chứng minh' };

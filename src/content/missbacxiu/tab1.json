@@ -134,13 +134,16 @@
           ],
           "prompts": [
            {
+            "id": "mbx-mu3r0j",
             "text": "In many cities, crime rates are increasing. What are the causes of this trend and what solutions can be implemented?",
             "hint": "vì + nêu bối cảnh: nhiều gia đình sống trong cảnh nghèo khó → bị dồn vào đường cùng để kiếm sống → trộm cắp, cướp giật"
            },
            {
+            "id": "mbx-agqv1y",
             "text": "People continue to recommit crime even after being penalized for their wrongdoings. Why do you think this happens? How can crime be stopped?"
            },
            {
+            "id": "mbx-yjvxbs",
             "text": "Some people believe that developed countries should provide financial assistance to poorer nations. To what extent do you agree or disagree?",
             "hint": "agree - vì: nêu bối cảnh - nhiều gia đình sống trong điều kiện thiếu thốn + hệ quả → Nếu có tiền thì sẽ giải quyết được hệ quả đã nêu ⇒ nếu bối cảnh về poverty gây vấn đề x để từ đó khi có giải pháp y sẽ giải quyết được vấn đề x"
            }
@@ -236,18 +239,22 @@
           "lines": [],
           "prompts": [
            {
+            "id": "mbx-iqo9eg",
             "text": "Some people believe that men and women should have different roles in society. Others think they should share responsibilities equally. Discuss both views and give your opinion",
             "hint": "nêu ý về bình đẳng giới hoặc nếu different roles thì do đặc điểm của từng giới như thế nào"
            },
            {
+            "id": "mbx-1jcdwfh",
             "text": "Fewer women than men choose careers in science and technology. Why is this the case? What can be done to encourage more women to enter these fields?",
             "hint": "giải thích 2 ý: dựa trên định kiến xh và đặc điểm sinh học"
            },
            {
+            "id": "mbx-1uol6ov",
             "text": "Women should play an equal role in government and leadership positions. To what extent do you agree or disagree?",
             "hint": "dựa trên đặc điểm của nữ giới"
            },
            {
+            "id": "mbx-gm2qh",
             "text": "Some people think mothers should stay at home to take care of children, while others believe both parents should work. Discuss both views and give your opinion."
            }
           ]
@@ -359,18 +366,23 @@
           "lines": [],
           "prompts": [
            {
+            "id": "mbx-1ykfptu",
             "text": "Stress-related illnesses are becoming increasingly common. Why is this happening and what can be done to reduce stress?"
            },
            {
+            "id": "mbx-8wiitt",
             "text": "Many employees work long hours nowadays. What are the reasons for this and what effects does it have on individuals and society?"
            },
            {
+            "id": "mbx-1ce5z7l",
             "text": "In many countries, the number of overweight children is increasing. What are the causes of this problem and what measures can be taken?"
            },
            {
+            "id": "mbx-k0rce1",
             "text": "More companies are allowing employees to work from home. What are the effects of this trend on individuals and society?"
            },
            {
+            "id": "mbx-18ti68l",
             "text": "Mental health problems are becoming more common. What are the causes and what measures can be taken?"
            }
           ]
@@ -509,51 +521,66 @@
           "lines": [],
           "prompts": [
            {
+            "id": "mbx-1rhrh5q",
             "text": "The media often presents unrealistic images of beauty and success. What effects can these portrayals have on individuals and society?"
            },
            {
+            "id": "mbx-1am7gm4",
             "text": "Celebrities and social media influencers have a significant impact on young people's attitudes and lifestyles. What are the effects of this trend?"
            },
            {
+            "id": "mbx-s7c0jz",
             "text": "Advertising encourages people to buy things they do not need. Do the disadvantages outweigh the advantages?"
            },
            {
+            "id": "mbx-1tsc0v3",
             "text": "Some people believe that money is the key to happiness. Others think happiness depends on other factors. Discuss both views and give your opinion."
            },
            {
+            "id": "mbx-183pihd",
             "text": "Young people are spending too much money on fashion and branded products. Why is this happening? What effects does it have?"
            },
            {
+            "id": "mbx-183pihd",
             "text": "Young people are spending too much money on fashion and branded products. Why is this happening? What effects does it have?"
            },
            {
+            "id": "mbx-dsdmf6",
             "text": "Nowadays celebrities are famous more for their glamour and wealth than for their achievements, and this sets a bad example to young people. To what extent do you agree or disagree?",
             "date": "6.7.2026"
            },
            {
+            "id": "mbx-12b8jtf",
             "text": "The tendency of human beings to copy one another is shown in the popularity of areas such as fashion and consumer goods. To what extent do you agree?",
             "date": "26.6.2026"
            },
            {
+            "id": "mbx-1nsodmc",
             "text": "In many countries today, people buy a range of household goods (television, microwave, oven and rice cookers). Is it a positive or negative development?",
             "date": "T8.2026"
            },
            {
+            "id": "mbx-hhwzsi",
             "text": "People are buying more clothes than ever before. What are the causes and what problems does this create?"
            },
            {
+            "id": "mbx-ymtikz",
             "text": "Should companies prioritize making profits or take responsibility for protecting society and the environment?"
            },
            {
+            "id": "mbx-15cuzen",
             "text": "Some people think private hospitals provide better healthcare than public hospitals. To what extent do you agree or disagree?"
            },
            {
+            "id": "mbx-1nfkgua",
             "text": "Governments should invest more in public education rather than encouraging the development of private schools. To what extent do you agree or disagree?"
            },
            {
+            "id": "mbx-euxt7z",
             "text": "Some people believe that public services should be run by private companies rather than governments. Discuss both views and give your opinion."
            },
            {
+            "id": "mbx-1fv16p7",
             "text": "Some people believe that private businesses are more efficient than government-run organizations. To what extent do you agree or disagree?"
            }
           ]
@@ -622,41 +649,53 @@
           ],
           "prompts": [
            {
+            "id": "mbx-1p8uysn",
             "text": "Many different countries have many shops and products that are the same. Some people consider this a positive development, while others think it is negative. Discuss both views and give your opinion."
            },
            {
+            "id": "mbx-1byk89a",
             "text": "The spread of multinational companies and the increase in globalisation produce positive effects for everyone. To what extent do you agree or disagree?"
            },
            {
+            "id": "mbx-wni9xu",
             "text": "Some people think governments should protect local culture by supporting local businesses, arts and traditions instead of allowing foreign products and cultures to dominate. To what extent do you agree or disagree?"
            },
            {
+            "id": "mbx-10ayfwd",
             "text": "Some people think international tourism is beneficial, while others believe it damages local culture and traditions. Discuss both views and give your opinion."
            },
            {
+            "id": "mbx-q42idu",
             "text": "Many people believe that traditional culture and customs are gradually disappearing. Why is this happening? What can be done to preserve them?"
            },
            {
+            "id": "mbx-1pziixx",
             "text": "Some people think advertising encourages excessive consumption and the spread of global consumer culture. To what extent do you agree or disagree?"
            },
            {
+            "id": "mbx-990t8g",
             "text": "Some people believe that social media and mass media are causing people around the world to become more similar. To what extent do you agree or disagree?"
            },
            {
+            "id": "mbx-5zjkjt",
             "text": "Some people think the use of English as an international language is beneficial, while others believe it threatens local languages and cultures. Discuss both views and give your opinion."
            },
            {
+            "id": "mbx-h11g9q",
             "text": "Some people think large international companies are more beneficial than local businesses, while others believe governments should support local businesses. Discuss both views and give your opinion."
            },
            {
+            "id": "mbx-1fistyx",
             "text": "Some people believe that cultural exchange brought about by globalisation promotes mutual understanding, while others think it weakens national identity. Discuss both views and give your opinion."
            },
            {
+            "id": "mbx-hetpep",
             "text": "Some people think that in modern world people are more and more dependent on each other, while others believe that they become more independent on each other. Discuss both views and give your own opinion.",
             "hint": "do toàn cầu hóa - thế giới kết nối hơn (interconnected) (→ countries and businesses exchange resources, technology and products→ individuals depend on international cooperation - hoặc bạn có thể lấy ví dụ về giá xăng (oil prices) phụ thuộc vào biến động thị trường/xung đột trên thế giới",
             "date": "2.7.2026"
            },
            {
+            "id": "mbx-qs2zeq",
             "text": "In some countries, only a few young people go to classical music concerts or play classical music. Why is this the case? Should young people be encouraged to attend those concerts and learn more about classical music?"
            }
           ]
@@ -738,43 +777,53 @@
           "lines": [],
           "prompts": [
            {
+            "id": "mbx-1ll72cm",
             "text": "Many countries now have the same shops and products. Is this a positive or negative development? (→ social media disseminates global trends → shape preferences worldwide → cultural homogenization)",
             "label": "Ý tưởng về social media shape our preferences/actions có thể dùng cho các đề sau"
            },
            {
+            "id": "mbx-iedhoh",
             "text": "Why do some young people engage in antisocial behaviour? (social media → normalize risky behaviours → imitate → shape behavioral patterns)",
             "label": "Ý tưởng về social media shape our preferences/actions có thể dùng cho các đề sau"
            },
            {
+            "id": "mbx-15j8f4",
             "text": "Many people buy things that they do not need because they are influenced by advertising and social media. Why is this happening? What problems can this cause?",
             "label": "Đề về người ta béo phì hơn (là do social media hoặc rõ hơn là advertising shapes food preferences → unhealthy eating habits → obesity)"
            },
            {
+            "id": "mbx-9duq9y",
             "text": "Some people believe that young people are under increasing pressure to achieve success. What are the causes of this? What solutions can you suggest?",
             "hint": "(social comparison trên MXH).",
             "label": "Đề về người ta béo phì hơn (là do social media hoặc rõ hơn là advertising shapes food preferences → unhealthy eating habits → obesity)"
            },
            {
+            "id": "mbx-fwbm95",
             "text": "Some people think that social media has had a negative impact on individuals and society. To what extent do you agree or disagree?",
             "label": "Ý tưởng về nghiện MXH vì bản chất gây nghiện của MXH (nhớ 2 đặc điểm) dùng cho các đề sau"
            },
            {
+            "id": "mbx-v56l5o",
             "text": "Many people spend a large amount of time on smartphones and social media. Why is this happening? Is it a positive or negative development?",
             "label": "Ý tưởng về nghiện MXH vì bản chất gây nghiện của MXH (nhớ 2 đặc điểm) dùng cho các đề sau"
            },
            {
+            "id": "mbx-xx9u8m",
             "text": "Some people believe that television and the Internet have reduced the amount of time people spend reading books. To what extent do you agree or disagree?",
             "label": "Ý tưởng về nghiện MXH vì bản chất gây nghiện của MXH (nhớ 2 đặc điểm) dùng cho các đề sau"
            },
            {
+            "id": "mbx-1mxwkoc",
             "text": "The media should report more good news instead of focusing on bad news. To what extent do you agree or disagree?",
             "label": "Ý tưởng về vai trò của MXH có thể dùng cho các đề sau"
            },
            {
+            "id": "mbx-pcohl9",
             "text": "Some people think that the internet has made it easier to spread false information. What problems does this cause, and what solutions can you suggest?",
             "label": "Ý tưởng về vai trò của MXH có thể dùng cho các đề sau"
            },
            {
+            "id": "mbx-5i33lk",
             "text": "Newspapers are having enormous influence on people's ideas and opinions. Why is this the case? Is it a positive or negative situation?",
             "label": "Ý tưởng về vai trò của MXH có thể dùng cho các đề sau"
            }
@@ -868,43 +917,56 @@
           "lines": [],
           "prompts": [
            {
+            "id": "mbx-849ibo",
             "text": "Nowadays more and more people are migrating from rural areas to cities. Why is this happening? What problems can this cause?"
            },
            {
+            "id": "mbx-1nfqetg",
             "text": "Environmental pollution is becoming a serious problem in many countries. What are the causes of this problem? What measures can governments and individuals take to solve it?"
            },
            {
+            "id": "mbx-nfxyow",
             "text": "Air pollution is one of the biggest environmental problems in the world today. What are the causes of this problem? What solutions can be adopted?"
            },
            {
+            "id": "mbx-1og4p6t",
             "text": "Crime rates tend to be higher in large cities than in smaller towns. Why is this the case? What can governments do to reduce crime?"
            },
            {
+            "id": "mbx-1bm0xdp",
             "text": "Some people think that companies and factories should be located in cities, while others believe they should be moved to rural areas. Discuss both views and give your opinion."
            },
            {
+            "id": "mbx-1lqfjua",
             "text": "Housing shortages have become a serious problem in many cities. What are the causes of this issue? What solutions can be proposed?"
            },
            {
+            "id": "mbx-wwjvw0",
             "text": "The gap between urban and rural areas is widening in many countries. Why is this happening? What can governments do to reduce this gap?"
            },
            {
+            "id": "mbx-2q2pmw",
             "text": "Traffic congestion is becoming a major issue in many cities around the world. Why is this happening? What solutions can be implemented?"
            },
            {
+            "id": "mbx-1yd070n",
             "text": "Many cities struggle to provide adequate public services for their residents. Why is this the case? What solutions can be implemented?"
            },
            {
+            "id": "mbx-1sfmsrd",
             "text": "The quality of life in large cities is decreasing. Why is this happening? What can be done about it?"
            },
            {
+            "id": "mbx-1v7vn10",
             "text": "Many people believe that it is easier to have a healthy lifestyle in the countryside. Others believe that there are health benefits of living in cities. Discuss both views and give your opinions."
            },
            {
+            "id": "mbx-17o0oj1",
             "text": "Governments should create more parks and green spaces in cities. To what extent do you agree or disagree?",
             "hint": "vì urbanization → loss of green spaces → poorer living environment"
            },
            {
+            "id": "mbx-1xcrs9y",
             "text": "The animal species are becoming extinct due to human activities on land and in sea. What are the reasons and solutions?",
             "date": "9.6.2026"
            }
@@ -955,15 +1017,19 @@
           "lines": [],
           "prompts": [
            {
+            "id": "mbx-ex65cv",
             "text": "The world's population is increasing rapidly. What problems does this cause and what solutions can be adopted?"
            },
            {
+            "id": "mbx-1oyx8it",
             "text": "Many countries have an ageing population. What problems does this cause and how can governments deal with these issues?"
            },
            {
+            "id": "mbx-g28qtq",
             "text": "Some governments are encouraging people to have more children. Do the advantages outweigh the disadvantages?"
            },
            {
+            "id": "mbx-1vy848f",
             "text": "Traffic congestion is becoming a major problem in many cities around the world. What are the causes of this problem, and what measures can be taken to solve it?"
            }
           ]
@@ -1077,81 +1143,100 @@
           "lines": [],
           "prompts": [
            {
+            "id": "mbx-dekofu",
             "text": "Nowadays people buy more imported food than locally produced food. Why? Is it positive or negative?",
             "label": "Lương cải thiện"
            },
            {
+            "id": "mbx-1zbm3v",
             "text": "Some people think consumer goods have become the most important part of people's lives. Do you agree or disagree?",
             "label": "Lương cải thiện"
            },
            {
+            "id": "mbx-1zhmb8",
             "text": "International tourism has become more common than ever before. Why? Is this a positive or negative development?",
             "label": "Lương cải thiện"
            },
            {
+            "id": "mbx-1ablly8",
             "text": "Some people spend a lot of money on expensive clothes and luxury brands. Why? Is this a positive or negative development?",
             "label": "Lương cải thiện"
            },
            {
+            "id": "mbx-1hmbpae",
             "text": "More people own private cars nowadays. Why? Is this a positive or negative development?",
             "label": "Lương cải thiện"
            },
            {
+            "id": "mbx-hetpep",
             "text": "Some people think that in modern world people are more and more dependent on each other, while others believe that they become more independent on each other. Discuss both views and give your own opinion.",
             "hint": "dùng cho ý người ta không phụ thuộc vào nhau quá nhiều → lấy ví dụ phụ nữ độc lập tài chính (đối lập với quá khứ)",
             "date": "2.7.2026",
             "label": "Lương cải thiện"
            },
            {
+            "id": "mbx-ot4ktp",
             "text": "Governments should spend more money on healthcare than on other sectors. Discuss both views.",
             "hint": "yes vì Có nhiều cơ hội tiếp cận dịch vụ chăm sóc sức khỏe và các dịch vụ công chất lượng hơn regardless of income.",
             "label": "Phúc lợi xã hội tăng"
            },
            {
+            "id": "mbx-3vz41n",
             "text": "Should university education be free for everyone?",
             "label": "Phúc lợi xã hội tăng"
            },
            {
+            "id": "mbx-5tq17n",
             "text": "Governments should provide free childcare. To what extent do you agree?",
             "label": "Phúc lợi xã hội tăng"
            },
            {
+            "id": "mbx-wepghi",
             "text": "In many countries, people are getting married later in life. Why? Is this a positive or negative development?",
             "label": "Tiến bộ xã hội (về mặt nhận thức) (GIẢI = CÁCH NÊU QUAN ĐIỂM THỜI NAY ĐÃ KHÁC HOẶC DO HỌ CÓ Ý THỨC HƠN)"
            },
            {
+            "id": "mbx-2lztef",
             "text": "Nowadays people are more concerned about healthy lifestyles than in the past. Why?",
             "label": "Tiến bộ xã hội (về mặt nhận thức) (GIẢI = CÁCH NÊU QUAN ĐIỂM THỜI NAY ĐÃ KHÁC HOẶC DO HỌ CÓ Ý THỨC HƠN)"
            },
            {
+            "id": "mbx-1bbkmdz",
             "text": "Nowadays more women work full-time than in the past. Why is this? Is this a positive or negative development?",
             "label": "Tiến bộ xã hội (về mặt nhận thức) (GIẢI = CÁCH NÊU QUAN ĐIỂM THỜI NAY ĐÃ KHÁC HOẶC DO HỌ CÓ Ý THỨC HƠN)"
            },
            {
+            "id": "mbx-nuv7dd",
             "text": "In many countries, the average family size is becoming smaller. Why is this? Is this a positive or negative development?",
             "label": "Tiến bộ xã hội (về mặt nhận thức) (GIẢI = CÁCH NÊU QUAN ĐIỂM THỜI NAY ĐÃ KHÁC HOẶC DO HỌ CÓ Ý THỨC HƠN)"
            },
            {
+            "id": "mbx-11dfhfn",
             "text": "Many people nowadays choose organic food instead of conventionally produced food. Why is this? Is it a positive or negative development?",
             "label": "Tiến bộ xã hội (về mặt nhận thức) (GIẢI = CÁCH NÊU QUAN ĐIỂM THỜI NAY ĐÃ KHÁC HOẶC DO HỌ CÓ Ý THỨC HƠN)"
            },
            {
+            "id": "mbx-1fg7t6u",
             "text": "Nowadays people buy more imported food than locally produced food. Why is this? Is it a positive or negative development?",
             "label": "Tiến bộ xã hội (về mặt nhận thức) (GIẢI = CÁCH NÊU QUAN ĐIỂM THỜI NAY ĐÃ KHÁC HOẶC DO HỌ CÓ Ý THỨC HƠN)"
            },
            {
+            "id": "mbx-qlus67",
             "text": "Some people think museums should focus on preserving traditional culture, while others believe they should become more entertaining. Discuss both views.",
             "label": "Tiến bộ xã hội (về mặt nhận thức) (GIẢI = CÁCH NÊU QUAN ĐIỂM THỜI NAY ĐÃ KHÁC HOẶC DO HỌ CÓ Ý THỨC HƠN)"
            },
            {
+            "id": "mbx-yu0hau",
             "text": "Prevention is better than cure. Governments should spend more money promoting healthy lifestyles than treating illness. To what extent do you agree or disagree?",
             "label": "Tiến bộ xã hội (về mặt nhận thức) (GIẢI = CÁCH NÊU QUAN ĐIỂM THỜI NAY ĐÃ KHÁC HOẶC DO HỌ CÓ Ý THỨC HƠN)"
            },
            {
+            "id": "mbx-tuptot",
             "text": "Some people think paying taxes is a big enough contribution to their society, while others think people have more responsibilities as members of society than only paying taxes. Discuss both views and give your own opinion.",
             "label": "Tiến bộ xã hội (về mặt nhận thức) (GIẢI = CÁCH NÊU QUAN ĐIỂM THỜI NAY ĐÃ KHÁC HOẶC DO HỌ CÓ Ý THỨC HƠN)"
            },
            {
+            "id": "mbx-19yp0bi",
             "text": "Advertising has little effect on people's buying decisions because they know what they want to buy. To what extent do you agree or disagree?",
             "label": "Tiến bộ xã hội (về mặt nhận thức) (GIẢI = CÁCH NÊU QUAN ĐIỂM THỜI NAY ĐÃ KHÁC HOẶC DO HỌ CÓ Ý THỨC HƠN)"
            }
@@ -1247,27 +1332,35 @@
           "lines": [],
           "prompts": [
            {
+            "id": "mbx-16nzriz",
             "text": "In many countries, the number of overweight children is increasing. What are the causes of this problem and what measures can be taken to address it?"
            },
            {
+            "id": "mbx-17r6kh3",
             "text": "Nowadays people rely heavily on convenience foods and delivery services. Is this a positive or negative development?"
            },
            {
+            "id": "mbx-1qvirjt",
             "text": "Many people prefer online shopping to traditional shopping. What are the reasons for this trend and what effects does it have?"
            },
            {
+            "id": "mbx-8ygf6g",
             "text": "Driverless vehicles are expected to become more common. Do the advantages outweigh the disadvantages?"
            },
            {
+            "id": "mbx-1gwxj2i",
             "text": "Food and groceries can now be delivered to people's homes. Is this a positive or negative development?"
            },
            {
+            "id": "mbx-umjnyt",
             "text": "Some people prefer using private cars rather than public transport. Why is this?"
            },
            {
+            "id": "mbx-16k76ou",
             "text": "Printed newspapers and books will eventually disappear because people can read everything online for free. To what extent do you agree or disagree?"
            },
            {
+            "id": "mbx-1qq055",
             "text": "Many people use written language in a less formal way and in a relaxed way than in the past. Why is that so? Does this development have more advantages or disadvantages?"
            }
           ]
@@ -1326,15 +1419,19 @@
           "lines": [],
           "prompts": [
            {
+            "id": "mbx-ae8u27",
             "text": "Some people believe that famous people are treated unfairly by the media. Why are celebrities constantly followed by the press and what are the effects?"
            },
            {
+            "id": "mbx-16ibctf",
             "text": "Nowadays many young people want to become famous. Why is this happening and is it a positive or negative development?"
            },
            {
+            "id": "mbx-1m5jo89",
             "text": "Some people think that success should be measured by how much money people earn, while others believe that there are more important factors. Discuss both views and give your opinion."
            },
            {
+            "id": "mbx-z4sad8",
             "text": "In many countries, products are made to be used for a short time and then thrown away, creating a \"throw-away society\". What are the causes of this trend, and what effects does it have on individuals and society?"
            }
           ]
@@ -1481,22 +1578,28 @@
           "lines": [],
           "prompts": [
            {
+            "id": "mbx-1afw17b",
             "text": "Some people believe that crime is the result of social problems, while others believe that it is caused by the bad nature of individuals. Discuss both views and give your own opinion."
            },
            {
+            "id": "mbx-zz1m8b",
             "text": "Many people believe governments should spend more money fighting corruption than on other public services. To what extent do you agree or disagree?"
            },
            {
+            "id": "mbx-l9x3jk",
             "text": "The fashion industry has become one of the biggest causes of environmental problems. Why is this? What solutions can you suggest?"
            },
            {
+            "id": "mbx-19t1t4c",
             "text": "Some people think that people are naturally selfish, while others believe that people become selfish because of society. Discuss both views and give your opinion."
            },
            {
+            "id": "mbx-ijjnr5",
             "text": "The internet has made people's personal information less secure. Why is this happening? What can be done?",
             "hint": "vì lòng tham nên các bên thứ ba - third parities bán data người dùng để trục lợi"
            },
            {
+            "id": "mbx-bbc51k",
             "text": "The spread of fake news online. Causes and solutions?"
            }
           ]
@@ -1595,26 +1698,33 @@
           "lines": [],
           "prompts": [
            {
+            "id": "mbx-1t7bq2c",
             "text": "Some people prefer to work for large companies, while others prefer small businesses. Discuss both views and give your opinion."
            },
            {
+            "id": "mbx-ukn5x4",
             "text": "Many young people are reluctant to start their own businesses. Why is this the case and what can be done to encourage entrepreneurship?"
            },
            {
+            "id": "mbx-1cg3a6d",
             "text": "Some people spend their entire lives living close to where they were born. What are the reasons for this and what are the effects on society?"
            },
            {
+            "id": "mbx-1t83hj0",
             "text": "Some people prefer to work for the government, while others prefer to work for private companies. Discuss both views and give your own opinion."
            },
            {
+            "id": "mbx-gnn3u6",
             "text": "People should continue learning throughout their lives rather than stop after formal education. To what extent do you agree or disagree?",
             "hint": "một số người avoid change, be reluctant to acquire new skills"
            },
            {
+            "id": "mbx-13451gy",
             "text": "Why do people move from rural areas to cities? What problems does this cause?",
             "hint": "vì họ seek financial stability, secure a stable income"
            },
            {
+            "id": "mbx-10c8bwi",
             "text": "Some people think technological developments improve our lives, while others think they create more problems. Discuss both views and give your own opinion.",
             "hint": "người lớn tuổi resist technological change, stick to familiar methods"
            }
@@ -1685,21 +1795,27 @@
           "lines": [],
           "prompts": [
            {
+            "id": "mbx-19pd1jk",
             "text": "Some people think that job satisfaction is more important than job security. Others believe that having a permanent job is better. Discuss both views and give your opinion."
            },
            {
+            "id": "mbx-6dothr",
             "text": "Many people nowadays change careers several times during their lives. Why is this happening and is it a positive or negative development?"
            },
            {
+            "id": "mbx-l5hsmj",
             "text": "Some people choose careers based on personal interests rather than salary. Do you think this is a positive or negative development?"
            },
            {
+            "id": "mbx-1knymck",
             "text": "All teenagers should be encouraged to do unpaid community work. To what extent do you agree or disagree?"
            },
            {
+            "id": "mbx-kis2gm",
             "text": "People should not retire at a fixed age. To what extent do you agree or disagree?"
            },
            {
+            "id": "mbx-16j2z3w",
             "text": "Success is often measured by wealth and material possessions. Do you agree or disagree?"
            }
           ]
@@ -1809,46 +1925,57 @@
           "lines": [],
           "prompts": [
            {
+            "id": "mbx-vvmfip",
             "text": "Some people think children should spend all their free time with their families. Others believe that children should spend more time with friends or doing activities outside the home. Discuss both views and give your opinion.",
             "label": "Ý 1: Trẻ em"
            },
            {
+            "id": "mbx-njj9ne",
             "text": "Nowadays children are exposed to a large amount of information through television and the Internet. What effects does this have on children and how can parents deal with these effects?",
             "label": "Ý 1: Trẻ em"
            },
            {
+            "id": "mbx-1gnx8nt",
             "text": "Children are becoming more interested in computer games than outdoor activities. Why is this happening and what are the consequences?",
             "label": "Ý 1: Trẻ em"
            },
            {
+            "id": "mbx-2b3ifs",
             "text": "Many young people are under pressure to succeed. What are the causes of this pressure and what problems does it cause?",
             "label": "Ý 2: Trẻ vị thành niên"
            },
            {
+            "id": "mbx-1whywd6",
             "text": "Young people are increasingly influenced by advertising and popular culture. What effects does this have on their behaviour and values?",
             "label": "Ý 2: Trẻ vị thành niên"
            },
            {
+            "id": "mbx-ad7a0q",
             "text": "Some people think that teenagers today are more selfish and less responsible than previous generations. To what extent do you agree or disagree?",
             "label": "Ý 2: Trẻ vị thành niên"
            },
            {
+            "id": "mbx-1f5mu7r",
             "text": "Young people who commit crime should be treated the same way as adults. Agree/Disagree",
             "label": "Ý 2: Trẻ vị thành niên"
            },
            {
+            "id": "mbx-pmqm20",
             "text": "In many countries, older people are encouraged to continue working after retirement. Do you think this is a positive or negative development?",
             "label": "Ý 3: Người già"
            },
            {
+            "id": "mbx-yczsxj",
             "text": "Many elderly people live alone nowadays. What are the causes of this trend and what effects does it have?",
             "label": "Ý 3: Người già"
            },
            {
+            "id": "mbx-lb4pv1",
             "text": "Older people often have very different opinions from younger people. Why is this? What problems can this cause?",
             "label": "Ý 3: Người già"
            },
            {
+            "id": "mbx-xl7dm5",
             "text": "Directors of large organizations earn much higher salaries than ordinary employees do. Some people believe it is necessary, but others think that it is unfair. Discuss both these views and give your own opinions.",
             "label": "// WORK"
            }
@@ -1942,34 +2069,42 @@
           "lines": [],
           "prompts": [
            {
+            "id": "mbx-1gr3hjr",
             "text": "Parents today spend less time with their children than in the past. Why is this happening and what are the effects on families and society?",
             "label": "Ý tưởng về cha mẹ bận"
            },
            {
+            "id": "mbx-1aea6hw",
             "text": "Many children are left alone at home because their parents have to work. What problems does this cause and how can these problems be solved?",
             "label": "Ý tưởng về cha mẹ bận"
            },
            {
+            "id": "mbx-1ysyctq",
             "text": "Some people think that parents should be punished if their children commit crimes. To what extent do you agree or disagree?",
             "label": "Ý tưởng về cha mẹ bận"
            },
            {
+            "id": "mbx-63yomv",
             "text": "In many countries, crime among young people is increasing. What are the causes? What solutions can be proposed?",
             "label": "Ý tưởng về cha mẹ bận"
            },
            {
+            "id": "mbx-koxud7",
             "text": "Children spend too much time on electronic devices. Why is this happening? What are the effects?",
             "label": "Ý tưởng về cha mẹ bận"
            },
            {
+            "id": "mbx-13jnebe",
             "text": "Should adult children be responsible for taking care of their elderly parents, or is it the government’s responsibility?",
             "label": "Ý tưởng về con cái bận"
            },
            {
+            "id": "mbx-1e1tds8",
             "text": "In many countries, traditional family structures and values are changing. What are the causes and effects of this trend?",
             "label": "Ý tưởng về con cái bận"
            },
            {
+            "id": "mbx-da2394",
             "text": "People today spend more time on work than on their personal lives. What problems does this cause",
             "label": "Ý tưởng về con cái bận"
            }
@@ -2058,33 +2193,43 @@
           "lines": [],
           "prompts": [
            {
+            "id": "mbx-r6ouv4",
             "text": "Many graduates are unable to find suitable jobs after leaving university. Why is this happening and what can be done about it?"
            },
            {
+            "id": "mbx-4d9qye",
             "text": "Some people think schools should teach practical skills such as financial management and communication skills. To what extent do you agree or disagree?"
            },
            {
+            "id": "mbx-16gt8j",
             "text": "In many countries, there is a gap between what students learn at school and what employers need. What are the causes and what solutions can be proposed?"
            },
            {
+            "id": "mbx-1f99uiv",
             "text": "Examinations are not the best way to assess students. To what extent do you agree or disagree?"
            },
            {
+            "id": "mbx-1yklcmp",
             "text": "Schools should encourage creativity rather than academic achievement. To what extent do you agree or disagree?"
            },
            {
+            "id": "mbx-bvb66m",
             "text": "Young people experience more pressure than previous generations. Why is this happening? What can be done?"
            },
            {
+            "id": "mbx-1rsf109",
             "text": "Mental health problems among young people are increasing. Why is this happening? What solutions can be proposed?"
            },
            {
+            "id": "mbx-rz7423",
             "text": "Students should be allowed to choose the subjects they study at school. To what extent do you agree or disagree?"
            },
            {
+            "id": "mbx-p5dv1p",
             "text": "All students should study the same subjects until they leave school. To what extent do you agree or disagree?"
            },
            {
+            "id": "mbx-1nxzzr5",
             "text": "Many graduates struggle to find jobs after leaving university. Why is this happening? What can be done? (do skills mismatch)"
            }
           ]
@@ -2121,12 +2266,15 @@
           "lines": [],
           "prompts": [
            {
+            "id": "mbx-1a7tscj",
             "text": "Advertising aimed at children should be banned. To what extent do you agree or disagree?"
            },
            {
+            "id": "mbx-1vnpokn",
             "text": "Some people believe that companies should focus mainly on making profits, while others think they should also have social responsibilities. Discuss both views and give your opinion."
            },
            {
+            "id": "mbx-1hw849e",
             "text": "Large companies have become increasingly powerful. What problems does this cause and what measures should governments take?"
            }
           ]
@@ -2163,6 +2311,7 @@
           "lines": [],
           "prompts": [
            {
+            "id": "mbx-1hd3tx7",
             "text": "Corruption remains a serious issue in many countries. What problems does this cause and what measures can be taken to address it?"
            }
           ]
@@ -2635,24 +2784,31 @@
           "lines": [],
           "prompts": [
            {
+            "id": "mbx-1nqxkl5",
             "text": "In many countries, schools are replacing traditional textbooks with digital devices such as tablets and laptops. Do the advantages of this trend outweigh the disadvantages?"
            },
            {
+            "id": "mbx-1mitzp3",
             "text": "Some people believe that online learning and artificial intelligence will eventually replace teachers in the classroom. To what extent do you agree or disagree?"
            },
            {
+            "id": "mbx-7voq2f",
             "text": "Nowadays, students can access a vast amount of information through the internet, which makes traditional schools less necessary. Do you agree or disagree?"
            },
            {
+            "id": "mbx-lbejc9",
             "text": "Computers and internet technology have transformed the way students learn. Is this a positive or negative development?"
            },
            {
+            "id": "mbx-1jg76wg",
             "text": "Many universities are now offering distance learning courses through the internet. Discuss the benefits and drawbacks of this development."
            },
            {
+            "id": "mbx-1v57tqb",
             "text": "Some people argue that children should learn how to use computers as early as possible, while others believe that screen time should be restricted for young learners. Discuss both views and give your opinion."
            },
            {
+            "id": "mbx-17u8faw",
             "text": "The use of modern technology in education has improved the quality of learning for students. To what extent do you agree or disagree?"
            }
           ]
@@ -2754,18 +2910,23 @@
           "lines": [],
           "prompts": [
            {
+            "id": "mbx-gzj797",
             "text": "In many countries, an increasing number of people are working from home using technology. Do the advantages of this trend outweigh the disadvantages?"
            },
            {
+            "id": "mbx-1otxbhx",
             "text": "Artificial intelligence and automation are increasingly replacing human workers in many industries. What are the main causes of this trend, and what effects does it have on society?"
            },
            {
+            "id": "mbx-1qrius6",
             "text": "The use of technology has made it possible for employees to work at any time and from anywhere. Is this a positive or negative development?"
            },
            {
+            "id": "mbx-wauihm",
             "text": "Some people believe that technology reduces human interaction in the workplace and harms teamwork, while others think it improves efficiency. Discuss both views and give your opinion."
            },
            {
+            "id": "mbx-q14vi5",
             "text": "Advances in technology have enabled companies to operate 24/7. Does this development have more benefits or drawbacks for workers?"
            }
           ]
@@ -2814,18 +2975,23 @@
           "lines": [],
           "prompts": [
            {
+            "id": "mbx-6atxyt",
             "text": "Modern technology has changed the way people spend their free time. Do you think this is a positive or negative development?"
            },
            {
+            "id": "mbx-wy2d5p",
             "text": "Some people believe that the widespread use of smartphones and social media is making people more isolated from real-world relationships. To what extent do you agree or disagree?"
            },
            {
+            "id": "mbx-bpdhte",
             "text": "Nowadays, many young people spend hours playing video games and using electronic gadgets instead of engaging in physical activities. What are the causes of this, and what solutions can be implemented?"
            },
            {
+            "id": "mbx-aeuuzp",
             "text": "Modern devices and smart home appliances have given people more leisure time. To what extent do you agree or disagree?"
            },
            {
+            "id": "mbx-kz9xee",
             "text": "Technology has changed the way people maintain relationships with family and friends. Discuss the advantages and disadvantages of this trend."
            }
           ]
@@ -2860,18 +3026,23 @@
           "lines": [],
           "prompts": [
            {
+            "id": "mbx-1646p46",
             "text": "The development of medical technology has significantly increased life expectancy in many parts of the world. Do the advantages of this trend outweigh the disadvantages?"
            },
            {
+            "id": "mbx-85bhzh",
             "text": "Some people believe that artificial intelligence and modern equipment will soon replace human doctors in diagnosing and treating illnesses. To what extent do you agree or disagree?"
            },
            {
+            "id": "mbx-1kgjvvi",
             "text": "Nowadays, many people use the internet to self-diagnose and seek medical advice instead of visiting a doctor. Is this a positive or negative development?"
            },
            {
+            "id": "mbx-1n2dfbi",
             "text": "Governments should invest more money in advanced medical technology rather than in public health education and disease prevention. To what extent do you agree or disagree?"
            },
            {
+            "id": "mbx-njbvsg",
             "text": "Telemedicine (remote medical consultation using technology) is becoming increasingly popular. Discuss the benefits and drawbacks of this development."
            }
           ]
@@ -2903,18 +3074,23 @@
           "lines": [],
           "prompts": [
            {
+            "id": "mbx-1208l9i",
             "text": "Some people believe that technological progress is the main cause of environmental pollution, while others argue that technology is the key to solving environmental problems. Discuss both views and give your opinion."
            },
            {
+            "id": "mbx-wxcxec",
             "text": "The development of green technologies, such as electric vehicles and renewable energy systems, can fully address global climate change. To what extent do you agree or disagree?"
            },
            {
+            "id": "mbx-4e2yfc",
             "text": "Advanced technology enables scientists to predict natural disasters more accurately. Do you think governments should focus more budget on technological prediction or on building infrastructure to withstand disasters?"
            },
            {
+            "id": "mbx-1ci6na3",
             "text": "Modern technology has led to a dramatic increase in electronic waste (e-waste). What problems does this cause, and what solutions can be introduced?"
            },
            {
+            "id": "mbx-1crogdv",
             "text": "Some people think that technological innovations in agriculture (such as GMOs and automated farming) are necessary to feed the growing world population, while others fear they damage the environment. Discuss both views and give your opinion."
            }
           ]
@@ -2958,18 +3134,23 @@
           "lines": [],
           "prompts": [
            {
+            "id": "mbx-1txyfoj",
             "text": "Online shopping is increasingly replacing traditional high-street shops. Do the advantages of this trend outweigh the disadvantages?"
            },
            {
+            "id": "mbx-sh5p7c",
             "text": "The rise of e-commerce has led to a decrease in face-to-face interaction between consumers and businesses. Is this a positive or negative development?"
            },
            {
+            "id": "mbx-1ay0ese",
             "text": "Targeted advertising powered by big data and AI encourages people to buy things they do not need. To what extent do you agree or disagree?"
            },
            {
+            "id": "mbx-fzx3ci",
             "text": "Many businesses now use automated chatbots and AI customer service instead of human employees. Discuss the advantages and disadvantages of this development."
            },
            {
+            "id": "mbx-clkvs",
             "text": "In many countries, cashless payments and mobile wallets are replacing physical currency. What are the benefits and drawbacks of a cashless society?"
            }
           ]
@@ -3007,18 +3188,23 @@
           "lines": [],
           "prompts": [
            {
+            "id": "mbx-fgwvw4",
             "text": "Modern technology has made international travel easier and more convenient than ever before. Do the advantages of this development outweigh the disadvantages?"
            },
            {
+            "id": "mbx-15xdn52",
             "text": "Some people believe that virtual reality technology will eventually allow people to experience travel without visiting physical destinations. Is this a positive or negative development?"
            },
            {
+            "id": "mbx-qtrhih",
             "text": "Tourists today rely heavily on smartphones and travel apps for navigation, booking, and translation. What are the causes of this trend, and does it improve or ruin the travel experience?"
            },
            {
+            "id": "mbx-1adadgg",
             "text": "Advances in transportation technology (such as high-speed trains and hyperloops) allow people to travel long distances in short periods. Do the benefits of this trend outweigh its drawbacks?"
            },
            {
+            "id": "mbx-1ras06x",
             "text": "Technology has made it possible for people to research travel destinations thoroughly online before visiting, reducing the sense of exploration. To what extent do you agree or disagree?"
            }
           ]
@@ -3364,34 +3550,42 @@
           "lines": [],
           "prompts": [
            {
+            "id": "mbx-6biucz",
             "text": "Online shopping is replacing traditional shopping. Is this a positive or negative development?",
             "label": "Tạo việc làm"
            },
            {
+            "id": "mbx-1fw6nlo",
             "text": "Artificial intelligence is replacing human workers. Is this a positive or negative development?",
             "label": "Tạo việc làm"
            },
            {
+            "id": "mbx-h5yk6p",
             "text": "Hosting international sporting events brings more benefits than drawbacks. To what extent do you agree or disagree?",
             "label": "Tạo việc làm"
            },
            {
+            "id": "mbx-q42rcl",
             "text": "Industrialization has brought more benefits than drawbacks. To what extent do you agree or disagree?",
             "label": "Phát triển kinh tế"
            },
            {
+            "id": "mbx-1mfwozp",
             "text": "Many countries encourage foreign investment. Is this a positive or negative development?",
             "label": "Phát triển kinh tế"
            },
            {
+            "id": "mbx-fke19t",
             "text": "Governments should spend more money on scientific research rather than on immediate social needs. To what extent do you agree or disagree?",
             "label": "Phát triển kinh tế"
            },
            {
+            "id": "mbx-1glgtl2",
             "text": "Artificial intelligence and automation are replacing human workers. Is this a positive or negative development?",
             "label": "Phát triển kinh tế"
            },
            {
+            "id": "mbx-qlw35q",
             "text": "Some people believe that international trade is beneficial for countries. To what extent do you agree or disagree?",
             "label": "Phát triển kinh tế"
            }
@@ -3486,22 +3680,27 @@
           "lines": [],
           "prompts": [
            {
+            "id": "mbx-1ns5jra",
             "text": "Some people think that charity organizations should only offer help to people of their own country. Others believe these organizations should give aid to people in great need wherever they live. Discuss both views and give your own opinion.",
             "label": "Ý tưởng về hợp tác quốc tế"
            },
            {
+            "id": "mbx-xds1ua",
             "text": "Many issues we face today affect our whole planet. Good relationships between different countries are becoming more important than ever before. To what extent do you agree or disagree?",
             "label": "Ý tưởng về hợp tác quốc tế"
            },
            {
+            "id": "mbx-mnwf4",
             "text": "Economic progress is often used to measure a country's success. However, some people believe that other factors are more important. What other factors should also be considered when measuring a country's success? Do you think one factor is more important than others?",
             "label": "//"
            },
            {
+            "id": "mbx-4xbon4",
             "text": "In many nations, people in huge cities either live alone or in small family units, instead of in large, extended family groups. Is this a positive or negative trend?",
             "label": "Ý tưởng về sự gắn kết"
            },
            {
+            "id": "mbx-hh7ob",
             "text": "In some parts of the world it is increasingly popular to research the history of one’s own family. Why do people want to do this? Is it a positive or negative development? (sense of belonging + togetherness + Document family history → preserve traditions and shared memories → pass cultural heritage on to future generations)",
             "label": "Ý tưởng về sự gắn kết"
            }
@@ -3665,85 +3864,105 @@
           "lines": [],
           "prompts": [
            {
+            "id": "mbx-mdc3vt",
             "text": "Some people think that schools should choose students according to their academic abilities, while others think it is better to have students of different abilities studying together. Discuss both views and state your own opinion",
             "hint": "view 1 sẽ dùng phần kết quả học tập, view 2 dùng phần kĩ năng xã hội",
             "label": "Các đề liên quan đến education/skills"
            },
            {
+            "id": "mbx-t3lu8r",
             "text": "More and more people want to study at university, so competition for university places is increasing. Why do more people want to study at university? Is it a positive or negative development?",
             "label": "Các đề liên quan đến education/skills"
            },
            {
+            "id": "mbx-wixg1h",
             "text": "Ambition is a positive quality for people to have in society today. How important is it for people who want to succeed in life? Is it a positive or negative characteristic?",
             "label": "Các đề liên quan đến education/skills"
            },
            {
+            "id": "mbx-1mxd5y1",
             "text": "Some feel that schools should be mixed with both girls and boys attending while others feel the genders ought to be separated. Discuss both views and give your own opinion.",
             "label": "Các đề liên quan đến education/skills"
            },
            {
+            "id": "mbx-oyvl60",
             "text": "Competitiveness is a positive quality for people in most societies. How does competitiveness affect individuals? Is it a positive or negative trend?",
             "hint": "đề mơ hồ ntn thì cứ quất phần skills development vào nhé",
             "label": "Các đề liên quan đến education/skills"
            },
            {
+            "id": "mbx-1plt6ad",
             "text": "Some people think that children should begin their education at a very early age. Some think they should begin at at least 7 years old. Discuss both views and give your own opinion.",
             "label": "Các đề liên quan đến education/skills"
            },
            {
+            "id": "mbx-1rdne4l",
             "text": "It is suggested that primary children should learn how to grow vegetables and keep animals. Do the advantages of this outweigh the disadvantages?",
             "label": "Nhận thức"
            },
            {
+            "id": "mbx-1ijdb6z",
             "text": "Some people think that schools should teach children how to cook and prepare healthy meals. To what extent do you agree or disagree?",
             "label": "Nhận thức"
            },
            {
+            "id": "mbx-123swtc",
             "text": "Some people think that schools should stop using books because children can learn from films, TV, computers and video games instead. To what extent do you agree or disagree?",
             "label": "Nhận thức"
            },
            {
+            "id": "mbx-1k5aehj",
             "text": "Some people think that schools should teach children how to manage money. To what extent do you agree or disagree?",
             "label": "Nhận thức"
            },
            {
+            "id": "mbx-1uzvgml",
             "text": "Shopping on the Internet is replacing shopping in stores. Do the advantages outweigh the disadvantages?",
             "label": "Save time"
            },
            {
+            "id": "mbx-1b3qedk",
             "text": "Governments should invest more in public transport than in building new roads. To what extent do you agree or disagree?",
             "label": "Save time"
            },
            {
+            "id": "mbx-1gcv0cb",
             "text": "Some people think that technological developments have made our lives more complicated, while others think they have made life easier. Discuss both views and give your own opinion.",
             "label": "Save time"
            },
            {
+            "id": "mbx-vb9y06",
             "text": "In many countries, the number of people using bicycles is decreasing despite its benefits. Why? How can they be encouraged to use bicycles as a main means of transport?",
             "date": "20.6.2026",
             "label": "Save time"
            },
            {
+            "id": "mbx-1uzvgml",
             "text": "Shopping on the Internet is replacing shopping in stores. Do the advantages outweigh the disadvantages?",
             "label": "Save money"
            },
            {
+            "id": "mbx-1mkggud",
             "text": "Countries should produce all the food they consume instead of importing it. To what extent do you agree or disagree?",
             "label": "Save money"
            },
            {
+            "id": "mbx-zi9a4a",
             "text": "University students should be required to do voluntary work as part of their studies. To what extent do you agree or disagree?",
             "label": "Phát triển bản thân"
            },
            {
+            "id": "mbx-1w5lkt5",
             "text": "Children should learn practical skills such as cooking and managing money at school. To what extent do you agree or disagree?",
             "label": "Phát triển bản thân"
            },
            {
+            "id": "mbx-azp5x4",
             "text": "Some people think participating in team sports is more beneficial than studying alone. Discuss both views and give your own opinion.",
             "label": "Phát triển bản thân"
            },
            {
+            "id": "mbx-1onhu2g",
             "text": "It is suggested that primary children should learn how to grow vegetables and keep animals. Do the advantages of this outweigh its disadvantages?",
             "label": "Phát triển bản thân"
            }
@@ -3817,10 +4036,12 @@
           ],
           "prompts": [
            {
+            "id": "mbx-rzdcon",
             "text": "Some cities have vehicles-free days when private cars, trucks, and motorcycles are banned from the city center. Do the advantages outweigh the disadvantages?",
             "label": "Bảo vệ môi trường"
            },
            {
+            "id": "mbx-18ov405",
             "text": "In some cities, people are choosing cars instead of bicycles, while in other cities riding bikes are replacing cars. Why is this the case? Which development do you think is better?",
             "label": "Bảo vệ môi trường"
            }
@@ -4010,54 +4231,67 @@
           ],
           "prompts": [
            {
+            "id": "mbx-ecwwjo",
             "text": "In today's world of advanced science and technology, we still greatly value our artists such as musicians, painters and writers. What can arts tell us about life that science and technology cannot?",
             "label": "Vài đề về art - chủ đề này mọi người học vocab là chính để nêu vai trò của art"
            },
            {
+            "id": "mbx-kb69fs",
             "text": "Governments should spend more money on art than on other public services. To what extent do you agree or disagree?",
             "label": "Vài đề về art - chủ đề này mọi người học vocab là chính để nêu vai trò của art"
            },
            {
+            "id": "mbx-wtdllq",
             "text": "Art classes such as painting and drawing are as important as other school subjects. Do you agree or disagree?",
             "label": "Vài đề về art - chủ đề này mọi người học vocab là chính để nêu vai trò của art"
            },
            {
+            "id": "mbx-7q4e3c",
             "text": "Many wild animals are now kept in captivity for educational and entertainment purposes. Do the advantages outweigh the disadvantages?",
             "label": "ANIMALS"
            },
            {
+            "id": "mbx-11u3h0u",
             "text": "Some people believe that animals should be used for medical experiments, while others think this is unacceptable. Discuss both views and give your opinion.",
             "label": "ANIMALS"
            },
            {
+            "id": "mbx-1gwsq99",
             "text": "Animals are in danger of extinctions. We should protect only those animals which are useful to humans. Agree - disagree?",
             "label": "ANIMALS"
            },
            {
+            "id": "mbx-en1pfp",
             "text": "It is a natural process for animal species to become extinct (e.g. dinosaur, dodo…) There is no reason why people should try to prevent this from happening. To what extent do you agree or disagree?",
             "label": "ANIMALS"
            },
            {
+            "id": "mbx-19vgqxn",
             "text": "It is more important for schoolchildren to learn about local history than world history. To what extent do you agree or disagree?",
             "label": "HISTORY"
            },
            {
+            "id": "mbx-usx8ln",
             "text": "Some people think history has little or nothing to tell us, while others believe that studying the past helps us understand the present. To what extent do you agree or disagree?",
             "label": "HISTORY"
            },
            {
+            "id": "mbx-yi31w6",
             "text": "In many countries, governments are spending more money on railways than roads. Do the advantages outweigh the disadvantages?",
             "label": "Transport"
            },
            {
+            "id": "mbx-12beogh",
             "text": "Public money should be spent on roads and motorways rather than on public transport systems such as railways and trams. To what extent do you agree or disagree?",
             "label": "Transport"
            },
            {
+            "id": "mbx-1166hh1",
             "text": "Some people think zoos are important for wildlife conservation, while others believe they are cruel and should be closed. Discuss both views and give your own opinion.",
             "label": "ZOO"
            },
            {
+            "id": "mbx-14fbtu1",
             "text": "Some people think that museums should be enjoyable places to entertain people, while others believe that the purpose of museums is to educate. Discuss both views and give your own opinion.",
             "label": "MUSEUMS"
            }
@@ -4135,12 +4369,15 @@
           "lines": [],
           "prompts": [
            {
+            "id": "mbx-1vpnef3",
             "text": "Many manufacturing jobs are being replaced by machines. Do the advantages outweigh the disadvantages?"
            },
            {
+            "id": "mbx-19rrmep",
             "text": "Many people believe that universities should focus on preparing students for the labour market rather than providing a broad education. To what extent do you agree or disagree?"
            },
            {
+            "id": "mbx-1gcjr5z",
             "text": "Many countries are experiencing an ageing population. What problems does this cause for society and the economy? What solutions can be taken?"
            }
           ]
@@ -4225,22 +4462,28 @@
           ],
           "prompts": [
            {
+            "id": "mbx-1wh9d4p",
             "text": "Many people believe that modern lifestyles have made people less connected to their local communities than in the past. To what extent do you agree or disagree?"
            },
            {
+            "id": "mbx-o5w6ml",
             "text": "Some people think that people today know more about international celebrities than about their neighbours. Why is this the case? Is this a positive or negative development?"
            },
            {
+            "id": "mbx-tp618c",
             "text": "The spread of fake news on social media has become a serious problem in many countries. What problems does this cause, and what measures can be taken to address them?"
            },
            {
+            "id": "mbx-ffdpwk",
             "text": "Many elderly people live alone nowadays instead of living with their children. Why has this become more common? Is this a positive or negative development?"
            },
            {
+            "id": "mbx-4kw0ul",
             "text": "Some people think university education should only be available to good students, while others believe everyone should have access to it.",
             "label": "Gia tăng bất bình đẳng xã hội (dùng khi chính sách thiên vị 1 nhóm người)"
            },
            {
+            "id": "mbx-1eab6yk",
             "text": "Some countries achieve international success by building specialised facilities for elite athletes instead of public sports facilities. Is this a positive or negative development?",
             "label": "Gia tăng bất bình đẳng xã hội (dùng khi chính sách thiên vị 1 nhóm người)"
            }
@@ -4344,32 +4587,41 @@
           "lines": [],
           "prompts": [
            {
+            "id": "mbx-1iignnp",
             "text": "Children spend too much time playing computer games instead of sports. Why? Is this a positive or negative development?"
            },
            {
+            "id": "mbx-o3ffb8",
             "text": "Many people eat fast food regularly. Why is this happening? Is it a positive or negative development?"
            },
            {
+            "id": "mbx-h5bn8v",
             "text": "Modern society has become increasingly competitive. Is this a positive or negative development?"
            },
            {
+            "id": "mbx-1j89zvp",
             "text": "Many people have to work long hours nowadays. Why? What problems can this cause?"
            },
            {
+            "id": "mbx-awfy2g",
             "text": "Students today face greater academic pressure than in the past. Why? What problems does this cause?"
            },
            {
+            "id": "mbx-1au29py",
             "text": "Some people believe dangerous sports should be banned. To what extent do you agree?"
            },
            {
+            "id": "mbx-136nalw",
             "text": "Living in big cities is bad for people’s health. To what extent do you agree or disagree?",
             "date": "5.7.2026"
            },
            {
+            "id": "mbx-1tji5qj",
             "text": "With the growing population in cities, many people are living in small homes that don't have outdoor spaces. Is this a positive or negative development?",
             "date": "29.6.2026"
            },
            {
+            "id": "mbx-1st47n3",
             "text": "Shops should be banned from selling food and drink that has been scientifically proven to be harmful to people's health. To what extent do you agree or disagree?",
             "date": "3.7.2026"
            }
@@ -4454,24 +4706,31 @@
           "lines": [],
           "prompts": [
            {
+            "id": "mbx-ng4zer",
             "text": "Organized tours to remote areas and communities are increasingly popular. Is this a positive or negative development for the local people and the environment?"
            },
            {
+            "id": "mbx-5h1dcr",
             "text": "Tourism has increased significantly in many parts of the world. Is this a positive or negative development?"
            },
            {
+            "id": "mbx-14dbtri",
             "text": "Some people think that governments should impose higher taxes on industries that pollute the environment. To what extent do you agree or disagree?"
            },
            {
+            "id": "mbx-dgabdn",
             "text": "Plastic shopping bags should be banned because they cause environmental problems. To what extent do you agree or disagree?"
            },
            {
+            "id": "mbx-225yl0",
             "text": "Many cities are replacing parks and green spaces with housing and commercial buildings. Do the advantages outweigh the disadvantages?"
            },
            {
+            "id": "mbx-1y60s2n",
             "text": "Some people think governments should spend more money protecting forests rather than developing industries. Discuss both views and give your opinion."
            },
            {
+            "id": "mbx-8iuv14",
             "text": "Some people think that climate change has a negative impact on business, while others think it provides more business opportunities. Discuss both views and give your own opinion."
            }
           ]
@@ -4914,33 +5173,43 @@
           "lines": [],
           "prompts": [
            {
+            "id": "mbx-tt8ofk",
             "text": "Some people think that the best way to improve public health is to increase the tax on unhealthy food and sugary drinks. To what extent do you agree or disagree?"
            },
            {
+            "id": "mbx-1g3qcwi",
             "text": "In many countries, junk food advertising aimed at children is widespread. Some people believe that governments should ban all advertisements for junk food. Do you agree or disagree?"
            },
            {
+            "id": "mbx-uja563",
             "text": "Some people believe that the best way to solve environmental problems is to increase the price of fuel for cars and other vehicles. To what extent do you agree or disagree?"
            },
            {
+            "id": "mbx-18p6jxm",
             "text": "Private cars should be banned from the centers of large cities to reduce congestion and pollution. To what extent do you agree or disagree?"
            },
            {
+            "id": "mbx-udi4j8",
             "text": "Smoking should be completely banned in all public places. To what extent do you agree or disagree?"
            },
            {
+            "id": "mbx-188px0m",
             "text": "Governments should ban the use of single-use plastics (such as plastic bags, straws, and disposable cutlery) to protect the environment. Do you agree or disagree?"
            },
            {
+            "id": "mbx-3pb3kr",
             "text": "Some people suggest that heavy taxes should be levied on luxury goods to reduce social inequality. To what extent do you agree or disagree?"
            },
            {
+            "id": "mbx-1rsjfci",
             "text": "Some people think that high taxes should be imposed on companies that cause environmental pollution. Do you agree or disagree?"
            },
            {
+            "id": "mbx-1uzh1fh",
             "text": "Some people believe that governments should ban dangerous sports, while others think people should be free to choose any sports they like. Discuss both views and give your opinion."
            },
            {
+            "id": "mbx-1upg9ep",
             "text": "Some people think that airlines should be taxed heavily for the environmental damage caused by air travel. To what extent do you agree or disagree?"
            }
           ]
@@ -4984,33 +5253,43 @@
           "lines": [],
           "prompts": [
            {
+            "id": "mbx-1fkkvlm",
             "text": "Some people think that governments should spend money on measures to reduce pollution and combat climate change, while others think that the money should be spent on populations who are already suffering from the effects of climate change. Discuss both views and give your opinion."
            },
            {
+            "id": "mbx-1bgrm9n",
             "text": "Governments should spend more money on medical research than on environmental protection. To what extent do you agree or disagree?"
            },
            {
+            "id": "mbx-fez5gf",
             "text": "Some people believe that governments should spend money on housing and medical care for the poor, while others think this money would be better spent on art, culture, and sports. Discuss both views and give your opinion."
            },
            {
+            "id": "mbx-v2ksig",
             "text": "Spending on public services such as healthcare and education is more important than spending on space exploration. To what extent do you agree or disagree?"
            },
            {
+            "id": "mbx-1c4pc65",
             "text": "Some people think that governments should build more roads to solve traffic congestion, while others believe that the money should be spent on public transport systems. Discuss both views and give your opinion."
            },
            {
+            "id": "mbx-17c3fi4",
             "text": "Governments should focus their spending on basic healthcare and education rather than on advanced technology and scientific research. To what extent do you agree or disagree?"
            },
            {
+            "id": "mbx-92lz2z",
             "text": "Some people believe that the government should provide free university education for all students, while others think that students should pay for their own higher education. Discuss both views and give your opinion."
            },
            {
+            "id": "mbx-1w5rb4",
             "text": "Governments should invest more money in railway infrastructure instead of building new highways. To what extent do you agree or disagree?"
            },
            {
+            "id": "mbx-1wd9vhs",
             "text": "Some people believe that governments should spend public funds on preserving historical sites and cultural heritage, while others think this money should be directed towards improving public infrastructure. Discuss both views and give your opinion."
            },
            {
+            "id": "mbx-gp3r7v",
             "text": "Some people think that governments should allocate more funds to crime prevention programs rather than building and maintaining prisons. To what extent do you agree or disagree?"
            }
           ]
@@ -5369,28 +5648,34 @@
           "lines": [],
           "prompts": [
            {
+            "id": "mbx-lh3nqi",
             "text": "In many countries, the number of overweight people is increasing. What are the causes of this trend, and what measures can be taken to solve it?",
             "hint": "Đưa giáo dục dinh dưỡng/thể chất vào trường học → thay đổi thái độ ăn uống → khuyến khích hành vi lành mạnh.",
             "label": "Ý tưởng về schools"
            },
            {
+            "id": "mbx-t1vhnc",
             "text": "Some people believe that school children should be taught how to manage money, while others think this is a waste of school time. Discuss both views and give your opinion.",
             "hint": "Tích hợp kỹ năng quản lý tài chính vào chương trình học → rèn luyện thói quen chi tiêu có trách nhiệm → mang lại lợi ích xã hội dài hạn.",
             "label": "Ý tưởng về schools"
            },
            {
+            "id": "mbx-itf3ot",
             "text": "Governments should spend money on awareness campaigns to encourage healthy eating habits rather than spending on treating illnesses. To what extent do you agree or disagree?",
             "label": "Ý tưởng về social media/celebrities: bất cứ đề nào cũng có thể dùng sức mạnh của truyền thông để thúc đẩy 1 lối sống/truyền đi 1 thông điệp"
            },
            {
+            "id": "mbx-llahu2",
             "text": "Many people believe that international cooperation is the only way to tackle environmental issues, while others think social media campaigns are more effective. Discuss both views and give your opinion.",
             "label": "Ý tưởng về social media/celebrities: bất cứ đề nào cũng có thể dùng sức mạnh của truyền thông để thúc đẩy 1 lối sống/truyền đi 1 thông điệp"
            },
            {
+            "id": "mbx-1vnql2q",
             "text": "In many parts of the world, traditional culture is being lost because of modern developments. What can be done to preserve traditional culture?",
             "label": "Ý tưởng về social media/celebrities: bất cứ đề nào cũng có thể dùng sức mạnh của truyền thông để thúc đẩy 1 lối sống/truyền đi 1 thông điệp"
            },
            {
+            "id": "mbx-np0rde",
             "text": "Some people think that crime can be reduced by improving education, while others believe that stricter punishments are necessary. Discuss both views and give your opinion.",
             "label": "Crime"
            }
@@ -5467,26 +5752,32 @@
           "lines": [],
           "prompts": [
            {
+            "id": "mbx-z9i8uf",
             "text": "Some people think that parents have the most important role in a child's development, while others believe that school has a greater influence. Discuss both views and give your opinion.",
             "label": "Ý tưởng về parents"
            },
            {
+            "id": "mbx-249if1",
             "text": "Young people today face more stress and pressure than previous generations. What are the causes of this, and what can be done to solve this problem?",
             "label": "Ý tưởng về parents"
            },
            {
+            "id": "mbx-c5nx7r",
             "text": "Children are spending too much time watching television and playing video games. What problems can this cause, and what solutions can be implemented?",
             "label": "Ý tưởng về parents"
            },
            {
+            "id": "mbx-1nu2b5s",
             "text": "Some people think that children can learn better at home with their parents, while others believe that attending school is better. Discuss both views and give your opinion.",
             "label": "Ý tưởng về parents"
            },
            {
+            "id": "mbx-hqilum",
             "text": "Some people think that the primary purpose of schools is to turn children into good citizens and workers, while others believe that schools should focus on personal development. Discuss both views and give your opinion.",
             "label": "Ý tưởng về teachers"
            },
            {
+            "id": "mbx-1emzdic",
             "text": "With the increase in the use of the internet, some people think that teachers will no longer be needed in the classroom. To what extent do you agree or disagree?",
             "label": "Ý tưởng về teachers"
            }
@@ -5528,12 +5819,15 @@
           "lines": [],
           "prompts": [
            {
+            "id": "mbx-plnzvf",
             "text": "Developed nations should share their technology with developing nations to help them progress. To what extent do you agree or disagree?"
            },
            {
+            "id": "mbx-73x5xg",
             "text": "Modern technology plays a vital role in solving environmental and global crisis issues. To what extent do you agree or disagree?"
            },
            {
+            "id": "mbx-1m76618",
             "text": "Environmental problems are too big for individual countries to solve on their own. Therefore, international cooperation is necessary to solve them. To what extent do you agree or disagree?"
            }
           ]
@@ -5574,12 +5868,15 @@
           "lines": [],
           "prompts": [
            {
+            "id": "mbx-n7acb7",
             "text": "Many people believe that international cooperation is the only way to tackle global environmental issues like climate change. Discuss both views and give your opinion."
            },
            {
+            "id": "mbx-4qy3uk",
             "text": "Rich countries should provide financial assistance to poor countries to improve healthcare and education. To what extent do you agree or disagree?"
            },
            {
+            "id": "mbx-q3otm",
             "text": "The best way to solve global problems is for rich nations to share knowledge and technology rather than sending financial aid. Discuss both views and give your opinion."
            }
           ]
@@ -5638,12 +5935,15 @@
           "lines": [],
           "prompts": [
            {
+            "id": "mbx-xrrkip",
             "text": "Some people believe that individual actions to protect the environment are useless, while others think individual efforts are essential. Discuss both views and give your opinion."
            },
            {
+            "id": "mbx-i7xux7",
             "text": "Consumers have the power to force large corporations to adopt environmentally friendly practices. To what extent do you agree or disagree?"
            },
            {
+            "id": "mbx-3po26z",
             "text": "Should individuals change their personal lifestyle to reduce pollution, or is it the government’s responsibility to make changes? Discuss both views and give your opinion."
            }
           ]
