@@ -3,7 +3,6 @@
 import { Volume2, VolumeX } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { Illustration } from '@/components/brand/Illustration';
 import { setSfxEnabled, sfx, sfxEnabled } from '@/lib/sfx';
 import { WorkspaceHeader } from '@/components/shell/BrandHeader';
 import { findPrompt } from '@/content/prompts';
@@ -27,8 +26,6 @@ import { ProBeam } from '@/components/ui/pro-beam';
 import { ENDS } from '../coach/ends';
 
 const shuffle = <T,>(xs: T[]) => { const a = [...xs]; for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
-/** A brand drawing for each kind of statement: why (a question), what it does (charts), what to do (brainstorm). */
-const DRAWING: Record<string, string> = { cause: 'man-sitting-on-question-mark-and-thinking', impact: 'hands-holding-different-charts', solution: 'woman-brainstorming-and-choosing-ideas' };
 const reducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 const ROLL_MS = 1900;
 
@@ -294,8 +291,7 @@ export function ProveDrill() {
                 {s && chip && prompt ? (
                   <>
                     {/* The statement: its own card, always the same height; the full IELTS prompt opens on demand. */}
-                    <section key={'st' + s.id} className="relative pb-5 pl-[34px] pr-[34px] pt-[22px] xl:pr-[200px]" style={{ flexShrink: 0, boxSizing: 'border-box', height: promptOpen ? 'auto' : STATEMENT_H, minHeight: STATEMENT_H, overflow: 'hidden', borderRadius: 12, border: '1px solid ' + CL.border, background: '#fff', display: 'flex', flexDirection: 'column', gap: 12 }}>
-                      <Illustration key={'drawing-' + s.id} name={DRAWING[s.kind] || DRAWING.impact} className="co-rise pointer-events-none absolute bottom-3 right-6 top-3 hidden h-[calc(100%-24px)] w-[150px] xl:block" />
+                    <section key={'st' + s.id} className="relative pb-5 pl-[34px] pr-[34px] pt-[22px]" style={{ flexShrink: 0, boxSizing: 'border-box', height: promptOpen ? 'auto' : STATEMENT_H, minHeight: STATEMENT_H, overflow: 'hidden', borderRadius: 12, border: '1px solid ' + CL.border, background: '#fff', display: 'flex', flexDirection: 'column', gap: 12 }}>
                       <span style={{ display: 'flex', alignItems: 'center', gap: 10, perspective: 400 }}>
                         <ClLabel>Chứng minh câu này</ClLabel>
                         <span key={s.id} className={landed ? 'co-flip' : ''} style={{ display: 'inline-block', borderRadius: 5, padding: '4px 8px', background: chip.bg, color: chip.fg, fontFamily: CL.sans, fontSize: 12, fontWeight: 500 }}>{chip.label}</span>

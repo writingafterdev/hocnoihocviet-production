@@ -2,7 +2,6 @@
 
 import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
-import { Illustration } from '@/components/brand/Illustration';
 import { Skeleton } from '@/components/base/skeleton/skeleton';
 import { ProBeam } from '@/components/ui/pro-beam';
 import { toast } from '@/components/ui/toast';
@@ -26,7 +25,6 @@ import { MACRO_NAME, MACRO_TINT, type IdeaPrompt, type Macro } from './NghiY';
 const KIND: Record<Macro, ChainKind> = { A: 'cause', B: 'impact', C: 'solution' };
 /** Which end the student finds: the cause (A), the impact (B), the measure (C). */
 const MINE_IS_START: Record<ChainKind, boolean> = { cause: true, impact: false, solution: true };
-const DRAWING: Record<Macro, string> = { A: 'man-sitting-on-question-mark-and-thinking', B: 'hands-holding-different-charts', C: 'woman-brainstorming-and-choosing-ideas' };
 const HINTS = 2;
 
 /** The ends of each prompt, asked once per visit to the page. */
@@ -176,8 +174,7 @@ export function IdeaExercise({ p, onLibrary, onNext, onDone }: { p: IdeaPrompt; 
           open={chat || showSample}
           main={
             <main className="co-col" style={{ minWidth: 0, display: 'flex', flexDirection: 'column', gap: 12 }}>
-              <section className="relative pb-5 pl-[34px] pr-[34px] pt-[22px] xl:pr-[200px]" style={{ flexShrink: 0, boxSizing: 'border-box', minHeight: 180, borderRadius: 12, border: '1px solid ' + CL.border, background: '#fff', display: 'flex', flexDirection: 'column', gap: 12 }}>
-                <Illustration name={DRAWING[p.macro]} className="co-rise pointer-events-none absolute bottom-3 right-6 top-3 hidden h-[calc(100%-24px)] w-[150px] xl:block" />
+              <section className="relative pb-5 pl-[34px] pr-[34px] pt-[22px]" style={{ flexShrink: 0, boxSizing: 'border-box', borderRadius: 12, border: '1px solid ' + CL.border, background: '#fff', display: 'flex', flexDirection: 'column', gap: 12 }}>
                 <span style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
                   <ClLabel>Nghĩ ý cho đề này</ClLabel>
                   <span style={{ borderRadius: 5, padding: '4px 8px', background: MACRO_TINT[p.macro].bg, color: MACRO_TINT[p.macro].fg, fontSize: 12, fontWeight: 500 }}>{MACRO_NAME[p.macro]}</span>
