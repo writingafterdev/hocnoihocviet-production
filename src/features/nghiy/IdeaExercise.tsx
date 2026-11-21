@@ -37,7 +37,7 @@ const errText = (e: unknown) => {
 
 /**
  * One prompt as a Nghĩ ý exercise. Her prompt gives one end of the mạch ý; the student writes the other end (Gợi ý: a
- * leading question, then her idea from the doc), then the steps between, and checks the mạch ý like Chứng minh nhanh.
+ * leading question, then her idea from the doc), then the steps between, and checks the mạch ý like Phát triển ý.
  */
 export function IdeaExercise({ p, onLibrary, onNext, onDone }: { p: IdeaPrompt; onLibrary: () => void; onNext: () => void; onDone: () => void }) {
   const kind = KIND[p.macro];

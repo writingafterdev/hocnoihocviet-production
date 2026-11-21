@@ -27,7 +27,7 @@ export function Sentence({ s }: { s: Statement }) {
 }
 
 /**
- * Chứng minh nhanh, before a statement is picked: every statement in the layout of the prompt library (Luyện viết), with
+ * Phát triển ý, before a statement is picked: every statement in the layout of the prompt library (Luyện viết), with
  * type and topic filters, "Câu ngẫu nhiên" (a random one from the filtered list, with the reel) and one row per statement.
  * `onOpen` gets the statement and the filtered list (what "Câu tiếp" goes on to); `onRandom` gets the filtered list.
  */
@@ -57,7 +57,7 @@ export function StatementLibrary({ view, setView, done, onOpen, onRandom }: { vi
         <div style={{ width: 96, height: 96, borderRadius: 12, background: '#FFF0EB', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
           <img src="/illustrations/man-sitting-on-question-mark-and-thinking.svg" style={{ width: 84, height: 84, objectFit: 'contain', mixBlendMode: 'multiply' }} alt="" />
         </div>
-        <h1 style={{ fontFamily: 'var(--font-sans)', fontSize: 32, fontWeight: 600, letterSpacing: '-0.01em', color: '#171717', margin: 0 }}>Chứng minh nhanh</h1>
+        <h1 style={{ fontFamily: 'var(--font-sans)', fontSize: 32, fontWeight: 600, letterSpacing: '-0.01em', color: '#171717', margin: 0 }}>Phát triển ý</h1>
       </div>
 
       <div style={{ borderBottom: '1px solid rgba(0,0,0,0.1)', marginBottom: 24 }} />

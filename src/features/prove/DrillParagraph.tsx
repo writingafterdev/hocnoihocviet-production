@@ -29,7 +29,7 @@ interface Review { tasks: FixTask[]; solved: string[]; checks: Record<string, Ch
 export interface ParagraphDraft { essay: EssayState; review: Review | null }
 
 /**
- * Chứng minh nhanh, after "Kiểm tra": the chain written as one paragraph, by the student alone ("Tự viết") or
+ * Phát triển ý, after "Kiểm tra": the chain written as one paragraph, by the student alone ("Tự viết") or
  * sentence by sentence ("Viết có hướng dẫn"). "Nhận xét đoạn văn" gives idea/flow comments, no score; each is fixed
  * inside its comment, the old words struck through in the paragraph with the rewrite after them.
  */
@@ -96,7 +96,7 @@ export function DrillParagraph({ s, prompt, steps, guided: startGuided, onBack, 
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10, minHeight: 42, paddingBottom: 12 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 18 }}>
           <button type="button" className="cl-btn cl-link" onClick={onBack} style={backLinkStyle}><ClIcon name="left" size={14} />Về mạch ý</button>
-          <Chip variant="subtle" color="blue">Chứng minh nhanh</Chip>
+          <Chip variant="subtle" color="blue">Phát triển ý</Chip>
           <span style={{ fontFamily: CL.sans, fontSize: 12.5, color: CL.ink5 }}>Viết đoạn văn từ mạch ý</span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>

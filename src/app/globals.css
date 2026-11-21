@@ -239,7 +239,7 @@ a:hover { color: #404040; }
   .pl-grid > aside { width: 100% !important; position: static !important; max-height: none !important; overflow: visible !important; }
 }
 
-/* Coach screens (Chứng minh nhanh, ① Dựng mạch, ② Viết bài) */
+/* Coach screens (Phát triển ý, ① Dựng mạch, ② Viết bài) */
 :root { --co-ease: var(--ease-smooth-out); --co-spring: var(--ease-bounce); }
 .co-ta { field-sizing: content; }
 .co-ta::placeholder { color: #A3A3A3; }

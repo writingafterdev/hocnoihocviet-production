@@ -28,7 +28,7 @@ export const attemptHref = (a: Attempt) => {
   return '/write/' + a.id + (open ? '/essay' : a.chains.length ? '/chains' : '/direction');
 };
 
-/** "Viết cả bài cho đề này": a new attempt whose first body paragraph is the chain from "Chứng minh nhanh". */
+/** "Viết cả bài cho đề này": a new attempt whose first body paragraph is the chain from "Phát triển ý". */
 export async function startFromStatement(prompt: Prompt, s: Statement, middle: string[]): Promise<string> {
   const attempt = createAttempt(prompt.id, bodyFromStatement(prompt, s, middle));
   await attemptStore.save(attempt);

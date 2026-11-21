@@ -2,7 +2,7 @@
  * Coaching one chain: "Bí? Gợi ý" asks one open question, "Kiểm tra" finds missing steps and the places
  * where a group's situation or a detail would make the chain more convincing (prompts in ./prompts).
  *
- * Used by "Chứng minh nhanh" (a ready-made statement) and by ① Dựng mạch (one chain per body paragraph).
+ * Used by "Phát triển ý" (a ready-made statement) and by ① Dựng mạch (one chain per body paragraph).
  * A chain is read as positions: 0 = starting point, 1…n = the student's middle steps, n+1 = ending point.
  */
 import type { Prompt } from '@/content/prompts';

@@ -51,7 +51,7 @@ function Row({ href, icon, children, note }: { href: string; icon?: React.ReactN
 const Empty = ({ children }: { children: React.ReactNode }) => <p className="m-0 py-3 text-[13.5px] leading-[1.5] text-ink-soft">{children}</p>;
 
 const PRACTICE: { label: string; href: string; icon: NavIconName }[] = [
-  { label: 'Chứng minh nhanh', href: '/prove', icon: 'drill' },
+  { label: 'Phát triển ý', href: '/prove', icon: 'drill' },
   { label: 'Luyện viết', href: '/writing', icon: 'write' },
   { label: 'Chép mẫu', href: '/copy', icon: 'copy' },
   { label: 'Từ vựng theo chủ đề', href: '/vocab', icon: 'vocab' },

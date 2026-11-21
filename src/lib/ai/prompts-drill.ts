@@ -1,5 +1,5 @@
 import { TERMS } from './prompts';
-/** Prompts for the quick drill's per-step help (Chứng minh nhanh). */
+/** Prompts for the quick drill's per-step help (Phát triển ý). */
 
 /** "Gợi ý" on one step: a guiding question and phrases for the step being written, never the step itself. */
 export const STEP_VOCAB_TASK = `# VIỆC CỦA BẠN: CÂU HỎI GỢI MỞ VÀ TỪ VỰNG CHO MỘT BƯỚC

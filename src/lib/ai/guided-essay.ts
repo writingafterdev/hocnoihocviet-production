@@ -21,7 +21,7 @@ Bố cục:
 - Không giới hạn số câu hay số chữ; viết đủ để mỗi ý được triển khai trọn vẹn. Văn phong học thuật, câu đa dạng, từ vựng chính xác và cụ thể, không sáo rỗng.
 `;
 
-/** Chứng minh nhanh, "Viết mạch ý này thành một đoạn văn": one body paragraph from the drill's chain. */
+/** Phát triển ý, "Viết mạch ý này thành một đoạn văn": one body paragraph from the drill's chain. */
 const PARAGRAPH_HEAD = `# VIỆC CỦA BẠN: ĐOẠN VĂN MẪU TỪ MỘT MẠCH Ý ("Viết có hướng dẫn")
 Học sinh vừa dựng một mạch ý để chứng minh một câu (điểm đầu → các bước → điểm cuối; câu chủ đề ghi ở dưới) và chọn viết mạch ý đó thành một đoạn văn có hướng dẫn. Bạn viết MỘT đoạn thân bài IELTS Writing Task 2 mẫu, band 8 đến 9, đi ĐÚNG theo mạch ý, rồi chia thành từng câu để học sinh tự viết lại từng câu.
 

@@ -14,7 +14,7 @@ interface Item { label: string; href: string; match: string[]; icon: React.React
 interface Section { label: string; soon?: boolean; items: Item[] }
 interface Group { label?: string; items?: Item[]; sections?: Section[] }
 
-const drill = (disabled?: boolean): Item => ({ label: 'Chứng minh nhanh', href: '/prove', match: disabled ? [] : ['/prove'], icon: <NavIcon name="drill" />, disabled });
+const drill = (disabled?: boolean): Item => ({ label: 'Phát triển ý', href: '/prove', match: disabled ? [] : ['/prove'], icon: <NavIcon name="drill" />, disabled });
 const write = (disabled?: boolean): Item => ({ label: 'Luyện viết', href: '/writing', match: disabled ? [] : ['/writing', '/write'], icon: <NavIcon name="write" />, disabled });
 const copy = (disabled?: boolean): Item => ({ label: 'Chép mẫu', href: '/copy', match: disabled ? [] : ['/copy'], icon: <NavIcon name="copy" />, disabled });
 
@@ -45,7 +45,7 @@ interface Crumb { label: string; href: string }
 function titleOf(path: string): { section?: Crumb; page: Crumb } {
   const task2: Crumb = { label: 'Task 2', href: '/writing' };
   const mbx: Crumb = { label: 'Tài liệu missbacxiu', href: '/tai-lieu' };
-  if (inside(path, '/prove')) return { section: task2, page: { label: 'Chứng minh nhanh', href: '/prove' } };
+  if (inside(path, '/prove')) return { section: task2, page: { label: 'Phát triển ý', href: '/prove' } };
   if (inside(path, '/copy')) return { section: task2, page: { label: 'Chép mẫu', href: '/copy' } };
   if (inside(path, '/writing')) return { section: task2, page: { label: 'Thư viện đề', href: '/writing' } };
   if (inside(path, '/write')) return { section: task2, page: { label: 'Luyện viết', href: '/writing' } };

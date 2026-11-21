@@ -77,7 +77,7 @@ function Sentence({ s, still }: { s: Statement; still?: boolean }) {
 interface Reel { items: string[]; target: Statement; startH: number; endH: number; h: number; settled: boolean }
 
 /**
- * "Chứng minh nhanh": a ready-made statement, picked in the library (or "Câu ngẫu nhiên"), with its two ends given; the
+ * "Phát triển ý": a ready-made statement, picked in the library (or "Câu ngẫu nhiên"), with its two ends given; the
  * student writes the middle, checks it, then moves on. "Đổi câu" / "Câu tiếp" spin the statement like a reel and land on another one.
  * A statement whose mạch ý passes Kiểm tra is saved as finished (✓ in the library).
  */

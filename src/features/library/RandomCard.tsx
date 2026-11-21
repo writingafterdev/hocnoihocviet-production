@@ -3,7 +3,7 @@
 import { RiShuffleLine } from '@remixicon/react';
 
 /**
- * The "random pick" card at the top of every library (Luyện viết, Chép mẫu, Chứng minh nhanh, Nghĩ ý): the app's Pro
+ * The "random pick" card at the top of every library (Luyện viết, Chép mẫu, Phát triển ý, Nghĩ ý): the app's Pro
  * look (.pro-fill: the moving brand gradient under a fine grain) with the treasure-chest drawing on a white tile.
  */
 export function RandomCard({ label, sub, onClick, disabled }: { label: string; sub?: string; onClick: () => void; disabled?: boolean }) {

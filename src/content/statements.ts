@@ -1,5 +1,5 @@
 /**
- * "Chứng minh nhanh": ready-made statements to prove, one per prompt in the library.
+ * "Phát triển ý": ready-made statements to prove, one per prompt in the library.
  *
  * Each statement is an English topic sentence whose two ends are words of the sentence itself: [[…]] marks
  * the starting point and ((…)) the ending point; the people involved are named in the two ends, and the

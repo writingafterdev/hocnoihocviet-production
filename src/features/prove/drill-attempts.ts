@@ -1,4 +1,4 @@
-/** Chứng minh nhanh attempts (one per mạch ý that passed Kiểm tra), shared by the drill, the API and "Mạch ý đã chứng minh". */
+/** Phát triển ý attempts (one per mạch ý that passed Kiểm tra), shared by the drill, the API and "Mạch ý đã chứng minh". */
 
 /** One mistake, as the history page shows it: where it was, the note's label, the student's words, how to fix it. */
 export interface DrillErr { where: string; label: string; quote: string; fix: string }

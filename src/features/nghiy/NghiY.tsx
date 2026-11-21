@@ -24,7 +24,7 @@ export function NghiY({ list }: { list: IdeaPrompt[] }) {
   const router = useRouter();
   const q = useSearchParams().get('q');
   const current = q ? list.find((p) => p.id === q) ?? null : null;
-  /** Prompts this student has finished (✓), shared with Chứng minh nhanh's attempts. */
+  /** Prompts this student has finished (✓), shared with Phát triển ý's attempts. */
   const [done, setDone] = useState<Set<string>>(new Set());
   useEffect(() => {
     fetch('/api/drill/done', { credentials: 'same-origin' }).then((r) => (r.ok ? r.json() : null)).then((d: { ids?: string[] } | null) => { if (d?.ids) setDone(new Set(d.ids)); }).catch(() => {});

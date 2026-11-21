@@ -96,7 +96,7 @@ function BodyCard({ prompt, chain, num, canDelete, onChange, onDelete, check, on
   const kind = kindOf(prompt, chain), q = questionOf(prompt, chain), info = KIND_ASK[kind];
   const coach = useCoach(prompt.id, chainIn(prompt, chain), check, onCheck);
   const { steps: _steps, ...base } = chainIn(prompt, chain); // eslint-disable-line @typescript-eslint/no-unused-vars
-  /** Same per-step help as Chứng minh nhanh: "Gợi ý" (a guiding question as the placeholder + phrases), then rewording after Enter. */
+  /** Same per-step help as Phát triển ý: "Gợi ý" (a guiding question as the placeholder + phrases), then rewording after Enter. */
   const help = useStepHelp(prompt.id, base, middleOf(chain).length ? middleOf(chain) : [''], '');
   const mine = chain.mine || 'start';
   const start = startOf(chain), end = endOf(chain);

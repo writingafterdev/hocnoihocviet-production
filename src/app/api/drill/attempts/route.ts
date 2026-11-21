@@ -29,7 +29,7 @@ export async function POST(request: Request) {
   let body: { statementId?: unknown; steps?: unknown; errs?: unknown };
   try { body = await request.json(); } catch { return json({ error: 'invalid' }, 400); }
   const sid = str(body.statementId, 80);
-  // A Chứng minh nhanh statement, or one of missbacxiu's prompts done in Nghĩ ý.
+  // A Phát triển ý statement, or one of missbacxiu's prompts done in Nghĩ ý.
   if (!findStatement(sid) && !findMbxPrompt(sid)) return json({ error: 'invalid' }, 400);
   const steps = Array.isArray(body.steps) ? body.steps.slice(0, 12).map((x) => str(x, 600)).filter(Boolean) : [];
   const id = crypto.randomUUID();

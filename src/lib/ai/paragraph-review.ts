@@ -1,5 +1,5 @@
 /**
- * Chứng minh nhanh, "Nhận xét đoạn văn": the paragraph the student wrote from the drill's chain, read for ideas and
+ * Phát triển ý, "Nhận xét đoạn văn": the paragraph the student wrote from the drill's chain, read for ideas and
  * flow only, every weak spot (no cap). No score; each comment is a fix task (same shape as the essay's fix plan) fixed inside the comment.
  */
 import type { Prompt } from '@/content/prompts';

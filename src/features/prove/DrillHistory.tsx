@@ -37,7 +37,7 @@ function Err({ e }: { e: DrillErr }) {
 }
 
 /**
- * "Mạch ý đã chứng minh": every Chứng minh nhanh statement the student has proved, one card per statement; opening it lists
+ * "Mạch ý đã chứng minh": every Phát triển ý statement the student has proved, one card per statement; opening it lists
  * each attempt with only what went wrong on the way (the notes of each Kiểm tra, then the paragraph's comments).
  */
 export function DrillHistory() {
@@ -75,7 +75,7 @@ export function DrillHistory() {
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/illustrations/woman-brainstorming-and-choosing-ideas.svg" alt="" style={{ width: 140, height: 140, objectFit: 'contain', mixBlendMode: 'multiply', marginBottom: 12 }} />
             <p style={{ fontSize: 15, fontWeight: 600, margin: '0 0 18px' }}>Chưa có mạch ý nào</p>
-            <Link href="/prove" className="cl-primary" style={{ display: 'inline-flex', alignItems: 'center', height: 36, padding: '0 14px', borderRadius: 10, color: '#fff', fontSize: 14, fontWeight: 500 }}>Mở Chứng minh nhanh</Link>
+            <Link href="/prove" className="cl-primary" style={{ display: 'inline-flex', alignItems: 'center', height: 36, padding: '0 14px', borderRadius: 10, color: '#fff', fontSize: 14, fontWeight: 500 }}>Mở Phát triển ý</Link>
           </div>
         ) : list && (
           <HistoryLayout filters={<>
