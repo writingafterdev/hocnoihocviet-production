@@ -12,7 +12,8 @@ import { backLinkStyle, ClIcon } from '../chainlab/ui/primitives';
 import type { CheckResult } from '../coach/useCoach';
 import { BuildScreen, isReady, NEED } from '../essay/BuildScreen';
 import { WriteScreen } from '../essay/WriteScreen';
-import { attemptStore, SignedOutError, type Attempt, type EssayState } from './store';
+import { MODE_LABEL } from '../library/ModePickerModal';
+import { attemptStore, modeOf, SignedOutError, type Attempt, type EssayState } from './store';
 
 type Status = 'loading' | 'ready' | 'missing' | 'error';
 type SaveState = 'saved' | 'saving' | 'failed';
@@ -20,14 +21,14 @@ type SaveState = 'saved' | 'saving' | 'failed';
 const SAVE_DELAY = 1500;
 
 /** What counts as an edit worth saving: everything except the running timer and timestamps. */
-const contentKey = (a: Attempt) => JSON.stringify([a.chains, a.checks, a.essay.bodies, a.essay.drafts, a.essay.review, a.essay.fixing, a.essay.fix, a.essay.guided, a.essay.mode]);
+const contentKey = (a: Attempt) => JSON.stringify([a.chains, a.checks, a.essay.bodies, a.essay.drafts, a.essay.review, a.essay.fixing, a.essay.fix, a.essay.guided, a.essay.mode, a.essay.notes]);
 
 /** ② Viết bài is open once the student chose how to write (or the essay already has text, a review or a guided round). */
-const essayOpen = (a: Attempt) => !!a.essay.mode || !!a.essay.guided || !!a.essay.review || Object.values(a.essay.drafts).some((t) => t.trim());
+const essayOpen = (a: Attempt) => modeOf(a) === 'free' || !!a.essay.mode || !!a.essay.guided || !!a.essay.review || Object.values(a.essay.drafts).some((t) => t.trim());
 
 const SAVE_LABEL: Record<SaveState, string> = { saved: 'Đã lưu', saving: 'Đang lưu…', failed: 'Chưa lưu được · thử lại' };
 
-/** One "Tự viết" attempt: ① Dựng mạch at /write/[id]/chains, ② Viết bài at /essay. Autosaves. */
+/** One attempt. Viết có hướng dẫn: ① Dựng mạch at /write/[id]/chains, ② Viết bài at /essay. Tự viết: only /essay. Autosaves. */
 export function AttemptWorkspace({ attemptId }: { attemptId: string }) {
   const router = useRouter();
   const path = usePathname();
@@ -80,9 +81,11 @@ export function AttemptWorkspace({ attemptId }: { attemptId: string }) {
     return () => { flush(); window.removeEventListener('pagehide', flush); document.removeEventListener('visibilitychange', onHide); };
   }, []);
 
-  // Opening ② Viết bài by its address before it is open goes back to ① Dựng mạch.
+  // Opening ② Viết bài by its address before it is open goes back to ① Dựng mạch; Tự viết has no ① Dựng mạch.
   useEffect(() => {
-    if (status === 'ready' && attempt && view === 'essay' && !essayOpen(attempt)) router.replace('/write/' + attempt.id + '/chains');
+    if (status !== 'ready' || !attempt) return;
+    if (view === 'essay' && !essayOpen(attempt)) router.replace('/write/' + attempt.id + '/chains');
+    if (view === 'chains' && modeOf(attempt) === 'free') router.replace('/write/' + attempt.id + '/essay');
   }, [status, view]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (status !== 'ready') {
@@ -120,6 +123,13 @@ export function AttemptWorkspace({ attemptId }: { attemptId: string }) {
   // or once the essay has started. Until then the step is shown locked.
   const started = essayOpen(attempt);
   const steps = [{ label: '① Dựng mạch ý', href: base + '/chains' }, { label: '② Viết bài', href: base + '/essay', locked: !started, title: 'Dựng xong ít nhất ' + NEED + ' mạch rồi bấm "Viết bài".' }];
+  const free = modeOf(attempt) === 'free';
+  const freeLeft = (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 18 }}>
+      <Link href="/writing" className="cl-link" style={backLinkStyle}><ClIcon name="left" size={14} />Thư viện đề</Link>
+      <span style={{ borderRadius: 6, padding: '2px 8px', background: '#F5F5F5', color: '#404040', fontFamily: 'var(--font-sans)', fontSize: 12, fontWeight: 500 }}>{MODE_LABEL.free}</span>
+    </div>
+  );
   const left = (back: string, label: string, k: number) => (
     <div style={{ display: 'flex', alignItems: 'center', gap: 18 }}>
       <Link href={back} className="cl-link" style={backLinkStyle}><ClIcon name="left" size={14} />{label}</Link>
@@ -133,10 +143,12 @@ export function AttemptWorkspace({ attemptId }: { attemptId: string }) {
         <button type="button" className="cl-btn" disabled={save !== 'failed'} onClick={() => persist(attempt)} aria-live="polite" style={{ fontFamily: 'var(--font-sans)', fontSize: 12, fontWeight: 500, color: save === 'failed' ? '#B33A1A' : '#A3A3A3', cursor: save === 'failed' ? 'pointer' : 'default' }}>{SAVE_LABEL[save === 'failed' ? 'failed' : contentKey(attempt) !== savedKey.current ? 'saving' : 'saved']}</button>
       } />
       <div style={{ flex: 1, minHeight: 0 }}>
-        {view === 'chains' ? (
+        {free ? (
+          view === 'essay' && <WriteScreen prompt={prompt} chains={[]} setChains={setChains} essay={attempt.essay} setEssay={setEssay} toolbarLeft={freeLeft} chainsHref={base + '/essay'} free />
+        ) : view === 'chains' ? (
           <BuildScreen prompt={prompt} chains={attempt.chains} setChains={setChains} checks={attempt.checks || {}} setCheck={setCheck}
             toolbarLeft={left('/writing', 'Thư viện đề', 0)}
-            started={started}
+            started={started} guidedOnly={attempt.mode === 'guided'}
             onNext={(mode) => {
               if (mode) setEssay((e) => ({ ...e, mode, ...(mode === 'guided' ? { guided: { plan: null, at: 0, level: 'frame' as const } } : {}) }));
               router.push(base + '/essay');

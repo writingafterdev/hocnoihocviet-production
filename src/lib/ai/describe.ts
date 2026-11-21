@@ -18,6 +18,7 @@ export function describePrompt(p: Prompt) {
 }
 
 export function describeChains(p: Prompt, chains: Chain[], stance: string) {
+  if (!chains.length) return 'HỌC SINH TỰ VIẾT: không dựng mạch ý trước, không có dàn ý để đối chiếu. Đọc bài như bài thi thật; mạch ý của mỗi thân bài là chính những gì đoạn đó lập luận. Không có Mạch ý nào: chainId để chuỗi rỗng "", step = 0.' + (stance.trim() ? '\n\nLẬP TRƯỜNG: ' + stance.trim() : '');
   const [left, right] = sidesOf(p);
   const side = (s?: Side) => (s === 'left' ? left : s === 'right' ? right : 'chưa xếp');
   const out: string[] = ['CÁC MẠCH Ý CỦA HỌC SINH (mỗi mạch ý là một đoạn thân bài, theo đúng thứ tự: Mạch ý 1 = Thân bài 1…; bước 1 là điểm đầu, bước cuối là điểm cuối)'];

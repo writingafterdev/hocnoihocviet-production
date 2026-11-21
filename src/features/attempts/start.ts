@@ -1,14 +1,29 @@
 import type { Prompt } from '@/content/prompts';
 import type { Statement } from '@/content/statements';
 import { bodyFromStatement, initialBodies } from '../essay/model';
-import { attemptStore, createAttempt } from './store';
+import { attemptStore, createAttempt, modeOf, type Attempt, type WritingMode } from './store';
 
-/** Create and save a new "Tự viết" attempt for a prompt; returns its ① Dựng mạch URL. */
-export async function startFreeAttempt(prompt: Prompt): Promise<string> {
-  const attempt = createAttempt(prompt.id, initialBodies(prompt));
+/**
+ * Create and save a new attempt for a prompt; returns where it opens. Tự viết has no chains and opens on the essay;
+ * Viết có hướng dẫn starts on ① Dựng mạch.
+ */
+export async function startAttempt(prompt: Prompt, mode: WritingMode): Promise<string> {
+  if (mode === 'free') {
+    const attempt = createAttempt(prompt.id, [], 'free');
+    attempt.essay = { ...attempt.essay, mode: 'free', notes: '' };
+    await attemptStore.save(attempt);
+    return '/write/' + attempt.id + '/essay';
+  }
+  const attempt = createAttempt(prompt.id, initialBodies(prompt), 'guided');
   await attemptStore.save(attempt);
   return '/write/' + attempt.id + '/chains';
 }
+
+/** Where an existing attempt opens: the essay once it is open (always, for Tự viết), else ① Dựng mạch. */
+export const attemptHref = (a: Attempt) => {
+  const open = modeOf(a) === 'free' || !!a.essay.mode || !!a.essay.guided || !!a.essay.review || Object.values(a.essay.drafts).some((t) => t.trim());
+  return '/write/' + a.id + (open ? '/essay' : '/chains');
+};
 
 /** "Viết cả bài cho đề này": a new attempt whose first body paragraph is the chain from "Chứng minh nhanh". */
 export async function startFromStatement(prompt: Prompt, s: Statement, middle: string[]): Promise<string> {

@@ -12,7 +12,8 @@ import { AppCredits } from '@/components/shell/AppCredits';
 import { findPrompt, PROMPTS, TOPIC_ILLUSTRATION, type Prompt } from '@/content/prompts';
 import { wordCount } from '../desk/scoring';
 import { attemptStore, type Attempt } from '../attempts/store';
-import { startFreeAttempt } from '../attempts/start';
+import { attemptHref, startAttempt } from '../attempts/start';
+import { ModePickerModal } from '../library/ModePickerModal';
 import { cn } from '@/lib/utils';
 
 interface SavedWord { id: string; en: string; vi: string }
@@ -92,11 +93,8 @@ export function Dashboard() {
       }, at));
     }
   };
-  const start = async () => {
-    if (!prompt || starting) return;
-    setStarting(true);
-    router.push(await startFreeAttempt(prompt));
-  };
+  /** "Viết bài này" opens the same start popup as the library. */
+  const start = () => { if (prompt && !rolling) setStarting(true); };
 
   // The numbers: writing days over the last weeks, the latest band scores, and counts.
   const stats = useMemo(() => {
@@ -145,7 +143,7 @@ export function Dashboard() {
               ) : <p className="m-0 text-sm text-ink-soft">…</p>}
             </div>
             <div className="flex w-36 shrink-0 flex-col items-stretch justify-center gap-2 p-2">
-              <button type="button" onClick={start} disabled={!prompt || starting || rolling} className="cl-primary h-10 cursor-pointer rounded-[10px] border-0 px-4 text-sm font-semibold text-white">{starting ? 'Đang mở…' : 'Viết bài này'}</button>
+              <button type="button" onClick={start} disabled={!prompt || starting || rolling} className="cl-primary h-10 cursor-pointer rounded-[10px] border-0 px-4 text-sm font-semibold text-white">Viết bài này</button>
               <button type="button" onClick={shuffle} disabled={rolling} className="inline-flex h-9 cursor-pointer items-center justify-center gap-1.5 rounded-[10px] border-0 bg-[#F5F5F5] text-[13px] font-semibold text-ink-soft hover:text-ink"><RiShuffleLine size={15} className={rolling ? 'animate-spin' : undefined} />Đổi đề</button>
             </div>
           </div>
@@ -211,6 +209,7 @@ export function Dashboard() {
         </div>
       </div>
       <footer className="shrink-0 pb-4 pt-8"><AppCredits /></footer>
+      {starting && prompt && <ModePickerModal prompt={prompt} onClose={() => setStarting(false)} onStart={async (m) => router.push(await startAttempt(prompt, m))} onResume={(a) => router.push(attemptHref(a))} />}
     </div>
   );
 }

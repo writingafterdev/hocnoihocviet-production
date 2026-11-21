@@ -37,11 +37,25 @@ function locate(sections: SectionIn[], prefer: string, quote: string): { id: str
 const clampBand = (x: number) => Math.max(1, Math.min(9, Math.round(Number(x) || 0)));
 
 /** The "scores" reply: whole bands per criterion, descriptor quotes and why / gap / next per criterion, the summary and the praise. */
-export function toScores(out: { criteria?: Criteria; summary?: string; praise?: string }): Pick<EssayReview, 'scores' | 'summary' | 'criteria' | 'praise'> {
+type SkeletonOut = { thesis?: string; bodies?: { sectionId?: string; steps?: unknown[]; weak?: boolean }[]; conclusion?: string };
+
+/** Tự viết: the skeleton from the scores reply, kept only for bodies that exist in the essay. */
+function toSkeleton(sk: SkeletonOut | undefined, sectionIds?: string[]): EssayReview['skeleton'] | undefined {
+  if (!sk || typeof sk !== 'object' || !Array.isArray(sk.bodies)) return undefined;
+  const txt = (x: unknown, n = 300) => (typeof x === 'string' ? x.trim().slice(0, n) : '');
+  const bodies = sk.bodies
+    .map((b) => ({ sectionId: txt(b?.sectionId, 40), steps: (Array.isArray(b?.steps) ? b.steps : []).map((x) => txt(x, 200)).filter(Boolean).slice(0, 8), weak: b?.weak === true }))
+    .filter((b) => b.steps.length && (!sectionIds || sectionIds.includes(b.sectionId)));
+  return bodies.length ? { thesis: txt(sk.thesis), bodies, conclusion: txt(sk.conclusion) } : undefined;
+}
+
+export function toScores(out: { criteria?: Criteria; summary?: string; praise?: string; skeleton?: SkeletonOut }, sectionIds?: string[]): Pick<EssayReview, 'scores' | 'summary' | 'criteria' | 'praise' | 'skeleton'> {
   const cr = out.criteria || ({} as Criteria);
   const tr = clampBand(cr.tr?.score), cc = clampBand(cr.cc?.score), lr = clampBand(cr.lr?.score), gra = clampBand(cr.gra?.score);
   const txt = (x: unknown) => (typeof x === 'string' ? x.trim() : '');
+  const skeleton = toSkeleton(out.skeleton, sectionIds);
   return {
+    ...(skeleton ? { skeleton } : {}),
     summary: txt(out.summary),
     praise: txt(out.praise),
     criteria: Object.fromEntries(CRITERIA.map(([id]) => {

@@ -50,6 +50,36 @@ const SCORE_SCHEMA = {
   },
 };
 
+/** Tự viết: the scores call also reads the essay's skeleton, shown in place of the chains after grading. */
+const SKELETON = {
+  type: 'object',
+  additionalProperties: false,
+  required: ['thesis', 'bodies', 'conclusion'],
+  properties: {
+    thesis: { type: 'string' },
+    bodies: {
+      type: 'array',
+      items: {
+        type: 'object',
+        additionalProperties: false,
+        required: ['sectionId', 'steps', 'weak'],
+        properties: { sectionId: { type: 'string' }, steps: { type: 'array', items: { type: 'string' } }, weak: { type: 'boolean' } },
+      },
+    },
+    conclusion: { type: 'string' },
+  },
+};
+const FREE_SCORE_SCHEMA = { ...SCORE_SCHEMA, required: [...SCORE_SCHEMA.required, 'skeleton'], properties: { ...SCORE_SCHEMA.properties, skeleton: SKELETON } };
+
+const ONLY_SCORES_FREE = `
+
+# KHUNG BÀI (skeleton)
+Học sinh tự viết, không dựng mạch ý trước. Sau khi chấm, học sinh xem lại khung bài mà bài viết của các em thật sự đã đi theo. Đọc bài và rút ra:
+- thesis: lập trường hoặc câu trả lời mà mở bài nêu, tiếng Việt, một cụm ngắn (tối đa khoảng 14 chữ), bám chữ của học sinh. Mở bài trống hoặc không nêu: "Chưa nêu lập trường".
+- bodies: mỗi đoạn thân bài có chữ là một mục, đúng thứ tự, sectionId = id của section đó. steps: mạch ý mà đoạn đó THẬT SỰ lập luận, từ ý đoạn văn khẳng định (bước đầu) tới chỗ lập luận dừng lại (bước cuối), 2 đến 6 bước. Mỗi bước là một cụm tiếng Anh ngắn (tối đa khoảng 10 chữ) lấy từ chính chữ của học sinh; không thêm bước học sinh không viết, không sửa cho hay hơn. weak = true khi mạch ý mỏng (chỉ nêu ý rồi dừng, không giải thích) hoặc nhảy bước (từ một việc thẳng tới kết quả xa mà thiếu việc ở giữa); không thì false.
+- conclusion: kết bài nói gì, tiếng Việt, một cụm ngắn. Kết bài trống: "Chưa có kết bài".
+Trả về JSON: {"criteria": {...}, "summary": string, "praise": string, "skeleton": {...}}.`;
+
 const COMMENTS_SCHEMA = (criterion: string) => ({
   type: 'object',
   additionalProperties: false,
@@ -96,7 +126,10 @@ const essayInput = (prompt: Prompt, sections: SectionIn[], chains: Chain[], stan
  */
 export function essayCall(part: string, prompt: Prompt, sections: SectionIn[], chains: Chain[], stance: string) {
   const input = essayInput(prompt, sections, chains, stance);
-  if (part === 'scores') return { kind: 'essay' as const, effort: 'high' as const, task: TASK + ONLY_SCORES, schema: SCORE_SCHEMA, input, grounded: false };
+  if (part === 'scores') {
+    const free = !chains.length;
+    return { kind: 'essay' as const, effort: 'high' as const, task: TASK + ONLY_SCORES + (free ? ONLY_SCORES_FREE : ''), schema: free ? FREE_SCORE_SCHEMA : SCORE_SCHEMA, input, grounded: false };
+  }
   const name = CRITERIA.find(([id]) => id === part)[1];
   return { kind: 'essay' as const, effort: 'high' as const, task: TASK + ONLY_COMMENTS(part, name), schema: COMMENTS_SCHEMA(part), input, grounded: false };
 }

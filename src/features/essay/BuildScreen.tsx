@@ -27,6 +27,8 @@ export interface BuildProps {
   started: boolean;
   /** To ② Viết bài; a first visit says how the student wants to write. */
   onNext: (mode?: 'free' | 'guided') => void;
+  /** Started as "Viết có hướng dẫn": "Viết bài" goes straight to guided writing, no choice to make. */
+  guidedOnly?: boolean;
 }
 
 /** A chain is ready for writing when both ends and at least one middle step are there. */
@@ -175,7 +177,7 @@ function BodyCard({ prompt, chain, num, canDelete, onChange, onDelete, check, on
 }
 
 /** ① Dựng mạch: the prompt, then one chain card per body paragraph. Right: the chosen chain's notes and the translator. */
-export function BuildScreen({ prompt, chains, setChains, checks, setCheck, toolbarLeft, started, onNext }: BuildProps) {
+export function BuildScreen({ prompt, chains, setChains, checks, setCheck, toolbarLeft, started, onNext, guidedOnly }: BuildProps) {
   const [chat, setChat] = useState(true);
   const [picking, setPicking] = useState(false);
   const ready = chains.filter(isReady).length;
@@ -195,7 +197,7 @@ export function BuildScreen({ prompt, chains, setChains, checks, setCheck, toolb
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           {!started && <Chip variant="caption" color={ready >= NEED ? 'lime' : 'gray'}>{Math.min(ready, NEED)}/{NEED} mạch ý đã dựng</Chip>}
           <button type="button" className="cl-btn" onClick={() => setChat(!chat)} aria-pressed={chat} style={toolbarBtn(chat)}>Dịch</button>
-          <button type="button" className="cl-btn cl-primary" onClick={() => (started ? onNext() : setPicking(true))} disabled={!canWrite}
+          <button type="button" className="cl-btn cl-primary" onClick={() => (started ? onNext() : guidedOnly ? onNext('guided') : setPicking(true))} disabled={!canWrite}
             title={canWrite ? '' : 'Dựng xong ít nhất ' + NEED + ' mạch ý (đủ hai đầu và ít nhất một bước ở giữa) để viết bài.'}
             style={{ ...primaryBtn, opacity: canWrite ? 1 : 0.4 }}>Viết bài<ClIcon name="right" size={13} /></button>
         </div>

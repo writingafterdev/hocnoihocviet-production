@@ -7,8 +7,9 @@ import { CATEGORIES_TASK2, findPrompt, TOPIC_ILLUSTRATION, TOPICS_TASK2, type Pr
 import { wordCount } from '../desk/scoring';
 import { Filter } from '../library/PromptLibrary';
 import { Chip, dayMonth, HistoryBone, HistoryCard, HistoryHeader, HistoryLayout, primaryLink, SectionTitle, smallLink } from './HistoryUI';
-import { startFreeAttempt, startSampleAttempt } from './start';
-import { attemptStore, SignedOutError, type Attempt } from './store';
+import { MODE_LABEL, ModePickerModal } from '../library/ModePickerModal';
+import { attemptHref, startAttempt, startSampleAttempt } from './start';
+import { attemptStore, modeOf, SignedOutError, type Attempt } from './store';
 
 const STATUS = ['draft', 'graded'];
 const STATUS_LABEL: Record<string, string> = { draft: 'Đang viết', graded: 'Đã chấm' };
@@ -16,7 +17,7 @@ const STATUS_ICON: Record<string, string> = { draft: '', graded: '' };
 
 const wordsOf = (a: Attempt) => Object.values(a.essay.drafts || {}).reduce((n, t) => n + wordCount(t), 0);
 const bandOf = (a: Attempt) => a.essay.review?.scores.band ?? null;
-const hrefOf = (a: Attempt) => '/write/' + a.id + (wordsOf(a) ? '/essay' : '/chains');
+const hrefOf = attemptHref;
 /** Nothing written yet (only the pre-filled starting point, no word): left out of the list. */
 const isEmpty = (a: Attempt) => !wordsOf(a) && !a.chains.some((c) => (c.steps || []).slice(1).some((x) => x.trim()));
 
@@ -31,6 +32,8 @@ export function AttemptHistory() {
   const [list, setList] = useState<Attempt[] | null>(null);
   const [failed, setFailed] = useState(false);
   const [busy, setBusy] = useState('');
+  /** "Viết lại đề này" opens the start popup for that prompt. */
+  const [again, setAgain] = useState<Prompt | null>(null);
   const [open, setOpen] = useState<string[]>([]);
   const [status, setStatus] = useState<string[]>([]);
   const [cats, setCats] = useState<string[]>([]);
@@ -118,7 +121,7 @@ export function AttemptHistory() {
                         </span>
                         <span style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 3 }}>
                           <span style={{ fontSize: 13.5, fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.text}</span>
-                          <span style={{ fontSize: 12, color: '#737373' }}>{words ? a.chains.length + ' thân bài · ' + words + ' từ' : 'Đang dựng mạch ý'} · {dayMonth(a.updatedAt)}{n > 1 ? ' · ' + n + ' bản nháp' : ''}</span>
+                          <span style={{ fontSize: 12, color: '#737373' }}>{MODE_LABEL[modeOf(a)]} · {words ? words + ' từ' : 'Đang dựng mạch ý'} · {dayMonth(a.updatedAt)}{n > 1 ? ' · ' + n + ' bản nháp' : ''}</span>
                         </span>
                         <Link href={hrefOf(a)} style={smallLink}>Viết tiếp</Link>
                       </div>
@@ -143,12 +146,13 @@ export function AttemptHistory() {
                           <div key={a.id} style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '8px 0', borderBottom: '1px solid #F0F0F0', fontSize: 13.5 }}>
                             <span style={{ width: 56, fontWeight: 600 }}>Lần {tries.length - k}</span>
                             <span style={{ width: 64, color: '#525252' }}>{dayMonth(a.updatedAt)}</span>
-                            <span style={{ flex: 1, color: '#525252' }}>{wordsOf(a)} từ</span>
+                            <span style={{ width: 128, color: '#525252', whiteSpace: 'nowrap' }}>{MODE_LABEL[modeOf(a)]}</span>
+                            <span style={{ flex: 1, color: '#525252', whiteSpace: 'nowrap' }}>{wordsOf(a)} từ</span>
                             <span style={{ width: 40, textAlign: 'right', fontWeight: 600, color: '#2F62C4', fontVariantNumeric: 'tabular-nums' }}>{bandOf(a)!.toFixed(1)}</span>
                             <Link href={hrefOf(a)} style={smallLink}>Mở</Link>
                           </div>
                         ))}
-                        <button type="button" onClick={() => start(p.id, () => startFreeAttempt(p))} disabled={!!busy} style={primaryLink}>{busy === p.id ? 'Đang mở…' : 'Viết lại đề này'}</button>
+                        <button type="button" onClick={() => setAgain(p)} disabled={!!busy} style={primaryLink}>Viết lại đề này</button>
                       </HistoryCard>
                     );
                   })}
@@ -159,6 +163,7 @@ export function AttemptHistory() {
           </HistoryLayout>
         )}
       </main>
+      {again && <ModePickerModal prompt={again} onClose={() => setAgain(null)} onStart={(m) => start(again.id, () => startAttempt(again, m))} onResume={(a) => router.push(attemptHref(a))} />}
     </div>
   );
 }

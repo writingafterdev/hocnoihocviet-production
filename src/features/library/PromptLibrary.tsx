@@ -9,7 +9,7 @@ import { PageHeader } from '@/components/shell/BrandHeader';
 import { sfx } from '@/lib/sfx';
 import { ModePickerModal } from './ModePickerModal';
 import { CATEGORIES_TASK1, CATEGORIES_TASK2, PROMPTS, TOPIC_ILLUSTRATION, TOPICS_TASK2, type Prompt, type Task } from '@/content/prompts';
-import { startFreeAttempt } from '../attempts/start';
+import { attemptHref, startAttempt } from '../attempts/start';
 import { RandomCard } from './RandomCard';
 import { SAMPLE_IDS } from '@/content/samples';
 
@@ -179,7 +179,7 @@ export function PromptLibrary({ mode = 'write' }: { mode?: 'write' | 'copy' }) {
         </div>
       </div>
       {reel && <RandomReel target={reel.target} others={reel.others} onDone={() => { pick(reel.target); setReel(null); }} />}
-      {modalPrompt && <ModePickerModal prompt={modalPrompt} only="free" onClose={() => setModalPrompt(null)} onStart={async () => router.push(await startFreeAttempt(modalPrompt))} onResume={(id) => router.push('/write/' + id + '/chains')} />}
+      {modalPrompt && <ModePickerModal prompt={modalPrompt} onClose={() => setModalPrompt(null)} onStart={async (m) => router.push(await startAttempt(modalPrompt, m))} onResume={(a) => router.push(attemptHref(a))} />}
     </div>
   );
 }

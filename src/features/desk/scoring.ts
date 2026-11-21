@@ -40,6 +40,11 @@ export interface EssayReview {
   /** Criteria whose detailed comments failed to load (AI only); they can be retried once with `ticket`. */
   failed?: string[];
   ticket?: string;
+  /**
+   * Tự viết (no chains): the skeleton the AI read from the essay, from the same "scores" call: the position, each body's
+   * mạch ý as argued (claim first, where it lands last) with `weak` when it is thin or jumps, and the conclusion.
+   */
+  skeleton?: { thesis: string; bodies: { sectionId: string; steps: string[]; weak: boolean }[]; conclusion: string };
   /** While grading (never saved): criteria whose comments haven't arrived yet. */
   loading?: string[];
 }
@@ -193,7 +198,7 @@ export async function requestEssayReview(spec: PromptSpec, sections: EssaySectio
     onPart({ ...head, key: draftsKey(drafts), source: 'ai', groups: CRITERIA.map(([id, title]) => ({ id, title, items: got[id] || [] })), loading: CRITERIA.map(([id]) => id).filter((id) => !(id in got)) });
   };
   const [scored, ...parts] = await Promise.allSettled([
-    call('scores').then((out) => { head = toScores(out); emit(); return head; }),
+    call('scores').then((out) => { head = toScores(out, body.sections.map((s) => s.id)); emit(); return head; }),
     ...CRITERIA.map(([id]) => call(id).then((out) => ({ items: toItems(id, out, body.sections, body.chains) })).then(
       (r) => { got[id] = r.items; emit(); return r; },
       (e) => { got[id] = []; emit(); throw e; },

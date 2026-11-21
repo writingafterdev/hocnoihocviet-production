@@ -8,6 +8,8 @@ import type { EssayReview } from '../desk/scoring';
 import type { CheckOut } from '../essay/fix-api';
 import type { GuidedSentence } from '@/lib/ai/guided-essay';
 
+export type WritingMode = 'free' | 'guided';
+
 export interface EssayState {
   /** Ids of body paragraphs, in order. Each body paragraph is one chain: its id is the chain's id. */
   bodies: string[];
@@ -35,6 +37,8 @@ export interface EssayState {
   guided?: { plan: GuidedSentence[] | null; at: number; level: 'frame' | 'detail'; done?: boolean } | null;
   /** How the student chose to write after building the chains ("Tự viết" or "Viết có hướng dẫn"); opens ② Viết bài. */
   mode?: 'free' | 'guided';
+  /** Tự viết: the student's own notes beside the essay (anything: ideas, an outline, Vietnamese). */
+  notes?: string;
   /** Scores of the review before the latest one, to show how much a resubmission moved them. */
   prevScores?: EssayReview['scores'] | null;
 }
@@ -42,7 +46,8 @@ export interface EssayState {
 export interface Attempt {
   id: string;
   promptId: string;
-  mode: 'free';
+  /** Tự viết (no chains: straight to the essay) or Viết có hướng dẫn (chains first, then guided writing). */
+  mode: WritingMode;
   createdAt: number;
   updatedAt: number;
   /** One chain per body paragraph, in essay order (see features/essay/model). */
@@ -65,10 +70,13 @@ export interface AttemptStore {
 
 export const newId = (prefix = '') => prefix + Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-4);
 
-export function createAttempt(promptId: string, chains: Chain[]): Attempt {
+/** Tự viết attempts have no chains; older attempts were all built on chains, whatever their label. */
+export const modeOf = (a: Attempt): WritingMode => (a.chains.length ? 'guided' : 'free');
+
+export function createAttempt(promptId: string, chains: Chain[], mode: WritingMode = 'guided'): Attempt {
   const now = Date.now();
   return {
-    id: newId(), promptId, mode: 'free', createdAt: now, updatedAt: now,
+    id: newId(), promptId, mode, createdAt: now, updatedAt: now,
     chains, stance: '', checks: {},
     essay: { bodies: chains.map((c) => c.id), drafts: {}, seconds: 0, review: null },
   };

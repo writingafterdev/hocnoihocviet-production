@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { AttemptWorkspace } from '@/features/attempts/AttemptWorkspace';
 
-export const metadata: Metadata = { title: 'Tự viết · hocnoihocviet' };
+export const metadata: Metadata = { title: 'Luyện viết · hocnoihocviet' };
 export const dynamic = 'force-dynamic';
 
 /**

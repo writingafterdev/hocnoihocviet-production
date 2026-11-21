@@ -33,6 +33,8 @@ export interface WriteProps {
   toolbarLeft: ReactNode;
   /** ① Dựng mạch, for chains that aren't built yet. */
   chainsHref: string;
+  /** Tự viết: no chains. The left panel holds the student's notes, then after grading the skeleton the AI read from the essay. */
+  free?: boolean;
 }
 
 interface Note { item: ReviewItem; crit: string; n: number }
@@ -46,6 +48,57 @@ export function sectionsFor(chains: Chain[]): EssaySection[] {
     ...chains.map((c, i) => ({ id: c.id, label: 'Thân bài ' + (i + 1), guide: '85–100 từ', placeholder: 'Câu chủ đề, rồi đi theo mạch ý bên trái, lần lượt từng bước.' })),
     { id: 'conclusion', label: 'Kết bài', guide: '30–45 từ', placeholder: 'Nói lại câu trả lời và lý do chính.' },
   ];
+}
+
+/** Tự viết has no chains to follow: a fixed four-paragraph essay. */
+export const FREE_SECTIONS: EssaySection[] = [
+  { id: 'intro', label: 'Mở bài', guide: '40–55 từ', placeholder: 'Nhắc lại đề bằng lời của bạn, rồi nêu lập trường hoặc câu trả lời.' },
+  { id: 'body1', label: 'Thân bài 1', guide: '85–100 từ', placeholder: 'Câu chủ đề, rồi giải thích từng bước cho tới kết quả.' },
+  { id: 'body2', label: 'Thân bài 2', guide: '85–100 từ', placeholder: 'Câu chủ đề, rồi giải thích từng bước cho tới kết quả.' },
+  { id: 'conclusion', label: 'Kết bài', guide: '30–45 từ', placeholder: 'Nói lại câu trả lời và lý do chính.' },
+];
+
+/** The dashed row for Mở bài / Kết bài in the left panel, with what the essay says there when known. */
+const EndRow = ({ label, text }: { label: string; text?: string }) => (
+  <div style={{ flexShrink: 0, borderRadius: 10, border: '1px dashed ' + CL.ink2, padding: '9px 12px', display: 'flex', flexDirection: 'column', gap: 2 }}>
+    <span style={{ fontFamily: CL.sans, fontSize: 12, color: CL.ink4 }}>{label}</span>
+    {text && <span style={{ fontFamily: CL.sans, fontSize: 13, lineHeight: 1.5, color: CL.ink7 }}>{text}</span>}
+  </div>
+);
+
+/**
+ * "Khung bài của bạn" (Tự viết, after grading): each body's mạch ý as the essay actually argued it, from the claim to where it
+ * lands. A body whose mạch ý is thin or jumps gets a light red background; the comments say why.
+ */
+function SkeletonView({ skeleton, sections, onOpen }: { skeleton: NonNullable<EssayReview['skeleton']>; sections: EssaySection[]; onOpen: (id: string) => void }) {
+  return (
+    <>
+      <ClLabel>Khung bài của bạn</ClLabel>
+      <EndRow label="Mở bài" text={skeleton.thesis} />
+      {skeleton.bodies.map((b) => {
+        const label = sections.find((x) => x.id === b.sectionId)?.label || 'Thân bài';
+        const line = b.weak ? '#F5C7B8' : CL.ink1;
+        return (
+          <button key={b.sectionId} type="button" className="cl-btn" onClick={() => onOpen(b.sectionId)}
+            style={{ flexShrink: 0, textAlign: 'left', borderRadius: 12, border: '1px solid ' + (b.weak ? '#F5C7B8' : CL.ink2), background: b.weak ? CL.redSoft : '#fff', overflow: 'hidden', padding: 0, cursor: 'pointer' }}>
+            <span style={{ display: 'block', padding: '10px 14px', borderBottom: '1px solid ' + line, fontFamily: CL.sans, fontSize: 13, fontWeight: 600, color: CL.ink }}>{label}</span>
+            <ol style={{ listStyle: 'none', margin: 0, padding: '10px 10px 12px', display: 'flex', flexDirection: 'column' }}>
+              {b.steps.map((t, k) => {
+                const first = k === 0, end = k === b.steps.length - 1 && k > 0;
+                return (
+                  <li key={k} style={{ display: 'flex', gap: 10, alignItems: 'baseline', padding: '4px 6px' }}>
+                    <span style={{ width: 9, height: 9, flexShrink: 0, borderRadius: end ? 2 : 99, background: first ? CL.green : end ? '#B8862B' : '#D4D4D4' }} />
+                    <span style={{ fontFamily: CL.sans, fontSize: 13, lineHeight: 1.5, fontWeight: end ? 600 : 400, color: first || end ? CL.ink8 : CL.ink6 }}>{t}</span>
+                  </li>
+                );
+              })}
+            </ol>
+          </button>
+        );
+      })}
+      <EndRow label="Kết bài" text={skeleton.conclusion} />
+    </>
+  );
 }
 
 /**
@@ -130,8 +183,8 @@ function ReviewBone() {
  * ② Viết bài, in three panels: the prompt and the chains (the essay's skeleton) on the left, the essay in the middle,
  * and the translator or, after "Nộp bài", the band, scores and comments on the right. Comments point at the essay and the chain.
  */
-export function WriteScreen({ prompt, chains, setChains, essay, setEssay, toolbarLeft, chainsHref }: WriteProps) {
-  const sections = sectionsFor(chains);
+export function WriteScreen({ prompt, chains, setChains, essay, setEssay, toolbarLeft, chainsHref, free }: WriteProps) {
+  const sections = free ? FREE_SECTIONS : sectionsFor(chains);
   const review = essay.review;
   const editing = !review || !!essay.fixing;
   // The guided writer needs the room: the translator starts closed there.
@@ -385,9 +438,20 @@ export function WriteScreen({ prompt, chains, setChains, essay, setEssay, toolba
         open={chat || !!review || sending}
         main={
         <main className="co-col co-write3" style={{ minWidth: 0 }}>
-          <aside aria-label="Dàn bài" style={{ minHeight: 0, display: 'flex', flexDirection: 'column', borderRadius: 12, border: '1px solid ' + CL.border, background: '#fff', overflow: 'hidden' }}>
+          <aside aria-label={free ? 'Đề bài và ghi chú' : 'Dàn bài'} style={{ minHeight: 0, display: 'flex', flexDirection: 'column', borderRadius: 12, border: '1px solid ' + CL.border, background: '#fff', overflow: 'hidden' }}>
             <PromptText text={prompt.text} style={{ padding: '18px 20px 16px', borderBottom: '1px solid ' + CL.ink1 }} />
-            <div className="cl-scroll" style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: '14px 16px 18px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+            {free ? (panel?.skeleton ? (
+              <div className="cl-scroll" style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: '14px 16px 18px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+                <SkeletonView skeleton={panel.skeleton} sections={sections} onOpen={openPara} />
+              </div>
+            ) : (
+              <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', padding: '14px 16px 16px', gap: 8 }}>
+                <label htmlFor="essay-notes" style={{ fontFamily: CL.sans, fontSize: 12, fontWeight: 500, color: CL.ink5 }}>Ghi chú</label>
+                <textarea id="essay-notes" className="cl-scroll" value={essay.notes || ''} onChange={(e) => { const v = e.target.value; setEssay((x) => ({ ...x, notes: v })); }}
+                  placeholder="Ghi gì cũng được: ý, dàn bài, tiếng Việt…"
+                  style={{ flex: 1, minHeight: 0, resize: 'none', borderRadius: 10, border: '1px solid ' + CL.ink1, background: CL.panel, outline: 'none', padding: '12px 14px', fontFamily: CL.sans, fontSize: 14, lineHeight: 1.65, color: CL.ink8 }} />
+              </div>
+            )) : <div className="cl-scroll" style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: '14px 16px 18px', display: 'flex', flexDirection: 'column', gap: 12 }}>
               <ClLabel>Dàn bài · {chains.length} thân bài</ClLabel>
               <div style={{ borderRadius: 10, border: '1px dashed ' + CL.ink2, padding: '9px 12px', fontFamily: CL.sans, fontSize: 12, color: CL.ink4 }}>Mở bài · không cần mạch ý</div>
               {chains.map((c, i) => (
@@ -395,7 +459,7 @@ export function WriteScreen({ prompt, chains, setChains, essay, setEssay, toolba
                   focused={gNow ? gNow.section === c.id : focus === c.id} onOpen={() => openPara(c.id)} chainsHref={chainsHref} />
               ))}
               <div style={{ borderRadius: 10, border: '1px dashed ' + CL.ink2, padding: '9px 12px', fontFamily: CL.sans, fontSize: 12, color: CL.ink4 }}>Kết bài · không cần mạch ý</div>
-            </div>
+            </div>}
           </aside>
           <section style={{ minHeight: 0, display: 'flex', flexDirection: 'column', borderRadius: 12, border: '1px solid ' + CL.border, background: '#fff', overflow: 'hidden' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 14, minHeight: 56, padding: '0 24px', borderBottom: '1px solid ' + CL.ink1, background: CL.panel }}>
