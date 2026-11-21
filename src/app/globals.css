@@ -346,6 +346,9 @@ a:hover { color: #404040; }
  */
 @keyframes pro-flow { 0% { background-position: 0% 30%; } 50% { background-position: 100% 60%; } 100% { background-position: 30% 100%; } }
 .pro-fill { display: inline-flex; flex-shrink: 0; }
+/* A whole card in the Pro look (e.g. the Viết có hướng dẫn option): fills its cell. */
+.pro-fill.pro-block { display: flex; min-width: 0; }
+.pro-fill.pro-block > button { flex: 1; min-width: 0; }
 .pro-fill > button:not(:disabled), .pro-fill > a {
   position: relative; overflow: hidden; isolation: isolate;
   border: none !important; color: #fff !important;

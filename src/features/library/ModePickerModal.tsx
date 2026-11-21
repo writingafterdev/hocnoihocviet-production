@@ -2,6 +2,7 @@
 
 import { useEffect, useState, type ReactNode } from 'react';
 import { X } from 'lucide-react';
+import { ProBeam } from '@/components/ui/pro-beam';
 import type { Prompt } from '@/content/prompts';
 import { attemptStore, modeOf, type Attempt, type WritingMode } from '../attempts/store';
 
@@ -57,14 +58,16 @@ const SketchGuided = (
   </span>
 );
 
-function ModeOption({ selected, onClick, title, sketch }: { selected: boolean; onClick: () => void; title: string; sketch: ReactNode }) {
-  return (
+/** `pro`: the card wears the Pro look (moving gradient with grain, white title, the sketch on its light tile); selected shows as an outline around it. */
+function ModeOption({ selected, onClick, title, sketch, pro }: { selected: boolean; onClick: () => void; title: string; sketch: ReactNode; pro?: boolean }) {
+  const card = (
     <button type="button" role="radio" aria-checked={selected} onClick={onClick}
-      style={{ cursor: 'pointer', textAlign: 'left', font: 'inherit', borderRadius: 10, border: 'none', boxShadow: selected ? '0 0 0 2px #171717' : '0 0 0 1px #E5E5E5', background: '#fff', padding: 16, display: 'flex', flexDirection: 'column', gap: 14, minWidth: 0 }}>
+      style={{ cursor: 'pointer', textAlign: 'left', font: 'inherit', borderRadius: 10, border: 'none', boxShadow: selected ? '0 0 0 2px #171717' : '0 0 0 1px #E5E5E5', outline: pro && selected ? '2px solid #171717' : 'none', outlineOffset: 2, background: '#fff', padding: 16, display: 'flex', flexDirection: 'column', gap: 14, minWidth: 0 }}>
       {sketch}
       <span style={{ fontFamily: 'var(--font-sans)', fontSize: 15, fontWeight: 600, color: '#171717' }}>{title}</span>
     </button>
   );
+  return pro ? <ProBeam className="pro-block">{card}</ProBeam> : card;
 }
 
 const ago = (t: number) => {
@@ -100,7 +103,7 @@ export function ModePickerModal({ prompt, onClose, onStart, onResume }: { prompt
         <p id="mode-title" style={{ fontFamily: 'var(--font-sans)', fontSize: 15, fontWeight: 600, color: '#171717', margin: '0 0 14px' }}>Chọn chế độ làm bài</p>
         <div role="radiogroup" aria-labelledby="mode-title" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 14, marginBottom: 22 }}>
           <ModeOption selected={mode === 'free'} onClick={() => setMode('free')} title={MODE_LABEL.free} sketch={SketchFree} />
-          <ModeOption selected={mode === 'guided'} onClick={() => setMode('guided')} title={MODE_LABEL.guided} sketch={SketchGuided} />
+          <ModeOption selected={mode === 'guided'} onClick={() => setMode('guided')} title={MODE_LABEL.guided} sketch={SketchGuided} pro />
         </div>
         <button type="button" className="cl-primary" disabled={starting} onClick={() => { setStarting(true); rememberMode(mode); onStart(mode); }} style={{ width: '100%', height: 46, borderRadius: 10, border: 'none', color: '#fff', fontFamily: 'var(--font-sans)', fontSize: 13, fontWeight: 600, cursor: 'pointer', opacity: starting ? 0.6 : 1 }}>{last ? 'Bắt đầu bài mới' : 'Bắt đầu làm bài'}</button>
         {last && (
