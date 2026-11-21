@@ -13,7 +13,7 @@ export async function POST(request: Request) {
   try {
     // `sentence`: the drill's statement; the plan is then one paragraph from its single chain.
     const sentence = typeof r.body.sentence === 'string' ? r.body.sentence.slice(0, 600) : '';
-    return json({ sentences: await aiGuidedPlan(r.userId, r.prompt, sentence ? r.body.chains.slice(0, 1) : r.body.chains, sentence || undefined) });
+    return json({ sentences: await aiGuidedPlan(r.userId, r.prompt, sentence ? r.body.chains.slice(0, 1) : r.body.chains, sentence || undefined, sentence ? '' : String(r.body.stance || '').slice(0, 400)) });
   } catch (err) {
     return aiErrorResponse(err instanceof Error ? err : new AiError('upstream'), { route: 'guided-plan', userId: r.userId });
   }

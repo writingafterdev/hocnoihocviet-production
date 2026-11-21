@@ -35,6 +35,8 @@ export interface WriteProps {
   chainsHref: string;
   /** Tự viết: no chains. The left panel holds the student's notes, then after grading the skeleton the AI read from the essay. */
   free?: boolean;
+  /** Where the essay lands (from ① Chọn hướng bài), for the grading and the guided writer. */
+  stance?: string;
 }
 
 interface Note { item: ReviewItem; crit: string; n: number }
@@ -45,7 +47,7 @@ const mmss = (s: number) => String(Math.floor(s / 60)).padStart(2, '0') + ':' + 
 export function sectionsFor(chains: Chain[]): EssaySection[] {
   return [
     { id: 'intro', label: 'Mở bài', guide: '40–55 từ', placeholder: 'Nhắc lại đề bằng lời của bạn, rồi nêu lập trường hoặc câu trả lời.' },
-    ...chains.map((c, i) => ({ id: c.id, label: 'Thân bài ' + (i + 1), guide: '85–100 từ', placeholder: 'Câu chủ đề, rồi đi theo mạch ý bên trái, lần lượt từng bước.' })),
+    ...chains.map((c, i) => ({ id: c.id, label: 'Thân bài ' + (i + 1), guide: chains.length >= 3 ? '65–80 từ' : '85–100 từ', placeholder: 'Câu chủ đề, rồi đi theo mạch ý bên trái, lần lượt từng bước.' })),
     { id: 'conclusion', label: 'Kết bài', guide: '30–45 từ', placeholder: 'Nói lại câu trả lời và lý do chính.' },
   ];
 }
@@ -183,7 +185,7 @@ function ReviewBone() {
  * ② Viết bài, in three panels: the prompt and the chains (the essay's skeleton) on the left, the essay in the middle,
  * and the translator or, after "Nộp bài", the band, scores and comments on the right. Comments point at the essay and the chain.
  */
-export function WriteScreen({ prompt, chains, setChains, essay, setEssay, toolbarLeft, chainsHref, free }: WriteProps) {
+export function WriteScreen({ prompt, chains, setChains, essay, setEssay, toolbarLeft, chainsHref, free, stance = '' }: WriteProps) {
   const sections = free ? FREE_SECTIONS : sectionsFor(chains);
   const review = essay.review;
   const editing = !review || !!essay.fixing;
@@ -208,7 +210,7 @@ export function WriteScreen({ prompt, chains, setChains, essay, setEssay, toolba
   const panel = sending ? live : review;
   /** "Viết có hướng dẫn" is running: the middle panel writes one sentence at a time. */
   const guidedOn = !!essay.guided && !essay.guided.done && !review;
-  const guided = useGuidedPlan(prompt, chains, essay, setEssay);
+  const guided = useGuidedPlan(prompt, chains, essay, setEssay, undefined, stance);
   const gPlan = essay.guided?.plan || null;
   const gNow = guidedOn && gPlan ? gPlan[essay.guided!.at] : null;
   /** Handed over with "Tự viết phần còn lại": sentences are still left in the plan, so the student can go back to them. */
@@ -298,7 +300,7 @@ export function WriteScreen({ prompt, chains, setChains, essay, setEssay, toolba
     if (sending || !words) return;
     setSending(true); setError(''); setActive(null); setLive(null); setChat(false); setTab('tr');
     try {
-      const r = await requestEssayReview(prompt, sections, drafts, chains, '', setLive);
+      const r = await requestEssayReview(prompt, sections, drafts, chains, stance, setLive);
       setEssay((e) => ({ ...e, review: r, fixing: false, fix: null, prevScores: e.review ? e.review.scores : null }));
       setTab('tr');
       setChat(false);
@@ -315,7 +317,7 @@ export function WriteScreen({ prompt, chains, setChains, essay, setEssay, toolba
     let groups = review.groups, failed = [...review.failed];
     for (const id of review.failed) {
       try {
-        const items = await retryEssayCriterion(review, prompt, sections, essay.drafts, chains, '', id);
+        const items = await retryEssayCriterion(review, prompt, sections, essay.drafts, chains, stance, id);
         groups = groups.map((g) => (g.id === id ? { ...g, items } : g));
         failed = failed.filter((x) => x !== id);
       } catch { /* stays failed */ }

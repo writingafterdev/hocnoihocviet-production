@@ -89,6 +89,8 @@ export interface Chain {
   mine?: 'start' | 'end';
   /** ① Dựng mạch: false while the chain is still two boxes (start, end); true once the middle can be built. */
   built?: boolean;
+  /** Viết có hướng dẫn: the job ① Chọn hướng bài gave this mạch ý (e.g. Công nhận · "Lợi ích của việc…"). */
+  role?: { id: string; tag: string; text: string };
 }
 
 export interface Lens {

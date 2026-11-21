@@ -25,6 +25,7 @@ export function describeChains(p: Prompt, chains: Chain[], stance: string) {
   chains.forEach((c, i) => {
     const sh = shapeOf(p, c);
     out.push('', `[Mạch ý ${i + 1}] id=${c.id} · câu ${c.q || 1} (${CL_SHAPE_LABEL[sh]}) · tên: ${c.title || '(chưa đặt)'}${c.drv ? ' · xuất phát từ driver ' + c.drv : ''}${sh === 'verdict' ? ` · tông: ${c.tone === 'cost' ? 'tác hại' : 'lợi ích'}` : ''}${sh === 'cause' ? ' · loại nguyên nhân: ' + (levelOf(c) || '(chưa viết)') + (upstreamSteps(c).length ? ' (bước 1–' + upstreamSteps(c).length + ' là nguyên nhân thượng nguồn thuộc hệ thống, các bước sau là của người trong cuộc)' : '') : ''}${c.area ? ' · vùng: ' + c.area : ''}${c.cell ? ' · ô bản đồ: ' + String(c.cell.r).slice(0, 60) + ' × ' + String(c.cell.c).slice(0, 60) : ''}`);
+    if (c.role?.text) out.push(`  việc của mạch ý này trong hướng bài: ${String(c.role.tag).slice(0, 30)} · ${String(c.role.text).slice(0, 200)}`);
     c.steps.forEach((s, k) => out.push(`  bước ${k + 1}: ${s.trim() || '(trống)'}`));
     if (c.split) {
       out.push(`  Scope: tách theo "${c.split.noun}" sau bước ${c.split.at + 1}`);

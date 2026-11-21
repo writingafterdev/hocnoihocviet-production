@@ -27,7 +27,7 @@ export async function POST(request: Request) {
     // The reply is streamed to the browser as it is written (a long reply must stream, or the provider's
     // gateway drops it after about 100 s); the browser parses it.
     try {
-      return await askStream(essayCall(part, r.prompt, sections, chains, stance));
+      return await askStream(essayCall(part, r.prompt, sections, chains, String(stance || '').slice(0, 400)));
     } catch (err) {
       // Without scores there is no review: give the use back. (A stream that breaks later can't be seen here.)
       if (part === 'scores') await refundTicket(r.userId, ticket).catch(() => {});

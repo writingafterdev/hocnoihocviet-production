@@ -11,6 +11,8 @@ import type { Chain } from '../chainlab/types';
 import { backLinkStyle, ClIcon } from '../chainlab/ui/primitives';
 import type { CheckResult } from '../coach/useCoach';
 import { BuildScreen, isReady, NEED } from '../essay/BuildScreen';
+import { chainsFor, directionKey, directionQuestion, stanceOf, wordingOf, type Direction } from '../essay/direction';
+import { DirectionScreen } from '../essay/DirectionScreen';
 import { WriteScreen } from '../essay/WriteScreen';
 import { MODE_LABEL } from '../library/ModePickerModal';
 import { attemptStore, modeOf, SignedOutError, type Attempt, type EssayState } from './store';
@@ -21,7 +23,7 @@ type SaveState = 'saved' | 'saving' | 'failed';
 const SAVE_DELAY = 1500;
 
 /** What counts as an edit worth saving: everything except the running timer and timestamps. */
-const contentKey = (a: Attempt) => JSON.stringify([a.chains, a.checks, a.essay.bodies, a.essay.drafts, a.essay.review, a.essay.fixing, a.essay.fix, a.essay.guided, a.essay.mode, a.essay.notes]);
+const contentKey = (a: Attempt) => JSON.stringify([a.chains, a.checks, a.direction, a.stance, a.essay.bodies, a.essay.drafts, a.essay.review, a.essay.fixing, a.essay.fix, a.essay.guided, a.essay.mode, a.essay.notes]);
 
 /** ② Viết bài is open once the student chose how to write (or the essay already has text, a review or a guided round). */
 const essayOpen = (a: Attempt) => modeOf(a) === 'free' || !!a.essay.mode || !!a.essay.guided || !!a.essay.review || Object.values(a.essay.drafts).some((t) => t.trim());
@@ -32,7 +34,7 @@ const SAVE_LABEL: Record<SaveState, string> = { saved: 'Đã lưu', saving: 'Đa
 export function AttemptWorkspace({ attemptId }: { attemptId: string }) {
   const router = useRouter();
   const path = usePathname();
-  const view = path.endsWith('/essay') ? 'essay' : 'chains';
+  const view = path.endsWith('/essay') ? 'essay' : path.endsWith('/direction') ? 'direction' : 'chains';
   const [attempt, setAttempt] = useState<Attempt | null>(null);
   const [status, setStatus] = useState<Status>('loading');
   const [save, setSave] = useState<SaveState>('saved');
@@ -85,7 +87,11 @@ export function AttemptWorkspace({ attemptId }: { attemptId: string }) {
   useEffect(() => {
     if (status !== 'ready' || !attempt) return;
     if (view === 'essay' && !essayOpen(attempt)) router.replace('/write/' + attempt.id + '/chains');
-    if (view === 'chains' && modeOf(attempt) === 'free') router.replace('/write/' + attempt.id + '/essay');
+    if (view !== 'essay' && modeOf(attempt) === 'free') router.replace('/write/' + attempt.id + '/essay');
+    // ① Chọn hướng bài comes first while there are no chains yet; prompts without a verdict question have no such step.
+    const pick = modeOf(attempt) === 'guided' && !!directionQuestion(findPrompt(attempt.promptId)!);
+    if (view === 'chains' && pick && !attempt.chains.length) router.replace('/write/' + attempt.id + '/direction');
+    if (view === 'direction' && (!pick || (!attempt.direction && attempt.chains.length))) router.replace('/write/' + attempt.id + '/chains');
   }, [status, view]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (status !== 'ready') {
@@ -122,7 +128,17 @@ export function AttemptWorkspace({ attemptId }: { attemptId: string }) {
   // ② Viết bài opens only through "Viết bài" on ① Dựng mạch (two built chains, then the Tự viết / có hướng dẫn choice),
   // or once the essay has started. Until then the step is shown locked.
   const started = essayOpen(attempt);
-  const steps = [{ label: '① Dựng mạch ý', href: base + '/chains' }, { label: '② Viết bài', href: base + '/essay', locked: !started, title: 'Dựng xong ít nhất ' + NEED + ' mạch rồi bấm "Viết bài".' }];
+  // A prompt with a verdict question (and an attempt that started there) has ① Chọn hướng bài before the chains.
+  const picks = !!attempt.direction || (attempt.mode === 'guided' && !!directionQuestion(prompt) && !attempt.chains.length);
+  const steps = [
+    ...(picks ? [{ label: '① Chọn hướng bài', href: base + '/direction' }] : []),
+    { label: (picks ? '②' : '①') + ' Dựng mạch ý', href: base + '/chains', locked: picks && !attempt.chains.length, title: 'Chọn một hướng bài trước.' },
+    { label: (picks ? '③' : '②') + ' Viết bài', href: base + '/essay', locked: !started, title: 'Dựng xong ít nhất ' + NEED + ' mạch rồi bấm "Viết bài".' },
+  ];
+  const at = (k: number) => k + (picks ? 1 : 0);
+  /** Changing the direction rebuilds the chains; it only matters once the student has written something in them. */
+  const willRebuild = (d: Direction) => !!attempt.direction?.built && attempt.direction.built !== directionKey(d)
+    && attempt.chains.some((c) => c.steps.some((x, k) => k !== (c.mine === 'start' ? c.steps.length - 1 : 0) && x.trim()));
   const free = modeOf(attempt) === 'free';
   const freeLeft = (
     <div style={{ display: 'flex', alignItems: 'center', gap: 18 }}>
@@ -143,11 +159,25 @@ export function AttemptWorkspace({ attemptId }: { attemptId: string }) {
         <button type="button" className="cl-btn" disabled={save !== 'failed'} onClick={() => persist(attempt)} aria-live="polite" style={{ fontFamily: 'var(--font-sans)', fontSize: 12, fontWeight: 500, color: save === 'failed' ? '#B33A1A' : '#A3A3A3', cursor: save === 'failed' ? 'pointer' : 'default' }}>{SAVE_LABEL[save === 'failed' ? 'failed' : contentKey(attempt) !== savedKey.current ? 'saving' : 'saved']}</button>
       } />
       <div style={{ flex: 1, minHeight: 0 }}>
-        {free ? (
+        {view === 'direction' && !free && directionQuestion(prompt) ? (
+          <DirectionScreen prompt={prompt} direction={attempt.direction ? { route: attempt.direction.route, way: attempt.direction.way } : null}
+            setDirection={(d) => setAttempt((a) => ({ ...a, direction: { ...a.direction, ...d }, updatedAt: Date.now() }))}
+            willRebuild={willRebuild}
+            onNext={(d, wording) => {
+              const key = directionKey(d);
+              if (attempt.direction?.built !== key || !attempt.chains.length) {
+                const w = wordingOf(wording, d);
+                const chains = chainsFor(prompt, d, w);
+                setAttempt((a) => ({ ...a, chains, checks: {}, stance: stanceOf(prompt, d, w), direction: { ...d, built: key }, essay: { ...a.essay, bodies: chains.map((c) => c.id) }, updatedAt: Date.now() }));
+              }
+              router.push(base + '/chains');
+            }}
+            toolbarLeft={left('/writing', 'Thư viện đề', 0)} />
+        ) : free ? (
           view === 'essay' && <WriteScreen prompt={prompt} chains={[]} setChains={setChains} essay={attempt.essay} setEssay={setEssay} toolbarLeft={freeLeft} chainsHref={base + '/essay'} free />
         ) : view === 'chains' ? (
           <BuildScreen prompt={prompt} chains={attempt.chains} setChains={setChains} checks={attempt.checks || {}} setCheck={setCheck}
-            toolbarLeft={left('/writing', 'Thư viện đề', 0)}
+            toolbarLeft={left(picks ? base + '/direction' : '/writing', picks ? 'Chọn hướng bài' : 'Thư viện đề', at(0))}
             started={started} guidedOnly={attempt.mode === 'guided'}
             onNext={(mode) => {
               if (mode) setEssay((e) => ({ ...e, mode, ...(mode === 'guided' ? { guided: { plan: null, at: 0, level: 'frame' as const } } : {}) }));
@@ -155,7 +185,7 @@ export function AttemptWorkspace({ attemptId }: { attemptId: string }) {
             }} />
         ) : (
           <WriteScreen prompt={prompt} chains={attempt.chains} setChains={setChains} essay={attempt.essay} setEssay={setEssay}
-            toolbarLeft={left(base + '/chains', 'Dựng mạch ý', 1)} chainsHref={base + '/chains'} />
+            toolbarLeft={left(base + '/chains', 'Dựng mạch ý', at(1))} chainsHref={base + '/chains'} stance={attempt.stance} />
         )}
       </div>
     </div>

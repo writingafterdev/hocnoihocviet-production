@@ -1,5 +1,6 @@
 import type { Prompt } from '@/content/prompts';
 import type { Statement } from '@/content/statements';
+import { directionQuestion } from '../essay/direction';
 import { bodyFromStatement, initialBodies } from '../essay/model';
 import { attemptStore, createAttempt, modeOf, type Attempt, type WritingMode } from './store';
 
@@ -14,15 +15,17 @@ export async function startAttempt(prompt: Prompt, mode: WritingMode): Promise<s
     await attemptStore.save(attempt);
     return '/write/' + attempt.id + '/essay';
   }
-  const attempt = createAttempt(prompt.id, initialBodies(prompt), 'guided');
+  // A prompt that asks for a side starts on ① Chọn hướng bài; its chains come from the direction.
+  const pick = !!directionQuestion(prompt);
+  const attempt = createAttempt(prompt.id, pick ? [] : initialBodies(prompt), 'guided');
   await attemptStore.save(attempt);
-  return '/write/' + attempt.id + '/chains';
+  return '/write/' + attempt.id + (pick ? '/direction' : '/chains');
 }
 
 /** Where an existing attempt opens: the essay once it is open (always, for Tự viết), else ① Dựng mạch. */
 export const attemptHref = (a: Attempt) => {
   const open = modeOf(a) === 'free' || !!a.essay.mode || !!a.essay.guided || !!a.essay.review || Object.values(a.essay.drafts).some((t) => t.trim());
-  return '/write/' + a.id + (open ? '/essay' : '/chains');
+  return '/write/' + a.id + (open ? '/essay' : a.chains.length ? '/chains' : '/direction');
 };
 
 /** "Viết cả bài cho đề này": a new attempt whose first body paragraph is the chain from "Chứng minh nhanh". */

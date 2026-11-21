@@ -47,7 +47,7 @@ function Frame({ text }: { text: string }) {
 const chainsOut = (chains: Chain[]) => chains.map(({ check, ...c }) => c); // eslint-disable-line @typescript-eslint/no-unused-vars
 
 /** `sentence`: the drill's statement; the plan is then one paragraph from its chain. */
-export function useGuidedPlan(prompt: Prompt, chains: Chain[], essay: EssayState, setEssay: (fn: (e: EssayState) => EssayState) => void, sentence?: string) {
+export function useGuidedPlan(prompt: Prompt, chains: Chain[], essay: EssayState, setEssay: (fn: (e: EssayState) => EssayState) => void, sentence?: string, stance = '') {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const g = essay.guided;
@@ -56,7 +56,7 @@ export function useGuidedPlan(prompt: Prompt, chains: Chain[], essay: EssayState
     setLoading(true); setError('');
     try {
       const ready = chains.filter((c) => c.steps.slice(1, -1).some((s) => s.trim()));
-      const r = await postAi<{ sentences: GuidedSentence[] }>('guided-plan', { promptId: prompt.id, chains: chainsOut(ready), stance: '', ...(sentence ? { sentence } : {}) });
+      const r = await postAi<{ sentences: GuidedSentence[] }>('guided-plan', { promptId: prompt.id, chains: chainsOut(ready), stance, ...(sentence ? { sentence } : {}) });
       if (!r.sentences?.length) throw new AiRequestError('bad_output');
       setEssay((e) => (e.guided ? { ...e, guided: { ...e.guided, plan: r.sentences, at: 0 } } : e));
     } catch (e) {

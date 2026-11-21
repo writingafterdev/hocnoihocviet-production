@@ -11,6 +11,7 @@ import { TranslatorChat } from '../coach/TranslatorChat';
 import { primaryBtn } from '../coach/ui';
 import { useCoach, type CheckResult } from '../coach/useCoach';
 import { useStepHelp } from '../prove/StepHelp';
+import { MOVE } from './direction';
 import { chainIn, endOf, KIND_ASK, kindOf, middleOf, newBody, questionOf, startOf, withEnds, withMiddle } from './model';
 import { Chip } from '@/components/base/badges/chip';
 import { ProBeam } from '@/components/ui/pro-beam';
@@ -106,6 +107,8 @@ function BodyCard({ prompt, chain, num, canDelete, onChange, onDelete, check, on
   const setEnd = (which: 'start' | 'end', v: string) => onChange(withEnds(chain, which === 'start' ? v : start, which === 'end' ? v : end));
   const notes = coach.fresh && coach.result ? coach.result.placed : [];
   const multi = prompt.questions.length > 1;
+  /** Viết có hướng dẫn: the job ① Chọn hướng bài gave this mạch ý, in place of the generic question. */
+  const role = chain.role ? MOVE[chain.role.id as keyof typeof MOVE] || MOVE.reason : null;
   const status = !chain.built ? (ready ? 'Đủ hai đầu' : 'Chưa đủ hai đầu') : filled ? filled + ' bước ở giữa' : 'Chưa có bước nào';
 
   const endBox = (which: 'start' | 'end') => {
@@ -117,7 +120,7 @@ function BodyCard({ prompt, chain, num, canDelete, onChange, onDelete, check, on
           <ClLabel color={isMine ? CL.ink : CL.ink5}>{ENDS[kind][which]}{isMine ? ' · bạn viết' : ''}</ClLabel>
           {!isMine && <span style={{ borderRadius: 5, padding: '2px 6px', background: '#E4F5FA', color: '#17667A', fontFamily: CL.sans, fontSize: 12, fontWeight: 500 }}>Gợi ý từ đề</span>}
         </span>
-        <textarea className="co-ta" value={value} rows={1} autoFocus={isMine && !value} aria-label={ENDS[kind][which]} placeholder={isMine ? info.ph : ''}
+        <textarea className="co-ta" value={value} rows={1} autoFocus={isMine && !value} aria-label={ENDS[kind][which]} placeholder={isMine ? (role ? 'Cụ thể là gì, với ai?' : info.ph) : ''}
           onChange={(e) => setEnd(which, e.target.value)} onFocus={onFocus}
           onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) { e.preventDefault(); build(); } }}
           style={fieldStyle} />
@@ -128,16 +131,19 @@ function BodyCard({ prompt, chain, num, canDelete, onChange, onDelete, check, on
   return (
     <section onFocusCapture={onFocus} style={{ flexShrink: 0, borderRadius: 12, border: '1px solid ' + CL.border, background: '#fff', overflow: 'hidden' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, minHeight: 56, padding: '0 14px 0 22px', borderBottom: '1px solid ' + CL.ink1 }}>
-        <span style={{ fontFamily: CL.sans, fontSize: 14.5, fontWeight: 600, color: CL.ink }}>Thân bài {num}</span>
-        <Chip variant="caption" color="gray">{multi ? CL_CIRC[q.n - 1] + ' ' : ''}{info.chip}</Chip>
-        <Chip className="ml-auto" variant="caption" color={chain.built && filled ? 'lime' : 'gray'}>{status}</Chip>
-        {canDelete && <button type="button" className="cl-btn cl-del" onClick={onDelete} aria-label={'Xoá thân bài ' + num} style={{ width: 30, height: 30, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', color: CL.ink3 }}><ClIcon name="trash" size={14} /></button>}
+        <span style={{ flexShrink: 0, fontFamily: CL.sans, fontSize: 14.5, fontWeight: 600, color: CL.ink }}>Mạch ý {num}</span>
+        {role ? <>
+          <span style={{ flexShrink: 0, borderRadius: 6, padding: '2px 8px', background: role.soft, color: role.fg, fontFamily: CL.sans, fontSize: 12, fontWeight: 500 }}>{chain.role!.tag}</span>
+          <span title={chain.role!.text} style={{ flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontFamily: CL.sans, fontSize: 13.5, color: CL.ink7 }}>{chain.role!.text}</span>
+        </> : <Chip variant="caption" color="gray">{multi ? CL_CIRC[q.n - 1] + ' ' : ''}{info.chip}</Chip>}
+        <Chip className={role ? 'shrink-0' : 'ml-auto'} variant="caption" color={chain.built && filled ? 'lime' : 'gray'}>{status}</Chip>
+        {canDelete && <button type="button" className="cl-btn cl-del" onClick={onDelete} aria-label={'Xoá mạch ý ' + num} style={{ width: 30, height: 30, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', color: CL.ink3 }}><ClIcon name="trash" size={14} /></button>}
       </div>
 
       {!chain.built ? (
         <>
           <div style={{ padding: '20px 24px 18px' }}>
-            <p style={{ margin: '0 0 14px', fontFamily: CL.sans, fontSize: 14, lineHeight: 1.55, color: CL.ink7 }}>{info.ask}{q.q && prompt.questions.length > 1 ? <span style={{ color: CL.ink4 }}> · {q.q}</span> : null}</p>
+            {!role && <p style={{ margin: '0 0 14px', fontFamily: CL.sans, fontSize: 14, lineHeight: 1.55, color: CL.ink7 }}>{info.ask}{q.q && prompt.questions.length > 1 ? <span style={{ color: CL.ink4 }}> · {q.q}</span> : null}</p>}
             <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) 36px minmax(0,1fr)', alignItems: 'stretch' }}>
               {endBox('start')}
               {arrow}
@@ -189,6 +195,8 @@ export function BuildScreen({ prompt, chains, setChains, checks, setCheck, toolb
   const add = (n: number) => setChains((cs) => [...cs, newBody(prompt, prompt.questions.find((q) => q.n === n) || prompt.questions[0], cs)]);
   const focused = chains.find((c) => c.id === focus) || null;
   const multi = prompt.questions.length > 1;
+  /** Chains built from ① Chọn hướng bài: their number is set by the direction. */
+  const fromDirection = chains.some((c) => !!c.role);
 
   return (
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column', width: '100%', maxWidth: 1560, margin: '0 auto', padding: '24px 32px 24px' }}>
@@ -210,19 +218,19 @@ export function BuildScreen({ prompt, chains, setChains, checks, setCheck, toolb
         <main className="co-col cl-scroll" style={{ minWidth: 0, overflowY: 'auto', gap: 16, paddingBottom: 24 }}>
           <PromptText text={prompt.text} style={{ flexShrink: 0, background: '#fff' }} />
           {chains.map((c, i) => (
-            <BodyCard key={c.id} prompt={prompt} chain={c} num={i + 1} canDelete={chains.length > 1}
+            <BodyCard key={c.id} prompt={prompt} chain={c} num={i + 1} canDelete={chains.length > 1 && !fromDirection}
               onChange={update} onDelete={() => remove(c.id)}
               check={checks[c.id] || null} onCheck={(r) => { setCheck(c.id, r); setFocus(c.id); setActive(null); }}
               focused={focus === c.id} onFocus={() => { if (focus !== c.id) { setFocus(c.id); setActive(null); } }}
               active={active} onPick={(k) => { setActive(k); }} />
           ))}
-          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          {!fromDirection && <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
             {prompt.questions.map((q) => (
               <button key={q.n} type="button" className="cl-btn cl-add" onClick={() => add(q.n)} style={{ ...miniBtn, height: 36, borderRadius: 10, border: '1px solid var(--color-border-button-default)', boxShadow: 'var(--shadow-xs)', padding: '0 12px', fontSize: 14, fontWeight: 500 }}>
-                <ClIcon name="plus" size={11} />Thêm thân bài{multi ? ' · ' + CL_CIRC[q.n - 1] + ' ' + KIND_ASK[kindOf(prompt, { q: q.n } as Chain)].chip.toLowerCase() : ''}
+                <ClIcon name="plus" size={11} />Thêm mạch ý{multi ? ' · ' + CL_CIRC[q.n - 1] + ' ' + KIND_ASK[kindOf(prompt, { q: q.n } as Chain)].chip.toLowerCase() : ''}
               </button>
             ))}
-          </div>
+          </div>}
         </main>
         }
         side={

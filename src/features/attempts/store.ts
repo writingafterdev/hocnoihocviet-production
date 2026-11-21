@@ -52,8 +52,13 @@ export interface Attempt {
   updatedAt: number;
   /** One chain per body paragraph, in essay order (see features/essay/model). */
   chains: Chain[];
-  /** Not asked for any more; kept empty for the essay review's input. */
+  /** Where the essay lands, from ① Chọn hướng bài (empty otherwise); read by the essay review and the guided writer. */
   stance: string;
+  /**
+   * Viết có hướng dẫn · ① Chọn hướng bài (prompts with a verdict question): the direction picked, and the key of the
+   * direction the chains were last built for (a changed direction rebuilds them).
+   */
+  direction?: { route: 'left' | 'right' | 'balanced'; way: 'other' | 'own' | 'depends' | 'combine'; built?: string } | null;
   /** Latest "Kiểm tra mạch" per chain id. */
   checks?: Record<string, CheckResult>;
   essay: EssayState;
@@ -71,7 +76,7 @@ export interface AttemptStore {
 export const newId = (prefix = '') => prefix + Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-4);
 
 /** Tự viết attempts have no chains; older attempts were all built on chains, whatever their label. */
-export const modeOf = (a: Attempt): WritingMode => (a.chains.length ? 'guided' : 'free');
+export const modeOf = (a: Attempt): WritingMode => (a.mode === 'guided' || a.chains.length ? 'guided' : 'free');
 
 export function createAttempt(promptId: string, chains: Chain[], mode: WritingMode = 'guided'): Attempt {
   const now = Date.now();
