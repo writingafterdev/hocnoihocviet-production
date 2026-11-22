@@ -39,8 +39,8 @@ export function givenEnd(p: Prompt, q: Question): string {
   const k = kindOfShape(q.shape);
   if (k === 'impact') return p.driver;
   if (k === 'cause') return p.driver;
-  // Solutions: the problem the cause / problem question is about, solved.
-  return 'Giải quyết được: ' + p.driver.charAt(0).toLowerCase() + p.driver.slice(1);
+  // Solutions: the problem the cause / problem question is about (its label says it is the one being solved).
+  return p.driver;
 }
 
 function blank(p: Prompt, q: Question, tone: Tone): Chain {

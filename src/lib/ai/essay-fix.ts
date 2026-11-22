@@ -8,13 +8,14 @@ import type { Chain } from '@/features/chainlab/types';
 import { ask } from './claude';
 import { describePrompt } from './describe';
 import type { SectionIn } from './essay-review';
+import { SKELETON, SKELETON_TASK } from './essay-review';
 import { RESCORE_TASK, TERMS } from './prompts';
 
 export interface PlanTask { sectionId: string; criterion: 'tr' | 'cc'; quote: string; title: string; ask: string[]; starter: string; aim: string; model?: string; vi?: string; why?: string; how?: string }
 export interface CheckOut { solved: boolean; reply: string; ask: string }
 export interface RescoreTask { title: string; criterion: string; aim: string; solved: boolean }
 export interface Scores { tr: number; cc: number; lr: number; gra: number }
-export interface RescoreOut { scores: Scores; notes: { criterion: string; text: string }[] }
+export interface RescoreOut { scores: Scores; notes: { criterion: string; text: string }[]; skeleton?: unknown }
 
 const str = { type: 'string' } as const;
 const CHECK_SCHEMA = {
@@ -53,12 +54,15 @@ export async function aiFixCheck(userId: string, _prompt: Prompt, _chain: Chain 
   return { solved: !!out.solved, reply: clip(out.reply, 400), ask: out.solved ? '' : clip(out.ask, 400) };
 }
 
-export async function aiRescore(userId: string, prompt: Prompt, prev: Scores, why: Record<string, string>, tasks: RescoreTask[], before: SectionIn[], after: SectionIn[]): Promise<RescoreOut> {
+/** `free` (Tự viết): the essay's skeleton is read again from the new text, so "Khung bài của bạn" follows the fixes. */
+export async function aiRescore(userId: string, prompt: Prompt, prev: Scores, why: Record<string, string>, tasks: RescoreTask[], before: SectionIn[], after: SectionIn[], free = false): Promise<RescoreOut> {
   const lines = ['ĐIỂM LẦN TRƯỚC'];
   (['tr', 'cc', 'lr', 'gra'] as const).forEach((k) => lines.push(`  ${k.toUpperCase()} ${prev[k]}: ${why[k] || ''}`));
   const input = describePrompt(prompt) + '\n\n' + lines.join('\n') + '\n\nCÁC VIỆC SỬA\n' + JSON.stringify(tasks, null, 1)
     + '\n\nBÀI TRƯỚC VÒNG SỬA\n' + essayText(before) + '\n\nBÀI SAU VÒNG SỬA\n' + essayText(after);
-  const out = await ask<RescoreOut>({ userId, kind: 'fix', task: RESCORE_TASK, schema: RESCORE_SCHEMA, effort: 'medium', maxTokens: 3000, input });
+  const schema = free ? { ...RESCORE_SCHEMA, required: [...RESCORE_SCHEMA.required, 'skeleton'], properties: { ...RESCORE_SCHEMA.properties, skeleton: SKELETON } } : RESCORE_SCHEMA;
+  const task = free ? RESCORE_TASK + SKELETON_TASK + '\nĐọc khung bài từ BÀI SAU VÒNG SỬA. Thêm trường "skeleton" vào JSON trả về.' : RESCORE_TASK;
+  const out = await ask<RescoreOut>({ userId, kind: 'fix', task, schema, effort: 'medium', maxTokens: free ? 5000 : 3000, input });
   const s = out.scores || ({} as Scores);
   // Anchored: a criterion moves at most one band from the last grading.
   const near = (k: keyof Scores) => Math.max(prev[k] - 1, Math.min(prev[k] + 1, band(s[k] ?? prev[k])));
@@ -66,5 +70,5 @@ export async function aiRescore(userId: string, prompt: Prompt, prev: Scores, wh
   const notes = (Array.isArray(out.notes) ? out.notes : [])
     .filter((n) => n && ['tr', 'cc', 'lr', 'gra'].includes(n.criterion) && clip(n.text, 300))
     .map((n) => ({ criterion: n.criterion, text: clip(n.text, 300) }));
-  return { scores, notes };
+  return { scores, notes, ...(free && out.skeleton ? { skeleton: out.skeleton } : {}) };
 }

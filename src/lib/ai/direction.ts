@@ -22,7 +22,8 @@ const task = (p: Prompt) => {
   const n = routeNames(p, q);
   const [l, r] = q.sides || ['Phản đối', 'Đồng ý'];
   return `# VIỆC CỦA BẠN: GHI TÊN VIỆC CỦA TỪNG MẠCH Ý TRONG MỖI HƯỚNG BÀI
-Học sinh chọn hướng cho bài IELTS Task 2 trước khi tự nghĩ ý. Câu hỏi cần chọn phía: "${q.q}". Hai phía: [left] ${l} · [right] ${r}.
+Học sinh chọn hướng cho bài IELTS Task 2 trước khi tự nghĩ ý. Câu hỏi cần chọn phía: "${q.q}". Hai phía: [left] ${l} · [right] ${r}. [right] LUÔN là phía cho rằng ý kiến, đề xuất hay xu hướng mà đề nêu ra là đúng hoặc tốt (đề hai quan điểm: quan điểm thứ nhất trong đề); [left] là phía ngược lại.
+<X> dưới đây luôn là chính điều mà đề nêu ra (ý kiến, đề xuất, xu hướng), không phải điều nó thay thế hay so sánh với. Vd đề "giáo dục hiệu quả hơn nhà tù": <X> = "việc dùng giáo dục thay cho nhà tù", không phải "nhà tù".
 Mỗi hướng có hai cách triển khai; mỗi cách là hai mạch ý (b1 = thân bài thứ nhất, b2 = thân bài thứ hai) và kết luận (end). Bạn viết, cho đúng đề này, mỗi mạch ý LÀM VIỆC GÌ: nó bàn mặt nào của chuyện gì trong đề.
 
 Các hướng (khung cố định, bạn chỉ điền chữ):
@@ -30,8 +31,8 @@ Các hướng (khung cố định, bạn chỉ điền chữ):
   - other (Có nhắc phe đối lập): b1 công nhận điều phía bên kia đúng; b2 phản bác: phía mình nặng hơn điều đó; end: chốt phía mình.
   - own (Chỉ phe mình): b1 một lý do của phía mình; b2 một lý do khác của phía mình; end: chốt phía mình.
 - balanced = "Cân bằng", không phía nào thắng:
-  - depends (Tuỳ trường hợp): b1 trường hợp hoặc nhóm mà [right] đúng; b2 trường hợp hoặc nhóm mà nó không đúng; end: tuỳ trường hợp.
-  - combine (Kết hợp cả hai): b1 điều chuyện trong đề làm được; b2 điều nó không làm được và cách khác bù vào; end: kết hợp cả hai.
+  - depends (Tuỳ trường hợp): b1 trường hợp hoặc nhóm mà [right] đúng, tức <X> đúng hoặc nên làm; b2 trường hợp hoặc nhóm mà <X> không đúng hoặc không cần; end: tuỳ trường hợp.
+  - combine (Kết hợp cả hai): b1 điều <X> làm được; b2 điều nó không làm được và cách khác bù vào; end: kết hợp cả hai.
 
 QUY TẮC QUAN TRỌNG NHẤT: KHÔNG ĐƯA Ý. Mạch ý chỉ được nói nó bàn MẶT NÀO của chuyện gì, không bao giờ nói mặt đó LÀ GÌ: không nêu lợi ích hay tác hại cụ thể, không nêu nhóm người cụ thể, không nêu lý do, không dùng chữ đánh giá như "bất hợp lý", "tầm quan trọng của…", "gánh nặng", "khó khăn của…". Học sinh tự nghĩ phần đó.
 Viết ĐÚNG theo mẫu dưới đây, chỉ thay phần trong <…>:

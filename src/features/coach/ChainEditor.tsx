@@ -16,6 +16,8 @@ const DOT = 17;
 const CENTER = { end: 34, step: 20, add: 22, sugg: 21 };
 
 export interface ChainEditorProps {
+  /** Just built: put the cursor in the first step so the student can type right away. */
+  autoFocusFirst?: boolean;
   start: string;
   end: string;
   startLabel: string;
@@ -90,6 +92,7 @@ export function ChainEditor(p: ChainEditorProps) {
   const listRef = useRef<HTMLOListElement>(null);
   /** Steps added since the last render get the entrance (line grows, dot pops, text rises). */
   const entering = useRef<Set<number>>(new Set());
+  useEffect(() => { if (p.autoFocusFirst && !(p.steps[0] || '').trim()) refs.current[0]?.focus(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
   const [green, setGreen] = useState(false);
   /** The check's notes, kept on the steps the check read: typing into an inserted step or rewriting one doesn't move them. */
   const live = p.check?.result ? place(p.steps, p.check.result.notes, checkedSteps(p.check.result.snap)) : [];

@@ -33,7 +33,7 @@ export async function POST(request: Request) {
       const tasks = b.tasks as RescoreTask[];
       const why = Object.fromEntries(['tr', 'cc', 'lr', 'gra'].map((k) => [k, String((b.why as Record<string, unknown> | undefined)?.[k] ?? '').slice(0, 1200)]));
       if (!validScores(b.prev) || !validSections(b.before) || !validSections(b.after) || !Array.isArray(tasks) || tasks.length > 8) return json({ error: 'invalid' }, 400);
-      return json(await aiRescore(r.userId, r.prompt, b.prev, why, tasks, b.before, b.after));
+      return json(await aiRescore(r.userId, r.prompt, b.prev, why, tasks, b.before, b.after, Array.isArray(b.chains) && b.chains.length === 0));
     }
     return json({ error: 'invalid' }, 400);
   } catch (err) {

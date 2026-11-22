@@ -37,10 +37,10 @@ function locate(sections: SectionIn[], prefer: string, quote: string): { id: str
 const clampBand = (x: number) => Math.max(1, Math.min(9, Math.round(Number(x) || 0)));
 
 /** The "scores" reply: whole bands per criterion, descriptor quotes and why / gap / next per criterion, the summary and the praise. */
-type SkeletonOut = { thesis?: string; bodies?: { sectionId?: string; steps?: unknown[]; weak?: boolean }[]; conclusion?: string };
+export type SkeletonOut = { thesis?: string; bodies?: { sectionId?: string; steps?: unknown[]; weak?: boolean }[]; conclusion?: string };
 
 /** Tự viết: the skeleton from the scores reply, kept only for bodies that exist in the essay. */
-function toSkeleton(sk: SkeletonOut | undefined, sectionIds?: string[]): EssayReview['skeleton'] | undefined {
+export function toSkeleton(sk: SkeletonOut | undefined, sectionIds?: string[]): EssayReview['skeleton'] | undefined {
   if (!sk || typeof sk !== 'object' || !Array.isArray(sk.bodies)) return undefined;
   const txt = (x: unknown, n = 300) => (typeof x === 'string' ? x.trim().slice(0, n) : '');
   const bodies = sk.bodies

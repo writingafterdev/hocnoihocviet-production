@@ -190,7 +190,8 @@ export function WriteScreen({ prompt, chains, setChains, essay, setEssay, toolba
   const review = essay.review;
   const editing = !review || !!essay.fixing;
   // The guided writer needs the room: the translator starts closed there.
-  const [chat, setChat] = useState(!review && !(essay.guided && !essay.guided.done));
+  // Tự viết keeps the room for the essay (prompt, notes and essay side by side): the translator opens on "Dịch".
+  const [chat, setChat] = useState(!review && !free && !(essay.guided && !essay.guided.done));
   /** The body paragraph being written (its chain is highlighted on the left). */
   const [focus, setFocus] = useState<string | null>(null);
   const paraRefs = useRef<Record<string, HTMLElement | null>>({});
@@ -357,7 +358,7 @@ export function WriteScreen({ prompt, chains, setChains, essay, setEssay, toolba
       setEssay((e) => {
         if (!e.review) return e;
         const groups = e.review.groups.map((g) => ({ ...g, items: g.items.filter((it) => !it.quote || !it.sectionId || (drafts[it.sectionId] || '').includes(it.quote)) }));
-        const next: EssayReview = { ...e.review, scores: r.scores, groups, key: draftsKey(drafts), rescore: { notes: r.notes } };
+        const next: EssayReview = { ...e.review, scores: r.scores, groups, key: draftsKey(drafts), rescore: { notes: r.notes }, ...(r.skeleton ? { skeleton: r.skeleton } : {}) };
         return { ...e, drafts, review: next, prevScores: e.review.scores, fix: null, fixing: false };
       });
       setTab('tr');

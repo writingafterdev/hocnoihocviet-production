@@ -103,7 +103,9 @@ function BodyCard({ prompt, chain, num, canDelete, onChange, onDelete, check, on
   const ready = !!(start.trim() && end.trim());
   const middle = middleOf(chain);
   const filled = middle.filter((s) => s.trim()).length;
-  const build = () => { if (ready) onChange({ ...withMiddle(chain, middle.length ? middle : ['']), built: true }); };
+  /** Built in this visit: the editor opens with the cursor in the first step. */
+  const [justBuilt, setJustBuilt] = useState(false);
+  const build = () => { if (ready) { setJustBuilt(true); onChange({ ...withMiddle(chain, middle.length ? middle : ['']), built: true }); } };
   const setEnd = (which: 'start' | 'end', v: string) => onChange(withEnds(chain, which === 'start' ? v : start, which === 'end' ? v : end));
   const notes = coach.fresh && coach.result ? coach.result.placed : [];
   const multi = prompt.questions.length > 1;
@@ -157,7 +159,7 @@ function BodyCard({ prompt, chain, num, canDelete, onChange, onDelete, check, on
       ) : (
         <>
           <div style={{ padding: '18px 26px 12px 26px' }}>
-            <ChainEditor
+            <ChainEditor autoFocusFirst={justBuilt}
               start={start} end={end}
               startLabel={ENDS[kind].start + ' · ' + (mine === 'start' ? 'bạn viết' : 'gợi ý từ đề')}
               endLabel={ENDS[kind].end + ' · ' + (mine === 'end' ? 'bạn viết' : 'gợi ý từ đề')}
