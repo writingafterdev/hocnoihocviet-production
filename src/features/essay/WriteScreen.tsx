@@ -88,8 +88,12 @@ function SkeletonView({ skeleton, sections, onOpen }: { skeleton: NonNullable<Es
               {b.steps.map((t, k) => {
                 const first = k === 0, end = k === b.steps.length - 1 && k > 0;
                 return (
-                  <li key={k} style={{ display: 'flex', gap: 10, alignItems: 'baseline', padding: '4px 6px' }}>
-                    <span style={{ width: 9, height: 9, flexShrink: 0, borderRadius: end ? 2 : 99, background: first ? CL.green : end ? '#B8862B' : '#D4D4D4' }} />
+                  <li key={k} style={{ display: 'flex', gap: 10, padding: '4px 6px' }}>
+                    {/* The thread: each dot joined to the next by a line, like the mạch ý everywhere else. */}
+                    <span aria-hidden="true" style={{ position: 'relative', width: 9, flexShrink: 0 }}>
+                      {k < b.steps.length - 1 && <span style={{ position: 'absolute', left: 4, top: 15, bottom: -15, width: 1, background: CL.ink3 }} />}
+                      <span style={{ position: 'absolute', top: 6, left: 0, width: 9, height: 9, borderRadius: end ? 2 : 99, background: first ? CL.green : end ? '#B8862B' : '#D4D4D4' }} />
+                    </span>
                     <span style={{ fontFamily: CL.sans, fontSize: 13, lineHeight: 1.5, fontWeight: end ? 600 : 400, color: first || end ? CL.ink8 : CL.ink6 }}>{t}</span>
                   </li>
                 );
