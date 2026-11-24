@@ -6,6 +6,8 @@ import { CL } from '../chainlab/constants';
 import { cellById, expandRow, groupLabel, groupType, hintsOf, judge, partById, partOfRow, POINT, RATIO, rowKey, TREND, uv, type Entry, type Hint, type Row, type Verdict } from './engine';
 import { familyOf, GLYPH, panelOf, TIP_HINT, tipsFor } from './tips';
 import { Glyph } from './Chart';
+import { postAi } from '../ai/request';
+import { ThinkingLoader } from '@/components/ui/thinking-loader';
 
 export interface ChipView { key: string; dot: boolean; color: string; initial: string; label: string; dashed: boolean; tip: boolean; vals: { t: string; i: number }[]; idx: number[]; run?: { part: string; item: string } }
 
@@ -122,6 +124,9 @@ export function ComparePanel({ prompt, row, setRow, found, setFound, hint, setHi
   const closeMenu = useCallback(() => setMenu((m) => (m && m.open ? { ...m, open: false } : m)), []);
   const [hintN, setHintN] = useState(0);
   const [ask, setAsk] = useState<Hint | null>(null);
+  /** Gợi ý from the AI: its question first, the answer (and the highlighted cells) on the second press. */
+  const [ai, setAi] = useState<{ question: string; answer: string; next: string; hint: Hint | null; shown: boolean } | null>(null);
+  const [thinking, setThinking] = useState(false);
   // Dragging a chip: it follows the cursor, and the others make room for it as it moves.
   const boxRef = useRef<HTMLDivElement>(null);
   const press = useRef<{ ents: Entry[]; sx: number; sy: number; offX: number; offY: number; on: boolean } | null>(null);
@@ -185,7 +190,7 @@ export function ComparePanel({ prompt, row, setRow, found, setFound, hint, setHi
     if (found.some((f) => rowKey(f.row) === rowKey(row))) { setMsg({ ok: false, text: 'Ý này đã có trong danh sách rồi.' }); return; }
     const j = judge(prompt, row);
     setMsg(j);
-    if (j.ok) { setFound([...found, { row }]); setRow([]); setHint(null); setAsk(null); closeMenu(); }
+    if (j.ok) { setFound([...found, { row }]); setRow([]); setHint(null); setAsk(null); setAi(null); closeMenu(); }
   };
   const canChain = (() => {
     if (!rowPart || !partById(prompt, rowPart).axis.ordered) return false;
@@ -268,15 +273,29 @@ export function ComparePanel({ prompt, row, setRow, found, setFound, hint, setHi
 
           {msg && msg.text && <span role="status" style={{ fontSize: 13, lineHeight: 1.5, color: msg.ok ? CL.greenText : CL.redText }}>{msg.text}</span>}
           {msg && msg.note && <span style={{ fontSize: 12.5, lineHeight: 1.5, color: msg.note.warn ? '#8A5A00' : CL.ink5 }}>{msg.note.text}</span>}
-          {ask && !hint && <span style={{ fontSize: 13, lineHeight: 1.5, color: '#8A5A00' }}>{askOf(ask)}</span>}
-          {hint && <span style={{ display: 'flex', flexDirection: 'column', gap: 3 }}><span style={{ fontSize: 13, lineHeight: 1.5, color: '#8A5A00' }}>Gợi ý: {hint.text}.</span><span style={{ fontSize: 12.5, lineHeight: 1.5, color: CL.ink5 }}>Lần sau: {hint.next}.</span></span>}
+          {thinking && <span style={{ alignSelf: 'flex-start' }}><ThinkingLoader phases={['Đang nhìn biểu đồ', 'Đang xem bạn đã tìm gì', 'Đang nghĩ câu hỏi']} interval={1800} /></span>}
+          {ai && !thinking && !ai.shown && <span style={{ fontSize: 13, lineHeight: 1.5, color: '#8A5A00' }}>{ai.question}</span>}
+          {ai && !thinking && ai.shown && <span style={{ display: 'flex', flexDirection: 'column', gap: 3 }}><span style={{ fontSize: 13, lineHeight: 1.5, color: '#8A5A00' }}>Gợi ý: {ai.answer}</span>{ai.next && <span style={{ fontSize: 12.5, lineHeight: 1.5, color: CL.ink5 }}>Lần sau: {ai.next.replace(/\.$/, '')}.</span>}</span>}
+          {!ai && ask && !hint && <span style={{ fontSize: 13, lineHeight: 1.5, color: '#8A5A00' }}>{askOf(ask)}</span>}
+          {!ai && hint && <span style={{ display: 'flex', flexDirection: 'column', gap: 3 }}><span style={{ fontSize: 13, lineHeight: 1.5, color: '#8A5A00' }}>Gợi ý: {hint.text}.</span><span style={{ fontSize: 12.5, lineHeight: 1.5, color: CL.ink5 }}>Lần sau: {hint.next}.</span></span>}
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <button type="button" className="cl-btn" onClick={() => put([])} style={{ ...btn, border: '1px solid rgba(0,0,0,.12)', background: '#fff', color: CL.ink }}>Xoá</button>
-            <span className="pro-fill" data-tour="hint"><button type="button" className="cl-btn" onClick={() => {
-              if (!hints.length) return; setMsg(null);
-              if (ask && !hint) { setHint(ask); return; }
-              setHint(null); setAsk(hints[hintN % hints.length]); setHintN(hintN + 1);
-            }} style={{ ...btn, border: 'none', color: '#fff' }}>{ask && !hint ? 'Xem gợi ý' : 'Gợi ý'}</button></span>
+            <span className="pro-fill" data-tour="hint"><button type="button" className="cl-btn" disabled={thinking} onClick={async () => {
+              setMsg(null);
+              // Second press: the answer, and the cells it is about light up on the chart.
+              if (ai && !ai.shown) { setAi({ ...ai, shown: true }); setHint(ai.hint); return; }
+              if (!ai && ask && !hint) { setHint(ask); return; }
+              setHint(null); setAsk(null); setAi(null); setThinking(true);
+              try {
+                const r = await postAi<{ hint: { question: string; answer: string; next: string; pick: number } }>('task1-hint', { promptId: prompt.id, found: found.map((f) => f.row), row });
+                if (!r.hint?.question) throw new Error('empty');
+                setAi({ question: r.hint.question, answer: r.hint.answer, next: r.hint.next, hint: r.hint.pick >= 0 ? hints[r.hint.pick] || null : null, shown: false });
+              } catch {
+                // The AI is busy or out of uses: the question from the checks instead.
+                if (hints.length) { setAsk(hints[hintN % hints.length]); setHintN(hintN + 1); }
+              }
+              setThinking(false);
+            }} style={{ ...btn, border: 'none', color: '#fff', opacity: thinking ? 0.7 : 1 }}>{(ai && !ai.shown) || (!ai && ask && !hint) ? 'Xem gợi ý' : 'Gợi ý'}</button></span>
             <button type="button" data-tour="check" className="cl-btn cl-primary" onClick={check} disabled={!row.length} style={{ ...btn, marginLeft: 'auto', border: 'none', color: '#fff', padding: '0 14px', opacity: row.length ? 1 : 0.4 }}>Kiểm tra</button>
           </div>
         </div>
