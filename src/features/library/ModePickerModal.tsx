@@ -80,14 +80,19 @@ const ago = (t: number) => {
 
 /** The start popup for a prompt: pick Tự viết or Viết có hướng dẫn (it opens on the last one used), or resume the latest attempt. */
 export function ModePickerModal({ prompt, onClose, onStart, onResume }: { prompt: Prompt; onClose: () => void; onStart: (mode: WritingMode) => void; onResume: (attempt: Attempt) => void }) {
-  const [mode, setMode] = useState<WritingMode>('guided');
   const [last, setLast] = useState<Attempt | null>(null);
+  useEffect(() => { attemptStore.listForPrompt(prompt.id).then((list) => setLast(list.find((a) => !a.essay.review) || null)).catch(() => {}); }, [prompt.id]);
+  return <ModePickerDialog text={prompt.text} onClose={onClose} onStart={onStart} last={last ? { mode: modeOf(last), updatedAt: last.updatedAt, resume: () => onResume(last) } : null} />;
+}
+
+/** The popup itself, shared by Task 1 and Task 2: the prompt, the two modes (each with its sketch), start, and resume when there is an attempt in progress. */
+export function ModePickerDialog({ text, last, onClose, onStart, sketches }: { text: string; last: { mode: WritingMode; updatedAt: number; resume: () => void } | null; onClose: () => void; onStart: (mode: WritingMode) => void; sketches?: Partial<Record<WritingMode, ReactNode>> }) {
+  const [mode, setMode] = useState<WritingMode>('guided');
   const [starting, setStarting] = useState(false);
   const [closing, setClosing] = useState(false);
   // Closing plays the quicker scale-down before the modal unmounts.
   const close = () => { if (closing) return; setClosing(true); setTimeout(onClose, 150); };
   useEffect(() => { setMode(lastMode()); }, []);
-  useEffect(() => { attemptStore.listForPrompt(prompt.id).then((list) => setLast(list.find((a) => !a.essay.review) || null)).catch(() => {}); }, [prompt.id]);
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') close(); };
     window.addEventListener('keydown', onKey);
@@ -97,17 +102,17 @@ export function ModePickerModal({ prompt, onClose, onStart, onResume }: { prompt
     <div onClick={close} className={'t-modal-back' + (closing ? ' is-closing' : '')} style={{ position: 'fixed', inset: 0, background: 'rgba(20,20,19,.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50, padding: 24 }}>
       <div role="dialog" aria-modal="true" aria-labelledby="mode-title" className="t-modal" onClick={(e) => e.stopPropagation()} style={{ width: '100%', maxWidth: 640, background: '#fff', borderRadius: 20, padding: '28px 28px 24px', boxShadow: '0 24px 60px rgba(20,20,19,.25)' }}>
         <div style={{ display: 'flex', alignItems: 'flex-start', gap: 16, marginBottom: 22 }}>
-          <p style={{ flex: 1, fontFamily: 'var(--font-sans)', fontSize: 17, fontWeight: 600, lineHeight: 1.4, color: '#171717', margin: 0 }}>{prompt.text}</p>
+          <p style={{ flex: 1, fontFamily: 'var(--font-sans)', fontSize: 17, fontWeight: 600, lineHeight: 1.4, color: '#171717', margin: 0 }}>{text}</p>
           <button type="button" onClick={close} aria-label="Đóng" style={{ cursor: 'pointer', width: 28, height: 28, borderRadius: 999, border: '1px solid #E5E5E5', background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#6E6B64', flexShrink: 0, padding: 0 }}><X size={14} strokeWidth={2.5} /></button>
         </div>
         <p id="mode-title" style={{ fontFamily: 'var(--font-sans)', fontSize: 15, fontWeight: 600, color: '#171717', margin: '0 0 14px' }}>Chọn chế độ làm bài</p>
         <div role="radiogroup" aria-labelledby="mode-title" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 14, marginBottom: 22 }}>
-          <ModeOption selected={mode === 'free'} onClick={() => setMode('free')} title={MODE_LABEL.free} sketch={SketchFree} />
-          <ModeOption selected={mode === 'guided'} onClick={() => setMode('guided')} title={MODE_LABEL.guided} sketch={SketchGuided} pro />
+          <ModeOption selected={mode === 'free'} onClick={() => setMode('free')} title={MODE_LABEL.free} sketch={sketches?.free || SketchFree} />
+          <ModeOption selected={mode === 'guided'} onClick={() => setMode('guided')} title={MODE_LABEL.guided} sketch={sketches?.guided || SketchGuided} pro />
         </div>
         <button type="button" className="cl-primary" disabled={starting} onClick={() => { setStarting(true); rememberMode(mode); onStart(mode); }} style={{ width: '100%', height: 46, borderRadius: 10, border: 'none', color: '#fff', fontFamily: 'var(--font-sans)', fontSize: 13, fontWeight: 600, cursor: 'pointer', opacity: starting ? 0.6 : 1 }}>{last ? 'Bắt đầu bài mới' : 'Bắt đầu làm bài'}</button>
         {last && (
-          <button type="button" onClick={() => onResume(last)} style={{ width: '100%', marginTop: 10, height: 42, borderRadius: 10, border: '1px solid #E5E5E5', background: '#fff', color: '#171717', fontFamily: 'var(--font-sans)', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>Tiếp tục bài đang viết · {MODE_LABEL[modeOf(last)]} · lưu {ago(last.updatedAt)}</button>
+          <button type="button" onClick={last.resume} style={{ width: '100%', marginTop: 10, height: 42, borderRadius: 10, border: '1px solid #E5E5E5', background: '#fff', color: '#171717', fontFamily: 'var(--font-sans)', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>Tiếp tục bài đang viết · {MODE_LABEL[last.mode]} · lưu {ago(last.updatedAt)}</button>
         )}
       </div>
     </div>

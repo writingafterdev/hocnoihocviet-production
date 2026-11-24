@@ -30,27 +30,6 @@ export function paragraphsOf(mode: 'guided' | 'free', essay: EssayState, section
   return sections.map((s) => (essay.drafts[s.id] || '').trim()).filter(Boolean);
 }
 
-/** ③ Viết bài, chosen once: Viết có hướng dẫn (one sentence per finding) or Tự viết. */
-export function ModeChoice({ onPick }: { onPick: (m: 'guided' | 'free') => void }) {
-  const opt = (m: 'guided' | 'free', title: string, desc: string) => (
-    <span className={m === 'guided' ? 'pro-fill pro-block' : ''} style={{ display: 'flex' }}>
-      <button type="button" className="cl-btn" onClick={() => onPick(m)} style={{ flex: 1, textAlign: 'left', padding: '18px 20px', borderRadius: 12, border: '1px solid ' + CL.border, background: '#fff', cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: 6 }}>
-        <span style={{ fontSize: 15, fontWeight: 600 }}>{title}</span>
-        <span style={{ fontSize: 13, lineHeight: 1.55, opacity: 0.85 }}>{desc}</span>
-      </button>
-    </span>
-  );
-  return (
-    <div style={{ ...card, padding: 24, gap: 14, justifyContent: 'center' }}>
-      <span style={{ fontSize: 16, fontWeight: 600 }}>Bạn muốn viết thế nào?</span>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-        {opt('guided', 'Viết có hướng dẫn', 'Viết từng câu theo dàn ý của bạn. Mỗi câu có cấu trúc và từ vựng; vẫn bí thì bật gợi ý chi tiết.')}
-        {opt('free', 'Tự viết', 'Viết cả bài theo cách của bạn, có ghi chú và khung dịch bên cạnh.')}
-      </div>
-    </div>
-  );
-}
-
 /** Viết có hướng dẫn: the sentences come from the AI once per plan, then GuidedWriter takes over (same as Task 2). */
 export function GuidedColumn({ prompt, plan, essay, setEssay, found }: { prompt: T1Prompt; plan: PlanState; essay: EssayState; setEssay: (fn: (e: EssayState) => EssayState) => void; found: PlanState['found'] }) {
   const [error, setError] = useState('');
@@ -123,20 +102,20 @@ export function FreeColumn({ essay, setEssay }: { essay: EssayState; setEssay: (
   );
 }
 
-/** Right column while writing: notes (Tự viết) and the translator. After Nộp bài the workspace shows the review instead. */
-export function SideColumn({ mode, essay, setEssay }: { mode: 'guided' | 'free'; essay: EssayState; setEssay: (fn: (e: EssayState) => EssayState) => void }) {
+/** Tự viết: the notes box under the chart in the left panel, saved with the attempt. */
+export function FreeNotes({ essay, setEssay }: { essay: EssayState; setEssay: (fn: (e: EssayState) => EssayState) => void }) {
   return (
-    <aside style={{ ...card, gap: 0 }}>
-      {mode === 'free' && (
-        <div style={{ padding: '12px 14px', borderBottom: '1px solid ' + CL.ink1, display: 'flex', flexDirection: 'column', gap: 6 }}>
-          <span style={{ fontSize: 13, fontWeight: 600 }}>Ghi chú</span>
-          <textarea className="co-ta" rows={4} value={essay.notes || ''} onChange={(e) => { const t = e.target.value; setEssay((x) => ({ ...x, notes: t })); }} placeholder="Ghi gì cũng được: điều bạn thấy trên biểu đồ, từ muốn dùng…"
-            style={{ resize: 'vertical', borderRadius: 10, border: '1px solid ' + CL.ink2, padding: '8px 10px', fontSize: 13, lineHeight: 1.6, fontFamily: 'inherit' }} />
-        </div>
-      )}
-      <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}><TranslatorChat skill="task1" /></div>
-    </aside>
+    <label style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+      <span style={{ fontSize: 13, fontWeight: 600 }}>Ghi chú</span>
+      <textarea className="co-ta" rows={5} value={essay.notes || ''} onChange={(e) => { const t = e.target.value; setEssay((x) => ({ ...x, notes: t })); }} placeholder="Ghi gì cũng được: điều bạn thấy trên biểu đồ, từ muốn dùng…"
+        style={{ resize: 'vertical', borderRadius: 10, border: '1px solid ' + CL.ink2, padding: '8px 10px', fontSize: 13, lineHeight: 1.6, fontFamily: 'inherit' }} />
+    </label>
   );
+}
+
+/** Right column while writing: the translator. After Nộp bài the workspace shows the review instead. */
+export function SideColumn() {
+  return <aside style={{ ...card, gap: 0 }}><div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}><TranslatorChat skill="task1" /></div></aside>;
 }
 
 /** The label of each graded paragraph: the guided sections that hold text, or plain numbers for Tự viết. */

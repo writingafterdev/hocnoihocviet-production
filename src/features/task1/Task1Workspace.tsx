@@ -14,8 +14,8 @@ import { Charts } from './Chart';
 import { ComparePanel } from './Compare';
 import { cellById, groupPart, partOfRow, type Hint, type Row } from './engine';
 import { PlanPanel, planReady, type PlanState } from './Plan';
-import { task1Store, type Task1Attempt, type Task1Review, type Task1Step } from './store';
-import { FreeColumn, GuidedColumn, labelsOf, ModeChoice, paragraphsOf, sectionsOf, SideColumn } from './Write';
+import { normalizeTask1, task1Store, type Task1Attempt, type Task1Review, type Task1Step } from './store';
+import { FreeColumn, FreeNotes, GuidedColumn, labelsOf, paragraphsOf, sectionsOf, SideColumn } from './Write';
 import { GradedEssay, GradedOutline, ReviewPanel } from './Review';
 import type { Task1Comment, Task1Crit } from './store';
 import { ThinkingLoader } from '@/components/ui/thinking-loader';
@@ -26,7 +26,7 @@ const contentKey = (a: Task1Attempt) => JSON.stringify([a.step, a.found, a.place
 const STEPS: [Task1Step, string][] = [['compare', '① So sánh'], ['plan', '② Chia đoạn'], ['write', '③ Viết bài']];
 const primary: React.CSSProperties = { height: 36, borderRadius: 10, border: 'none', color: '#fff', fontSize: 14, fontWeight: 500, padding: '0 14px', cursor: 'pointer' };
 
-/** One Task 1 attempt: ① So sánh → ② Chia đoạn → ③ Viết bài on one page, autosaved. */
+/** One Task 1 attempt, autosaved. Viết có hướng dẫn: ① So sánh → ② Chia đoạn → ③ Viết bài on one page. Tự viết: straight to writing, the chart and notes on the left. */
 export function Task1Workspace({ attemptId }: { attemptId: string }) {
   const router = useRouter();
   const [a, setA] = useState<Task1Attempt | null>(null);
@@ -46,7 +46,7 @@ export function Task1Workspace({ attemptId }: { attemptId: string }) {
   useEffect(() => {
     let alive = true;
     task1Store.get(attemptId).then(
-      (x) => { if (!alive) return; savedKey.current = x ? contentKey(x) : null; setA(x); setStatus(x && findTask1Prompt(x.promptId) ? 'ready' : 'missing'); },
+      (x) => { if (!alive) return; savedKey.current = x ? contentKey(x) : null; setA(x && normalizeTask1(x)); setStatus(x && findTask1Prompt(x.promptId) ? 'ready' : 'missing'); },
       (e) => { if (!alive) return; if (e instanceof SignedOutError) toLogin(); else setStatus('error'); },
     );
     return () => { alive = false; };
@@ -96,8 +96,9 @@ export function Task1Workspace({ attemptId }: { attemptId: string }) {
     onGroup: (g: string) => { if (rowPart && rowPart !== groupPart(g)) return; setRow([...row, { k: 'group', id: g }]); },
   };
   const sections = sectionsOf(plan);
+  const mode = a.mode || 'guided', free = mode === 'free';
   const submit = async () => {
-    const paras = paragraphsOf(a.mode || 'free', a.essay, sections);
+    const paras = paragraphsOf(mode, a.essay, sections);
     if (!paras.length) { setGradeError('Bài còn trống.'); return; }
     setGrading(true); setGradeError('');
     try { const r = await postAi<{ review: Task1Review }>('task1-review', { promptId: prompt.id, paragraphs: paras }); setActive(null); setTab('ta'); upd({ review: r.review }); }
@@ -107,7 +108,7 @@ export function Task1Workspace({ attemptId }: { attemptId: string }) {
   const writing = a.step === 'write';
   // A review saved before the feedback took Task 2's shape has no paragraphs: treat it as not graded.
   const graded = a.review && Array.isArray(a.review.paragraphs) ? a.review : null;
-  const labels = graded ? labelsOf(a.mode || 'free', a.essay, sections, graded.paragraphs.length) : [];
+  const labels = graded ? labelsOf(mode, a.essay, sections, graded.paragraphs.length) : [];
   const saveLabel = save === 'failed' ? 'Chưa lưu được · thử lại' : contentKey(a) !== savedKey.current ? 'Đang lưu…' : 'Đã lưu';
 
   return (
@@ -118,7 +119,7 @@ export function Task1Workspace({ attemptId }: { attemptId: string }) {
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, minHeight: 42, paddingBottom: 12 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 18 }}>
             <Link href="/task1" className="cl-link" style={backLinkStyle}><ClIcon name="left" size={14} />Thư viện đề</Link>
-            <nav aria-label="Các bước" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            {!free && <nav aria-label="Các bước" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
               {STEPS.map(([s, label], i) => {
                 const on = a.step === s, off = s !== 'compare' && !canPlan;
                 return (
@@ -129,22 +130,22 @@ export function Task1Workspace({ attemptId }: { attemptId: string }) {
                   </span>
                 );
               })}
-            </nav>
-            {writing && a.mode && <span style={{ borderRadius: 6, padding: '2px 8px', background: '#F5F5F5', color: CL.ink7, fontSize: 12, fontWeight: 500 }}>{a.mode === 'guided' ? 'Có hướng dẫn' : 'Tự viết'}</span>}
+            </nav>}
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             {gradeError && <span role="alert" style={{ fontSize: 12.5, color: CL.redText }}>{gradeError}</span>}
             {a.step === 'compare' && <button type="button" className="cl-btn cl-primary" disabled={!canPlan} onClick={() => go('plan')} style={{ ...primary, opacity: canPlan ? 1 : 0.4 }}>Chia đoạn →</button>}
             {a.step === 'plan' && <button type="button" className="cl-btn cl-primary" disabled={!ready} title={ready ? '' : 'Cần ít nhất một ý trong Tổng quan, Đoạn 1 và Đoạn 2.'} onClick={() => go('write')} style={{ ...primary, opacity: ready ? 1 : 0.4 }}>Viết bài →</button>}
-            {writing && a.mode && !a.review && (grading ? <span role="status" style={{ fontSize: 13, fontWeight: 500, color: CL.ink5 }}>Đang chấm bài…</span> : <span className="pro-fill"><button type="button" className="cl-btn" onClick={submit} style={primary}>Nộp bài</button></span>)}
+            {writing && !a.review && (grading ? <span role="status" style={{ fontSize: 13, fontWeight: 500, color: CL.ink5 }}>Đang chấm bài…</span> : <span className="pro-fill"><button type="button" className="cl-btn" onClick={submit} style={primary}>Nộp bài</button></span>)}
             {writing && a.review && <button type="button" className="cl-btn cl-primary" onClick={() => { setActive(null); upd({ review: null }); }} style={primary}>Viết lại</button>}
           </div>
         </div>
 
-        <main style={{ flex: 1, minHeight: 0, display: 'grid', gridTemplateColumns: writing && a.mode ? (a.review ? '360px minmax(0, 1fr) 380px' : '360px minmax(0, 1fr) 330px') : writing ? '360px minmax(0, 1fr)' : 'minmax(0, 1fr) 520px', gap: 16 }}>
+        <main style={{ flex: 1, minHeight: 0, display: 'grid', gridTemplateColumns: writing ? (a.review ? '360px minmax(0, 1fr) 380px' : '360px minmax(0, 1fr) 330px') : 'minmax(0, 1fr) 520px', gap: 16 }}>
           <section style={{ minHeight: 0, overflowY: 'auto', borderRadius: 12, border: '1px solid ' + CL.border, background: '#fff', padding: writing ? '16px' : '18px 20px 24px', display: 'flex', flexDirection: 'column', gap: writing ? 16 : 28 }}>
             <div style={{ border: '1px solid ' + CL.ink3, padding: '10px 13px' }}><p style={{ margin: 0, fontSize: 12.5, fontWeight: 600, fontStyle: 'italic', lineHeight: 1.55, color: '#20252D' }}>{prompt.text}</p></div>
             <Charts prompt={prompt} act={act} compact={writing} />
+            {writing && free && !graded && <FreeNotes essay={a.essay} setEssay={setEssay} />}
             {writing && graded && <GradedOutline review={graded} labels={labels} />}
           </section>
 
@@ -153,14 +154,13 @@ export function Task1Workspace({ attemptId }: { attemptId: string }) {
               setFound={(f) => upd(f.length < a.found.length ? { found: f, place: {}, ov: [] } : { found: f })} />
           )}
           {a.step === 'plan' && <PlanPanel prompt={prompt} state={plan} set={(p) => upd(p)} />}
-          {writing && !a.mode && <ModeChoice onPick={(m) => upd({ mode: m, essay: m === 'guided' ? { ...a.essay, guided: { plan: null, at: 0, level: 'frame' } } : a.essay })} />}
           {writing && graded && <GradedEssay review={graded} labels={labels} active={active} setActive={setActive} tab={tab} />}
-          {writing && !graded && a.mode === 'guided' && <GuidedColumn prompt={prompt} plan={plan} essay={a.essay} setEssay={setEssay} found={a.found} />}
-          {writing && !graded && a.mode === 'free' && <FreeColumn essay={a.essay} setEssay={setEssay} />}
+          {writing && !graded && !free && <GuidedColumn prompt={prompt} plan={plan} essay={a.essay} setEssay={setEssay} found={a.found} />}
+          {writing && !graded && free && <FreeColumn essay={a.essay} setEssay={setEssay} />}
           {writing && graded && <ReviewPanel review={graded} labels={labels} active={active} setActive={setActive} tab={tab} setTab={setTab} />}
-          {writing && !graded && a.mode && (grading
+          {writing && !graded && (grading
             ? <aside style={{ borderRadius: 12, border: '1px solid ' + CL.border, padding: 18 }}><ThinkingLoader phases={['Đang đọc bài', 'Đang đối chiếu số liệu', 'Đang chấm từng tiêu chí', 'Đang viết nhận xét']} interval={2600} /></aside>
-            : <SideColumn mode={a.mode} essay={a.essay} setEssay={setEssay} />)}
+            : <SideColumn />)}
         </main>
       </div>
     </div>

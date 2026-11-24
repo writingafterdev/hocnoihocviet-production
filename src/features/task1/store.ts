@@ -41,19 +41,26 @@ export interface Task1Attempt {
   ov: number[];
   /** Paragraph order chosen by the student (overview, b1, b2, b3). */
   order: string[] | null;
-  /** ③ Viết bài: how the student writes (null until chosen) and the essay itself (drafts by section, guided round, notes). */
+  /** Chosen in the start popup: Tự viết goes straight to writing; Viết có hướng dẫn goes ① → ② → ③. Older attempts may hold null (treated as guided). */
   mode: 'guided' | 'free' | null;
   essay: EssayState;
   review: Task1Review | null;
 }
 
-export function createTask1Attempt(promptId: string): Task1Attempt {
+export function createTask1Attempt(promptId: string, mode: 'guided' | 'free'): Task1Attempt {
   const now = Date.now();
   return {
-    id: newId('t1'), promptId, createdAt: now, updatedAt: now, step: 'compare',
-    found: [], place: {}, ov: [], order: null, mode: null,
-    essay: { bodies: [], drafts: {}, seconds: 0, review: null }, review: null,
+    id: newId('t1'), promptId, createdAt: now, updatedAt: now, step: mode === 'free' ? 'write' : 'compare',
+    found: [], place: {}, ov: [], order: null, mode,
+    essay: { bodies: [], drafts: {}, seconds: 0, review: null, ...(mode === 'guided' ? { guided: { plan: null, at: 0, level: 'frame' as const } } : {}) }, review: null,
   };
+}
+
+/** An attempt as the workspace uses it: a missing mode means guided, and a guided attempt always has its guided round. */
+export function normalizeTask1(a: Task1Attempt): Task1Attempt {
+  const mode = a.mode || 'guided';
+  const essay = mode === 'guided' && !a.essay.guided ? { ...a.essay, guided: { plan: null, at: 0, level: 'frame' as const } } : a.essay;
+  return mode === a.mode && essay === a.essay ? a : { ...a, mode, essay };
 }
 
 /** The guided round's sentences live in essay.guided.plan, typed for GuidedWriter. */
