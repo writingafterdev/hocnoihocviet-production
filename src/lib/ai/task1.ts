@@ -18,7 +18,8 @@ Viết tiếng Việt, xưng "mình", gọi học sinh là "bạn". Dùng đúng
 export function describeTask1(pr: T1Prompt) {
   const out = ['ĐỀ BÀI (IELTS Academic Writing Task 1)', pr.text];
   pr.parts.forEach((p) => {
-    out.push('', `BIỂU ĐỒ: ${p.title} · đơn vị: ${p.unitEn.trim() || p.unit.trim() || 'số'} · trục: ${p.axis.labels.join(', ')}`);
+    out.push('', `BIỂU ĐỒ: ${p.title} · đơn vị: ${p.unitEn.trim() || p.unit.trim() || 'số'} · trục: ${p.axis.labels.map((l, i) => (p.axis.projected !== undefined && i >= p.axis.projected ? l + ' (dự kiến)' : l)).join(', ')}`);
+    if (p.axis.projected !== undefined) out.push(`  Số từ ${p.axis.labels[p.axis.projected]} trở đi là dự kiến: câu nói về chúng dùng is expected to / is predicted to / will.`);
     p.items.forEach((it) => out.push(`  ${it.name}: ${p.data[it.id].map((v) => (v === null ? '—' : v)).join(', ')}`));
   });
   return out.join('\n');
