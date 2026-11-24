@@ -72,7 +72,7 @@ export function PlanPanel({ prompt, state, set }: { prompt: T1Prompt; state: Pla
   return (
     <aside onClickCapture={swallowClick} style={{ minHeight: 0, overflowY: 'auto', borderRadius: 12, border: '1px solid ' + CL.border, background: '#fff' }}>
       <div style={{ display: 'flex', alignItems: 'center', minHeight: 50, padding: '0 20px', borderBottom: '1px solid ' + CL.ink1 }}>
-        <span style={{ fontSize: 14.5, fontWeight: 600 }}>Chia đoạn</span><span style={{ marginLeft: 'auto', fontSize: 12, color: CL.ink5 }}>Kéo để xếp, hoặc bấm nút đặt vào</span>
+        <span style={{ fontSize: 14.5, fontWeight: 600 }}>Chia đoạn</span><span style={{ marginLeft: 'auto', fontSize: 12, color: CL.ink5 }}>Kéo từng điểm vào một đoạn. Tổng quan chỉ nhận ý bao quát.</span>
       </div>
       <div ref={rootRef} style={{ position: 'relative', padding: '14px 16px 16px', display: 'flex', flexDirection: 'column', gap: 12 }}>
         <div data-drop="pool"

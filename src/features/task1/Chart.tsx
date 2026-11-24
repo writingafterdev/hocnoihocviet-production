@@ -6,7 +6,7 @@ import { CL } from '../chainlab/constants';
 import { uv } from './engine';
 
 /** A chart is clickable in ① So sánh: a point adds that number, a line's name or a year adds the whole line or the whole year. */
-export interface ChartActions { interactive: boolean; isIn: (id: string) => boolean; isHinted: (id: string) => boolean; onCell: (id: string) => void; onGroup: (g: string) => void }
+export interface ChartActions { interactive: boolean; isIn: (id: string) => boolean; isHinted: (id: string) => boolean; onCell: (id: string) => void; onGroup: (g: string) => void; /** The walkthrough's line: drawn thicker, the others faded. */ focus?: string }
 
 const L = 44, R = 12, TOP = 12, BOTTOM = 30;
 
@@ -34,12 +34,12 @@ export function LineChart({ part: p, act, compact }: { part: T1Part; act: ChartA
   const link = act.interactive ? 't1-link' : '';
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 14, width: W, maxWidth: '100%' }}>
-      <div style={{ position: 'relative', width: W, maxWidth: '100%' }}>
+      <div data-tour={'part:' + p.id} style={{ position: 'relative', width: W, maxWidth: '100%' }}>
         <svg viewBox={`0 0 ${W} ${H}`} width="100%" style={{ display: 'block', overflow: 'visible' }} role="img" aria-label={p.title}>
           {grid.map((t) => <g key={t}><line x1={L} x2={W - R} y1={ys(t)} y2={ys(t)} stroke={t ? CL.ink1 : CL.ink3} /><text x={L - 8} y={ys(t) + 3.5} fontSize={fs} fill={CL.ink5} textAnchor="end">{t}</text></g>)}
           {p.items.map((it) => {
             const pts = p.data[it.id].map((v, ai) => (v === null ? null : xs(ai).toFixed(1) + ',' + ys(v).toFixed(1))).filter(Boolean).join(' ');
-            return <polyline key={it.id} points={pts} fill="none" stroke={it.color} strokeWidth={2.5} strokeLinejoin="round" strokeLinecap="round" />;
+            return <polyline key={it.id} points={pts} fill="none" stroke={it.color} strokeWidth={act.focus === it.id ? 4 : 2.5} opacity={act.focus && act.focus !== it.id ? 0.2 : 1} strokeLinejoin="round" strokeLinecap="round" />;
           })}
           {p.axis.labels.map((lab, ai) => (!p.axis.show || p.axis.show.includes(ai)) && (
             <text key={ai} x={xs(ai)} y={H - 10} fontSize={fs + 0.5} fontWeight={500} fill={CL.ink6} textAnchor="middle" className={link} onClick={() => act.interactive && act.onGroup(p.id + '>col:' + ai)}>
@@ -49,7 +49,7 @@ export function LineChart({ part: p, act, compact }: { part: T1Part; act: ChartA
           {dots.map((d) => {
             const on = act.isIn(d.id), hint = act.isHinted(d.id);
             return (
-              <g key={d.id} onClick={() => click(d)} style={{ cursor: act.interactive ? 'pointer' : 'default' }}>
+              <g key={d.id} onClick={() => click(d)} opacity={act.focus && act.focus !== d.it.id ? 0.2 : 1} style={{ cursor: act.interactive ? 'pointer' : 'default' }}>
                 <title>{d.it.name + ', ' + p.axis.labels[d.ai] + ': ' + uv(p, d.v)}</title>
                 {(on || hint) && <circle cx={d.cx} cy={d.cy} r={9} fill="none" stroke={on ? d.it.color : '#FFC73C'} strokeWidth={2.5} />}
                 <circle cx={d.cx} cy={d.cy} r={5} fill={d.it.color} stroke="#fff" strokeWidth={2} />
@@ -73,7 +73,7 @@ export function LineChart({ part: p, act, compact }: { part: T1Part; act: ChartA
       </div>
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: compact ? '6px 12px' : 14, justifyContent: 'center' }}>
         {p.items.map((it) => (
-          <span key={it.id} className={link} title={act.interactive ? 'Chọn cả ' + it.name : ''} onClick={() => act.interactive && act.onGroup(p.id + '>item:' + it.id)} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: compact ? 11.5 : 12.5, color: CL.ink7 }}>
+          <span key={it.id} data-tour={'item:' + it.id} className={link} title={act.interactive ? 'Chọn cả ' + it.name : ''} onClick={() => act.interactive && act.onGroup(p.id + '>item:' + it.id)} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: compact ? 11.5 : 12.5, color: CL.ink7 }}>
             <span aria-hidden="true" style={{ width: 10, height: 10, borderRadius: 2, background: it.color }} />{it.name}
           </span>
         ))}

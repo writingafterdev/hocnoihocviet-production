@@ -193,7 +193,7 @@ export function ComparePanel({ prompt, row, setRow, found, setFound, hint, setHi
       <section style={{ borderRadius: 12, border: '1px solid ' + CL.border, background: '#fff', flexShrink: 0 }}>
         <div style={{ display: 'flex', alignItems: 'center', minHeight: 50, padding: '0 20px', borderBottom: '1px solid ' + CL.ink1 }}><span style={{ fontSize: 14.5, fontWeight: 600 }}>Tìm điểm nổi bật</span></div>
         <div style={{ padding: '14px 16px 16px', display: 'flex', flexDirection: 'column', gap: 10 }}>
-          <div ref={boxRef} onClickCapture={(e) => { if (justDragged.current) { e.stopPropagation(); e.preventDefault(); } }}
+          <div ref={boxRef} data-tour="row" onClickCapture={(e) => { if (justDragged.current) { e.stopPropagation(); e.preventDefault(); } }}
             style={{ position: 'relative', userSelect: 'none', minHeight: 52, boxSizing: 'border-box', borderRadius: 10, border: '1px solid ' + (msg && !msg.ok ? '#F5C7B8' : CL.ink2), boxShadow: 'inset 0 1px 2px rgba(0,0,0,.04)', padding: '9px 10px', display: 'flex', flexWrap: 'wrap', gap: 6, alignItems: 'center' }}>
             {chips.map((c) => {
               const first = shown[c.idx[0]], moving = !!dv && c.idx.some((i) => dv.ents.includes(shown[i]));
@@ -244,7 +244,7 @@ export function ComparePanel({ prompt, row, setRow, found, setFound, hint, setHi
             {boxes.map((b, k) => (
               <div key={k} style={{ borderRadius: 10, border: '1px solid #DCE7F7', background: '#F7F9FD', padding: 10, display: 'flex', flexWrap: 'wrap', gap: 6 }}>
                 {b.map((t) => { const fam = familyOf(t, avail); return (
-                  <button key={t} type="button" className="cl-btn" title={TIP_HINT[t] || ''} onClick={(e) => (fam && fam.length > 1 ? openMenu(e, fam, null) : addTip(t))} aria-haspopup={fam && fam.length > 1 ? 'menu' : undefined}
+                  <button key={t} type="button" data-tour={'tip:' + t} className="cl-btn" title={TIP_HINT[t] || ''} onClick={(e) => (fam && fam.length > 1 ? openMenu(e, fam, null) : addTip(t))} aria-haspopup={fam && fam.length > 1 ? 'menu' : undefined}
                     style={{ display: 'inline-flex', alignItems: 'center', gap: 6, height: 32, borderRadius: 8, border: '1px solid ' + (menuOn(null, t) ? '#77A1DD' : '#DCE7F7'), background: menuOn(null, t) ? '#EEF3FC' : '#fff', color: '#1F4FA8', fontSize: 13, fontWeight: 500, padding: fam && fam.length > 1 ? '0 8px 0 7px' : '0 10px 0 7px', cursor: 'pointer' }}>
                     <Glyph shapes={GLYPH[t] || []} />{t}{fam && fam.length > 1 && <Chevron up={menuOn(null, t)} />}
                   </button>
@@ -259,12 +259,12 @@ export function ComparePanel({ prompt, row, setRow, found, setFound, hint, setHi
           {hint && <span style={{ display: 'flex', flexDirection: 'column', gap: 3 }}><span style={{ fontSize: 13, lineHeight: 1.5, color: '#8A5A00' }}>Gợi ý: {hint.text}.</span><span style={{ fontSize: 12.5, lineHeight: 1.5, color: CL.ink5 }}>Lần sau: {hint.next}.</span></span>}
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <button type="button" className="cl-btn" onClick={() => put([])} style={{ ...btn, border: '1px solid rgba(0,0,0,.12)', background: '#fff', color: CL.ink }}>Xoá</button>
-            <span className="pro-fill"><button type="button" className="cl-btn" onClick={() => {
+            <span className="pro-fill" data-tour="hint"><button type="button" className="cl-btn" onClick={() => {
               if (!hints.length) return; setMsg(null);
               if (ask && !hint) { setHint(ask); return; }
               setHint(null); setAsk(hints[hintN % hints.length]); setHintN(hintN + 1);
             }} style={{ ...btn, border: 'none', color: '#fff' }}>{ask && !hint ? 'Xem gợi ý' : 'Gợi ý'}</button></span>
-            <button type="button" className="cl-btn cl-primary" onClick={check} disabled={!row.length} style={{ ...btn, marginLeft: 'auto', border: 'none', color: '#fff', padding: '0 14px', opacity: row.length ? 1 : 0.4 }}>Kiểm tra</button>
+            <button type="button" data-tour="check" className="cl-btn cl-primary" onClick={check} disabled={!row.length} style={{ ...btn, marginLeft: 'auto', border: 'none', color: '#fff', padding: '0 14px', opacity: row.length ? 1 : 0.4 }}>Kiểm tra</button>
           </div>
         </div>
       </section>

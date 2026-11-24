@@ -19,6 +19,7 @@ import { FreeColumn, FreeNotes, GuidedColumn, labelsOf, paragraphsOf, sectionsOf
 import { GradedEssay, GradedOutline, ReviewPanel } from './Review';
 import type { Task1Comment, Task1Crit } from './store';
 import { ThinkingLoader } from '@/components/ui/thinking-loader';
+import { markTourSeen, TourLayer, tourPlanOf, tourSeen, tourStage, type TourPlan } from './Tour';
 
 type Status = 'loading' | 'ready' | 'missing' | 'error';
 const SAVE_DELAY = 1500;
@@ -38,6 +39,9 @@ export function Task1Workspace({ attemptId }: { attemptId: string }) {
   const [gradeError, setGradeError] = useState('');
   const [active, setActive] = useState<Task1Comment | null>(null);
   const [tab, setTab] = useState<Task1Crit>('ta');
+  /** The first-visit walkthrough in ① (one finding done together); `start` = findings before it began. */
+  const [tour, setTour] = useState<{ start: number; plan: TourPlan } | null>(null);
+  const tourChecked = useRef(false);
   const savedKey = useRef<string | null>(null);
   const latest = useRef<Task1Attempt | null>(null);
   latest.current = a;
@@ -66,6 +70,13 @@ export function Task1Workspace({ attemptId }: { attemptId: string }) {
     return () => { flush(); window.removeEventListener('pagehide', flush); document.removeEventListener('visibilitychange', onHide); };
   }, []);
 
+  useEffect(() => {
+    if (tourChecked.current || status !== 'ready' || !a) return;
+    tourChecked.current = true;
+    const p = findTask1Prompt(a.promptId);
+    if (p && a.mode !== 'free' && a.step === 'compare' && !a.found.length && !tourSeen()) { const plan = tourPlanOf(p, a.found); if (plan) setTour({ start: 0, plan }); }
+  }, [status, a]);
+
   if (status !== 'ready' || !a) {
     return (
       <div style={{ height: '100%', background: '#fff', display: 'flex', flexDirection: 'column' }}>
@@ -88,13 +99,19 @@ export function Task1Workspace({ attemptId }: { attemptId: string }) {
   const plan: PlanState = { found: a.found, place: a.place, ov: a.ov, order: a.order };
   const canPlan = a.found.length >= 2, ready = planReady(plan);
   const go = (step: Task1Step) => { if (step !== 'compare' && !canPlan) return; upd({ step }); setRow([]); setHint(null); };
+  const stage = tour ? tourStage(tour.plan, row, a.found.length, tour.start) : 0;
+  const guiding = !!tour && a.step === 'compare' && stage < 4;
+  const endTour = () => { markTourSeen(); setTour(null); };
+  const replay = () => { const plan = tourPlanOf(prompt, a.found); if (!plan) return; setRow([]); setHint(null); setTour({ start: a.found.length, plan }); };
   const rowPart = partOfRow(row);
   const isIn = (id: string) => row.some((e) => e.k === 'val' && e.id === id);
   const act = {
     interactive: a.step === 'compare',
     isIn, isHinted: (id: string) => !!hint && hint.ids.includes(id) && !isIn(id),
-    onCell: (id: string) => { if (rowPart && rowPart !== cellById(prompt, id).part) return; setRow([...row, { k: 'val', id }]); },
-    onGroup: (g: string) => { if (rowPart && rowPart !== groupPart(g)) return; setRow([...row, { k: 'group', id: g }]); },
+    // While the walkthrough shows, the chart only takes its one click (the line's name in step 1).
+    focus: tour && a.step === 'compare' && stage <= 2 && tour.plan.first.kind === 'item' ? tour.plan.first.id : undefined,
+    onCell: (id: string) => { if (guiding) return; if (rowPart && rowPart !== cellById(prompt, id).part) return; setRow([...row, { k: 'val', id }]); },
+    onGroup: (g: string) => { if (guiding && !(stage === 1 && g === tour!.plan.first.group)) return; if (rowPart && rowPart !== groupPart(g)) return; setRow([...row, { k: 'group', id: g }]); },
   };
   const sections = sectionsOf(plan);
   const mode = a.mode || 'guided', free = mode === 'free';
@@ -132,6 +149,7 @@ export function Task1Workspace({ attemptId }: { attemptId: string }) {
                 );
               })}
             </nav>}
+            {!free && a.step === 'compare' && <button type="button" className="cl-btn" onClick={replay} aria-label="Xem lại cách làm" title="Xem lại cách làm" style={{ width: 30, height: 30, borderRadius: 8, border: 'none', boxShadow: '0 0 0 1px rgba(0,0,0,.1)', background: '#fff', color: CL.ink6, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>?</button>}
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             {gradeError && <span role="alert" style={{ fontSize: 12.5, color: CL.redText }}>{gradeError}</span>}
@@ -154,6 +172,7 @@ export function Task1Workspace({ attemptId }: { attemptId: string }) {
             <ComparePanel prompt={prompt} row={row} setRow={setRow} hint={hint} setHint={setHint} found={a.found}
               setFound={(f) => upd(f.length < a.found.length ? { found: f, place: {}, ov: [] } : { found: f })} />
           )}
+          {a.step === 'compare' && tour && <Walkthrough plan={tour.plan} stage={stage} onEnd={endTour} />}
           {a.step === 'plan' && <PlanPanel prompt={prompt} state={plan} set={(p) => upd(p)} />}
           {writing && graded && <GradedEssay review={graded} labels={labels} active={active} setActive={setActive} tab={tab} />}
           {writing && !graded && !free && <GuidedColumn prompt={prompt} plan={plan} essay={a.essay} setEssay={setEssay} found={a.found} />}
@@ -165,5 +184,23 @@ export function Task1Workspace({ attemptId }: { attemptId: string }) {
         </main>
       </div>
     </div>
+  );
+}
+
+const skipStyle: React.CSSProperties = { alignSelf: 'flex-start', border: 'none', background: 'none', padding: 0, fontSize: 12.5, fontWeight: 500, color: CL.ink5, cursor: 'pointer' };
+
+/** The four cards of the walkthrough: the first thing, the comparison, Kiểm tra, then Gợi ý for the rest. */
+function Walkthrough({ plan, stage, onEnd }: { plan: TourPlan; stage: number; onEnd: () => void }) {
+  const first = plan.first, skip = <button type="button" onClick={onEnd} style={skipStyle}>Bỏ qua, mình tự làm</button>;
+  if (stage === 1) return first.kind === 'item'
+    ? <TourLayer step={1} dim holes={['part:' + first.group.split('>')[0], 'item:' + first.id]} anchor={'item:' + first.id} side="below" title="Mình làm thử một ý nhé" action={skip}>Mỗi điểm nổi bật bắt đầu từ biểu đồ. Bấm tên <b>{first.name}</b>: cả đường đó sẽ vào ô so sánh.</TourLayer>
+    : <TourLayer step={1} dim holes={['tip:Tất cả']} anchor="tip:Tất cả" side="below" title="Mình làm thử một ý nhé" action={skip}>Có một điều đúng với cả biểu đồ. Bấm <b>Tất cả</b>: mọi đường cùng vào ô so sánh.</TourLayer>;
+  if (stage === 2) return <TourLayer step={2} dim holes={first.kind === 'item' ? ['part:' + first.group.split('>')[0], 'row', 'tip:' + plan.tip] : ['row', 'tip:' + plan.tip]} anchor={'tip:' + plan.tip} side="below" title="Giờ nói điều bạn thấy" action={skip}>{plan.why} Chọn <b>{plan.tip}</b>.</TourLayer>;
+  if (stage === 3) return <TourLayer step={3} dim holes={['row', 'check']} anchor="check" side="above" title="Để mình đối chiếu số liệu" action={skip}>Bấm <b>Kiểm tra</b>. Ý nào đúng với biểu đồ mới được giữ lại.</TourLayer>;
+  return (
+    <TourLayer step={4} dim={false} holes={[]} anchor="hint" side="above" title="Xong một ý rồi đó"
+      action={<button type="button" className="cl-btn cl-primary" onClick={onEnd} style={{ alignSelf: 'flex-start', height: 34, borderRadius: 8, border: 'none', color: '#fff', fontSize: 13, fontWeight: 500, padding: '0 14px', cursor: 'pointer' }}>Mình tự tìm tiếp</button>}>
+      Giờ bạn tự tìm thêm, cứ thế: bấm trên biểu đồ, chọn ý, rồi Kiểm tra. Bí thì bấm <b>Gợi ý</b>, mình hỏi một câu để bạn tự nhìn ra.
+    </TourLayer>
   );
 }
