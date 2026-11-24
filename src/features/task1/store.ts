@@ -8,15 +8,24 @@ import type { Row } from './engine';
 
 export type Task1Step = 'compare' | 'plan' | 'write';
 
-/** The AI's assessment of a Task 1 report. */
+export type Task1Crit = 'ta' | 'cc' | 'lr' | 'gra';
+/** One comment on the report: the criterion, a short name, which paragraph (1-based), the exact words, why, and a fix. */
+export interface Task1Comment { crit: Task1Crit; label: string; section: number; quote: string; text: string; fix: string }
+
+/** The AI's assessment of a Task 1 report, shaped like Task 2's: band, summary, per-criterion analysis, comments that quote the essay. */
 export interface Task1Review {
   scores: { band: number; ta: number; cc: number; lr: number; gra: number };
+  summary: string;
+  praise: string;
+  /** Per criterion: why this band, what is missing, the next step, and the descriptor phrases for this band and the next. */
+  criteria: Record<Task1Crit, { why: string; gap: string; next: string; bandQuote: string; nextQuote: string }>;
+  comments: Task1Comment[];
   /** The prompt's key features (from the checks) and whether the report covers each one. */
   features: { label: string; covered: boolean; note: string }[];
-  /** Short comments, most important first. */
-  comments: { text: string; kind: 'good' | 'fix' }[];
-  /** What each paragraph actually does (Tự viết's "Khung bài của bạn"). */
-  skeleton: { name: string; text: string; warn: string }[];
+  /** "Khung bài của bạn": what the introduction and overview say, and each body paragraph's points (weak when thin or only listing numbers). */
+  skeleton: { intro: string; overview: string; bodies: { section: number; points: string[]; weak: boolean }[] };
+  /** The paragraphs that were graded, so highlights match what was read. */
+  paragraphs: string[];
 }
 
 export interface Task1Attempt {

@@ -8,7 +8,7 @@ import { uv } from './engine';
 /** A chart is clickable in ① So sánh: a point adds that number, a line's name or a year adds the whole line or the whole year. */
 export interface ChartActions { interactive: boolean; isIn: (id: string) => boolean; isHinted: (id: string) => boolean; onCell: (id: string) => void; onGroup: (g: string) => void }
 
-const W = 760, H = 300, L = 44, R = 12, TOP = 12, BOTTOM = 30;
+const L = 44, R = 12, TOP = 12, BOTTOM = 30;
 
 function Glyph({ shapes }: { shapes: [string, string, number, string, string?][] }) {
   return <svg width="22" height="14" viewBox="0 0 28 18" fill="none" aria-hidden="true">{shapes.map((s, i) => <path key={i} d={s[0]} stroke={s[1]} fill={s[4] || 'none'} strokeWidth={s[2]} strokeLinecap={s[3] as 'round'} strokeLinejoin="round" />)}</svg>;
@@ -16,7 +16,9 @@ function Glyph({ shapes }: { shapes: [string, string, number, string, string?][]
 export { Glyph };
 
 /** A line chart drawn in our style; points that sit on top of each other open a small list to pick from. */
-export function LineChart({ part: p, act }: { part: T1Part; act: ChartActions }) {
+export function LineChart({ part: p, act, compact }: { part: T1Part; act: ChartActions; compact?: boolean }) {
+  // Compact (③ Viết bài, a narrow column): a smaller drawing area, so the labels stay readable once it is scaled to the column.
+  const W = compact ? 400 : 760, H = compact ? 250 : 300, fs = compact ? 13 : 10.5;
   const [picker, setPicker] = useState<{ x: number; y: number; ids: string[] } | null>(null);
   const n = p.axis.labels.length, PW = W - L - R, PH = H - TOP - BOTTOM, max = p.max || 100, step = p.step || max / 5;
   const xs = (i: number) => L + 8 + (i * (PW - 16)) / Math.max(1, n - 1);
@@ -34,13 +36,13 @@ export function LineChart({ part: p, act }: { part: T1Part; act: ChartActions })
     <div style={{ display: 'flex', flexDirection: 'column', gap: 14, width: W, maxWidth: '100%' }}>
       <div style={{ position: 'relative', width: W, maxWidth: '100%' }}>
         <svg viewBox={`0 0 ${W} ${H}`} width="100%" style={{ display: 'block', overflow: 'visible' }} role="img" aria-label={p.title}>
-          {grid.map((t) => <g key={t}><line x1={L} x2={W - R} y1={ys(t)} y2={ys(t)} stroke={t ? CL.ink1 : CL.ink3} /><text x={L - 8} y={ys(t) + 3.5} fontSize="10.5" fill={CL.ink5} textAnchor="end">{t}</text></g>)}
+          {grid.map((t) => <g key={t}><line x1={L} x2={W - R} y1={ys(t)} y2={ys(t)} stroke={t ? CL.ink1 : CL.ink3} /><text x={L - 8} y={ys(t) + 3.5} fontSize={fs} fill={CL.ink5} textAnchor="end">{t}</text></g>)}
           {p.items.map((it) => {
             const pts = p.data[it.id].map((v, ai) => (v === null ? null : xs(ai).toFixed(1) + ',' + ys(v).toFixed(1))).filter(Boolean).join(' ');
             return <polyline key={it.id} points={pts} fill="none" stroke={it.color} strokeWidth={2.5} strokeLinejoin="round" strokeLinecap="round" />;
           })}
           {p.axis.labels.map((lab, ai) => (!p.axis.show || p.axis.show.includes(ai)) && (
-            <text key={ai} x={xs(ai)} y={H - 10} fontSize="11" fontWeight={500} fill={CL.ink6} textAnchor="middle" className={link} onClick={() => act.interactive && act.onGroup(p.id + '>col:' + ai)}>
+            <text key={ai} x={xs(ai)} y={H - 10} fontSize={fs + 0.5} fontWeight={500} fill={CL.ink6} textAnchor="middle" className={link} onClick={() => act.interactive && act.onGroup(p.id + '>col:' + ai)}>
               <title>{act.interactive ? 'Chọn cả ' + lab : lab}</title>{lab}
             </text>
           ))}
@@ -69,9 +71,9 @@ export function LineChart({ part: p, act }: { part: T1Part; act: ChartActions })
           </div>
         )}
       </div>
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 14, justifyContent: 'center' }}>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: compact ? '6px 12px' : 14, justifyContent: 'center' }}>
         {p.items.map((it) => (
-          <span key={it.id} className={link} title={act.interactive ? 'Chọn cả ' + it.name : ''} onClick={() => act.interactive && act.onGroup(p.id + '>item:' + it.id)} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12.5, color: CL.ink7 }}>
+          <span key={it.id} className={link} title={act.interactive ? 'Chọn cả ' + it.name : ''} onClick={() => act.interactive && act.onGroup(p.id + '>item:' + it.id)} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: compact ? 11.5 : 12.5, color: CL.ink7 }}>
             <span aria-hidden="true" style={{ width: 10, height: 10, borderRadius: 2, background: it.color }} />{it.name}
           </span>
         ))}
@@ -83,11 +85,11 @@ export function LineChart({ part: p, act }: { part: T1Part; act: ChartActions })
 /** The prompt's charts, centred, with space between them. M1 draws line charts. */
 export function Charts({ prompt, act, compact }: { prompt: T1Prompt; act: ChartActions; compact?: boolean }) {
   return (
-    <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: compact ? 24 : 44, zoom: compact ? 0.45 : 1 } as React.CSSProperties}>
+    <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: compact ? 24 : 44 }}>
       {prompt.parts.map((p) => (
-        <div key={p.id} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16 }}>
-          <span className={prompt.parts.length > 1 && act.interactive ? 't1-link' : ''} onClick={() => prompt.parts.length > 1 && act.interactive && act.onGroup(p.id)} style={{ fontSize: 13.5, fontWeight: 600, color: CL.ink, textAlign: 'center' }}>{p.title}</span>
-          {p.kind === 'line' ? <LineChart part={p} act={act} /> : <span style={{ fontSize: 13, color: CL.ink5 }}>Dạng biểu đồ này sẽ có ở bước sau.</span>}
+        <div key={p.id} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: compact ? 10 : 16, width: compact ? '100%' : undefined }}>
+          <span className={prompt.parts.length > 1 && act.interactive ? 't1-link' : ''} onClick={() => prompt.parts.length > 1 && act.interactive && act.onGroup(p.id)} style={{ fontSize: compact ? 12.5 : 13.5, fontWeight: 600, color: CL.ink, textAlign: 'center' }}>{p.title}</span>
+          {p.kind === 'line' ? <LineChart part={p} act={act} compact={compact} /> : <span style={{ fontSize: 13, color: CL.ink5 }}>Dạng biểu đồ này sẽ có ở bước sau.</span>}
         </div>
       ))}
     </div>

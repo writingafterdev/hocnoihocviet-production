@@ -15,7 +15,10 @@ import { ComparePanel } from './Compare';
 import { cellById, groupPart, partOfRow, type Hint, type Row } from './engine';
 import { PlanPanel, planReady, type PlanState } from './Plan';
 import { task1Store, type Task1Attempt, type Task1Review, type Task1Step } from './store';
-import { FreeColumn, GuidedColumn, ModeChoice, paragraphsOf, sectionsOf, SideColumn } from './Write';
+import { FreeColumn, GuidedColumn, labelsOf, ModeChoice, paragraphsOf, sectionsOf, SideColumn } from './Write';
+import { GradedEssay, GradedOutline, ReviewPanel } from './Review';
+import type { Task1Comment, Task1Crit } from './store';
+import { ThinkingLoader } from '@/components/ui/thinking-loader';
 
 type Status = 'loading' | 'ready' | 'missing' | 'error';
 const SAVE_DELAY = 1500;
@@ -33,6 +36,8 @@ export function Task1Workspace({ attemptId }: { attemptId: string }) {
   const [hint, setHint] = useState<Hint | null>(null);
   const [grading, setGrading] = useState(false);
   const [gradeError, setGradeError] = useState('');
+  const [active, setActive] = useState<Task1Comment | null>(null);
+  const [tab, setTab] = useState<Task1Crit>('ta');
   const savedKey = useRef<string | null>(null);
   const latest = useRef<Task1Attempt | null>(null);
   latest.current = a;
@@ -95,16 +100,20 @@ export function Task1Workspace({ attemptId }: { attemptId: string }) {
     const paras = paragraphsOf(a.mode || 'free', a.essay, sections);
     if (!paras.length) { setGradeError('Bài còn trống.'); return; }
     setGrading(true); setGradeError('');
-    try { const r = await postAi<{ review: Task1Review }>('task1-review', { promptId: prompt.id, paragraphs: paras }); upd({ review: r.review }); }
+    try { const r = await postAi<{ review: Task1Review }>('task1-review', { promptId: prompt.id, paragraphs: paras }); setActive(null); setTab('ta'); upd({ review: r.review }); }
     catch (e) { if (e instanceof SignedOutError) { toLogin(); return; } setGradeError(e instanceof AiRequestError ? AI_ERROR_TEXT[e.code] : AI_ERROR_TEXT.network); }
     setGrading(false);
   };
   const writing = a.step === 'write';
+  // A review saved before the feedback took Task 2's shape has no paragraphs: treat it as not graded.
+  const graded = a.review && Array.isArray(a.review.paragraphs) ? a.review : null;
+  const labels = graded ? labelsOf(a.mode || 'free', a.essay, sections, graded.paragraphs.length) : [];
   const saveLabel = save === 'failed' ? 'Chưa lưu được · thử lại' : contentKey(a) !== savedKey.current ? 'Đang lưu…' : 'Đã lưu';
 
   return (
     <div style={{ height: '100%', background: '#fff', display: 'flex', flexDirection: 'column' }}>
-      <WorkspaceHeader status={<button type="button" className="cl-btn" disabled={save !== 'failed'} onClick={() => persist(a)} style={{ fontSize: 12, fontWeight: 500, color: save === 'failed' ? CL.redText : CL.ink4, background: 'none', border: 'none' }}>{saveLabel}</button>} />
+      {/* Saving is silent; only a failed save shows, with a retry. */}
+      <WorkspaceHeader status={save === 'failed' ? <button type="button" className="cl-btn" onClick={() => persist(a)} style={{ fontSize: 12, fontWeight: 500, color: CL.redText, background: 'none', border: 'none' }}>{saveLabel}</button> : undefined} />
       <div style={{ flex: 1, minHeight: 0, width: '100%', maxWidth: 1560, margin: '0 auto', boxSizing: 'border-box', padding: '18px 32px 22px', display: 'flex', flexDirection: 'column' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, minHeight: 42, paddingBottom: 12 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 18 }}>
@@ -128,14 +137,15 @@ export function Task1Workspace({ attemptId }: { attemptId: string }) {
             {a.step === 'compare' && <button type="button" className="cl-btn cl-primary" disabled={!canPlan} onClick={() => go('plan')} style={{ ...primary, opacity: canPlan ? 1 : 0.4 }}>Chia đoạn →</button>}
             {a.step === 'plan' && <button type="button" className="cl-btn cl-primary" disabled={!ready} title={ready ? '' : 'Cần ít nhất một ý trong Tổng quan, Đoạn 1 và Đoạn 2.'} onClick={() => go('write')} style={{ ...primary, opacity: ready ? 1 : 0.4 }}>Viết bài →</button>}
             {writing && a.mode && !a.review && (grading ? <span role="status" style={{ fontSize: 13, fontWeight: 500, color: CL.ink5 }}>Đang chấm bài…</span> : <span className="pro-fill"><button type="button" className="cl-btn" onClick={submit} style={primary}>Nộp bài</button></span>)}
-            {writing && a.review && <button type="button" className="cl-btn cl-primary" onClick={() => upd({ review: null })} style={primary}>Viết lại</button>}
+            {writing && a.review && <button type="button" className="cl-btn cl-primary" onClick={() => { setActive(null); upd({ review: null }); }} style={primary}>Viết lại</button>}
           </div>
         </div>
 
-        <main style={{ flex: 1, minHeight: 0, display: 'grid', gridTemplateColumns: writing && a.mode ? '330px minmax(0, 1fr) 330px' : writing ? '330px minmax(0, 1fr)' : 'minmax(0, 1fr) 520px', gap: 16 }}>
+        <main style={{ flex: 1, minHeight: 0, display: 'grid', gridTemplateColumns: writing && a.mode ? (a.review ? '360px minmax(0, 1fr) 380px' : '360px minmax(0, 1fr) 330px') : writing ? '360px minmax(0, 1fr)' : 'minmax(0, 1fr) 520px', gap: 16 }}>
           <section style={{ minHeight: 0, overflowY: 'auto', borderRadius: 12, border: '1px solid ' + CL.border, background: '#fff', padding: writing ? '16px' : '18px 20px 24px', display: 'flex', flexDirection: 'column', gap: writing ? 16 : 28 }}>
             <div style={{ border: '1px solid ' + CL.ink3, padding: '10px 13px' }}><p style={{ margin: 0, fontSize: 12.5, fontWeight: 600, fontStyle: 'italic', lineHeight: 1.55, color: '#20252D' }}>{prompt.text}</p></div>
             <Charts prompt={prompt} act={act} compact={writing} />
+            {writing && graded && <GradedOutline review={graded} labels={labels} />}
           </section>
 
           {a.step === 'compare' && (
@@ -144,9 +154,13 @@ export function Task1Workspace({ attemptId }: { attemptId: string }) {
           )}
           {a.step === 'plan' && <PlanPanel prompt={prompt} state={plan} set={(p) => upd(p)} />}
           {writing && !a.mode && <ModeChoice onPick={(m) => upd({ mode: m, essay: m === 'guided' ? { ...a.essay, guided: { plan: null, at: 0, level: 'frame' } } : a.essay })} />}
-          {writing && a.mode === 'guided' && <GuidedColumn prompt={prompt} plan={plan} essay={a.essay} setEssay={setEssay} found={a.found} />}
-          {writing && a.mode === 'free' && <FreeColumn essay={a.essay} setEssay={setEssay} />}
-          {writing && a.mode && <SideColumn mode={a.mode} essay={a.essay} setEssay={setEssay} review={a.review} />}
+          {writing && graded && <GradedEssay review={graded} labels={labels} active={active} setActive={setActive} tab={tab} />}
+          {writing && !graded && a.mode === 'guided' && <GuidedColumn prompt={prompt} plan={plan} essay={a.essay} setEssay={setEssay} found={a.found} />}
+          {writing && !graded && a.mode === 'free' && <FreeColumn essay={a.essay} setEssay={setEssay} />}
+          {writing && graded && <ReviewPanel review={graded} labels={labels} active={active} setActive={setActive} tab={tab} setTab={setTab} />}
+          {writing && !graded && a.mode && (grading
+            ? <aside style={{ borderRadius: 12, border: '1px solid ' + CL.border, padding: 18 }}><ThinkingLoader phases={['Đang đọc bài', 'Đang đối chiếu số liệu', 'Đang chấm từng tiêu chí', 'Đang viết nhận xét']} interval={2600} /></aside>
+            : <SideColumn mode={a.mode} essay={a.essay} setEssay={setEssay} />)}
         </main>
       </div>
     </div>

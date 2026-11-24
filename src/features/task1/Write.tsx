@@ -10,7 +10,6 @@ import type { EssaySection } from '../desk/scoring';
 import { GuidedHeader, GuidedWriter } from '../essay/GuidedWriter';
 import type { GuidedSentence } from '@/lib/ai/guided-essay';
 import { boxesOf, indexesIn, type PlanState } from './Plan';
-import type { Task1Review } from './store';
 
 const words = (t: string) => (t.trim() ? t.trim().split(/\s+/).length : 0);
 const card: React.CSSProperties = { borderRadius: 12, border: '1px solid ' + CL.border, background: '#fff', minHeight: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden' };
@@ -124,9 +123,8 @@ export function FreeColumn({ essay, setEssay }: { essay: EssayState; setEssay: (
   );
 }
 
-/** Right column: notes (Tự viết) and the translator while writing; the assessment after Nộp bài. */
-export function SideColumn({ mode, essay, setEssay, review }: { mode: 'guided' | 'free'; essay: EssayState; setEssay: (fn: (e: EssayState) => EssayState) => void; review: Task1Review | null }) {
-  if (review) return <ReviewPanel review={review} />;
+/** Right column while writing: notes (Tự viết) and the translator. After Nộp bài the workspace shows the review instead. */
+export function SideColumn({ mode, essay, setEssay }: { mode: 'guided' | 'free'; essay: EssayState; setEssay: (fn: (e: EssayState) => EssayState) => void }) {
   return (
     <aside style={{ ...card, gap: 0 }}>
       {mode === 'free' && (
@@ -141,47 +139,8 @@ export function SideColumn({ mode, essay, setEssay, review }: { mode: 'guided' |
   );
 }
 
-function ReviewPanel({ review }: { review: Task1Review }) {
-  const s = review.scores;
-  const rows: [string, number][] = [['Task Achievement', s.ta], ['Coherence & Cohesion', s.cc], ['Lexical Resource', s.lr], ['Grammatical Range & Accuracy', s.gra]];
-  return (
-    <aside style={card}>
-      <div style={{ display: 'flex', alignItems: 'center', minHeight: 46, padding: '0 16px', borderBottom: '1px solid ' + CL.ink1 }}><span style={{ fontSize: 13.5, fontWeight: 600 }}>Kết quả</span></div>
-      <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: '14px 16px 18px', display: 'flex', flexDirection: 'column', gap: 16 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-          <span className="pro-fill"><button type="button" tabIndex={-1} style={{ width: 60, height: 60, borderRadius: 12, fontSize: 24, fontWeight: 700, cursor: 'default' }}>{s.band.toFixed(1)}</button></span>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 5, flex: 1 }}>{rows.map(([n, v]) => <span key={n} style={{ display: 'flex', gap: 8, fontSize: 12, color: CL.ink7 }}><span style={{ flex: 1 }}>{n}</span><b style={{ color: CL.ink }}>{v.toFixed(1)}</b></span>)}</div>
-        </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
-          <span style={{ fontSize: 13, fontWeight: 600 }}>Điểm chính của đề</span>
-          {review.features.map((f) => (
-            <span key={f.label} style={{ display: 'flex', gap: 8, alignItems: 'flex-start', fontSize: 13, lineHeight: 1.5 }}>
-              <span aria-hidden="true" style={{ width: 18, height: 18, flexShrink: 0, marginTop: 1, borderRadius: 99, background: f.covered ? CL.mintSoft : CL.redSoft, color: f.covered ? CL.greenText : CL.redText, fontSize: 11, fontWeight: 700, display: 'grid', placeItems: 'center' }}>{f.covered ? '✓' : '!'}</span>
-              <span>{f.label}{f.note && <span style={{ display: 'block', fontSize: 12, color: CL.ink5 }}>{f.note}</span>}</span>
-            </span>
-          ))}
-        </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
-          <span style={{ fontSize: 13, fontWeight: 600 }}>Nhận xét</span>
-          {review.comments.map((c, i) => <p key={i} style={{ margin: 0, padding: '9px 11px', borderRadius: 10, background: c.kind === 'good' ? CL.mintSoft : '#FFF7E0', fontSize: 13, lineHeight: 1.55 }}>{c.text}</p>)}
-        </div>
-        {review.skeleton.length > 0 && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-            <span style={{ fontSize: 13, fontWeight: 600 }}>Khung bài của bạn</span>
-            {review.skeleton.map((k, i) => (
-              <div key={i} style={{ position: 'relative', display: 'flex', gap: 10, padding: '8px 10px', borderRadius: 10, background: k.warn ? CL.redSoft : 'transparent' }}>
-                {i < review.skeleton.length - 1 && <span aria-hidden="true" style={{ position: 'absolute', left: 15, top: 19, bottom: -15, width: 1.5, background: '#DCE7F7' }} />}
-                <span aria-hidden="true" style={{ position: 'relative', width: 11, height: 11, marginTop: 3, flexShrink: 0, borderRadius: 99, background: '#fff', boxShadow: 'inset 0 0 0 2.5px ' + (k.warn ? CL.red : '#2F62C4') }} />
-                <span style={{ display: 'flex', flexDirection: 'column', gap: 3, minWidth: 0 }}>
-                  <span style={{ fontSize: 12.5, fontWeight: 600 }}>{k.name}</span>
-                  <span style={{ fontSize: 12.5, lineHeight: 1.5, color: CL.ink7 }}>{k.text}</span>
-                  {k.warn && <span style={{ fontSize: 12, color: CL.redText }}>{k.warn}</span>}
-                </span>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-    </aside>
-  );
+/** The label of each graded paragraph: the guided sections that hold text, or plain numbers for Tự viết. */
+export function labelsOf(mode: 'guided' | 'free', essay: EssayState, sections: EssaySection[], count: number) {
+  if (mode === 'guided') return sections.filter((s) => (essay.drafts[s.id] || '').trim()).map((s) => s.label);
+  return Array.from({ length: count }, (_, i) => 'Đoạn ' + (i + 1));
 }
