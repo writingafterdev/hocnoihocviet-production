@@ -41,6 +41,16 @@ export function MiniChips({ prompt, row, noNums, white }: { prompt: T1Prompt; ro
   );
 }
 
+/** The empty box's first line, in the words of this prompt's chart kind. */
+function firstLine(prompt: T1Prompt) {
+  const kinds = [...new Set(prompt.parts.map((x) => x.kind))];
+  if (kinds.length > 1) return 'Bấm một số, một tên hoặc một nhãn trên biểu đồ hay bảng, rồi chọn một ý so sánh.';
+  if (kinds[0] === 'table') return 'Bấm một ô, tên một hàng hoặc tên một cột, rồi chọn một ý so sánh.';
+  if (kinds[0] === 'pies') return 'Bấm một phần, một tên ở chú thích hoặc một năm dưới biểu đồ, rồi chọn một ý so sánh.';
+  if (kinds[0] === 'bars') return 'Bấm một cột, một tên ở chú thích hoặc một nhãn dưới biểu đồ, rồi chọn một ý so sánh.';
+  return 'Bấm một điểm, tên một đường hoặc một năm trên biểu đồ, rồi chọn một ý so sánh.';
+}
+
 /** Gợi ý starts with a question; the second press shows the answer. */
 function askOf(h: Hint): string {
   const t = h.feat.tip;
@@ -222,7 +232,7 @@ export function ComparePanel({ prompt, row, setRow, found, setFound, hint, setHi
                 </span>
               );
             })}
-            {!row.length && <span style={{ fontSize: 13, color: CL.ink4, padding: '0 4px' }}>{prompt.parts.some((x) => x.kind === 'pies') ? 'Bấm một phần, một tên ở chú thích hoặc một năm dưới biểu đồ, rồi chọn một ý so sánh.' : prompt.parts.some((x) => x.kind === 'bars') ? 'Bấm một cột, một tên ở chú thích hoặc một nhãn dưới biểu đồ, rồi chọn một ý so sánh.' : 'Bấm một điểm, tên một đường hoặc một năm trên biểu đồ, rồi chọn một ý so sánh.'}</span>}
+            {!row.length && <span style={{ fontSize: 13, color: CL.ink4, padding: '0 4px' }}>{firstLine(prompt)}</span>}
             {canChain && !dv && (
               <button type="button" className="cl-btn" title="Kể tiếp chặng sau của cùng đường này" onClick={() => put([...row, { k: 'tip', id: 'rồi' }])} style={{ marginLeft: 'auto', display: 'inline-flex', alignItems: 'center', gap: 5, height: 32, borderRadius: 8, border: '1px dashed #77A1DD', background: '#F7F9FD', color: '#2F62C4', fontSize: 13, fontWeight: 600, padding: '0 11px', cursor: 'pointer' }}>
                 rồi<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg>

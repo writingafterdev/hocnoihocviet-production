@@ -14,7 +14,7 @@ import { startTask1, task1Store, type Task1Attempt } from './store';
 import { Thumb } from './Thumb';
 
 const STEP_LABEL = { compare: '① So sánh', plan: '② Chia đoạn', write: '③ Viết bài' } as const;
-const shortText = (pr: T1Prompt) => pr.text.replace(/ Summari[sz]e .*$/, '');
+const shortText = (pr: T1Prompt) => pr.text.replace(/ (Summari[sz]e|Provide an overview) .*$/, '');
 
 /** Viết có hướng dẫn in Task 1: find the key features on the chart, group them into paragraphs, write sentence by sentence. */
 const SketchGuided1 = (
@@ -103,7 +103,7 @@ export function Task1Library() {
             {filtered.length === 0 && (
               <div style={{ borderRadius: 10, border: '1px dashed #E5E5E5', padding: '48px 24px', textAlign: 'center' }}>
                 <p style={{ fontFamily: 'var(--font-sans)', fontSize: 15, fontWeight: 600, color: '#171717', margin: '0 0 6px' }}>Dạng đề này đang được soạn</p>
-                <p style={{ fontFamily: 'var(--font-sans)', fontSize: 13, color: '#737373', margin: 0 }}>Hiện có biểu đồ đường và biểu đồ cột. Thử bỏ bớt một vài lựa chọn.</p>
+                <p style={{ fontFamily: 'var(--font-sans)', fontSize: 13, color: '#737373', margin: 0 }}>Quy trình và bản đồ sẽ có sau. Thử bỏ bớt một vài lựa chọn.</p>
               </div>
             )}
           </div>

@@ -6,8 +6,13 @@ export function ChartSketch({ pr, size }: { pr: T1Prompt; size: number }) {
   const x = (i: number) => pad + (i * (w - 2 * pad)) / Math.max(1, n - 1), y = (v: number) => h - pad - (v / max) * (h - 2 * pad);
   return (
     <svg viewBox={`0 0 ${w} ${h}`} width={size} height={size} aria-hidden="true" style={{ overflow: 'visible' }}>
-      {p.kind !== 'pies' && [0, 0.5, 1].map((t) => <line key={t} x1={pad} x2={w - pad} y1={y(t * max)} y2={y(t * max)} stroke={t ? '#E5E5E5' : '#D4D4D4'} strokeWidth="1" />)}
-      {p.kind === 'pies' ? p.axis.labels.map((_, i) => {
+      {p.kind !== 'pies' && p.kind !== 'table' && [0, 0.5, 1].map((t) => <line key={t} x1={pad} x2={w - pad} y1={y(t * max)} y2={y(t * max)} stroke={t ? '#E5E5E5' : '#D4D4D4'} strokeWidth="1" />)}
+      {p.kind === 'table' ? (() => {
+        // A table: a small grid, the header row tinted.
+        const rows = Math.min(6, (p.rowsAreAxis ? p.axis.labels.length : p.items.length) + 1), cols = Math.min(5, (p.rowsAreAxis ? p.items.length : p.axis.labels.length) + 1);
+        const cw = (w - 2 * pad) / cols, rh = (h - 2 * pad) / rows;
+        return Array.from({ length: rows * cols }, (_, k) => { const r = Math.floor(k / cols), c = k % cols; return <rect key={k} x={pad + c * cw + 1} y={pad + r * rh + 1} width={cw - 2} height={rh - 2} rx={1.5} fill={r === 0 ? '#DCE7F7' : c === 0 ? '#E5E5E5' : '#fff'} stroke="#E5E5E5" strokeWidth="0.6" />; });
+      })() : p.kind === 'pies' ? p.axis.labels.map((_, i) => {
         // Pies: one small pie per label, side by side.
         const r = Math.min(30, (w - 2 * pad) / n / 2 - 2), cx = pad + ((w - 2 * pad) / n) * (i + 0.5), cy = h / 2;
         const vals = p.items.map((it) => p.data[it.id][i] ?? 0), tot = vals.reduce((a, b) => a + b, 0) || 1; let acc = 0;

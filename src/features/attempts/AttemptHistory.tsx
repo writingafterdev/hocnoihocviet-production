@@ -33,7 +33,7 @@ function fromTask2(a: Attempt): Item | null {
   if (!p || isEmpty(a)) return null;
   return { id: a.id, task: 'Task 2', promptId: p.id, text: p.text, category: p.category, topic: p.topic, img: TOPIC_ILLUSTRATION[p.topic], mode: MODE_LABEL[modeOf(a)], words: wordsOf(a), band: bandOf(a), note: 'Đang dựng mạch ý', updatedAt: a.updatedAt, href: attemptHref(a) };
 }
-const t1Text = (p: T1Prompt) => p.text.replace(/ Summari[sz]e .*$/, '');
+const t1Text = (p: T1Prompt) => p.text.replace(/ (Summari[sz]e|Provide an overview) .*$/, '');
 function fromTask1(a: Task1Attempt): Item | null {
   const p = findTask1Prompt(a.promptId);
   const words = Object.values(a.essay.drafts || {}).reduce((n, t) => n + wordCount(t), 0);

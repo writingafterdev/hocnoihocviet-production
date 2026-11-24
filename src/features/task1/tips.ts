@@ -31,6 +31,10 @@ export const GLYPH: Record<string, Shape[]> = {
   'cao thứ hai': [bar(7, 13, GG), bar(14, 10, GB), bar(21, 5, GG)], 'thấp thứ hai': [bar(7, 4, GG), bar(14, 7, GB), bar(21, 13, GG)],
   'nhóm cao nhất': [bar(7, 12, GB), bar(14, 13, GB), bar(21, 5, GG)], 'nhóm thấp nhất': [bar(7, 4, GB), bar(14, 5, GB), bar(21, 13, GG)],
   'trừ': [bar(7, 11, GB), bar(14, 4, GG), bar(21, 11, GB)],
+  'bắt đầu ở': [ln('M3 12 L10 9 L17 10 L25 4', GG), dot(3, 12)], 'kết thúc ở': [ln('M3 12 L10 9 L17 10 L25 4', GG), dot(25, 4)],
+  'trên trung bình': [bar(7, 13, GB), bar(14, 6, GG), bar(21, 8, GG), ln('M2 7 L26 7', '#E9A21F', 1.2)], 'dưới trung bình': [bar(7, 4, GB), bar(14, 12, GG), bar(21, 10, GG), ln('M2 8 L26 8', '#E9A21F', 1.2)],
+  'cộng lại': [['M10 16 L10 10', GB, 6, 'butt'], ['M10 10 L10 4', '#77A1DD', 6, 'butt'], bar(19, 12, GG)],
+  'dự kiến': [ln('M3 14 L13 9'), ln('M15.5 7.8 L17.5 6.8', GB, 1.6), ln('M20 5.5 L22 4.5', GB, 1.6), ln('M24.5 3.3 L26 2.6', GB, 1.6)],
   'vượt qua': [ln('M3 13 L25 5'), ln('M3 6 L25 12', GG)], 'nới rộng': [ln('M3 8.5 L25 2.5'), ln('M3 9.5 L25 15.5', GG)], 'thu hẹp': [ln('M3 2.5 L25 8'), ln('M3 15.5 L25 10', GG)],
   'cùng xu hướng': [ln('M3 10 L10 5 L17 9 L25 3'), ln('M3 15 L10 10 L17 14 L25 8', GG)], 'ngược chiều': [ln('M3 12 L10 5 L17 12 L25 5'), ln('M3 6 L10 13 L17 6 L25 13', GG)],
   'chiếm': pie('20.89 10.22', 0), 'gần như toàn bộ': pie('11.57 2.43', 1), 'phần lớn': pie('8.64 13.5', 1), 'hai phần ba': pie('7.94 12.5', 1), 'gần một nửa': pie('15.22 15.89', 0),
@@ -49,6 +53,8 @@ export const TIP_HINT: Record<string, string> = {
   'vượt qua': 'hai mục', 'nới rộng': 'hai mục', 'thu hẹp': 'hai mục', 'cùng xu hướng': 'hai mục cùng lên cùng xuống', 'ngược chiều': 'hai mục đi ngược nhau', 'chiếm': 'một số liệu',
   'gần như toàn bộ': 'từ 80% trở lên', 'phần lớn': 'hơn một nửa', 'hai phần ba': '60 tới 72%', 'gần một nửa': '40 tới 50%', 'một phần ba': '28 tới 38%', 'một phần tư': '20 tới 30%',
   'một phần năm': '17 tới 23%', 'phần nhỏ nhất': 'phần ít nhất', 'Tất cả': 'cả biểu đồ',
+  'bắt đầu ở': 'số đầu tiên của một mục', 'kết thúc ở': 'số cuối cùng của một mục', 'trên trung bình': 'cao hơn trung bình các mục cùng mốc', 'dưới trung bình': 'thấp hơn trung bình các mục cùng mốc',
+  'cộng lại': 'bấm các số cần cộng, rồi “cộng lại”; có thể thêm “phần lớn” hay “cao hơn” + một số', 'dự kiến': 'thêm vào một ý dùng số dự kiến (năm tương lai)',
 };
 
 export const FAMILY: Record<string, string[]> = {
@@ -58,6 +64,7 @@ export const FAMILY: Record<string, string[]> = {
   'ổn định': ['chững lại'], 'dao động': ['đảo chiều', 'phục hồi'], 'đạt đỉnh': ['chạm đáy'],
   'cao hơn': ['thấp hơn', 'chênh lệch', 'gấp … lần', 'một nửa'], 'gần bằng': ['bằng nhau'], 'vượt qua': ['nới rộng', 'thu hẹp'], 'cùng xu hướng': ['ngược chiều'],
   'cao nhất': ['cao thứ hai', 'nhóm cao nhất'], 'thấp nhất': ['thấp thứ hai', 'nhóm thấp nhất'],
+  'bắt đầu ở': ['kết thúc ở'], 'trên trung bình': ['dưới trung bình'],
 };
 const BASE_OF: Record<string, string> = {};
 Object.keys(FAMILY).forEach((b) => { BASE_OF[b] = b; FAMILY[b].forEach((v) => { BASE_OF[v] = b; }); });
@@ -67,14 +74,16 @@ export const familyOf = (tip: string, avail?: string[]) => { const b = BASE_OF[t
 
 /** Every tip this chart offers, by box: shares, one thing over time, two things, ranks. */
 export function tipsFor(parts: T1Part[], single: boolean): string[][] {
-  const share: string[] = [], one: string[] = [], two = PAIR.slice(), all = [...RANK, ...SECOND, ...BAND, 'trừ'];
+  const share: string[] = [], one: string[] = [], two = [...PAIR, 'cộng lại'], all = [...RANK, ...SECOND, ...BAND, 'trừ'];
   const add = (list: string[], xs: string[]) => xs.forEach((x) => { if (!list.includes(x)) list.push(x); });
   parts.forEach((p) => {
     if (p.axis.ordered) {
       add(one, ['tăng', 'tăng mạnh', 'tăng nhẹ', 'tăng đều', 'giảm', 'giảm mạnh', 'giảm nhẹ', 'giảm đều', 'ổn định', 'dao động']);
       if (p.axis.labels.length > 2) add(one, ['đạt đỉnh', 'chạm đáy', 'đảo chiều', 'phục hồi', 'chững lại']);
-      add(one, [...RATIO, 'tăng nhiều nhất', 'giảm nhiều nhất']); add(two, TWO);
+      add(one, [...RATIO, 'tăng nhiều nhất', 'giảm nhiều nhất', 'bắt đầu ở', 'kết thúc ở']); add(two, TWO);
+      if (p.axis.projected !== undefined) add(one, ['dự kiến']);
     }
+    if (p.items.length >= 3) add(all, ['trên trung bình', 'dưới trung bình']);
     if (p.derived) add(one, ['tăng nhiều nhất']);
     if (p.share) add(share, SHARE);
   });

@@ -28,7 +28,7 @@ export function tourPlanOf(prompt: T1Prompt, found: { row: Row }[]): TourPlan | 
       const it = p.items.find((x) => x.name === h.feat.items[0]);
       const every = (h.text.match(/ở mọi ([^\s.,]+)/) || [])[1];
       const shape = p.kind, top = h.feat.tip === 'cao nhất';
-      const sees = shape === 'bars' ? 'Cột ' + it?.name + ' luôn ' + (top ? 'cao' : 'thấp') + ' hơn các cột khác' : shape === 'pies' ? 'Phần ' + it?.name + ' luôn ' + (top ? 'lớn' : 'nhỏ') + ' nhất' : 'Đường ' + it?.name + ' nằm ' + (top ? 'trên cùng' : 'dưới cùng');
+      const sees = shape === 'table' ? (p.rowsAreAxis ? 'Cột ' : 'Hàng ') + it?.name + ' luôn ' + (top ? 'cao' : 'thấp') + ' nhất' : shape === 'bars' ? 'Cột ' + it?.name + ' luôn ' + (top ? 'cao' : 'thấp') + ' hơn các cột khác' : shape === 'pies' ? 'Phần ' + it?.name + ' luôn ' + (top ? 'lớn' : 'nhỏ') + ' nhất' : 'Đường ' + it?.name + ' nằm ' + (top ? 'trên cùng' : 'dưới cùng');
       if (it) plan = { first: { kind: 'item', group: p.id + '>item:' + it.id, id: it.id, name: it.name, shape }, tip: h.feat.tip, why: sees + (every ? ' ở mọi ' + every : '') + '.' };
     }
     if (!plan) continue;

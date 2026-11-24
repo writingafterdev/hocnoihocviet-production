@@ -70,6 +70,22 @@ expect('t1-europe-spending', [G('a>item:housing'), T('vượt qua'), G('a>item:f
 expect('t1-car-sales', [G('a>item:sedan'), T('cao nhất')], true);
 expect('t1-charity-money', [V('a.food.0'), T('phần lớn')], true);
 
+// New tips: where a line starts or ends, against the average, sums, forecasts
+expect('t1-urban-population', [V('a.africa.0'), T('bắt đầu ở')], true);
+expect('t1-urban-population', [V('a.africa.1'), T('bắt đầu ở')], false, 'not the first year');
+expect('t1-living-alone', [V('a.a55.2'), T('bắt đầu ở')], true, '55-64 starts in 1950 (no figure before)');
+expect('t1-urban-population', [V('a.latam.2'), T('kết thúc ở'), T('dự kiến')], true, 'ends in the forecast year');
+expect('t1-urban-population', [G('a>item:latam'), T('trên trung bình')], true);
+expect('t1-urban-population', [G('a>item:africa'), T('dưới trung bình')], true);
+expect('t1-urban-population', [V('a.world.1'), T('trên trung bình')], false, 'world 48 vs average 49');
+expect('t1-urban-population', [G('a>item:asia'), T('tăng'), T('dự kiến')], true);
+expect('t1-urban-population', [V('a.world.0'), V('a.world.1'), T('tăng'), T('dự kiến')], false, 'no forecast figure in it');
+expect('t1-library-survey', [V('a.ftp.0'), V('a.ptp.0'), T('cộng lại'), T('gần một nửa')], true, '25 + 16 = 41');
+expect('t1-health-spending', [V('a.jp.1'), V('a.jp.2'), T('cộng lại'), T('bằng nhau'), V('a.jp.0')], true, 'public + private = total');
+expect('t1-australia-visitors', [V('a.cn.1'), V('a.jp.1'), T('cộng lại'), T('cao hơn'), V('a.uk.1')], false, '550,000 is below 640,000');
+expect('t1-health-spending', [G('a>item:fr'), T('cao nhất')], true);
+{ const j = E.judge(E.findTask1Prompt('t1-urban-population'), [G('a>item:asia'), T('tăng')]); if (!j.ok || !j.note || !j.note.warn) { fails++; console.log('FAIL forecast note missing', JSON.stringify(j)); } }
+
 // Every hint's own recipe must be judged true where the hint can be turned into a row
 for (const pr of E.TASK1_PROMPTS) for (const h of E.hintsOf(pr)) {
   const p = pr.parts.find((x) => x.id === h.part), item = (n) => p.items.find((x) => x.name === n);

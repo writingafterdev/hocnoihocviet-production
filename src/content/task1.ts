@@ -3,7 +3,7 @@
  * a prompt has parts (a chart or a table); each part is items × one axis (ordered, like years, or not, like sports).
  *
  * Source: youpass.vn's Task 1 bank. The prompt text is kept exactly as written there; the numbers are read from their
- * images and the charts are redrawn in our own style. Line graphs, bar charts and pie charts so far.
+ * images and the charts are redrawn in our own style. Line graphs, bar charts, pie charts, tables and mixed charts.
  */
 
 export interface T1Item { id: string; name: string; color: string; initial: string }
@@ -19,6 +19,8 @@ export interface T1Axis {
   en?: string[];
   /** Which labels to print under a line chart (all when missing). */
   show?: number[];
+  /** Index of the first label that is a forecast (2030): those figures are projections, said with “dự kiến”. */
+  projected?: number;
 }
 export interface T1Part {
   id: string;
@@ -43,6 +45,8 @@ export interface T1Part {
   derived?: string;
   /** This part breaks down one item of another part (fresh water of all water). */
   parent?: { part: string; item: string };
+  /** A table drawn with the axis down the side (years as rows) and the items across the top. */
+  rowsAreAxis?: boolean;
 }
 export interface T1Prompt {
   id: string;
@@ -177,6 +181,140 @@ export const TASK1_PROMPTS: T1Prompt[] = [
         axis: { name: '', ordered: false, prep: '', labels: [''] },
         items: [it('services', 'Program services', C.leaf), it('fundraising', 'Fundraising', C.tomato), it('management', 'Management and general', C.navy)],
         data: { services: [95.8], fundraising: [2.6], management: [1.6] },
+      },
+    ],
+  },
+  {
+    id: 't1-waste-disposal', category: 'Bar Chart', title: 'Waste disposal in a European country, 2005–2008', source: YP + ' · Collect',
+    text: 'The chart below shows different methods of waste disposal in a European country from 2005 to 2008.' + END,
+    parts: [{
+      id: 'a', title: 'Waste disposal (million tonnes)', kind: 'bars', unit: ' triệu tấn', unitEn: ' million tonnes', tol: 3, max: 80, step: 10,
+      axis: { name: 'năm', ordered: true, prep: 'in', labels: ['2005', '2006', '2007', '2008'] },
+      items: [it('landfill', 'Landfill', C.teal), it('burning', 'Burning', C.sun), it('sea', 'Dumping in sea', C.tomato)],
+      data: { landfill: [70, 60, 50, 40], burning: [65, 60, 40, 65], sea: [55, 50, 50, 40] },
+    }],
+  },
+  {
+    id: 't1-living-alone', category: 'Bar Chart', title: 'People living alone in the US, 1850–2000', source: YP + ' · Collect',
+    text: 'The bar chart below shows the percentage of people living alone in 5 different age groups in the US from 1850 to 2000.' + END,
+    parts: [{
+      id: 'a', title: 'People living alone in the US (%)', kind: 'bars', unit: '%', unitEn: '%', tol: 0.5, max: 20, step: 5,
+      axis: { name: 'năm', ordered: true, prep: 'in', labels: ['1850', '1900', '1950', '2000'] },
+      items: [it('a17', '17-26', C.gray), it('a27', '27-36', C.navy), it('a37', '37-46', C.lblue), it('a47', '47-54', C.sun), it('a55', '55-64', C.tomato)],
+      data: { a17: [2.5, 2.2, 2, 5], a27: [2.5, 2.5, 2.5, 8], a37: [3, 3, 2.8, 7], a47: [null, 3.5, 3.2, 13], a55: [null, null, 9, 17] },
+    }],
+  },
+  {
+    id: 't1-urban-population', category: 'Bar Chart', title: 'Urban population in parts of the world, 1950–2030', source: YP + ' · Collect',
+    text: 'The chart below gives information about the growth of the urban population in certain parts of the world, including the prediction of the future. Summarize the information by selecting and reporting the main features, and make comparisons where relevant.',
+    parts: [{
+      id: 'a', title: 'Urban population (% of people) · 2030 is a forecast', kind: 'bars', unit: '%', unitEn: '%', tol: 2, max: 90, step: 10,
+      axis: { name: 'năm', ordered: true, prep: 'in', labels: ['1950', '2000', '2030'], projected: 2 },
+      items: [it('world', 'Whole World', C.navy), it('africa', 'Africa', C.sun), it('asia', 'Asia', C.tomato), it('latam', 'Latin America', C.leaf)],
+      data: { world: [30, 48, 60], africa: [12, 39, 51], asia: [14, 39, 56], latam: [42, 70, 80] },
+    }],
+  },
+  {
+    id: 't1-australia-visitors', category: 'Table', title: 'Australians visiting seven destinations, 1999 and 2009', source: YP + ' · IELTS Insights Oct 26',
+    text: 'The table below gives information on the number of Australian people who visited the seven most popular destinations in 1999 and 2009. Provide an overview of the information by identifying and describing the key details, and include comparisons where appropriate.',
+    parts: [
+      {
+        id: 'a', title: 'Australian visitors', kind: 'table', unit: ' người', unitEn: ' people', tol: 15000,
+        axis: { name: 'năm', ordered: true, prep: 'in', labels: ['1999', '2009'] },
+        items: [it('nz', 'New Zealand', C.blue), it('uk', 'United Kingdom', C.blue), it('us', 'United States', C.blue), it('id', 'Indonesia', C.blue), it('fj', 'Fiji', C.blue), it('jp', 'Japan', C.blue), it('cn', 'China', C.blue)],
+        data: { nz: [500700, 1064000], uk: [400000, 640000], us: [300000, 400000], id: [150000, 340000], fj: [120000, 257000], jp: [100000, 250000], cn: [86000, 300000] },
+      },
+      {
+        id: 'b', title: 'Growth rate', kind: 'table', unit: '%', unitEn: '%', tol: 5, derived: 'a',
+        axis: { name: 'cột', ordered: false, prep: '', labels: ['Growth rate'] },
+        items: [it('nz', 'New Zealand', C.blue), it('uk', 'United Kingdom', C.blue), it('us', 'United States', C.blue), it('id', 'Indonesia', C.blue), it('fj', 'Fiji', C.blue), it('jp', 'Japan', C.blue), it('cn', 'China', C.blue)],
+        data: { nz: [113], uk: [60], us: [33], id: [127], fj: [114], jp: [150], cn: [249] },
+      },
+    ],
+  },
+  {
+    id: 't1-australia-marriage', category: 'Table', title: 'Marriages and age at marriage in Australia, 1960–2000', source: YP + ' · IELTS Insights Aug 26',
+    text: 'The table below gives information about the situation of marriage and age from 1960 to 2000 in Australia. Summarize the information by selecting and reporting the main features, and make comparisons where relevant.',
+    parts: [
+      {
+        id: 'a', title: 'Number of marriages', kind: 'table', rowsAreAxis: true, unit: ' đám cưới', unitEn: ' marriages', tol: 2000,
+        axis: { name: 'năm', ordered: true, prep: 'in', labels: ['1960', '1970', '1980', '1990', '2000'] },
+        items: [it('rel', 'Religious marriage', C.blue), it('civ', 'Civil marriage', C.leaf)],
+        data: { rel: [25000, 28000, 50000, 32000, 34000], civ: [8000, 12000, 16000, 23000, 40000] },
+      },
+      {
+        id: 'b', title: 'Average age at marriage', kind: 'table', rowsAreAxis: true, unit: ' tuổi', unitEn: '', tol: 0.5,
+        axis: { name: 'năm', ordered: true, prep: 'in', labels: ['1960', '1970', '1980', '1990', '2000'] },
+        items: [it('bride', 'Bride', C.tomato), it('groom', 'Bridegroom', C.blue)],
+        data: { bride: [21, 23, 25, 27, 30], groom: [24, 25, 27, 30, 32] },
+      },
+    ],
+  },
+  {
+    id: 't1-health-spending', category: 'Table', title: 'Health spending in five countries, 2002', source: YP + ' · 04/4/2026',
+    text: 'The table below shows information about spending on health in five different countries in 2002.' + END_Z,
+    parts: [{
+      id: 'a', title: 'The spending on health in five different countries in 2002 (%)', kind: 'table', unit: '%', unitEn: '%', tol: 0.3, total: 0,
+      axis: { name: 'loại chi', ordered: false, prep: 'in', labels: ['Total', 'Public spending', 'Private spending'] },
+      items: [it('jp', 'Japan', C.blue), it('it', 'Italy', C.blue), it('de', 'Germany', C.blue), it('fr', 'France', C.blue), it('us', 'USA', C.blue)],
+      data: { jp: [7.2, 5.8, 1.4], it: [7.7, 5.3, 2.4], de: [9.3, 7, 2.3], fr: [11.4, 8.6, 2.8], us: [8.6, 6, 2.6] },
+    }],
+  },
+  {
+    id: 't1-library-survey', category: 'Mixed Charts', title: 'University library users and their satisfaction', source: YP + ' · IELTS Insights Jul 26',
+    text: 'The chart and table below show the results of a survey of library users at a university.' + END,
+    parts: [
+      {
+        id: 'a', title: 'Categories of library users (%)', kind: 'pies', unit: '%', unitEn: '%', tol: 1, share: true,
+        axis: { name: '', ordered: false, prep: '', labels: [''] },
+        items: [it('ftu', 'Full-time undergraduate', C.blue), it('ftp', 'Full-time postgraduate', C.tomato), it('ptp', 'Part-time postgraduate', C.teal), it('dl', 'Distance learning (all courses)', C.sun), it('staff', 'Academic staff', C.navy)],
+        data: { ftu: [44], ftp: [25], ptp: [16], dl: [8], staff: [7] },
+      },
+      {
+        id: 'b', title: 'Library users satisfaction (%)', kind: 'table', unit: '%', unitEn: '%', tol: 2, share: true,
+        axis: { name: 'mức', ordered: false, prep: '', labels: ['Very satisfied', 'Fairly satisfied', 'Not satisfied'] },
+        items: [it('hours', 'Library opening hours', C.blue), it('staffh', 'Helpfulness of staff', C.blue), it('books', 'Availability of books', C.blue), it('journals', 'Availability of journals', C.blue), it('wifi', 'Reliability of Wifi', C.blue)],
+        data: { hours: [65, 35, 0], staffh: [95, 5, 0], books: [50, 40, 10], journals: [45, 35, 20], wifi: [48, 33, 19] },
+      },
+    ],
+  },
+  {
+    id: 't1-city-weather', category: 'Mixed Charts', title: 'Temperature and sunshine in London, New York and Sydney', source: YP + ' · Collect',
+    text: 'The line graph and table show the average monthly temperatures and annual hours of sunshine in three major cities.' + END_Z,
+    parts: [
+      {
+        id: 'a', title: 'Average monthly temperature (°C)', kind: 'line', unit: '°C', unitEn: '°C', tol: 1, max: 35, step: 5,
+        axis: { name: 'tháng', ordered: true, prep: 'in', labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'June', 'July', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'], en: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'] },
+        items: [it('lon', 'London', C.navy), it('ny', 'New York', C.sun), it('syd', 'Sydney', C.teal)],
+        data: { lon: [8, 10, 13, 18, 24, 23, 25, 23, 17, 16, 11, 10], ny: [5, 6, 12, 20, 25, 28, 30, 28, 25, 16, 7, 5], syd: [23, 21, 23, 22, 18, 16, 15, 17, 18, 23, 24, 26] },
+      },
+      {
+        id: 'b', title: 'Annual hours of sunshine', kind: 'table', unit: ' giờ', unitEn: ' hours', tol: 30,
+        axis: { name: 'cột', ordered: false, prep: '', labels: ['Hours'] },
+        items: [it('lon', 'London', C.navy), it('ny', 'New York', C.sun), it('syd', 'Sydney', C.teal)],
+        data: { lon: [1158], ny: [2535], syd: [2473] },
+      },
+    ],
+  },
+  {
+    id: 't1-world-water', category: 'Mixed Charts', title: 'The world’s water and its use in three countries', source: YP + ' · IELTS Insights Oct 26',
+    text: 'The charts below show the distribution of the world’s water and the use of water in three countries.' + END,
+    parts: [
+      {
+        id: 'a', title: 'All water (%)', kind: 'pies', unit: '%', unitEn: '%', tol: 1, share: true,
+        axis: { name: '', ordered: false, prep: '', labels: [''] },
+        items: [it('salt', 'Salt water', C.tomato), it('fresh', 'Fresh water', C.sun)], data: { salt: [97], fresh: [3] },
+      },
+      {
+        id: 'b', title: 'Fresh water (%)', kind: 'pies', unit: '%', unitEn: '%', tol: 1, share: true, parent: { part: 'a', item: 'fresh' },
+        axis: { name: '', ordered: false, prep: '', labels: [''] },
+        items: [it('ice', 'Ice and glaciers', C.tomato), it('ground', 'Ground water', C.sun), it('surface', 'Surface water', C.navy)], data: { ice: [79], ground: [20], surface: [1] },
+      },
+      {
+        id: 'c', title: 'The use of water (%)', kind: 'bars', unit: '%', unitEn: '%', tol: 2, max: 80, step: 20,
+        axis: { name: 'nước', ordered: false, prep: 'in', labels: ['Egypt', 'Saudi Arabia', 'Canada'] },
+        items: [it('agri', 'Agriculture', C.tomato), it('dom', 'Domestic', C.teal), it('ind', 'Industry', C.sun)],
+        data: { agri: [80, 78, 10], dom: [12, 12, 11], ind: [8, 10, 79] },
       },
     ],
   },

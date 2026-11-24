@@ -108,8 +108,101 @@ function holds(tip, x, y, T) {
 }
 
 /** Check one row of chips against the numbers. */
+/** Tips checked on their own before the main checks: where a line starts or ends, against the average, a sum. */
+export var EXTRA: string[] = ['bắt đầu ở', 'kết thúc ở', 'trên trung bình', 'dưới trung bình', 'cộng lại'];
+var MOVING = function (t) { return TREND.indexOf(t) >= 0 || MOST.indexOf(t) >= 0 || RATIO.indexOf(t) >= 0 || TWO.indexOf(t) >= 0 || t === 'kết thúc ở'; };
+
+/** Does this finding use a forecast figure (a cell at or after the axis's first projected label, or a whole line that runs into it)? */
+function touchesProjected(pr: T1Prompt, row: Row): boolean {
+  var pid = partOfRow(row); if (!pid) return false;
+  var p = partById(pr, pid), P = p.axis.projected; if (P === undefined || P === null) return false;
+  var moving = row.some(function (e) { return e.k === 'tip' && MOVING(e.id); });
+  return row.some(function (e) {
+    if (e.k === 'val') return cellById(pr, e.id).ai >= P;
+    if (e.k === 'group' && groupType(e.id) === 'col') return +groupVal(e.id) >= P;
+    if (e.k === 'group') return moving;
+    return false;
+  });
+}
+
 export function judge(pr: T1Prompt, row: Row): Verdict {
   row = expandRow(row);
+  var hasTip = function (t) { return row.some(function (e) { return e.k === 'tip' && e.id === t; }); };
+  if (hasTip('dự kiến')) {
+    var rest = row.filter(function (e) { return !(e.k === 'tip' && e.id === 'dự kiến'); });
+    var pv = judge(pr, rest); if (!pv.ok) return pv;
+    var pp = partById(pr, partOfRow(rest) || pr.parts[0].id);
+    if (!touchesProjected(pr, rest)) return { ok: false, text: pp.axis.projected === undefined ? 'Biểu đồ này không có số dự kiến: bỏ “dự kiến” đi.' : 'Ý này không dùng số dự kiến (từ ' + pp.axis.labels[pp.axis.projected] + '): bỏ “dự kiến” đi.' };
+    return { ok: true, text: 'Dự kiến: ' + pv.text, note: null };
+  }
+  var v = extraJudge(pr, row) || judgeCore(pr, row);
+  if (v.ok && touchesProjected(pr, row)) {
+    var pq = partById(pr, partOfRow(row));
+    v = { ok: true, text: v.text, note: { warn: true, text: 'Số từ ' + pq.axis.labels[pq.axis.projected!] + ' là dự kiến: thêm “dự kiến” để câu viết nói đúng (is expected to, is predicted to).' } };
+  }
+  return v;
+}
+
+function extraJudge(pr: T1Prompt, row: Row): Verdict | null {
+  var tipsAll = row.filter(function (e) { return e.k === 'tip'; }).map(function (e) { return e.id; });
+  var tip = tipsAll.filter(function (t) { return EXTRA.indexOf(t) >= 0; })[0];
+  if (!tip) return null;
+  var pid = partOfRow(row); if (!pid) return { ok: false, text: 'Bấm số liệu hoặc tên trên biểu đồ trước.' };
+  var p = partById(pr, pid), A = p.axis, T = p.tol;
+  if (row.some(function (e) { var x = entryPart(e); return x && x !== pid; })) return { ok: false, text: 'Mỗi ý chỉ so sánh trong cùng một biểu đồ hoặc bảng.' };
+  var nameOf = function (id) { return itemOf(p, id).name; };
+
+  if (tip === 'cộng lại') {
+    var at = row.map(function (e) { return e.k === 'tip' && e.id === 'cộng lại'; }).indexOf(true), before = row.slice(0, at), after = row.slice(at + 1);
+    var parts = before.filter(function (e) { return e.k === 'val'; }).map(function (e) { return cellById(pr, e.id); });
+    if (parts.length < 2 || before.some(function (e) { return e.k !== 'val'; })) return { ok: false, text: '“cộng lại”: bấm từng số cần cộng (ít nhất hai số), rồi chọn “cộng lại”.' };
+    if (parts.some(function (c) { return c.v === null; })) return { ok: false, text: 'Có số không có số liệu: không cộng được.' };
+    var sum = parts.reduce(function (a, c) { return a + (c.v as number); }, 0), sumT = Math.round(sum * 100) / 100;
+    var label = parts.map(function (c) { return c.name + (A.labels.length > 1 ? ' (' + c.col + ')' : ''); }).join(' + ') + ' = ' + fmt(sumT) + p.unit;
+    var t2 = after.filter(function (e) { return e.k === 'tip'; }).map(function (e) { return e.id; }), other = after.filter(function (e) { return e.k === 'val'; }).map(function (e) { return cellById(pr, e.id); });
+    if (!t2.length && !other.length) return { ok: true, text: label + ': đúng.' };
+    if (t2.length !== 1) return { ok: false, text: 'Sau “cộng lại” chỉ thêm một cách so sánh (như phần lớn, cao hơn).' };
+    var rng = { 'gần như toàn bộ': [80, 100], 'phần lớn': [50.01, 100], 'hai phần ba': [60, 72], 'gần một nửa': [40, 50], 'một phần ba': [28, 38], 'một phần tư': [20, 30], 'một phần năm': [17, 23] }[t2[0]];
+    if (rng) {
+      if (!p.share) return { ok: false, text: '“' + t2[0] + '” chỉ dùng khi số là phần của một tổng (%).' };
+      return sumT >= rng[0] && sumT <= rng[1] ? { ok: true, text: label + ', tức ' + t2[0] + ': đúng.' } : { ok: false, text: label + ': chưa phải “' + t2[0] + '” (' + rng[0] + '–' + rng[1] + '%).' };
+    }
+    if (['cao hơn', 'thấp hơn', 'gần bằng', 'bằng nhau'].indexOf(t2[0]) >= 0) {
+      if (other.length !== 1 || other[0].v === null) return { ok: false, text: 'Sau “' + t2[0] + '”, bấm số để so với tổng.' };
+      var o = other[0].v as number, d = sumT - o, oName = other[0].name + (A.labels.length > 1 ? ' (' + other[0].col + ')' : '') + ' ' + fmt(o) + p.unit;
+      var ok2 = t2[0] === 'cao hơn' ? d > T / 2 : t2[0] === 'thấp hơn' ? d < -T / 2 : t2[0] === 'gần bằng' ? Math.abs(d) <= T : Math.abs(d) <= T / 4;
+      return ok2 ? { ok: true, text: label + ', ' + t2[0] + ' ' + oName + ': đúng.' } : { ok: false, text: label + ', so với ' + oName + ': chưa phải “' + t2[0] + '”.' };
+    }
+    return { ok: false, text: 'Sau “cộng lại”, dùng một phần (phần lớn, một phần ba…) hoặc so với một số (cao hơn, thấp hơn, gần bằng).' };
+  }
+
+  var vals = row.filter(function (e) { return e.k === 'val'; }).map(function (e) { return cellById(pr, e.id); });
+  var items = row.filter(function (e) { return e.k === 'group' && groupType(e.id) === 'item'; }).map(function (e) { return groupVal(e.id); });
+  if (tipsAll.length !== 1) return { ok: false, text: '“' + tip + '” đứng một mình: bỏ cách so sánh còn lại.' };
+
+  if (tip === 'bắt đầu ở' || tip === 'kết thúc ở') {
+    if (!A.ordered || A.labels.length < 2) return { ok: false, text: '“' + tip + '” cần trục thời gian.' };
+    var first = tip === 'bắt đầu ở';
+    var one = vals.length === 1 && !items.length ? vals[0].item : items.length === 1 && !vals.length ? items[0] : null;
+    if (!one) return { ok: false, text: '“' + tip + '”: bấm một số (hoặc tên một mục).' };
+    var sp = spanOf(p, one), ai = first ? sp.a : sp.b, v0 = p.data[one][ai];
+    if (vals.length && vals[0].ai !== ai) return { ok: false, text: nameOf(one) + (first ? ' bắt đầu ở ' : ' kết thúc ở ') + A.labels[ai] + ' (' + uv(p, v0) + '), không phải ' + vals[0].col + '.' };
+    return { ok: true, text: nameOf(one) + (first ? ' bắt đầu ở ' : ' kết thúc ở ') + uv(p, v0) + ' (' + A.labels[ai] + '): đúng.' };
+  }
+
+  // trên / dưới trung bình: against the average of the same column (the same year, sport…), over every item that has a figure.
+  var above = tip === 'trên trung bình';
+  var mean = function (ai) { var xs = p.items.map(function (x) { return p.data[x.id][ai]; }).filter(function (q) { return q !== null; }) as number[]; return xs.reduce(function (a, b) { return a + b; }, 0) / (xs.length || 1); };
+  if (p.items.length < 3) return { ok: false, text: '“' + tip + '” cần ít nhất ba mục để có trung bình.' };
+  var cells = vals.length && !items.length ? vals : items.length === 1 && !vals.length ? p.data[items[0]].map(function (q, ai) { return { name: nameOf(items[0]), col: A.labels[ai], ai: ai, v: q }; }).filter(function (c) { return c.v !== null; }) : null;
+  if (!cells || !cells.length) return { ok: false, text: '“' + tip + '”: bấm một hay vài số, hoặc tên một mục.' };
+  var miss = cells.filter(function (c) { var m = mean(c.ai); return above ? !((c.v as number) > m + T / 4) : !((c.v as number) < m - T / 4); });
+  if (miss.length) { var c0 = miss[0]; return { ok: false, text: c0.name + (A.labels.length > 1 ? ' (' + c0.col + ')' : '') + ' ' + fmt(c0.v) + p.unit + ', trung bình là ' + fmt(Math.round(mean(c0.ai) * 10) / 10) + p.unit + ': chưa ' + (above ? 'trên' : 'dưới') + ' trung bình.' }; }
+  var c1 = cells[0];
+  return { ok: true, text: (cells.length > 1 ? c1.name + ' luôn ' : c1.name + (A.labels.length > 1 ? ' (' + c1.col + ') ' : ' ')) + (above ? 'trên' : 'dưới') + ' trung bình' + (cells.length > 1 ? ' ở mọi ' + axisWord(p) : ' (' + fmt(c1.v) + p.unit + ' so với ' + fmt(Math.round(mean(c1.ai) * 10) / 10) + p.unit + ')') + ': đúng.' };
+}
+
+function judgeCore(pr: T1Prompt, row: Row): Verdict {
   var pid = partOfRow(row); if (!pid) return { ok: false, text: 'Bấm số liệu hoặc tên trên biểu đồ trước.' };
   var p = partById(pr, pid), T = p.tol, A = p.axis, W = axisWord(p);
   if (row.some(function (e) { var x = entryPart(e); return x && x !== pid; })) return { ok: false, text: 'Mỗi ý chỉ so sánh trong cùng một biểu đồ hoặc bảng.' };
@@ -479,7 +572,9 @@ export function hintsOf(pr: T1Prompt): Hint[] {
 export function kindOf(row: Row): string {
   row = expandRow(row);
   if (row.some(function (e) { return e.k === 'tip' && e.id === 'rồi'; })) return 'trend';
-  var tip = (row.filter(function (e) { return e.k === 'tip' && MODS.indexOf(e.id) < 0 && e.id !== 'trừ'; })[0] || {}).id;
+  var tip = (row.filter(function (e) { return e.k === 'tip' && MODS.indexOf(e.id) < 0 && e.id !== 'trừ' && e.id !== 'dự kiến' && e.id !== 'cộng lại'; })[0] || {}).id;
+  if (tip === 'bắt đầu ở' || tip === 'kết thúc ở') return 'trend';
+  if (tip === 'trên trung bình' || tip === 'dưới trung bình') return 'rank';
   if (TREND.indexOf(tip) >= 0 || POINT.indexOf(tip) >= 0 || RATIO.indexOf(tip) >= 0 || MOST.indexOf(tip) >= 0) return 'trend';
   if (RANK.indexOf(tip) >= 0 || BAND.indexOf(tip) >= 0 || SECOND.indexOf(tip) >= 0) return 'rank';
   if (SHARE.indexOf(tip) >= 0) return 'share';

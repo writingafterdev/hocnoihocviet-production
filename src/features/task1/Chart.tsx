@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import type { T1Part, T1Prompt } from '@/content/task1';
 import { CL } from '../chainlab/constants';
-import { uv } from './engine';
+import { fmt, uv } from './engine';
 
 /** A chart is clickable in ① So sánh: a point adds that number, a line's name or a year adds the whole line or the whole year. */
 export interface ChartActions { interactive: boolean; isIn: (id: string) => boolean; isHinted: (id: string) => boolean; onCell: (id: string) => void; onGroup: (g: string) => void; /** The walkthrough's line: drawn thicker, the others faded. */ focus?: string }
@@ -194,14 +194,63 @@ export function PieChart({ part: p, act, compact }: { part: T1Part; act: ChartAc
   );
 }
 
-/** The prompt's charts, centred, with space between them: line, bar and pie charts so far. */
+/** A table: a cell adds its number; a row or column name adds the whole row or column (an item, or one label of the axis). */
+export function TableChart({ part: p, act, compact }: { part: T1Part; act: ChartActions; compact?: boolean }) {
+  const A = p.axis, link = act.interactive ? 't1-link' : '';
+  const cols = p.rowsAreAxis ? p.items.length : A.labels.length;
+  const W = compact ? 400 : Math.min(760, 150 + 120 * cols);
+  const fs = compact ? 12.5 : 13.5;
+  // Tables show every figure in full (1.064.000, not 1,06 triệu), as the prompt's table does.
+  const full = (v: number) => (Math.abs(v) >= 1000 && Number.isInteger(v) ? String(Math.round(v)).replace(/\B(?=(\d{3})+(?!\d))/g, '.') : fmt(v));
+  const show = (v: number | null) => (v === null ? '—' : full(v) + (p.unit.trim() === '%' ? '%' : ''));
+  const cell = (itemId: string, ai: number) => {
+    const id = p.id + '.' + itemId + '.' + ai, on = act.isIn(id), hint = act.isHinted(id), v = p.data[itemId][ai], it = p.items.find((x) => x.id === itemId)!;
+    return (
+      <td key={id} onClick={() => act.interactive && v !== null && act.onCell(id)} title={it.name + (A.labels[ai] ? ', ' + A.labels[ai] : '') + ': ' + uv(p, v)}
+        style={{ padding: compact ? '6px 8px' : '8px 12px', textAlign: 'right', fontSize: fs, fontWeight: 500, fontVariantNumeric: 'tabular-nums', color: CL.ink, cursor: act.interactive && v !== null ? 'pointer' : 'default', borderBottom: '1px solid ' + CL.ink1, background: on ? '#EEF3FC' : hint ? '#FFF7E0' : 'transparent', boxShadow: on ? 'inset 0 0 0 2px #77A1DD' : hint ? 'inset 0 0 0 2px #FFC73C' : 'none', opacity: act.focus && act.focus !== itemId ? 0.3 : 1 }}>
+        {show(v)}
+      </td>
+    );
+  };
+  const th = (key: string, label: string, group: string, align: 'left' | 'right', tour?: string) => (
+    <th key={key} data-tour={tour} scope="col" style={{ padding: compact ? '6px 8px' : '8px 12px', textAlign: align, fontSize: fs - 1, fontWeight: 600, color: CL.ink7, background: '#F5F5F5', borderBottom: '1px solid ' + CL.ink2 }}>
+      {label && <span className={link} title={act.interactive ? 'Chọn cả ' + label : ''} onClick={() => act.interactive && act.onGroup(group)}>{label}</span>}
+    </th>
+  );
+  const rowHead = (key: string, label: string, group: string, tour?: string) => (
+    <th key={key} data-tour={tour} scope="row" style={{ padding: compact ? '6px 8px' : '8px 12px', textAlign: 'left', fontSize: fs, fontWeight: 600, color: CL.ink, borderBottom: '1px solid ' + CL.ink1, whiteSpace: 'nowrap' }}>
+      <span className={link} title={act.interactive ? 'Chọn cả ' + label : ''} onClick={() => act.interactive && act.onGroup(group)}>{label}</span>
+    </th>
+  );
+  return (
+    <div data-tour={'part:' + p.id} style={{ width: W, maxWidth: '100%', overflowX: 'auto' }}>
+      <table style={{ width: '100%', borderCollapse: 'collapse', borderRadius: 10, overflow: 'hidden', boxShadow: '0 0 0 1px ' + CL.ink2 }}>
+        <thead>
+          <tr>
+            {th('corner', '', '', 'left')}
+            {p.rowsAreAxis
+              ? p.items.map((it) => th(it.id, it.name, p.id + '>item:' + it.id, 'right', 'item:' + it.id))
+              : A.labels.map((lab, ai) => th('c' + ai, lab, p.id + '>col:' + ai, 'right'))}
+          </tr>
+        </thead>
+        <tbody>
+          {p.rowsAreAxis
+            ? A.labels.map((lab, ai) => <tr key={ai}>{rowHead('r' + ai, lab, p.id + '>col:' + ai)}{p.items.map((it) => cell(it.id, ai))}</tr>)
+            : p.items.map((it) => <tr key={it.id}>{rowHead('r' + it.id, it.name, p.id + '>item:' + it.id, 'item:' + it.id)}{A.labels.map((_, ai) => cell(it.id, ai))}</tr>)}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+/** The prompt's charts, centred, with space between them: line, bar and pie charts and tables. */
 export function Charts({ prompt, act, compact }: { prompt: T1Prompt; act: ChartActions; compact?: boolean }) {
   return (
     <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: compact ? 24 : 44 }}>
       {prompt.parts.map((p) => (
         <div key={p.id} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: compact ? 10 : 16, width: compact ? '100%' : undefined }}>
           <span className={prompt.parts.length > 1 && act.interactive ? 't1-link' : ''} onClick={() => prompt.parts.length > 1 && act.interactive && act.onGroup(p.id)} style={{ fontSize: compact ? 12.5 : 13.5, fontWeight: 600, color: CL.ink, textAlign: 'center' }}>{p.title}</span>
-          {p.kind === 'line' ? <LineChart part={p} act={act} compact={compact} /> : p.kind === 'bars' ? <BarChart part={p} act={act} compact={compact} /> : p.kind === 'pies' ? <PieChart part={p} act={act} compact={compact} /> : <span style={{ fontSize: 13, color: CL.ink5 }}>Dạng biểu đồ này sẽ có ở bước sau.</span>}
+          {p.kind === 'line' ? <LineChart part={p} act={act} compact={compact} /> : p.kind === 'bars' ? <BarChart part={p} act={act} compact={compact} /> : p.kind === 'pies' ? <PieChart part={p} act={act} compact={compact} /> : p.kind === 'table' ? <TableChart part={p} act={act} compact={compact} /> : <span style={{ fontSize: 13, color: CL.ink5 }}>Dạng biểu đồ này sẽ có ở bước sau.</span>}
         </div>
       ))}
     </div>
