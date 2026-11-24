@@ -18,7 +18,7 @@ const drill = (disabled?: boolean): Item => ({ label: 'Phát triển ý', href: 
 const write = (disabled?: boolean): Item => ({ label: 'Luyện viết', href: '/writing', match: disabled ? [] : ['/writing', '/write'], icon: <NavIcon name="write" />, disabled });
 const copy = (disabled?: boolean): Item => ({ label: 'Chép mẫu', href: '/copy', match: disabled ? [] : ['/copy'], icon: <NavIcon name="copy" />, disabled });
 
-// Tài liệu missbacxiu (her doc and Nghĩ ý) comes first; Writing holds Task 2 (quick drill, writing practice, copying a sample) and Task 1 (not open yet); vocab and the student's own essays stand apart.
+// Tài liệu missbacxiu (her doc and Nghĩ ý) comes first; Writing holds Task 2 (quick drill, writing practice, copying a sample) and Task 1 (writing practice, copying a sample later; no drill); vocab and the student's own essays stand apart.
 /** Task 1 opens for admins while it is being built (the rest of the section stays "Sắp có"). */
 const task1Write = (open: boolean): Item => ({ label: 'Luyện viết', href: '/task1', match: open ? ['/task1'] : [], icon: <NavIcon name="write" />, disabled: !open });
 const groupsFor = (task1: boolean): Group[] => [
@@ -27,7 +27,7 @@ const groupsFor = (task1: boolean): Group[] => [
     { label: 'Nghĩ ý', href: '/nghi-y', match: ['/nghi-y'], icon: <NavIcon name="chains" /> }] },
   { label: 'Writing', sections: [
     { label: 'Task 2', items: [drill(), write(), copy()] },
-    { label: 'Task 1', soon: !task1, items: [drill(true), task1Write(task1), copy(true)] },
+    { label: 'Task 1', soon: !task1, items: [task1Write(task1), copy(true)] },
   ] },
   { label: 'Từ vựng', items: [{ label: 'Từ vựng theo chủ đề', href: '/vocab', match: ['/vocab'], icon: <NavIcon name="vocab" /> }] },
   { label: 'Của bạn', items: [
