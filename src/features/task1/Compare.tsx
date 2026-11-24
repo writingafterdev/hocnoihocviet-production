@@ -1,9 +1,9 @@
 'use client';
 
-import { useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import type { T1Prompt } from '@/content/task1';
 import { CL } from '../chainlab/constants';
-import { cellById, expandRow, groupLabel, groupType, hintsOf, judge, partById, partOfRow, POINT, RATIO, rowKey, TREND, uv, type Hint, type Row, type Verdict } from './engine';
+import { cellById, expandRow, groupLabel, groupType, hintsOf, judge, partById, partOfRow, POINT, RATIO, rowKey, TREND, uv, type Entry, type Hint, type Row, type Verdict } from './engine';
 import { familyOf, GLYPH, panelOf, TIP_HINT, tipsFor } from './tips';
 import { Glyph } from './Chart';
 
@@ -41,6 +41,55 @@ export function MiniChips({ prompt, row, noNums, white }: { prompt: T1Prompt; ro
   );
 }
 
+/** Gợi ý starts with a question; the second press shows the answer. */
+function askOf(h: Hint): string {
+  const t = h.feat.tip;
+  if (h.feat.all) return 'Nhìn cả biểu đồ: có điều gì đúng với tất cả các mục không?';
+  if (h.cross) return 'Có hai đường nào cắt nhau không? Đường nào vượt lên?';
+  if (h.opp) return 'Có hai đường nào cứ đường này lên thì đường kia xuống không?';
+  if (h.colPair) return 'Đặt hai cột cạnh nhau: cột nào luôn cao hơn?';
+  if (t === 'tăng' || t === 'giảm') return 'Phần lớn các mục đi cùng một hướng. Có mục nào đi ngược lại không?';
+  if (t === 'cao hơn') return 'Đặt hai mục cạnh nhau ở mọi mốc: bên nào cao hơn? Có chỗ nào ngoại lệ không?';
+  if (t === 'đạt đỉnh') return 'Đường nào thay đổi nhiều nhất? Điểm cao nhất của nó nằm ở đâu?';
+  if (t === 'tăng nhiều nhất') return 'Ngoài số lớn nhất, cái gì tăng nhanh nhất?';
+  if (t === 'phần lớn' || t === 'gần một nửa') return 'Phần nào lớn nhất, và nó chiếm khoảng bao nhiêu?';
+  if ((t === 'cao nhất' || t === 'thấp nhất') && h.text.includes(' ở mọi ')) return 'Có mục nào lúc nào cũng đứng ' + (t === 'cao nhất' ? 'đầu' : 'cuối') + ' không?';
+  if (t === 'cao nhất' || t === 'thấp nhất') return 'Trong cột số này, số nào cao nhất, số nào thấp nhất?';
+  return 'Điều gì nổi bật nhất trên biểu đồ?';
+}
+
+/** A tip's other ways of saying it, as a menu under its button (like a model picker): one row each, a radio dot on the current one. */
+function TipMenu({ at, tips, current, onPick, onClose }: { at: DOMRect; tips: string[]; current?: string; onPick: (t: string) => void; onClose: () => void }) {
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const down = (e: PointerEvent) => { if (ref.current && !ref.current.contains(e.target as Node)) onClose(); };
+    const key = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+    const scroll = (e: Event) => { if (!ref.current?.contains(e.target as Node)) onClose(); };
+    document.addEventListener('pointerdown', down, true); document.addEventListener('keydown', key); window.addEventListener('scroll', scroll, true);
+    return () => { document.removeEventListener('pointerdown', down, true); document.removeEventListener('keydown', key); window.removeEventListener('scroll', scroll, true); };
+  }, [onClose]);
+  const W = 230, left = Math.min(at.left, window.innerWidth - W - 12), below = at.bottom + 6 + tips.length * 38 + 12 < window.innerHeight;
+  return (
+    <div ref={ref} role="menu" style={{ position: 'fixed', left, ...(below ? { top: at.bottom + 6 } : { bottom: window.innerHeight - at.top + 6 }), zIndex: 50, width: W, padding: 6, borderRadius: 12, background: '#fff', boxShadow: '0 0 0 1px rgba(0,0,0,.08), 0 12px 32px -12px rgba(0,0,0,.28)', display: 'flex', flexDirection: 'column', gap: 2 }}>
+      {tips.map((t) => { const on = t === current; return (
+        <button key={t} type="button" role="menuitemradio" aria-checked={on} className="t1-row" title={TIP_HINT[t] || ''} onClick={() => onPick(t)}
+          style={{ display: 'flex', alignItems: 'center', gap: 10, height: 36, padding: '0 10px 0 8px', border: 'none', borderRadius: 8, background: on ? '#EEF3FC' : 'none', fontSize: 13.5, fontWeight: 500, color: on ? '#1F4FA8' : CL.ink, cursor: 'pointer', textAlign: 'left', whiteSpace: 'nowrap' }}>
+          <Glyph shapes={GLYPH[t] || []} />
+          <span style={{ flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis' }}>{t}</span>
+          {current !== undefined && <span aria-hidden="true" style={{ width: 16, height: 16, borderRadius: 99, boxSizing: 'border-box', border: on ? '5px solid #2F62C4' : '1.5px solid ' + CL.ink3, background: '#fff', flexShrink: 0 }} />}
+        </button>
+      ); })}
+    </div>
+  );
+}
+
+const Chevron = () => <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6" /></svg>;
+/** Stable keys for chips, so they can slide to their new place while one is dragged. */
+const ENTRY_KEY = new WeakMap<object, number>(); let entrySeq = 0;
+const keyOf = (e: Entry) => { let k = ENTRY_KEY.get(e); if (k === undefined) { k = ++entrySeq; ENTRY_KEY.set(e, k); } return 'e' + k; };
+const chipBox = (c: ChipView): React.CSSProperties => ({ display: 'inline-flex', alignItems: 'center', height: 32, boxSizing: 'border-box', padding: c.dot ? '0 3px 0 5px' : '0 3px 0 6px', borderRadius: 8, border: '1px ' + (c.dashed ? 'dashed ' + CL.ink4 : 'solid ' + (c.tip ? '#DCE7F7' : '#EBEBEB')), background: c.tip ? '#EEF3FC' : c.dashed ? '#FAFAFA' : '#F5F5F5', color: c.tip ? '#2F62C4' : CL.ink, fontSize: 13, fontWeight: 500 });
+const Dot = ({ c }: { c: ChipView }) => <span aria-hidden="true" style={{ width: 20, height: 20, marginRight: 3, borderRadius: 99, background: c.color, color: '#fff', fontSize: 11, fontWeight: 700, display: 'grid', placeItems: 'center' }}>{c.initial}</span>;
+
 const btn: React.CSSProperties = { height: 34, borderRadius: 10, fontSize: 13.5, fontWeight: 500, padding: '0 12px', cursor: 'pointer' };
 
 /** ① So sánh: build a finding from the chart and the tips, check it, keep it. */
@@ -48,33 +97,73 @@ export function ComparePanel({ prompt, row, setRow, found, setFound, hint, setHi
   prompt: T1Prompt; row: Row; setRow: (r: Row) => void; found: { row: Row }[]; setFound: (f: { row: Row }[]) => void; hint: Hint | null; setHint: (h: Hint | null) => void;
 }) {
   const [msg, setMsg] = useState<Verdict | null>(null);
-  const [varAt, setVarAt] = useState<number | null>(null);
+  const [menu, setMenu] = useState<{ at: DOMRect; tips: string[]; slot: number | null } | null>(null);
   const [hintN, setHintN] = useState(0);
-  const drag = useRef<{ idx: number[]; moved: boolean } | null>(null);
-  const [dragView, setDragView] = useState<{ src: number; over: number } | null>(null);
+  const [ask, setAsk] = useState<Hint | null>(null);
+  // Dragging a chip: it follows the cursor, and the others make room for it as it moves.
+  const boxRef = useRef<HTMLDivElement>(null);
+  const press = useRef<{ ents: Entry[]; sx: number; sy: number; offX: number; offY: number; on: boolean } | null>(null);
+  const [dv, setDv] = useState<{ ents: Entry[]; at: number; x: number; y: number; offX: number; offY: number } | null>(null);
+  const dvRef = useRef<typeof dv>(null);
+  const justDragged = useRef(false);
+  const rowRef = useRef(row); rowRef.current = row;
   const single = prompt.parts.length === 1;
   const rowPart = partOfRow(row);
   const { avail, boxes } = panelOf(tipsFor(rowPart ? [partById(prompt, rowPart)] : prompt.parts, single));
   const hints = hintsOf(prompt);
 
-  const put = (r: Row, v: number | null = null) => { setRow(r); setMsg(null); setVarAt(v); };
+  const put = (r: Row) => { setRow(r); setMsg(null); setMenu(null); };
   const addTip = (t: string) => {
     if (t === 'Tất cả') { put([...row, { k: 'group', id: prompt.parts[0].id }]); return; }
-    const r = [...row, { k: 'tip' as const, id: t }], fam = familyOf(t, avail);
-    put(r, fam && fam.length > 1 ? r.length - 1 : null);
+    put([...row, { k: 'tip' as const, id: t }]);
   };
-  const moveChip = (from: number[], before: number | null) => {
-    if (from.includes(before as number)) return;
-    const moving = from.map((i) => row[i]), rest = row.filter((_, i) => !from.includes(i));
-    let at = before === null ? rest.length : rest.indexOf(row[before]); if (at < 0) at = rest.length;
-    put([...rest.slice(0, at), ...moving, ...rest.slice(at)]);
+  const restOf = (ents: Entry[]) => rowRef.current.filter((e) => !ents.includes(e));
+  const previewOf = (d: { ents: Entry[]; at: number }) => { const rest = restOf(d.ents); return [...rest.slice(0, d.at), ...d.ents, ...rest.slice(d.at)]; };
+  /** Where the dragged chip would go: before the first chip the cursor is above, or left of the middle of. */
+  const slotAt = (x: number, y: number, ents: Entry[]) => {
+    const box = boxRef.current; if (!box) return 0;
+    const br = box.getBoundingClientRect(), rest = restOf(ents);
+    for (const el of Array.from(box.querySelectorAll<HTMLElement>('[data-rest]'))) {
+      const l = br.left + el.offsetLeft, t = br.top + el.offsetTop, b = t + el.offsetHeight;
+      if (y < t || (y <= b && x < l + el.offsetWidth / 2)) return Number(el.dataset.rest);
+    }
+    return rest.length;
   };
+  useEffect(() => {
+    const move = (e: PointerEvent) => {
+      const d = press.current; if (!d) return;
+      if (!d.on) { if (Math.hypot(e.clientX - d.sx, e.clientY - d.sy) < 4) return; d.on = true; setMenu(null); document.body.style.cursor = 'grabbing'; }
+      e.preventDefault();
+      const v = { ents: d.ents, at: slotAt(e.clientX, e.clientY, d.ents), x: e.clientX, y: e.clientY, offX: d.offX, offY: d.offY };
+      dvRef.current = v; setDv(v);
+    };
+    const up = () => {
+      const d = press.current; press.current = null; if (!d || !d.on) return;
+      document.body.style.cursor = '';
+      justDragged.current = true; setTimeout(() => { justDragged.current = false; }, 0);
+      const v = dvRef.current; dvRef.current = null; setDv(null);
+      if (v) { setRow(previewOf(v)); setMsg(null); }
+    };
+    window.addEventListener('pointermove', move); window.addEventListener('pointerup', up); window.addEventListener('pointercancel', up);
+    return () => { window.removeEventListener('pointermove', move); window.removeEventListener('pointerup', up); window.removeEventListener('pointercancel', up); };
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  // The other chips slide to their new place instead of jumping.
+  const lastPos = useRef(new Map<string, { x: number; y: number }>());
+  useLayoutEffect(() => {
+    const box = boxRef.current; if (!box) return;
+    const next = new Map<string, { x: number; y: number }>();
+    box.querySelectorAll<HTMLElement>('[data-key]').forEach((el) => {
+      const k = el.dataset.key!, p = { x: el.offsetLeft, y: el.offsetTop }, was = lastPos.current.get(k); next.set(k, p);
+      if (dv && was && (was.x !== p.x || was.y !== p.y)) el.animate([{ transform: `translate(${was.x - p.x}px, ${was.y - p.y}px)` }, { transform: 'none' }], { duration: 180, easing: 'cubic-bezier(.2,.8,.2,1)' });
+    });
+    lastPos.current = next;
+  });
   const check = () => {
     if (!row.length) return;
     if (found.some((f) => rowKey(f.row) === rowKey(row))) { setMsg({ ok: false, text: 'Ý này đã có trong danh sách rồi.' }); return; }
     const j = judge(prompt, row);
     setMsg(j);
-    if (j.ok) { setFound([...found, { row }]); setRow([]); setHint(null); setVarAt(null); }
+    if (j.ok) { setFound([...found, { row }]); setRow([]); setHint(null); setAsk(null); setMenu(null); }
   };
   const canChain = (() => {
     if (!rowPart || !partById(prompt, rowPart).axis.ordered) return false;
@@ -85,33 +174,32 @@ export function ComparePanel({ prompt, row, setRow, found, setFound, hint, setHi
     const moves = [...TREND, ...POINT, ...RATIO, 'vượt qua'];
     return expandRow(row).some((e) => e.k === 'tip' && moves.includes(e.id));
   })();
-  const vFam = varAt !== null && row[varAt] && row[varAt].k === 'tip' ? familyOf(row[varAt].id, avail) : null;
-  const chips = chipsOf(prompt, row);
+  const shown = dv ? previewOf(dv) : row, restNow = dv ? restOf(dv.ents) : row;
+  const chips = chipsOf(prompt, shown);
+  const openMenu = (e: React.MouseEvent, tips: string[], slot: number | null) => { const at = (e.currentTarget as HTMLElement).getBoundingClientRect(); setMenu(menu && menu.slot === slot && menu.tips[0] === tips[0] ? null : { at, tips, slot }); };
 
   return (
     <aside style={{ minHeight: 0, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 14 }}>
       <section style={{ borderRadius: 12, border: '1px solid ' + CL.border, background: '#fff', flexShrink: 0 }}>
         <div style={{ display: 'flex', alignItems: 'center', minHeight: 50, padding: '0 20px', borderBottom: '1px solid ' + CL.ink1 }}><span style={{ fontSize: 14.5, fontWeight: 600 }}>Tìm điểm nổi bật</span></div>
         <div style={{ padding: '14px 16px 16px', display: 'flex', flexDirection: 'column', gap: 10 }}>
-          <div onMouseUp={() => { if (drag.current?.moved) moveChip(drag.current.idx, null); drag.current = null; setDragView(null); }} onMouseLeave={() => { drag.current = null; setDragView(null); }}
-            style={{ userSelect: 'none', minHeight: 52, boxSizing: 'border-box', borderRadius: 10, border: '1px solid ' + (msg && !msg.ok ? '#F5C7B8' : CL.ink2), boxShadow: 'inset 0 1px 2px rgba(0,0,0,.04)', padding: '9px 10px', display: 'flex', flexWrap: 'wrap', gap: 6, alignItems: 'center' }}>
+          <div ref={boxRef} onClickCapture={(e) => { if (justDragged.current) { e.stopPropagation(); e.preventDefault(); } }}
+            style={{ position: 'relative', userSelect: 'none', minHeight: 52, boxSizing: 'border-box', borderRadius: 10, border: '1px solid ' + (msg && !msg.ok ? '#F5C7B8' : CL.ink2), boxShadow: 'inset 0 1px 2px rgba(0,0,0,.04)', padding: '9px 10px', display: 'flex', flexWrap: 'wrap', gap: 6, alignItems: 'center' }}>
             {chips.map((c) => {
-              const src = dragView && c.idx.includes(dragView.src), over = dragView && dragView.over === c.idx[0] && !src;
-              const famC = c.tip ? familyOf(row[c.idx[0]].id) : null;
+              const first = shown[c.idx[0]], moving = !!dv && c.idx.some((i) => dv.ents.includes(shown[i]));
+              const famC = c.tip ? familyOf(first.id, avail) : null;
               return (
-                <span key={c.key} title="Giữ và kéo để đổi chỗ"
-                  onMouseDown={(e) => { if (e.button === 0) drag.current = { idx: c.idx, moved: false }; }}
-                  onMouseEnter={() => { if (drag.current && !drag.current.idx.includes(c.idx[0])) { drag.current.moved = true; setDragView({ src: drag.current.idx[0], over: c.idx[0] }); } }}
-                  onMouseUp={(e) => { if (drag.current?.moved && !drag.current.idx.includes(c.idx[0])) { e.stopPropagation(); moveChip(drag.current.idx, c.idx[0]); drag.current = null; setDragView(null); } }}
-                  style={{ cursor: dragView ? 'grabbing' : 'grab', opacity: src ? 0.45 : 1, boxShadow: over ? 'inset 3px 0 0 #2F62C4' : 'none', display: 'inline-flex', alignItems: 'center', height: 32, boxSizing: 'border-box', padding: c.dot ? '0 3px 0 5px' : '0 3px 0 6px', borderRadius: 8, border: '1px ' + (c.dashed ? 'dashed ' + CL.ink4 : 'solid ' + (c.tip ? '#DCE7F7' : '#EBEBEB')), background: c.tip ? '#EEF3FC' : c.dashed ? '#FAFAFA' : '#F5F5F5', color: c.tip ? '#2F62C4' : CL.ink, fontSize: 13, fontWeight: 500 }}>
-                  {c.dot && <span aria-hidden="true" style={{ width: 20, height: 20, marginRight: 3, borderRadius: 99, background: c.color, color: '#fff', fontSize: 11, fontWeight: 700, display: 'grid', placeItems: 'center' }}>{c.initial}</span>}
+                <span key={keyOf(first)} data-key={keyOf(first)} data-rest={moving ? undefined : restNow.indexOf(first)} title="Giữ và kéo để đổi chỗ"
+                  onPointerDown={(e) => { if (e.button !== 0 || dv) return; const r = e.currentTarget.getBoundingClientRect(); press.current = { ents: c.idx.map((i) => row[i]), sx: e.clientX, sy: e.clientY, offX: e.clientX - r.left, offY: e.clientY - r.top, on: false }; }}
+                  style={{ ...chipBox(c), cursor: dv ? 'grabbing' : 'grab', touchAction: 'none', opacity: moving ? 0.3 : 1, ...(moving ? { background: '#fff', borderStyle: 'dashed', borderColor: '#77A1DD' } : {}) }}>
+                  {c.dot && <Dot c={c} />}
                   {c.run ? (
                     <button type="button" className="t1-seg" title={'Nói chung cho cả ' + c.label + ' (bỏ các số)'} onClick={() => { const r = row.filter((_, i) => !c.idx.includes(i)); r.splice(c.idx[0], 0, { k: 'group', id: c.run!.part + '>item:' + c.run!.item }); put(r); }}
                       style={{ height: 24, padding: '0 5px', border: 'none', borderRadius: 6, background: 'none', fontSize: 13, fontWeight: 500, color: 'inherit', cursor: 'pointer' }}>{c.label}</button>
                   ) : <span style={{ padding: '0 5px' }}>{c.label}</span>}
                   {famC && famC.length > 1 && (
-                    <button type="button" className="t1-seg" aria-label="Đổi sang cách nói khác" title="Đổi sang cách nói khác" onClick={() => setVarAt(varAt === c.idx[0] ? null : c.idx[0])} style={{ width: 22, height: 24, display: 'grid', placeItems: 'center', border: 'none', borderRadius: 6, background: 'none', color: '#2F62C4', cursor: 'pointer', padding: 0 }}>
-                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6" /></svg>
+                    <button type="button" className="t1-seg" aria-label="Đổi sang cách nói khác" title="Đổi sang cách nói khác" onClick={(e) => openMenu(e, famC, c.idx[0])} style={{ width: 22, height: 24, display: 'grid', placeItems: 'center', border: 'none', borderRadius: 6, background: menu && menu.slot === c.idx[0] ? '#DCE7F7' : 'none', color: '#2F62C4', cursor: 'pointer', padding: 0 }}>
+                      <Chevron />
                     </button>
                   )}
                   {c.vals.map((v) => <button key={v.i} type="button" className="t1-val" title="Bỏ số này" onClick={() => put(row.filter((_, i) => i !== v.i))} style={{ height: 24, marginLeft: 3, padding: '0 7px', border: 'none', borderRadius: 6, background: CL.mintSoft, color: CL.greenText, fontSize: 12.5, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}>{v.t}</button>)}
@@ -122,31 +210,33 @@ export function ComparePanel({ prompt, row, setRow, found, setFound, hint, setHi
               );
             })}
             {!row.length && <span style={{ fontSize: 13, color: CL.ink4, padding: '0 4px' }}>Bấm một điểm, tên một đường hoặc một năm trên biểu đồ, rồi chọn một ý so sánh.</span>}
-            {canChain && (
+            {canChain && !dv && (
               <button type="button" className="cl-btn" title="Kể tiếp chặng sau của cùng đường này" onClick={() => put([...row, { k: 'tip', id: 'rồi' }])} style={{ marginLeft: 'auto', display: 'inline-flex', alignItems: 'center', gap: 5, height: 32, borderRadius: 8, border: '1px dashed #77A1DD', background: '#F7F9FD', color: '#2F62C4', fontSize: 13, fontWeight: 600, padding: '0 11px', cursor: 'pointer' }}>
                 rồi<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
               </button>
             )}
           </div>
-
-          {vFam && vFam.length > 1 && (
-            <div style={{ marginTop: -4, borderRadius: 10, border: '1px solid #77A1DD', background: '#fff', boxShadow: '0 4px 14px -8px rgba(47,98,196,.45)', padding: 8, display: 'flex', flexWrap: 'wrap', gap: 6, alignItems: 'center' }}>
-              {vFam.map((t) => { const on = row[varAt!].id === t; return (
-                <button key={t} type="button" className="cl-btn" title={TIP_HINT[t] || ''} onClick={() => { const r = row.slice(); r[varAt!] = { k: 'tip', id: t }; setRow(r); setMsg(null); }}
-                  style={{ display: 'inline-flex', alignItems: 'center', gap: 6, height: 30, borderRadius: 8, border: '1px solid ' + (on ? '#2F62C4' : '#DCE7F7'), background: on ? '#2F62C4' : '#fff', color: on ? '#fff' : '#1F4FA8', fontSize: 13, fontWeight: 500, padding: '0 10px 0 7px', cursor: 'pointer' }}>
-                  <Glyph shapes={GLYPH[t] || []} />{t}
-                </button>
-              ); })}
-              <button type="button" className="cl-btn" aria-label="Đóng" onClick={() => setVarAt(null)} style={{ marginLeft: 'auto', width: 26, height: 26, border: 'none', borderRadius: 6, background: 'none', color: CL.ink5, cursor: 'pointer' }}>×</button>
+          {dv && (
+            <div aria-hidden="true" style={{ position: 'fixed', left: dv.x - dv.offX, top: dv.y - dv.offY, zIndex: 60, pointerEvents: 'none', display: 'flex', gap: 6, cursor: 'grabbing' }}>
+              {chipsOf(prompt, dv.ents).map((c) => (
+                <span key={c.key} style={{ ...chipBox(c), padding: c.dot ? '0 10px 0 5px' : '0 10px', background: c.tip ? '#EEF3FC' : '#fff', boxShadow: '0 10px 24px -8px rgba(0,0,0,.3), 0 0 0 1px rgba(0,0,0,.04)', transform: 'rotate(-1.5deg)' }}>
+                  {c.dot && <Dot c={c} />}<span style={{ padding: '0 4px' }}>{c.label}</span>
+                  {c.vals.map((v) => <span key={v.i} style={{ height: 24, marginLeft: 3, padding: '0 7px', display: 'inline-flex', alignItems: 'center', borderRadius: 6, background: CL.mintSoft, color: CL.greenText, fontSize: 12.5, fontWeight: 600, whiteSpace: 'nowrap' }}>{v.t}</span>)}
+                </span>
+              ))}
             </div>
           )}
+          {menu && <TipMenu at={menu.at} tips={menu.tips} current={menu.slot === null ? undefined : row[menu.slot]?.id}
+            onClose={() => setMenu(null)}
+            onPick={(t) => { if (menu.slot === null) addTip(t); else { const r = row.slice(); r[menu.slot] = { k: 'tip', id: t }; put(r); } }} />}
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {boxes.map((b, k) => (
               <div key={k} style={{ borderRadius: 10, border: '1px solid #DCE7F7', background: '#F7F9FD', padding: 10, display: 'flex', flexWrap: 'wrap', gap: 6 }}>
                 {b.map((t) => { const fam = familyOf(t, avail); return (
-                  <button key={t} type="button" className="cl-btn" title={TIP_HINT[t] || ''} onClick={() => addTip(t)} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, height: 32, borderRadius: 8, border: '1px solid #DCE7F7', background: '#fff', color: '#1F4FA8', fontSize: 13, fontWeight: 500, padding: '0 10px 0 7px', cursor: 'pointer' }}>
-                    <Glyph shapes={GLYPH[t] || []} />{t + (fam && fam.length > 1 ? ' ▾' : '')}
+                  <button key={t} type="button" className="cl-btn" title={TIP_HINT[t] || ''} onClick={(e) => (fam && fam.length > 1 ? openMenu(e, fam, null) : addTip(t))} aria-haspopup={fam && fam.length > 1 ? 'menu' : undefined}
+                    style={{ display: 'inline-flex', alignItems: 'center', gap: 6, height: 32, borderRadius: 8, border: '1px solid ' + (menu && menu.slot === null && menu.tips[0] === t ? '#77A1DD' : '#DCE7F7'), background: menu && menu.slot === null && menu.tips[0] === t ? '#EEF3FC' : '#fff', color: '#1F4FA8', fontSize: 13, fontWeight: 500, padding: fam && fam.length > 1 ? '0 8px 0 7px' : '0 10px 0 7px', cursor: 'pointer' }}>
+                    <Glyph shapes={GLYPH[t] || []} />{t}{fam && fam.length > 1 && <Chevron />}
                   </button>
                 ); })}
               </div>
@@ -155,10 +245,15 @@ export function ComparePanel({ prompt, row, setRow, found, setFound, hint, setHi
 
           {msg && msg.text && <span role="status" style={{ fontSize: 13, lineHeight: 1.5, color: msg.ok ? CL.greenText : CL.redText }}>{msg.text}</span>}
           {msg && msg.note && <span style={{ fontSize: 12.5, lineHeight: 1.5, color: msg.note.warn ? '#8A5A00' : CL.ink5 }}>{msg.note.text}</span>}
+          {ask && !hint && <span style={{ fontSize: 13, lineHeight: 1.5, color: '#8A5A00' }}>{askOf(ask)}</span>}
           {hint && <span style={{ display: 'flex', flexDirection: 'column', gap: 3 }}><span style={{ fontSize: 13, lineHeight: 1.5, color: '#8A5A00' }}>Gợi ý: {hint.text}.</span><span style={{ fontSize: 12.5, lineHeight: 1.5, color: CL.ink5 }}>Lần sau: {hint.next}.</span></span>}
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <button type="button" className="cl-btn" onClick={() => put([])} style={{ ...btn, border: '1px solid rgba(0,0,0,.12)', background: '#fff', color: CL.ink }}>Xoá</button>
-            <span className="pro-fill"><button type="button" className="cl-btn" onClick={() => { if (!hints.length) return; setHint(hints[hintN % hints.length]); setHintN(hintN + 1); setMsg(null); }} style={{ ...btn, border: 'none', color: '#fff' }}>Gợi ý</button></span>
+            <span className="pro-fill"><button type="button" className="cl-btn" onClick={() => {
+              if (!hints.length) return; setMsg(null);
+              if (ask && !hint) { setHint(ask); return; }
+              setHint(null); setAsk(hints[hintN % hints.length]); setHintN(hintN + 1);
+            }} style={{ ...btn, border: 'none', color: '#fff' }}>{ask && !hint ? 'Xem gợi ý' : 'Gợi ý'}</button></span>
             <button type="button" className="cl-btn cl-primary" onClick={check} disabled={!row.length} style={{ ...btn, marginLeft: 'auto', border: 'none', color: '#fff', padding: '0 14px', opacity: row.length ? 1 : 0.4 }}>Kiểm tra</button>
           </div>
         </div>
