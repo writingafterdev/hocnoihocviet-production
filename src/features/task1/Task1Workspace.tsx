@@ -59,7 +59,8 @@ export function Task1Workspace({ attemptId }: { attemptId: string }) {
   const key = a ? contentKey(a) : null;
   useEffect(() => { if (!a || key === savedKey.current) return; const t = setTimeout(() => persist(latest.current!), SAVE_DELAY); return () => clearTimeout(t); }, [key]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => {
-    const flush = () => { if (latest.current) task1Store.save(latest.current).catch(() => {}); };
+    // Only when something is unsaved: the page can be hidden and shown many times without a change.
+    const flush = () => { const x = latest.current; if (x && contentKey(x) !== savedKey.current) task1Store.save(x).then(() => { savedKey.current = contentKey(x); }, () => {}); };
     const onHide = () => { if (document.visibilityState === 'hidden') flush(); };
     window.addEventListener('pagehide', flush); document.addEventListener('visibilitychange', onHide);
     return () => { flush(); window.removeEventListener('pagehide', flush); document.removeEventListener('visibilitychange', onHide); };
