@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import type { T1Prompt } from '@/content/task1';
 import { CL } from '../chainlab/constants';
 import { cellById, expandRow, groupLabel, groupType, hintsOf, judge, partById, partOfRow, POINT, RATIO, rowKey, TREND, uv, type Entry, type Hint, type Row, type Verdict } from './engine';
@@ -58,19 +58,27 @@ function askOf(h: Hint): string {
   return 'Điều gì nổi bật nhất trên biểu đồ?';
 }
 
-/** A tip's other ways of saying it, as a menu under its button (like a model picker): one row each, a radio dot on the current one. */
-function TipMenu({ at, tips, current, onPick, onClose }: { at: DOMRect; tips: string[]; current?: string; onPick: (t: string) => void; onClose: () => void }) {
+/** A tip's other ways of saying it, as a menu under its button (like a model picker): one row each, a radio dot on the current one.
+ *  It grows in from its button and fades out when closed; pressing the button again closes it. */
+function TipMenu({ at, anchor, open, tips, current, onPick, onClose, onGone }: { at: DOMRect; anchor: HTMLElement; open: boolean; tips: string[]; current?: string; onPick: (t: string) => void; onClose: () => void; onGone: () => void }) {
   const ref = useRef<HTMLDivElement>(null);
+  const W = 230, left = Math.min(at.left, window.innerWidth - W - 12), below = at.bottom + 6 + tips.length * 38 + 12 < window.innerHeight;
   useEffect(() => {
-    const down = (e: PointerEvent) => { if (ref.current && !ref.current.contains(e.target as Node)) onClose(); };
+    if (!open) return;
+    const down = (e: PointerEvent) => { const t = e.target as Node; if (ref.current?.contains(t) || anchor.contains(t)) return; onClose(); };
     const key = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
     const scroll = (e: Event) => { if (!ref.current?.contains(e.target as Node)) onClose(); };
     document.addEventListener('pointerdown', down, true); document.addEventListener('keydown', key); window.addEventListener('scroll', scroll, true);
     return () => { document.removeEventListener('pointerdown', down, true); document.removeEventListener('keydown', key); window.removeEventListener('scroll', scroll, true); };
-  }, [onClose]);
-  const W = 230, left = Math.min(at.left, window.innerWidth - W - 12), below = at.bottom + 6 + tips.length * 38 + 12 < window.innerHeight;
+  }, [open, anchor, onClose]);
+  useLayoutEffect(() => {
+    const el = ref.current; if (!el) return;
+    const shut = { opacity: 0, transform: `translateY(${below ? -6 : 6}px) scale(.96)` }, shown = { opacity: 1, transform: 'none' };
+    if (open) el.animate([shut, shown], { duration: 170, easing: 'cubic-bezier(.2,.9,.25,1)' });
+    else { const a = el.animate([shown, shut], { duration: 120, easing: 'cubic-bezier(.4,0,1,1)', fill: 'forwards' }); a.onfinish = onGone; return () => { a.onfinish = null; }; }
+  }, [open]); // eslint-disable-line react-hooks/exhaustive-deps
   return (
-    <div ref={ref} role="menu" style={{ position: 'fixed', left, ...(below ? { top: at.bottom + 6 } : { bottom: window.innerHeight - at.top + 6 }), zIndex: 50, width: W, padding: 6, borderRadius: 12, background: '#fff', boxShadow: '0 0 0 1px rgba(0,0,0,.08), 0 12px 32px -12px rgba(0,0,0,.28)', display: 'flex', flexDirection: 'column', gap: 2 }}>
+    <div ref={ref} role="menu" style={{ position: 'fixed', left, ...(below ? { top: at.bottom + 6 } : { bottom: window.innerHeight - at.top + 6 }), transformOrigin: below ? 'top left' : 'bottom left', pointerEvents: open ? 'auto' : 'none', zIndex: 50, width: W, padding: 6, borderRadius: 12, background: '#fff', boxShadow: '0 0 0 1px rgba(0,0,0,.08), 0 12px 32px -12px rgba(0,0,0,.28)', display: 'flex', flexDirection: 'column', gap: 2 }}>
       {tips.map((t) => { const on = t === current; return (
         <button key={t} type="button" role="menuitemradio" aria-checked={on} className="t1-row" title={TIP_HINT[t] || ''} onClick={() => onPick(t)}
           style={{ display: 'flex', alignItems: 'center', gap: 10, height: 36, padding: '0 10px 0 8px', border: 'none', borderRadius: 8, background: on ? '#EEF3FC' : 'none', fontSize: 13.5, fontWeight: 500, color: on ? '#1F4FA8' : CL.ink, cursor: 'pointer', textAlign: 'left', whiteSpace: 'nowrap' }}>
@@ -83,7 +91,7 @@ function TipMenu({ at, tips, current, onPick, onClose }: { at: DOMRect; tips: st
   );
 }
 
-const Chevron = () => <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6" /></svg>;
+const Chevron = ({ up }: { up?: boolean }) => <svg style={{ transition: 'transform .18s cubic-bezier(.2,.8,.2,1)', transform: up ? 'rotate(180deg)' : 'none' }} width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6" /></svg>;
 /** Stable keys for chips, so they can slide to their new place while one is dragged. */
 const ENTRY_KEY = new WeakMap<object, number>(); let entrySeq = 0;
 const keyOf = (e: Entry) => { let k = ENTRY_KEY.get(e); if (k === undefined) { k = ++entrySeq; ENTRY_KEY.set(e, k); } return 'e' + k; };
@@ -97,7 +105,8 @@ export function ComparePanel({ prompt, row, setRow, found, setFound, hint, setHi
   prompt: T1Prompt; row: Row; setRow: (r: Row) => void; found: { row: Row }[]; setFound: (f: { row: Row }[]) => void; hint: Hint | null; setHint: (h: Hint | null) => void;
 }) {
   const [msg, setMsg] = useState<Verdict | null>(null);
-  const [menu, setMenu] = useState<{ at: DOMRect; tips: string[]; slot: number | null } | null>(null);
+  const [menu, setMenu] = useState<{ id: number; at: DOMRect; el: HTMLElement; tips: string[]; slot: number | null; open: boolean } | null>(null);
+  const closeMenu = useCallback(() => setMenu((m) => (m && m.open ? { ...m, open: false } : m)), []);
   const [hintN, setHintN] = useState(0);
   const [ask, setAsk] = useState<Hint | null>(null);
   // Dragging a chip: it follows the cursor, and the others make room for it as it moves.
@@ -112,7 +121,7 @@ export function ComparePanel({ prompt, row, setRow, found, setFound, hint, setHi
   const { avail, boxes } = panelOf(tipsFor(rowPart ? [partById(prompt, rowPart)] : prompt.parts, single));
   const hints = hintsOf(prompt);
 
-  const put = (r: Row) => { setRow(r); setMsg(null); setMenu(null); };
+  const put = (r: Row) => { setRow(r); setMsg(null); closeMenu(); };
   const addTip = (t: string) => {
     if (t === 'Tất cả') { put([...row, { k: 'group', id: prompt.parts[0].id }]); return; }
     put([...row, { k: 'tip' as const, id: t }]);
@@ -163,7 +172,7 @@ export function ComparePanel({ prompt, row, setRow, found, setFound, hint, setHi
     if (found.some((f) => rowKey(f.row) === rowKey(row))) { setMsg({ ok: false, text: 'Ý này đã có trong danh sách rồi.' }); return; }
     const j = judge(prompt, row);
     setMsg(j);
-    if (j.ok) { setFound([...found, { row }]); setRow([]); setHint(null); setAsk(null); setMenu(null); }
+    if (j.ok) { setFound([...found, { row }]); setRow([]); setHint(null); setAsk(null); closeMenu(); }
   };
   const canChain = (() => {
     if (!rowPart || !partById(prompt, rowPart).axis.ordered) return false;
@@ -176,7 +185,8 @@ export function ComparePanel({ prompt, row, setRow, found, setFound, hint, setHi
   })();
   const shown = dv ? previewOf(dv) : row, restNow = dv ? restOf(dv.ents) : row;
   const chips = chipsOf(prompt, shown);
-  const openMenu = (e: React.MouseEvent, tips: string[], slot: number | null) => { const at = (e.currentTarget as HTMLElement).getBoundingClientRect(); setMenu(menu && menu.slot === slot && menu.tips[0] === tips[0] ? null : { at, tips, slot }); };
+  const openMenu = (e: React.MouseEvent, tips: string[], slot: number | null) => { const el = e.currentTarget as HTMLElement; if (menu && menu.open && menu.el === el) { closeMenu(); return; } setMenu({ id: performance.now(), at: el.getBoundingClientRect(), el, tips, slot, open: true }); };
+  const menuOn = (slot: number | null, base?: string) => !!menu && menu.open && menu.slot === slot && (base === undefined || menu.tips[0] === base);
 
   return (
     <aside style={{ minHeight: 0, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 14 }}>
@@ -198,8 +208,8 @@ export function ComparePanel({ prompt, row, setRow, found, setFound, hint, setHi
                       style={{ height: 24, padding: '0 5px', border: 'none', borderRadius: 6, background: 'none', fontSize: 13, fontWeight: 500, color: 'inherit', cursor: 'pointer' }}>{c.label}</button>
                   ) : <span style={{ padding: '0 5px' }}>{c.label}</span>}
                   {famC && famC.length > 1 && (
-                    <button type="button" className="t1-seg" aria-label="Đổi sang cách nói khác" title="Đổi sang cách nói khác" onClick={(e) => openMenu(e, famC, c.idx[0])} style={{ width: 22, height: 24, display: 'grid', placeItems: 'center', border: 'none', borderRadius: 6, background: menu && menu.slot === c.idx[0] ? '#DCE7F7' : 'none', color: '#2F62C4', cursor: 'pointer', padding: 0 }}>
-                      <Chevron />
+                    <button type="button" className="t1-seg" aria-label="Đổi sang cách nói khác" title="Đổi sang cách nói khác" onClick={(e) => openMenu(e, famC, c.idx[0])} style={{ width: 22, height: 24, display: 'grid', placeItems: 'center', border: 'none', borderRadius: 6, background: menuOn(c.idx[0]) ? '#DCE7F7' : 'none', color: '#2F62C4', cursor: 'pointer', padding: 0 }}>
+                      <Chevron up={menuOn(c.idx[0])} />
                     </button>
                   )}
                   {c.vals.map((v) => <button key={v.i} type="button" className="t1-val" title="Bỏ số này" onClick={() => put(row.filter((_, i) => i !== v.i))} style={{ height: 24, marginLeft: 3, padding: '0 7px', border: 'none', borderRadius: 6, background: CL.mintSoft, color: CL.greenText, fontSize: 12.5, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}>{v.t}</button>)}
@@ -226,8 +236,8 @@ export function ComparePanel({ prompt, row, setRow, found, setFound, hint, setHi
               ))}
             </div>
           )}
-          {menu && <TipMenu at={menu.at} tips={menu.tips} current={menu.slot === null ? undefined : row[menu.slot]?.id}
-            onClose={() => setMenu(null)}
+          {menu && <TipMenu key={menu.id} at={menu.at} anchor={menu.el} open={menu.open} tips={menu.tips} current={menu.slot === null ? undefined : row[menu.slot]?.id}
+            onClose={closeMenu} onGone={() => setMenu((m) => (m && !m.open ? null : m))}
             onPick={(t) => { if (menu.slot === null) addTip(t); else { const r = row.slice(); r[menu.slot] = { k: 'tip', id: t }; put(r); } }} />}
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -235,8 +245,8 @@ export function ComparePanel({ prompt, row, setRow, found, setFound, hint, setHi
               <div key={k} style={{ borderRadius: 10, border: '1px solid #DCE7F7', background: '#F7F9FD', padding: 10, display: 'flex', flexWrap: 'wrap', gap: 6 }}>
                 {b.map((t) => { const fam = familyOf(t, avail); return (
                   <button key={t} type="button" className="cl-btn" title={TIP_HINT[t] || ''} onClick={(e) => (fam && fam.length > 1 ? openMenu(e, fam, null) : addTip(t))} aria-haspopup={fam && fam.length > 1 ? 'menu' : undefined}
-                    style={{ display: 'inline-flex', alignItems: 'center', gap: 6, height: 32, borderRadius: 8, border: '1px solid ' + (menu && menu.slot === null && menu.tips[0] === t ? '#77A1DD' : '#DCE7F7'), background: menu && menu.slot === null && menu.tips[0] === t ? '#EEF3FC' : '#fff', color: '#1F4FA8', fontSize: 13, fontWeight: 500, padding: fam && fam.length > 1 ? '0 8px 0 7px' : '0 10px 0 7px', cursor: 'pointer' }}>
-                    <Glyph shapes={GLYPH[t] || []} />{t}{fam && fam.length > 1 && <Chevron />}
+                    style={{ display: 'inline-flex', alignItems: 'center', gap: 6, height: 32, borderRadius: 8, border: '1px solid ' + (menuOn(null, t) ? '#77A1DD' : '#DCE7F7'), background: menuOn(null, t) ? '#EEF3FC' : '#fff', color: '#1F4FA8', fontSize: 13, fontWeight: 500, padding: fam && fam.length > 1 ? '0 8px 0 7px' : '0 10px 0 7px', cursor: 'pointer' }}>
+                    <Glyph shapes={GLYPH[t] || []} />{t}{fam && fam.length > 1 && <Chevron up={menuOn(null, t)} />}
                   </button>
                 ); })}
               </div>
