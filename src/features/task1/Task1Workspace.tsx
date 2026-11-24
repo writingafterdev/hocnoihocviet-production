@@ -1,0 +1,154 @@
+'use client';
+
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useEffect, useRef, useState } from 'react';
+import { WorkspaceHeader } from '@/components/shell/BrandHeader';
+import { WorkspaceBone } from '@/components/ui/page-bone';
+import { findTask1Prompt } from '@/content/task1';
+import { SignedOutError, type EssayState } from '../attempts/store';
+import { AI_ERROR_TEXT, AiRequestError, postAi } from '../ai/request';
+import { CL } from '../chainlab/constants';
+import { backLinkStyle, ClIcon } from '../chainlab/ui/primitives';
+import { Charts } from './Chart';
+import { ComparePanel } from './Compare';
+import { cellById, groupPart, partOfRow, type Hint, type Row } from './engine';
+import { PlanPanel, planReady, type PlanState } from './Plan';
+import { task1Store, type Task1Attempt, type Task1Review, type Task1Step } from './store';
+import { FreeColumn, GuidedColumn, ModeChoice, paragraphsOf, sectionsOf, SideColumn } from './Write';
+
+type Status = 'loading' | 'ready' | 'missing' | 'error';
+const SAVE_DELAY = 1500;
+const contentKey = (a: Task1Attempt) => JSON.stringify([a.step, a.found, a.place, a.ov, a.order, a.mode, a.essay.drafts, a.essay.guided, a.essay.notes, a.review]);
+const STEPS: [Task1Step, string][] = [['compare', '① So sánh'], ['plan', '② Chia đoạn'], ['write', '③ Viết bài']];
+const primary: React.CSSProperties = { height: 36, borderRadius: 10, border: 'none', color: '#fff', fontSize: 14, fontWeight: 500, padding: '0 14px', cursor: 'pointer' };
+
+/** One Task 1 attempt: ① So sánh → ② Chia đoạn → ③ Viết bài on one page, autosaved. */
+export function Task1Workspace({ attemptId }: { attemptId: string }) {
+  const router = useRouter();
+  const [a, setA] = useState<Task1Attempt | null>(null);
+  const [status, setStatus] = useState<Status>('loading');
+  const [save, setSave] = useState<'saved' | 'saving' | 'failed'>('saved');
+  const [row, setRow] = useState<Row>([]);
+  const [hint, setHint] = useState<Hint | null>(null);
+  const [grading, setGrading] = useState(false);
+  const [gradeError, setGradeError] = useState('');
+  const savedKey = useRef<string | null>(null);
+  const latest = useRef<Task1Attempt | null>(null);
+  latest.current = a;
+  const toLogin = () => router.replace('/login?next=' + encodeURIComponent(location.pathname));
+
+  useEffect(() => {
+    let alive = true;
+    task1Store.get(attemptId).then(
+      (x) => { if (!alive) return; savedKey.current = x ? contentKey(x) : null; setA(x); setStatus(x && findTask1Prompt(x.promptId) ? 'ready' : 'missing'); },
+      (e) => { if (!alive) return; if (e instanceof SignedOutError) toLogin(); else setStatus('error'); },
+    );
+    return () => { alive = false; };
+  }, [attemptId]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const persist = (x: Task1Attempt) => {
+    const key = contentKey(x); setSave('saving');
+    task1Store.save(x).then(() => { savedKey.current = key; if (latest.current && contentKey(latest.current) === key) setSave('saved'); }, (e) => { if (e instanceof SignedOutError) toLogin(); else setSave('failed'); });
+  };
+  const key = a ? contentKey(a) : null;
+  useEffect(() => { if (!a || key === savedKey.current) return; const t = setTimeout(() => persist(latest.current!), SAVE_DELAY); return () => clearTimeout(t); }, [key]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    const flush = () => { if (latest.current) task1Store.save(latest.current).catch(() => {}); };
+    const onHide = () => { if (document.visibilityState === 'hidden') flush(); };
+    window.addEventListener('pagehide', flush); document.addEventListener('visibilitychange', onHide);
+    return () => { flush(); window.removeEventListener('pagehide', flush); document.removeEventListener('visibilitychange', onHide); };
+  }, []);
+
+  if (status !== 'ready' || !a) {
+    return (
+      <div style={{ height: '100%', background: '#fff', display: 'flex', flexDirection: 'column' }}>
+        <WorkspaceHeader />
+        {status === 'loading' && <WorkspaceBone />}
+        {status !== 'loading' && (
+          <main style={{ maxWidth: 520, margin: '96px auto 0', padding: '0 24px', color: CL.ink }}>
+            <h1 style={{ fontSize: 22, fontWeight: 600, margin: '0 0 10px' }}>{status === 'error' ? 'Chưa tải được bài viết' : 'Không tìm thấy bài viết này'}</h1>
+            <p style={{ fontSize: 14.5, lineHeight: 1.6, color: CL.ink6, margin: '0 0 24px' }}>{status === 'error' ? 'Có thể mạng đang chập chờn. Bài của bạn vẫn được lưu trên máy chủ.' : 'Bài này không có trong tài khoản của bạn.'}</p>
+            <Link href="/task1" className="cl-primary" style={{ display: 'inline-flex', alignItems: 'center', height: 42, padding: '0 18px', borderRadius: 10, color: '#fff', fontSize: 13.5, fontWeight: 600 }}>Về thư viện đề Task 1</Link>
+          </main>
+        )}
+      </div>
+    );
+  }
+
+  const prompt = findTask1Prompt(a.promptId)!;
+  const upd = (patch: Partial<Task1Attempt>) => setA((x) => (x ? { ...x, ...patch, updatedAt: Date.now() } : x));
+  const setEssay = (fn: (e: EssayState) => EssayState) => setA((x) => (x ? { ...x, essay: fn(x.essay), updatedAt: Date.now() } : x));
+  const plan: PlanState = { found: a.found, place: a.place, ov: a.ov, order: a.order };
+  const canPlan = a.found.length >= 2, ready = planReady(plan);
+  const go = (step: Task1Step) => { if (step !== 'compare' && !canPlan) return; upd({ step }); setRow([]); setHint(null); };
+  const rowPart = partOfRow(row);
+  const isIn = (id: string) => row.some((e) => e.k === 'val' && e.id === id);
+  const act = {
+    interactive: a.step === 'compare',
+    isIn, isHinted: (id: string) => !!hint && hint.ids.includes(id) && !isIn(id),
+    onCell: (id: string) => { if (rowPart && rowPart !== cellById(prompt, id).part) return; setRow([...row, { k: 'val', id }]); },
+    onGroup: (g: string) => { if (rowPart && rowPart !== groupPart(g)) return; setRow([...row, { k: 'group', id: g }]); },
+  };
+  const sections = sectionsOf(plan);
+  const submit = async () => {
+    const paras = paragraphsOf(a.mode || 'free', a.essay, sections);
+    if (!paras.length) { setGradeError('Bài còn trống.'); return; }
+    setGrading(true); setGradeError('');
+    try { const r = await postAi<{ review: Task1Review }>('task1-review', { promptId: prompt.id, paragraphs: paras }); upd({ review: r.review }); }
+    catch (e) { if (e instanceof SignedOutError) { toLogin(); return; } setGradeError(e instanceof AiRequestError ? AI_ERROR_TEXT[e.code] : AI_ERROR_TEXT.network); }
+    setGrading(false);
+  };
+  const writing = a.step === 'write';
+  const saveLabel = save === 'failed' ? 'Chưa lưu được · thử lại' : contentKey(a) !== savedKey.current ? 'Đang lưu…' : 'Đã lưu';
+
+  return (
+    <div style={{ height: '100%', background: '#fff', display: 'flex', flexDirection: 'column' }}>
+      <WorkspaceHeader status={<button type="button" className="cl-btn" disabled={save !== 'failed'} onClick={() => persist(a)} style={{ fontSize: 12, fontWeight: 500, color: save === 'failed' ? CL.redText : CL.ink4, background: 'none', border: 'none' }}>{saveLabel}</button>} />
+      <div style={{ flex: 1, minHeight: 0, width: '100%', maxWidth: 1560, margin: '0 auto', boxSizing: 'border-box', padding: '18px 32px 22px', display: 'flex', flexDirection: 'column' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, minHeight: 42, paddingBottom: 12 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 18 }}>
+            <Link href="/task1" className="cl-link" style={backLinkStyle}><ClIcon name="left" size={14} />Thư viện đề</Link>
+            <nav aria-label="Các bước" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              {STEPS.map(([s, label], i) => {
+                const on = a.step === s, off = s !== 'compare' && !canPlan;
+                return (
+                  <span key={s} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    {i > 0 && <span aria-hidden="true" style={{ width: 14, height: 1, background: CL.ink2 }} />}
+                    <button type="button" className="cl-btn" aria-current={on ? 'step' : undefined} disabled={off} title={off ? 'Tìm ít nhất 2 điểm nổi bật trước.' : ''} onClick={() => go(s)}
+                      style={{ minHeight: 30, borderRadius: 8, padding: '0 12px', fontSize: 12, fontWeight: 600, border: 'none', cursor: off ? 'not-allowed' : 'pointer', background: on ? '#EEF3FC' : '#fff', color: on ? '#2F62C4' : CL.ink6, boxShadow: on ? 'none' : '0 0 0 1px rgba(0,0,0,.1)', opacity: off ? 0.45 : 1 }}>{label}</button>
+                  </span>
+                );
+              })}
+            </nav>
+            {writing && a.mode && <span style={{ borderRadius: 6, padding: '2px 8px', background: '#F5F5F5', color: CL.ink7, fontSize: 12, fontWeight: 500 }}>{a.mode === 'guided' ? 'Có hướng dẫn' : 'Tự viết'}</span>}
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            {gradeError && <span role="alert" style={{ fontSize: 12.5, color: CL.redText }}>{gradeError}</span>}
+            {a.step === 'compare' && <button type="button" className="cl-btn cl-primary" disabled={!canPlan} onClick={() => go('plan')} style={{ ...primary, opacity: canPlan ? 1 : 0.4 }}>Chia đoạn →</button>}
+            {a.step === 'plan' && <button type="button" className="cl-btn cl-primary" disabled={!ready} title={ready ? '' : 'Cần ít nhất một ý trong Tổng quan, Đoạn 1 và Đoạn 2.'} onClick={() => go('write')} style={{ ...primary, opacity: ready ? 1 : 0.4 }}>Viết bài →</button>}
+            {writing && a.mode && !a.review && (grading ? <span role="status" style={{ fontSize: 13, fontWeight: 500, color: CL.ink5 }}>Đang chấm bài…</span> : <span className="pro-fill"><button type="button" className="cl-btn" onClick={submit} style={primary}>Nộp bài</button></span>)}
+            {writing && a.review && <button type="button" className="cl-btn cl-primary" onClick={() => upd({ review: null })} style={primary}>Viết lại</button>}
+          </div>
+        </div>
+
+        <main style={{ flex: 1, minHeight: 0, display: 'grid', gridTemplateColumns: writing && a.mode ? '330px minmax(0, 1fr) 330px' : writing ? '330px minmax(0, 1fr)' : 'minmax(0, 1fr) 520px', gap: 16 }}>
+          <section style={{ minHeight: 0, overflowY: 'auto', borderRadius: 12, border: '1px solid ' + CL.border, background: '#fff', padding: writing ? '16px' : '18px 20px 24px', display: 'flex', flexDirection: 'column', gap: writing ? 16 : 28 }}>
+            <div style={{ border: '1px solid ' + CL.ink3, padding: '10px 13px' }}><p style={{ margin: 0, fontSize: 12.5, fontWeight: 600, fontStyle: 'italic', lineHeight: 1.55, color: '#20252D' }}>{prompt.text}</p></div>
+            <Charts prompt={prompt} act={act} compact={writing} />
+          </section>
+
+          {a.step === 'compare' && (
+            <ComparePanel prompt={prompt} row={row} setRow={setRow} hint={hint} setHint={setHint} found={a.found}
+              setFound={(f) => upd(f.length < a.found.length ? { found: f, place: {}, ov: [] } : { found: f })} />
+          )}
+          {a.step === 'plan' && <PlanPanel prompt={prompt} state={plan} set={(p) => upd(p)} />}
+          {writing && !a.mode && <ModeChoice onPick={(m) => upd({ mode: m, essay: m === 'guided' ? { ...a.essay, guided: { plan: null, at: 0, level: 'frame' } } : a.essay })} />}
+          {writing && a.mode === 'guided' && <GuidedColumn prompt={prompt} plan={plan} essay={a.essay} setEssay={setEssay} found={a.found} />}
+          {writing && a.mode === 'free' && <FreeColumn essay={a.essay} setEssay={setEssay} />}
+          {writing && a.mode && <SideColumn mode={a.mode} essay={a.essay} setEssay={setEssay} review={a.review} />}
+        </main>
+      </div>
+    </div>
+  );
+}

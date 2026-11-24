@@ -44,7 +44,7 @@ Mỗi câu trả về:
 - idea: câu này nói gì, tiếng Việt, ngắn gọn.
 - en: câu tiếng Anh hoàn chỉnh.
 - vi: bản dịch tiếng Việt tự nhiên của câu en.
-- frame: khung câu dùng được ngay, giữ nguyên các chữ cố định (từ nối, giới từ, động từ chỉ xu hướng nếu là phần cấu trúc), thay phần nội dung bằng ô trong ngoặc vuông: [S], [O], [V2], [V-ing], [adv], [số], [mốc], [N], [adj]. Khung phải khớp đúng câu en.
+- frame: khung câu dùng được ngay, giữ nguyên các chữ cố định (từ nối, giới từ, động từ chỉ xu hướng nếu là phần cấu trúc), thay phần nội dung bằng ô trong ngoặc vuông. Trong ô chỉ ghi một nhãn ngắn, không ghi chữ của câu: [S], [O], [V2], [V-ing], [adv], [số], [mốc], [N], [adj]. Khung phải khớp đúng câu en.
 - note: một câu tiếng Việt ngắn gọi tên cấu trúc (ví dụ: "from … to …: mức trước và mức sau khi thay đổi.").
 - vocab: 1 đến 3 cụm từ chính có NGUYÊN VĂN trong câu en (2 đến 4 chữ, viết thường), thường là cách nói xu hướng hoặc so sánh.
 
@@ -108,7 +108,7 @@ export async function aiTask1Review(userId: string, pr: T1Prompt, paragraphs: st
   const feats = keyFeatures(pr);
   const words = paragraphs.join(' ').trim().split(/\s+/).filter(Boolean).length;
   const input = [describeTask1(pr), '', 'ĐIỂM CHÍNH CỦA ĐỀ (máy tính tìm từ số liệu):', ...feats.map((f) => '  - ' + f), '', `BÀI CỦA HỌC SINH (${words} chữ, ${paragraphs.length} đoạn):`, ...paragraphs.map((t, i) => `[Đoạn ${i + 1}] ${t}`)].join('\n');
-  const out = await ask<Task1Review>({ userId, kind: 'essay', task: REVIEW_TASK, schema: REVIEW_SCHEMA, effort: 'medium', maxTokens: 8000, grounded: false, input });
+  const out = await ask<Task1Review>({ userId, kind: 'essay', task: REVIEW_TASK, schema: REVIEW_SCHEMA, effort: 'high', maxTokens: 16000, noLite: true, grounded: false, input });
   const band = (x: unknown) => { const n = Math.round(Number(x) * 2) / 2; return Number.isFinite(n) ? Math.max(0, Math.min(9, n)) : 0; };
   const s = (x: unknown, max: number) => String(x ?? '').trim().slice(0, max);
   const sc = out.scores || ({} as Task1Review['scores']);

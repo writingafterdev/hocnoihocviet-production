@@ -19,13 +19,15 @@ const write = (disabled?: boolean): Item => ({ label: 'Luyện viết', href: '/
 const copy = (disabled?: boolean): Item => ({ label: 'Chép mẫu', href: '/copy', match: disabled ? [] : ['/copy'], icon: <NavIcon name="copy" />, disabled });
 
 // Tài liệu missbacxiu (her doc and Nghĩ ý) comes first; Writing holds Task 2 (quick drill, writing practice, copying a sample) and Task 1 (not open yet); vocab and the student's own essays stand apart.
-const GROUPS: Group[] = [
+/** Task 1 opens for admins while it is being built (the rest of the section stays "Sắp có"). */
+const task1Write = (open: boolean): Item => ({ label: 'Luyện viết', href: '/task1', match: open ? ['/task1'] : [], icon: <NavIcon name="write" />, disabled: !open });
+const groupsFor = (task1: boolean): Group[] => [
   { items: [{ label: 'Trang chủ', href: '/home', match: ['/home'], icon: <NavIcon name="home" /> }] },
   { label: 'Tài liệu missbacxiu', items: [{ label: 'Tài liệu', href: '/tai-lieu', match: ['/tai-lieu'], icon: <NavIcon name="cafe" /> },
     { label: 'Nghĩ ý', href: '/nghi-y', match: ['/nghi-y'], icon: <NavIcon name="chains" /> }] },
   { label: 'Writing', sections: [
     { label: 'Task 2', items: [drill(), write(), copy()] },
-    { label: 'Task 1', soon: true, items: [drill(true), write(true), copy(true)] },
+    { label: 'Task 1', soon: !task1, items: [drill(true), task1Write(task1), copy(true)] },
   ] },
   { label: 'Từ vựng', items: [{ label: 'Từ vựng theo chủ đề', href: '/vocab', match: ['/vocab'], icon: <NavIcon name="vocab" /> }] },
   { label: 'Của bạn', items: [
@@ -38,6 +40,8 @@ const inside = (path: string, base: string) => path === base || path.startsWith(
 const KEY = 'hnhv-sidebar';
 /** The workspaces (drill, chains, essay) need every pixel, so there the sidebar starts hidden. Everywhere else it starts open. */
 const WORKSPACE = ['/prove', '/write'];
+/** A Task 1 attempt (/task1/<id>) is a workspace too; the Task 1 library is not. */
+const isWorkspace = (path: string) => WORKSPACE.some((b) => inside(path, b)) || /^\/task1\/[^/]+/.test(path);
 const SIDEBAR_W = 232;
 
 /** What the top bar says about the current page: a section (muted) and the page, each a link (the section to its first page, the page to its start). */
@@ -45,6 +49,7 @@ interface Crumb { label: string; href: string }
 function titleOf(path: string): { section?: Crumb; page: Crumb } {
   const task2: Crumb = { label: 'Task 2', href: '/writing' };
   const mbx: Crumb = { label: 'Tài liệu missbacxiu', href: '/tai-lieu' };
+  if (inside(path, '/task1')) return { section: { label: 'Task 1', href: '/task1' }, page: path === '/task1' ? { label: 'Thư viện đề', href: '/task1' } : { label: 'Luyện viết', href: '/task1' } };
   if (inside(path, '/prove')) return { section: task2, page: { label: 'Phát triển ý', href: '/prove' } };
   if (inside(path, '/copy')) return { section: task2, page: { label: 'Chép mẫu', href: '/copy' } };
   if (inside(path, '/writing')) return { section: task2, page: { label: 'Thư viện đề', href: '/writing' } };
@@ -76,7 +81,10 @@ function ToggleIcon({ open }: { open: boolean }) {
  */
 export function AppSidebar({ children }: { children: React.ReactNode }) {
   const path = usePathname();
-  const workspace = WORKSPACE.some((b) => inside(path, b));
+  const workspace = isWorkspace(path);
+  const [task1, setTask1] = useState(false);
+  useEffect(() => { fetch('/api/task1/access', { credentials: 'same-origin' }).then((r) => setTask1(r.ok), () => {}); }, []);
+  const GROUPS = groupsFor(task1);
   const kind = workspace ? 'workspace' : 'page';
   const [stored, setStored] = useState<Record<string, boolean>>({});
   useEffect(() => { try { setStored(JSON.parse(localStorage.getItem(KEY) || '{}')); } catch { /* private mode */ } }, []);
