@@ -6,8 +6,17 @@ export function ChartSketch({ pr, size }: { pr: T1Prompt; size: number }) {
   const x = (i: number) => pad + (i * (w - 2 * pad)) / Math.max(1, n - 1), y = (v: number) => h - pad - (v / max) * (h - 2 * pad);
   return (
     <svg viewBox={`0 0 ${w} ${h}`} width={size} height={size} aria-hidden="true" style={{ overflow: 'visible' }}>
-      {[0, 0.5, 1].map((t) => <line key={t} x1={pad} x2={w - pad} y1={y(t * max)} y2={y(t * max)} stroke={t ? '#E5E5E5' : '#D4D4D4'} strokeWidth="1" />)}
-      {p.kind === 'bars' ? p.axis.labels.map((_, i) => {
+      {p.kind !== 'pies' && [0, 0.5, 1].map((t) => <line key={t} x1={pad} x2={w - pad} y1={y(t * max)} y2={y(t * max)} stroke={t ? '#E5E5E5' : '#D4D4D4'} strokeWidth="1" />)}
+      {p.kind === 'pies' ? p.axis.labels.map((_, i) => {
+        // Pies: one small pie per label, side by side.
+        const r = Math.min(30, (w - 2 * pad) / n / 2 - 2), cx = pad + ((w - 2 * pad) / n) * (i + 0.5), cy = h / 2;
+        const vals = p.items.map((it) => p.data[it.id][i] ?? 0), tot = vals.reduce((a, b) => a + b, 0) || 1; let acc = 0;
+        return p.items.map((it, k) => {
+          const a0 = (acc / tot) * Math.PI * 2, a1 = ((acc + vals[k]) / tot) * Math.PI * 2; acc += vals[k];
+          if (!vals[k]) return null;
+          return <path key={it.id + i} fill={it.color} d={`M${cx} ${cy}L${cx + r * Math.sin(a0)} ${cy - r * Math.cos(a0)}A${r} ${r} 0 ${a1 - a0 > Math.PI ? 1 : 0} 1 ${cx + r * Math.sin(a1)} ${cy - r * Math.cos(a1)}Z`} />;
+        });
+      }) : p.kind === 'bars' ? p.axis.labels.map((_, i) => {
         // Bars: one small group per label, inside the frame.
         const gw = (w - 2 * pad) / n, bw = Math.max(1.5, (gw - 3) / p.items.length);
         return p.items.map((it, k) => { const v = p.data[it.id][i]; if (v === null) return null; const y0 = y(v); return <rect key={it.id + i} x={pad + i * gw + (gw - bw * p.items.length) / 2 + k * bw} y={y0} width={Math.max(1, bw - 0.6)} height={h - pad - y0} fill={it.color} />; });

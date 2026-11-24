@@ -54,6 +54,7 @@ function askOf(h: Hint): string {
   if (t === 'cao hơn') return 'Đặt hai mục cạnh nhau ở mọi mốc: bên nào cao hơn? Có chỗ nào ngoại lệ không?';
   if (t === 'đạt đỉnh') return 'Mục nào thay đổi nhiều nhất? Số cao nhất của nó nằm ở đâu?';
   if (t === 'tăng nhiều nhất') return 'Ngoài số lớn nhất, cái gì tăng nhanh nhất?';
+  if (t === 'giảm nhiều nhất') return 'So hai năm: mục nào giảm nhiều nhất?';
   if (t === 'phần lớn' || t === 'gần một nửa') return 'Phần nào lớn nhất, và nó chiếm khoảng bao nhiêu?';
   if ((t === 'cao nhất' || t === 'thấp nhất') && h.text.includes(' ở mọi ')) return 'Có mục nào lúc nào cũng đứng ' + (t === 'cao nhất' ? 'đầu' : 'cuối') + ' không?';
   if (t === 'cao nhất' || t === 'thấp nhất') return 'Trong cột số này, số nào cao nhất, số nào thấp nhất?';
@@ -221,7 +222,7 @@ export function ComparePanel({ prompt, row, setRow, found, setFound, hint, setHi
                 </span>
               );
             })}
-            {!row.length && <span style={{ fontSize: 13, color: CL.ink4, padding: '0 4px' }}>{prompt.parts.some((x) => x.kind === 'bars') ? 'Bấm một cột, một tên ở chú thích hoặc một nhãn dưới biểu đồ, rồi chọn một ý so sánh.' : 'Bấm một điểm, tên một đường hoặc một năm trên biểu đồ, rồi chọn một ý so sánh.'}</span>}
+            {!row.length && <span style={{ fontSize: 13, color: CL.ink4, padding: '0 4px' }}>{prompt.parts.some((x) => x.kind === 'pies') ? 'Bấm một phần, một tên ở chú thích hoặc một năm dưới biểu đồ, rồi chọn một ý so sánh.' : prompt.parts.some((x) => x.kind === 'bars') ? 'Bấm một cột, một tên ở chú thích hoặc một nhãn dưới biểu đồ, rồi chọn một ý so sánh.' : 'Bấm một điểm, tên một đường hoặc một năm trên biểu đồ, rồi chọn một ý so sánh.'}</span>}
             {canChain && !dv && (
               <button type="button" className="cl-btn" title="Kể tiếp chặng sau của cùng đường này" onClick={() => put([...row, { k: 'tip', id: 'rồi' }])} style={{ marginLeft: 'auto', display: 'inline-flex', alignItems: 'center', gap: 5, height: 32, borderRadius: 8, border: '1px dashed #77A1DD', background: '#F7F9FD', color: '#2F62C4', fontSize: 13, fontWeight: 600, padding: '0 11px', cursor: 'pointer' }}>
                 rồi<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg>

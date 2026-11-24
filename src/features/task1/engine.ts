@@ -319,7 +319,8 @@ export function judge(pr: T1Prompt, row: Row): Verdict {
     if (!A.ordered) return { ok: false, text: '“giảm nhiều nhất” cần trục thời gian.' };
     var nL = A.labels.length - 1, chL = p.items.map(function (o) { var so = spanOf(p, o.id); return { id: o.id, d: p.data[o.id][so.b] - p.data[o.id][so.a] }; }), worst = chL.slice().sort(function (u, w) { return u.d - w.d; })[0];
     if (worst.d >= 0) return { ok: false, text: 'Không mục nào giảm từ ' + A.labels[0] + ' đến ' + A.labels[nL] + '.' };
-    if (worst.id !== items[0]) return { ok: false, text: 'Giảm nhiều nhất (' + A.labels[0] + ' → ' + A.labels[nL] + ') là ' + name(worst.id) + ' (' + fmt(worst.d) + p.unit + ').' };
+    // A tie counts for each of them.
+    if (chL.filter(function (o) { return o.id === items[0]; })[0].d > worst.d + 1e-9) return { ok: false, text: 'Giảm nhiều nhất (' + A.labels[0] + ' → ' + A.labels[nL] + ') là ' + name(worst.id) + ' (' + fmt(worst.d) + p.unit + ').' };
     return { ok: true, text: name(items[0]) + ' giảm nhiều nhất, ' + fmt(worst.d) + p.unit + ' (' + A.labels[0] + ' → ' + A.labels[nL] + '): đúng.' };
   }
   if (tip === 'tăng nhiều nhất') {
@@ -332,7 +333,7 @@ export function judge(pr: T1Prompt, row: Row): Verdict {
     }
     if (!A.ordered) return { ok: false, text: '“tăng nhiều nhất” cần trục thời gian.' };
     var n = A.labels.length - 1, chg = p.items.map(function (o) { var so = spanOf(p, o.id); return { id: o.id, d: p.data[o.id][so.b] - p.data[o.id][so.a] }; }), best = chg.slice().sort(function (u, w) { return w.d - u.d; })[0];
-    if (best.id !== x2) return { ok: false, text: 'Tăng nhiều nhất (' + A.labels[0] + ' → ' + A.labels[n] + ') là ' + name(best.id) + ' (+' + fmt(best.d) + p.unit + '), ' + name(x2) + ' +' + fmt(chg.filter(function (o) { return o.id === x2; })[0].d) + p.unit + '.' };
+    if (chg.filter(function (o) { return o.id === x2; })[0].d < best.d - 1e-9) return { ok: false, text: 'Tăng nhiều nhất (' + A.labels[0] + ' → ' + A.labels[n] + ') là ' + name(best.id) + ' (+' + fmt(best.d) + p.unit + '), ' + name(x2) + ' +' + fmt(chg.filter(function (o) { return o.id === x2; })[0].d) + p.unit + '.' };
     return { ok: true, text: name(x2) + ' tăng nhiều nhất, +' + fmt(best.d) + p.unit + ' (' + A.labels[0] + ' → ' + A.labels[n] + '): đúng.' + (p.items.length && p.data[x2][0] && best.d / p.data[x2][0] < 0.5 ? '' : '') };
   }
   return { ok: false, text: '' };
@@ -434,6 +435,20 @@ export function hintsOf(pr: T1Prompt): Hint[] {
         var d = p.data[x.id];
         for (var e1 = 0; e1 < n; e1++) for (var e2 = e1 + 1; e2 < n; e2++) if (d[e1] !== null && d[e1] === d[e2] && !out.some(function (h) { return h.eq; })) out.push({ part: p.id, eq: true, ids: [p.id + '.' + x.id + '.' + e1, p.id + '.' + x.id + '.' + e2], text: nm(x.id) + ' ở ' + A.labels[e1] + ' và ' + A.labels[e2] + ' bằng nhau (' + uv(p, d[e1]) + '). Bấm hai cột đang sáng, chọn “bằng nhau”', next: 'tìm hai cột cùng màu cao bằng nhau', feat: { tip: 'bằng nhau', items: [nm(x.id)], label: nm(x.id) + ': ' + A.labels[e1] + ' bằng ' + A.labels[e2] } });
       });
+    }
+    if (A.ordered && n === 2) {
+      // Only two years (1958 and 2008): the biggest fall and the biggest rise.
+      var ch = p.items.map(function (x) { var d2 = p.data[x.id]; return { id: x.id, d: d2[0] === null || d2[1] === null ? 0 : d2[1] - d2[0] }; });
+      var fall = ch.slice().sort(function (q, r) { return q.d - r.d; })[0], rise = ch.slice().sort(function (q, r) { return r.d - q.d; })[0];
+      var only = function (o) { return ch.filter(function (q) { return Math.abs(q.d - o.d) < 1e-9; }).length === 1; };
+      if (fall.d < -2 * T && only(fall)) out.push({ part: p.id, ids: ids(fall.id), text: nm(fall.id) + ' giảm nhiều nhất (' + uv(p, p.data[fall.id][0]) + ' → ' + uv(p, p.data[fall.id][1]) + '). Bấm tên ' + nm(fall.id) + ', chọn “giảm nhiều nhất”', next: 'so từng mục giữa hai năm, tìm mục thay đổi nhiều nhất', feat: { tip: 'giảm nhiều nhất', items: [nm(fall.id)], label: nm(fall.id) + ' giảm nhiều nhất' } });
+      if (rise.d > 2 * T && only(rise)) out.push({ part: p.id, ids: ids(rise.id), text: nm(rise.id) + ' tăng nhiều nhất (' + uv(p, p.data[rise.id][0]) + ' → ' + uv(p, p.data[rise.id][1]) + '). Bấm tên ' + nm(rise.id) + ', chọn “tăng nhiều nhất”', next: 'so từng mục giữa hai năm, tìm mục thay đổi nhiều nhất', feat: { tip: 'tăng nhiều nhất', items: [nm(rise.id)], label: nm(rise.id) + ' tăng nhiều nhất' } });
+    }
+    if (A.ordered && n === 2) {
+      for (var u0 = 0; u0 < p.items.length; u0++) for (var w0 = 0; w0 < p.items.length; w0++) {
+        if (u0 === w0) continue; var X0 = p.data[p.items[u0].id], Y0 = p.data[p.items[w0].id];
+        if (X0[0] !== null && Y0[0] !== null && X0[0] < Y0[0] - T && X0[1] > Y0[1] + T && !out.some(function (h) { return h.cross; })) out.push({ part: p.id, cross: true, ids: ids(p.items[u0].id).concat(ids(p.items[w0].id)), text: p.items[u0].name + ' vượt ' + p.items[w0].name + '. Bấm hai tên đó và “vượt qua”', next: 'tìm hai mục đổi chỗ cho nhau', feat: { tip: 'vượt qua', items: [p.items[u0].name, p.items[w0].name], label: p.items[u0].name + ' vượt ' + p.items[w0].name } });
+      }
     }
     if (A.ordered && n >= 3) {
       for (var u = 0; u < p.items.length; u++) for (var w = 0; w < p.items.length; w++) {

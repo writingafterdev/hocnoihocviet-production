@@ -10,7 +10,7 @@ import { hintsOf, type Row } from './engine';
  * The first visit to ① So sánh: one finding done together, on the prompt's own chart. The finding is the first simple
  * Gợi ý answer (one line "cao nhất"/"thấp nhất", or "Tất cả" + a trend), so every prompt has one without extra content.
  */
-export interface TourPlan { first: { kind: 'item'; group: string; id: string; name: string; bars: boolean } | { kind: 'all'; group: string }; tip: string; why: string }
+export interface TourPlan { first: { kind: 'item'; group: string; id: string; name: string; shape: 'line' | 'bars' | 'pies' | 'table' } | { kind: 'all'; group: string }; tip: string; why: string }
 
 const SEEN_KEY = 'hnhv.t1tour';
 export const tourSeen = () => { try { return localStorage.getItem(SEEN_KEY) === 'done'; } catch { return true; } };
@@ -27,8 +27,9 @@ export function tourPlanOf(prompt: T1Prompt, found: { row: Row }[]): TourPlan | 
     else if ((h.feat.tip === 'cao nhất' || h.feat.tip === 'thấp nhất') && h.feat.items.length === 1 && !/trừ/.test(h.feat.label)) {
       const it = p.items.find((x) => x.name === h.feat.items[0]);
       const every = (h.text.match(/ở mọi ([^\s.,]+)/) || [])[1];
-      const bars = p.kind === 'bars', top = h.feat.tip === 'cao nhất';
-      if (it) plan = { first: { kind: 'item', group: p.id + '>item:' + it.id, id: it.id, name: it.name, bars }, tip: h.feat.tip, why: (bars ? 'Cột ' + it.name + ' luôn ' + (top ? 'cao' : 'thấp') + ' hơn các cột khác' : 'Đường ' + it.name + ' nằm ' + (top ? 'trên cùng' : 'dưới cùng')) + (every ? ' ở mọi ' + every : '') + '.' };
+      const shape = p.kind, top = h.feat.tip === 'cao nhất';
+      const sees = shape === 'bars' ? 'Cột ' + it?.name + ' luôn ' + (top ? 'cao' : 'thấp') + ' hơn các cột khác' : shape === 'pies' ? 'Phần ' + it?.name + ' luôn ' + (top ? 'lớn' : 'nhỏ') + ' nhất' : 'Đường ' + it?.name + ' nằm ' + (top ? 'trên cùng' : 'dưới cùng');
+      if (it) plan = { first: { kind: 'item', group: p.id + '>item:' + it.id, id: it.id, name: it.name, shape }, tip: h.feat.tip, why: sees + (every ? ' ở mọi ' + every : '') + '.' };
     }
     if (!plan) continue;
     const row: Row = [{ k: 'group', id: plan.first.group }, { k: 'tip', id: plan.tip }];

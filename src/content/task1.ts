@@ -2,8 +2,8 @@
  * Task 1 prompt library (Academic charts), stored in one general form so the checks work on any chart:
  * a prompt has parts (a chart or a table); each part is items × one axis (ordered, like years, or not, like sports).
  *
- * Source: youpass.vn's Task 1 bank. The prompt sentence is kept as written there; the numbers are read from their
- * images and the charts are redrawn in our own style. Line graphs and bar charts so far.
+ * Source: youpass.vn's Task 1 bank. The prompt text is kept exactly as written there; the numbers are read from their
+ * images and the charts are redrawn in our own style. Line graphs, bar charts and pie charts so far.
  */
 
 export interface T1Item { id: string; name: string; color: string; initial: string }
@@ -56,7 +56,9 @@ export interface T1Prompt {
 
 const C = { blue: '#2F62C4', lblue: '#77A1DD', tomato: '#D2401B', sun: '#E9A21F', leaf: '#2D881A', teal: '#5FAF9F', navy: '#1F3F8A', gray: '#A3A3A3', berry: '#B0306A' };
 const it = (id: string, name: string, color: string): T1Item => ({ id, name, color, initial: name.replace(/[^A-Za-z0-9]/g, '').charAt(0).toUpperCase() || '#' });
+// The closing sentence as YouPass writes it: two spellings, kept as each prompt has it.
 const END = ' Summarise the information by selecting and reporting the main features, and make comparisons where relevant.';
+const END_Z = ' Summarize the information by selecting and reporting the main features and make comparisons where relevant.';
 const YP = 'YouPass';
 
 export const TASK1_PROMPTS: T1Prompt[] = [
@@ -72,7 +74,7 @@ export const TASK1_PROMPTS: T1Prompt[] = [
   },
   {
     id: 't1-china-food', category: 'Line Graph', title: 'Food consumption in China, 1985–2010', source: YP + ' · Collect',
-    text: 'The graph shows the changes in food consumption by Chinese people between 1985 and 2010.' + END,
+    text: 'The graph shows the changes in food consumption by Chinese people between 1985 and 2010.' + END_Z,
     parts: [{
       id: 'a', title: 'Food consumption by Chinese people (grams per person per week)', kind: 'line', unit: ' gram', unitEn: ' grams', tol: 15, max: 900, step: 100,
       axis: { name: 'năm', ordered: true, prep: 'in', labels: ['1985', '1990', '1995', '2000', '2005', '2010'] },
@@ -82,7 +84,7 @@ export const TASK1_PROMPTS: T1Prompt[] = [
   },
   {
     id: 't1-uk-forest', category: 'Line Graph', title: 'UK forest industry production, 1980–2000', source: YP + ' · Collect',
-    text: 'The line graph below shows the production of paper, wood pulp and sawn-wood in the UK from 1980 to 2000.' + END,
+    text: 'The line graph below shows the production of paper, wood pulp and sawn-wood in the UK from 1980 to 2000.' + END_Z,
     parts: [{
       id: 'a', title: 'Production of the forest industry in the UK (million tonnes)', kind: 'line', unit: ' triệu tấn', unitEn: ' million tonnes', tol: 6, max: 400, step: 50,
       axis: { name: 'năm', ordered: true, prep: 'in', labels: ['1980', '1990', '2000'] },
@@ -102,7 +104,7 @@ export const TASK1_PROMPTS: T1Prompt[] = [
   },
   {
     id: 't1-household-devices', category: 'Line Graph', title: 'Households owning electronic devices, 1995–2015', source: YP + ' · Actual Test',
-    text: 'The graph below shows the percentage of households owning four types of electronic devices between 1995 and 2015.' + END,
+    text: 'The graph below shows the percentage of households owning four types of electronic devices between 1995 and 2015.' + END_Z,
     parts: [{
       id: 'a', title: 'Households owning four types of electronic devices (%)', kind: 'line', unit: '%', unitEn: '%', tol: 3, max: 100, step: 20,
       axis: { name: 'năm', ordered: true, prep: 'in', labels: ['1995', '2000', '2005', '2010', '2015'] },
@@ -112,7 +114,7 @@ export const TASK1_PROMPTS: T1Prompt[] = [
   },
   {
     id: 't1-fruit-veg', category: 'Bar Chart', title: 'Five portions of fruit and vegetables a day, UK, 2001–2008', source: YP + ' · Collect',
-    text: 'The bar chart shows the percentage of children, men and women in the UK who ate five portions of fruit and vegetables per day from 2001 to 2008.' + END,
+    text: 'The bar chart shows the percentage of people who ate five portions of fruits and vegetables per day in the UK from 2001 to 2008.' + END_Z,
     parts: [{
       id: 'a', title: 'People eating five portions a day, UK (%)', kind: 'bars', unit: '%', unitEn: '%', tol: 1.5, max: 40, step: 10,
       axis: { name: 'năm', ordered: true, prep: 'in', labels: ['2001', '2002', '2003', '2004', '2005', '2006', '2007', '2008'] },
@@ -121,14 +123,62 @@ export const TASK1_PROMPTS: T1Prompt[] = [
     }],
   },
   {
-    id: 't1-sports-males', category: 'Bar Chart', title: 'Young men watching or playing six sports', source: YP + ' · Collect',
-    text: 'The graph shows the percentage of males aged 16-25 in a particular country who prefer watching sports or taking part in them.' + END,
+    id: 't1-sports-males', category: 'Bar Chart', title: 'Young men watching or playing six sports', source: YP + ' · IELTS Insights Aug 26',
+    text: 'The graph shows the percentage of males aged 16-25 in a particular country who prefer watching sports to males who prefer participating in sports. Summarise the information by selecting and reporting the main features and make comparisons where relevant.',
     parts: [{
       id: 'a', title: 'Males aged 16-25 who prefer watching or participating (%)', kind: 'bars', unit: '%', unitEn: '%', tol: 2, max: 60, step: 10,
       axis: { name: 'môn', ordered: false, prep: 'for', labels: ['Football', 'Rugby', 'Basketball', 'Badminton', 'Fishing', 'Horse riding'] },
       items: [it('watch', 'Watching', C.blue), it('play', 'Participating', C.sun)],
       data: { watch: [45, 30, 37.5, 29, 15, 45], play: [10, 20, 25, 25, 50, 18] },
     }],
+  },
+  {
+    id: 't1-music-sales', category: 'Pie Chart', title: 'US music album sales by genre, 2008–2010', source: YP + ' · Collect',
+    text: 'The pie charts below show the percentage of US music album sales by genre in 2008, 2009, and 2010.' + END_Z,
+    parts: [{
+      id: 'a', title: 'US music album sales by genre (%)', kind: 'pies', unit: '%', unitEn: '%', tol: 1, share: true,
+      axis: { name: 'năm', ordered: true, prep: 'in', labels: ['2008', '2009', '2010'] },
+      items: [it('country', 'Country', C.lblue), it('rnb', 'R&B', C.teal), it('rock', 'Rock', C.tomato), it('alt', 'Alternative', C.sun), it('jazz', 'Jazz', C.navy)],
+      data: { country: [13, 16, 18], rnb: [22, 22, 19], rock: [39, 39, 40], alt: [23, 20, 20], jazz: [3, 3, 3] },
+    }],
+  },
+  {
+    id: 't1-car-sales', category: 'Pie Chart', title: 'New car sales in Australia, 1994–2013', source: YP + ' · Collect',
+    text: 'The pie charts show the sales of new cars in Australia in 1994, 2004, and 2013. Summarize the information by selecting and reporting the main points and make comparisons where relevant.',
+    parts: [{
+      id: 'a', title: 'New car sales in Australia in April (%) · total 42,900 (1994), 71,000 (2004), 85,000 (2013)', kind: 'pies', unit: '%', unitEn: '%', tol: 1, share: true,
+      axis: { name: 'năm', ordered: true, prep: 'in', labels: ['1994', '2004', '2013'] },
+      items: [it('suv', 'SUVs', C.navy), it('sedan', 'Sedans', C.tomato), it('other', 'Others', C.sun)],
+      data: { suv: [7, 17, 17], sedan: [74, 62, 51], other: [19, 21, 32] },
+    }],
+  },
+  {
+    id: 't1-europe-spending', category: 'Pie Chart', title: 'Spending in a European country, 1958 and 2008', source: YP + ' · Collect',
+    text: 'The charts below show the proportion of people’s total spending in a particular European country was spent on different commodities and services in 1958 and in 2008.' + END,
+    parts: [{
+      id: 'a', title: 'Share of total spending (%)', kind: 'pies', unit: '%', unitEn: '%', tol: 1, share: true,
+      axis: { name: 'năm', ordered: true, prep: 'in', labels: ['1958', '2008'] },
+      items: [it('housing', 'Housing', C.tomato), it('food', 'Food', C.leaf), it('clothing', 'Clothing', C.sun), it('travel', 'Travel/transport', C.lblue), it('fun', 'Entertainment', C.berry), it('luxury', 'Luxury goods', C.navy)],
+      data: { housing: [22, 32], food: [32, 12], clothing: [18, 16], travel: [8, 17], fun: [13, 6], luxury: [7, 17] },
+    }],
+  },
+  {
+    id: 't1-charity-money', category: 'Pie Chart', title: 'A US children’s charity: money in and money out', source: YP + ' · Collect',
+    text: 'The pie chart shows the amount of money that a children’s charity located in the USA spent and received in one year.' + END,
+    parts: [
+      {
+        id: 'a', title: 'Revenue sources (%) · total $53,561,580', kind: 'pies', unit: '%', unitEn: '%', tol: 0.5, share: true,
+        axis: { name: '', ordered: false, prep: '', labels: [''] },
+        items: [it('food', 'Donated food', C.leaf), it('community', 'Community contributions', C.tomato), it('program', 'Program revenue', C.sun), it('other', 'Other income', C.lblue), it('grants', 'Government grants', C.navy), it('invest', 'Investment income', C.berry)],
+        data: { food: [86.6], community: [10.4], program: [2.2], other: [0.4], grants: [0.2], invest: [0.2] },
+      },
+      {
+        id: 'b', title: 'Expenditures (%) · total $53,224,896', kind: 'pies', unit: '%', unitEn: '%', tol: 0.5, share: true,
+        axis: { name: '', ordered: false, prep: '', labels: [''] },
+        items: [it('services', 'Program services', C.leaf), it('fundraising', 'Fundraising', C.tomato), it('management', 'Management and general', C.navy)],
+        data: { services: [95.8], fundraising: [2.6], management: [1.6] },
+      },
+    ],
   },
 ];
 

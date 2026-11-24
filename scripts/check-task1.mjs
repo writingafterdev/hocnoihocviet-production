@@ -61,6 +61,15 @@ expect('t1-sports-males', [G('a>item:watch'), T('cao hơn'), G('a>item:play')], 
 expect('t1-fruit-veg', [G('a>item:women'), T('cao nhất')], true);
 expect('t1-fruit-veg', [G('a'), T('tăng')], true);
 
+// Pies over two years: the biggest fall, a tie for the biggest rise (both count), one overtaking the other
+expect('t1-europe-spending', [G('a>item:food'), T('giảm nhiều nhất')], true);
+expect('t1-europe-spending', [G('a>item:housing'), T('tăng nhiều nhất')], true, 'housing +10, tied');
+expect('t1-europe-spending', [G('a>item:luxury'), T('tăng nhiều nhất')], true, 'luxury +10, tied');
+expect('t1-europe-spending', [G('a>item:travel'), T('tăng nhiều nhất')], false, 'travel +9');
+expect('t1-europe-spending', [G('a>item:housing'), T('vượt qua'), G('a>item:food')], true);
+expect('t1-car-sales', [G('a>item:sedan'), T('cao nhất')], true);
+expect('t1-charity-money', [V('a.food.0'), T('phần lớn')], true);
+
 // Every hint's own recipe must be judged true where the hint can be turned into a row
 for (const pr of E.TASK1_PROMPTS) for (const h of E.hintsOf(pr)) {
   const p = pr.parts.find((x) => x.id === h.part), item = (n) => p.items.find((x) => x.name === n);

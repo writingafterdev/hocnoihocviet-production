@@ -77,13 +77,13 @@ export function LineChart({ part: p, act, compact }: { part: T1Part; act: ChartA
 }
 
 /** The chart's key: a name adds every value of that item (a whole line, or every bar of one colour). */
-function Legend({ part: p, act, compact }: { part: T1Part; act: ChartActions; compact?: boolean }) {
+function Legend({ part: p, act, compact, values }: { part: T1Part; act: ChartActions; compact?: boolean; values?: boolean }) {
   const link = act.interactive ? 't1-link' : '';
   return (
     <div style={{ display: 'flex', flexWrap: 'wrap', gap: compact ? '6px 12px' : 14, justifyContent: 'center' }}>
       {p.items.map((it) => (
         <span key={it.id} data-tour={'item:' + it.id} className={link} title={act.interactive ? 'Chọn cả ' + it.name : ''} onClick={() => act.interactive && act.onGroup(p.id + '>item:' + it.id)} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: compact ? 11.5 : 12.5, color: CL.ink7 }}>
-          <span aria-hidden="true" style={{ width: 10, height: 10, borderRadius: 2, background: it.color }} />{it.name}
+          <span aria-hidden="true" style={{ width: 10, height: 10, borderRadius: 2, background: it.color }} />{it.name}{values && <b style={{ fontWeight: 600, color: CL.ink }}>{uv(p, p.data[it.id][0])}</b>}
         </span>
       ))}
     </div>
@@ -144,14 +144,64 @@ export function BarChart({ part: p, act, compact }: { part: T1Part; act: ChartAc
   );
 }
 
-/** The prompt's charts, centred, with space between them: line and bar charts so far. */
+/** Pie charts, one per axis label (a year), side by side: a slice adds its number, the label under a pie adds the whole pie. */
+export function PieChart({ part: p, act, compact }: { part: T1Part; act: ChartActions; compact?: boolean }) {
+  // A single pie (no years) is drawn smaller so two can sit side by side; its key carries the numbers.
+  const n = p.axis.labels.length, single = n === 1, W = compact ? 400 : single ? 320 : 760;
+  const R = Math.min(compact ? 70 : 96, (W / n - 24) / 2), gap = W / n, hasLab = p.axis.labels.some((l) => l);
+  const H = R * 2 + 16 + (hasLab ? 34 : 8), fs = compact ? 12 : 11.5;
+  const link = act.interactive ? 't1-link' : '';
+  const pt = (cx: number, cy: number, r: number, a: number) => [cx + r * Math.sin(a), cy - r * Math.cos(a)];
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 14, width: W, maxWidth: '100%' }}>
+      <div data-tour={'part:' + p.id} style={{ position: 'relative', width: W, maxWidth: '100%' }}>
+        <svg viewBox={`0 0 ${W} ${H}`} width="100%" style={{ display: 'block', overflow: 'visible' }} role="img" aria-label={p.title}>
+          {p.axis.labels.map((lab, ai) => {
+            const cx = gap * ai + gap / 2, cy = R + 8;
+            const vals = p.items.map((it) => p.data[it.id][ai] ?? 0), tot = vals.reduce((a, b) => a + b, 0) || 1;
+            let acc = 0;
+            const slices = p.items.map((it, k) => {
+              const v = vals[k], a0 = (acc / tot) * Math.PI * 2, a1 = ((acc + v) / tot) * Math.PI * 2; acc += v;
+              return { it, v, a0, a1, id: p.id + '.' + it.id + '.' + ai };
+            }).filter((x) => x.v > 0);
+            return (
+              <g key={ai}>
+                {slices.map(({ it, v, a0, a1, id }) => {
+                  const on = act.isIn(id), hint = act.isHinted(id), full = a1 - a0 > Math.PI * 2 - 1e-6;
+                  const [x0, y0] = pt(cx, cy, R, a0), [x1, y1] = pt(cx, cy, R, a1), large = a1 - a0 > Math.PI ? 1 : 0;
+                  const d = full ? `M${cx} ${cy - R}A${R} ${R} 0 1 1 ${cx - 0.01} ${cy - R}Z` : `M${cx} ${cy}L${x0} ${y0}A${R} ${R} 0 ${large} 1 ${x1} ${y1}Z`;
+                  const mid = (a0 + a1) / 2, small = v / tot < 0.08, [lx, ly] = pt(cx, cy, small ? R + 16 : R * 0.62, mid), tiny = v / tot < 0.03;
+                  return (
+                    <g key={it.id} onClick={() => act.interactive && act.onCell(id)} opacity={act.focus && act.focus !== it.id ? 0.25 : 1} style={{ cursor: act.interactive ? 'pointer' : 'default' }}>
+                      <title>{it.name + (lab ? ', ' + lab : '') + ': ' + uv(p, v)}</title>
+                      <path d={d} fill={it.color} stroke={on ? CL.ink : hint ? '#FFC73C' : '#fff'} strokeWidth={on || hint ? 3 : 1.5} strokeLinejoin="round" />
+                      {!tiny && <text x={lx} y={ly + 4} fontSize={fs} fontWeight={700} textAnchor="middle" fill={small ? CL.ink7 : '#fff'} style={{ pointerEvents: 'none' }}>{uv(p, v)}</text>}
+                    </g>
+                  );
+                })}
+                {hasLab && (
+                  <text x={cx} y={cy + R + 26} fontSize={fs + 1} fontWeight={600} fill={CL.ink} textAnchor="middle" className={link} onClick={() => act.interactive && act.onGroup(p.id + '>col:' + ai)}>
+                    <title>{act.interactive ? 'Chọn cả ' + lab : lab}</title>{lab}
+                  </text>
+                )}
+              </g>
+            );
+          })}
+        </svg>
+      </div>
+      <Legend part={p} act={act} compact={compact} values={single} />
+    </div>
+  );
+}
+
+/** The prompt's charts, centred, with space between them: line, bar and pie charts so far. */
 export function Charts({ prompt, act, compact }: { prompt: T1Prompt; act: ChartActions; compact?: boolean }) {
   return (
     <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: compact ? 24 : 44 }}>
       {prompt.parts.map((p) => (
         <div key={p.id} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: compact ? 10 : 16, width: compact ? '100%' : undefined }}>
           <span className={prompt.parts.length > 1 && act.interactive ? 't1-link' : ''} onClick={() => prompt.parts.length > 1 && act.interactive && act.onGroup(p.id)} style={{ fontSize: compact ? 12.5 : 13.5, fontWeight: 600, color: CL.ink, textAlign: 'center' }}>{p.title}</span>
-          {p.kind === 'line' ? <LineChart part={p} act={act} compact={compact} /> : p.kind === 'bars' ? <BarChart part={p} act={act} compact={compact} /> : <span style={{ fontSize: 13, color: CL.ink5 }}>Dạng biểu đồ này sẽ có ở bước sau.</span>}
+          {p.kind === 'line' ? <LineChart part={p} act={act} compact={compact} /> : p.kind === 'bars' ? <BarChart part={p} act={act} compact={compact} /> : p.kind === 'pies' ? <PieChart part={p} act={act} compact={compact} /> : <span style={{ fontSize: 13, color: CL.ink5 }}>Dạng biểu đồ này sẽ có ở bước sau.</span>}
         </div>
       ))}
     </div>
