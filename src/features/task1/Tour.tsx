@@ -71,7 +71,11 @@ export function TourLayer({ step, holes, anchor, side, dim, title, children, act
     // Measured every frame: chips joining the box, the panel scrolling and the window resizing all move the targets.
     const tick = () => {
       // A tip's variants menu open: the card steps aside so the menu is the thing to read.
-      const next = { holes: holes.map(rectOf).filter((r): r is Rect => !!r), anchor: rectOf(anchor), vw: window.innerWidth, vh: window.innerHeight, menu: !!document.querySelector('[role="menu"]') };
+      // A gap inside another gap (a table's row name inside the table) is dropped: two gaps on top of each other cancel out
+      // in the even-odd fill, which would dim the very thing to press and block the click.
+      const found = holes.map(rectOf).filter((r): r is Rect => !!r);
+      const inside = (a: Rect, b: Rect) => a !== b && a.x >= b.x - 1 && a.y >= b.y - 1 && a.x + a.w <= b.x + b.w + 1 && a.y + a.h <= b.y + b.h + 1;
+      const next = { holes: found.filter((r) => !found.some((o) => inside(r, o))), anchor: rectOf(anchor), vw: window.innerWidth, vh: window.innerHeight, menu: !!document.querySelector('[role="menu"]') };
       const key = JSON.stringify(next);
       if (key !== last.current) { last.current = key; setRects(next); }
       raf = requestAnimationFrame(tick);
