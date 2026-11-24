@@ -10,7 +10,7 @@ import { hintsOf, type Row } from './engine';
  * The first visit to ① So sánh: one finding done together, on the prompt's own chart. The finding is the first simple
  * Gợi ý answer (one line "cao nhất"/"thấp nhất", or "Tất cả" + a trend), so every prompt has one without extra content.
  */
-export interface TourPlan { first: { kind: 'item'; group: string; id: string; name: string } | { kind: 'all'; group: string }; tip: string; why: string }
+export interface TourPlan { first: { kind: 'item'; group: string; id: string; name: string; bars: boolean } | { kind: 'all'; group: string }; tip: string; why: string }
 
 const SEEN_KEY = 'hnhv.t1tour';
 export const tourSeen = () => { try { return localStorage.getItem(SEEN_KEY) === 'done'; } catch { return true; } };
@@ -23,11 +23,12 @@ export function tourPlanOf(prompt: T1Prompt, found: { row: Row }[]): TourPlan | 
     const p = prompt.parts.find((x) => x.id === h.part);
     if (!p) continue;
     let plan: TourPlan | null = null;
-    if (h.feat.all) plan = { first: { kind: 'all', group: p.id }, tip: h.feat.tip, why: 'Mọi đường đều ' + h.feat.tip + ' từ đầu đến cuối.' };
+    if (h.feat.all) plan = { first: { kind: 'all', group: p.id }, tip: h.feat.tip, why: 'Tất cả đều ' + h.feat.tip + ' từ đầu đến cuối.' };
     else if ((h.feat.tip === 'cao nhất' || h.feat.tip === 'thấp nhất') && h.feat.items.length === 1 && !/trừ/.test(h.feat.label)) {
       const it = p.items.find((x) => x.name === h.feat.items[0]);
       const every = (h.text.match(/ở mọi ([^\s.,]+)/) || [])[1];
-      if (it) plan = { first: { kind: 'item', group: p.id + '>item:' + it.id, id: it.id, name: it.name }, tip: h.feat.tip, why: 'Đường ' + it.name + ' nằm ' + (h.feat.tip === 'cao nhất' ? 'trên cùng' : 'dưới cùng') + (every ? ' ở mọi ' + every : '') + '.' };
+      const bars = p.kind === 'bars', top = h.feat.tip === 'cao nhất';
+      if (it) plan = { first: { kind: 'item', group: p.id + '>item:' + it.id, id: it.id, name: it.name, bars }, tip: h.feat.tip, why: (bars ? 'Cột ' + it.name + ' luôn ' + (top ? 'cao' : 'thấp') + ' hơn các cột khác' : 'Đường ' + it.name + ' nằm ' + (top ? 'trên cùng' : 'dưới cùng')) + (every ? ' ở mọi ' + every : '') + '.' };
     }
     if (!plan) continue;
     const row: Row = [{ k: 'group', id: plan.first.group }, { k: 'tip', id: plan.tip }];

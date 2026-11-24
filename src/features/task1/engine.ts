@@ -13,7 +13,7 @@ export type Row = Entry[];
 export interface Cell { id: string; part: string; item: string; ai: number; v: number | null; name: string; col: string; color: string; initial: string }
 export interface Verdict { ok: boolean; text: string; note?: { warn: boolean; text: string } | null; fix?: string }
 export interface Feature { tip: string; items: string[]; label: string; all?: boolean }
-export interface Hint { part: string; ids: string[]; text: string; next: string; feat: Feature; colPair?: boolean; cross?: boolean; opp?: boolean }
+export interface Hint { part: string; ids: string[]; text: string; next: string; feat: Feature; colPair?: boolean; cross?: boolean; opp?: boolean; gap?: boolean; eq?: boolean }
 export interface Sentence { en: string; vi: string; frame: string; note: string; vocab: string[] }
 
 /* The general engine: cells, groups, checks, hints, paragraph reasons and guided sentences, for any prompt in the form above. */
@@ -357,12 +357,12 @@ function judgeChain(pr: T1Prompt, p: T1Part, row: Row): Verdict {
     var objs = []; st.forEach(function (e) { var it2 = e.k === 'val' ? cellById(pr, e.id).item : e.k === 'group' ? groupVal(e.id) : null; if (it2 && it2 !== actor && objs.indexOf(it2) < 0) objs.push(it2); });
     if (!main.length) return { ok: false, text: 'Chặng ' + (i + 1) + ' chưa có cách so sánh: chọn tăng, giảm, đạt đỉnh, vượt qua…' };
     var tip = main[0].id;
-    if (objs.length && tip !== 'vượt qua') return { ok: false, text: 'Chặng ' + (i + 1) + ': chỉ “vượt qua” mới nhắc tới đường khác. Người làm hành động trong cả chuỗi vẫn là ' + an + '; muốn kể ' + objs.map(function (x) { return itemOf(p, x).name; }).join(', ') + ' làm gì thì tách thành một ý khác.' };
+    if (objs.length && tip !== 'vượt qua') return { ok: false, text: 'Chặng ' + (i + 1) + ': chỉ “vượt qua” mới nhắc tới mục khác. Người làm hành động trong cả chuỗi vẫn là ' + an + '; muốn kể ' + objs.map(function (x) { return itemOf(p, x).name; }).join(', ') + ' làm gì thì tách thành một ý khác.' };
     if (!mine.length) return { ok: false, text: 'Chặng ' + (i + 1) + ' chưa có điểm của ' + an + ': bấm điểm ' + an + ' ' + (i ? 'đi tới' : 'đầu và điểm cuối') + '.' };
     var cells = mine.map(function (e) { return cellById(pr, e.id); }), end = cells[cells.length - 1];
     if (prevEnd && end.ai <= prevEnd.ai) return { ok: false, text: 'Chặng ' + (i + 1) + ' phải đi tiếp về sau ' + A.labels[prevEnd.ai] + '.' };
     if (tip === 'vượt qua') {
-      if (!objs.length) return { ok: false, text: 'Chặng ' + (i + 1) + ': ' + an + ' vượt ai? Bấm tên hoặc một điểm của đường bị vượt.' };
+      if (!objs.length) return { ok: false, text: 'Chặng ' + (i + 1) + ': ' + an + ' vượt ai? Bấm tên hoặc một số của mục bị vượt.' };
       var s0 = i === 0 ? (cells.length >= 2 ? cells[0].ai : null) : prevEnd.ai;
       if (s0 === null) return { ok: false, text: 'Chặng đầu cần hai điểm của ' + an + ': lúc bắt đầu và lúc vượt.' };
       for (var k = 0; k < objs.length; k++) {
@@ -419,6 +419,21 @@ export function hintsOf(pr: T1Prompt): Hint[] {
     if (p.kind === 'table' && !A.ordered && n >= 2 && p.items.length >= 2) {
       // Two columns compared over every item (Public vs Private).
       for (var i1 = 0; i1 < n; i1++) for (var i2 = 0; i2 < n; i2++) { if (i1 === i2 || i1 === p.total || i2 === p.total) continue; if (p.items.every(function (o) { return p.data[o.id][i1] > p.data[o.id][i2]; }) && !out.some(function (h) { return h.colPair; })) out.push({ part: p.id, colPair: true, ids: p.items.map(function (o) { return p.id + '.' + o.id + '.' + i1; }), text: A.labels[i1] + ' cao hơn ' + A.labels[i2] + ' ở mọi mục. Bấm tên cột ' + A.labels[i1] + ', “cao hơn”, tên cột ' + A.labels[i2], next: 'so hai cột với nhau, không chỉ từng ô', feat: { tip: 'cao hơn', items: [A.labels[i1], A.labels[i2]], label: A.labels[i1] + ' cao hơn ' + A.labels[i2] + ' ở mọi mục' } }); }
+    }
+    if (p.kind === 'bars' && !A.ordered && n >= 2 && p.items.length >= 2) {
+      // Bars by category (sports, countries): the group where the bars are furthest apart…
+      var gap = -1, gi = -1, ghi = null, glo = null;
+      A.labels.forEach(function (l, ai) {
+        var vs = p.items.map(function (o) { return { id: o.id, v: p.data[o.id][ai] }; }).filter(function (q) { return q.v !== null; }).sort(function (q, r) { return r.v - q.v; });
+        if (vs.length >= 2 && vs[0].v - vs[vs.length - 1].v > gap) { gap = vs[0].v - vs[vs.length - 1].v; gi = ai; ghi = vs[0]; glo = vs[vs.length - 1]; }
+      });
+      if (gi >= 0 && gap > 2 * T) out.push({ part: p.id, gap: true, ids: [p.id + '.' + ghi.id + '.' + gi, p.id + '.' + glo.id + '.' + gi], text: 'Ở ' + A.labels[gi] + ', ' + nm(ghi.id) + ' cao hơn ' + nm(glo.id) + ' nhiều nhất (' + uv(p, ghi.v) + ' so với ' + uv(p, glo.v) + '). Bấm hai cột đang sáng, chọn “cao hơn”', next: 'tìm nhóm có hai cột chênh nhau nhiều nhất', feat: { tip: 'cao hơn', items: [nm(ghi.id), nm(glo.id)], label: A.labels[gi] + ': ' + nm(ghi.id) + ' cao hơn ' + nm(glo.id) } });
+      // …and two bars of one colour that stand at the same height.
+      p.items.forEach(function (x) {
+        if (out.some(function (h) { return h.eq; })) return;
+        var d = p.data[x.id];
+        for (var e1 = 0; e1 < n; e1++) for (var e2 = e1 + 1; e2 < n; e2++) if (d[e1] !== null && d[e1] === d[e2] && !out.some(function (h) { return h.eq; })) out.push({ part: p.id, eq: true, ids: [p.id + '.' + x.id + '.' + e1, p.id + '.' + x.id + '.' + e2], text: nm(x.id) + ' ở ' + A.labels[e1] + ' và ' + A.labels[e2] + ' bằng nhau (' + uv(p, d[e1]) + '). Bấm hai cột đang sáng, chọn “bằng nhau”', next: 'tìm hai cột cùng màu cao bằng nhau', feat: { tip: 'bằng nhau', items: [nm(x.id)], label: nm(x.id) + ': ' + A.labels[e1] + ' bằng ' + A.labels[e2] } });
+      });
     }
     if (A.ordered && n >= 3) {
       for (var u = 0; u < p.items.length; u++) for (var w = 0; w < p.items.length; w++) {

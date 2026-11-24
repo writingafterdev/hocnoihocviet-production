@@ -103,7 +103,7 @@ export function Task1Library() {
             {filtered.length === 0 && (
               <div style={{ borderRadius: 10, border: '1px dashed #E5E5E5', padding: '48px 24px', textAlign: 'center' }}>
                 <p style={{ fontFamily: 'var(--font-sans)', fontSize: 15, fontWeight: 600, color: '#171717', margin: '0 0 6px' }}>Dạng đề này đang được soạn</p>
-                <p style={{ fontFamily: 'var(--font-sans)', fontSize: 13, color: '#737373', margin: 0 }}>Hiện có biểu đồ đường. Thử bỏ bớt một vài lựa chọn.</p>
+                <p style={{ fontFamily: 'var(--font-sans)', fontSize: 13, color: '#737373', margin: 0 }}>Hiện có biểu đồ đường và biểu đồ cột. Thử bỏ bớt một vài lựa chọn.</p>
               </div>
             )}
           </div>

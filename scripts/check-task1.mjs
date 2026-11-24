@@ -54,6 +54,13 @@ expect('t1-household-devices', [G('a>item:tablet'), T('vượt qua'), G('a>item:
 expect('t1-household-devices', [G('a>item:mobile'), T('tăng nhiều nhất')], true);
 expect('t1-household-devices', [G('a>item:computer'), T('tăng nhiều nhất')], false, 'mobile rose a bit more');
 
+// Bars by category: the biggest gap in one group, and two equal bars of one colour
+expect('t1-sports-males', [V('a.play.4'), T('cao hơn'), V('a.watch.4')], true, 'Fishing: participating above watching');
+expect('t1-sports-males', [V('a.watch.0'), T('bằng nhau'), V('a.watch.5')], true, 'watching football = horse riding');
+expect('t1-sports-males', [G('a>item:watch'), T('cao hơn'), G('a>item:play')], false, 'watching above everywhere (not at Fishing)');
+expect('t1-fruit-veg', [G('a>item:women'), T('cao nhất')], true);
+expect('t1-fruit-veg', [G('a'), T('tăng')], true);
+
 // Every hint's own recipe must be judged true where the hint can be turned into a row
 for (const pr of E.TASK1_PROMPTS) for (const h of E.hintsOf(pr)) {
   const p = pr.parts.find((x) => x.id === h.part), item = (n) => p.items.find((x) => x.name === n);

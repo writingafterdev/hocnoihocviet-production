@@ -3,7 +3,7 @@
  * a prompt has parts (a chart or a table); each part is items × one axis (ordered, like years, or not, like sports).
  *
  * Source: youpass.vn's Task 1 bank. The prompt sentence is kept as written there; the numbers are read from their
- * images and the charts are redrawn in our own style. M1: line graphs only.
+ * images and the charts are redrawn in our own style. Line graphs and bar charts so far.
  */
 
 export interface T1Item { id: string; name: string; color: string; initial: string }
@@ -108,6 +108,26 @@ export const TASK1_PROMPTS: T1Prompt[] = [
       axis: { name: 'năm', ordered: true, prep: 'in', labels: ['1995', '2000', '2005', '2010', '2015'] },
       items: [it('mp3', 'MP3 player', C.tomato), it('mobile', 'Mobile', C.leaf), it('computer', 'Computer', C.navy), it('tablet', 'Tablet', C.sun)],
       data: { mp3: [15, 23, 25, 28, 30], mobile: [8, 60, 70, 85, 95], computer: [8, 18, 44, 72, 92], tablet: [null, 2, 10, 62, 80] },
+    }],
+  },
+  {
+    id: 't1-fruit-veg', category: 'Bar Chart', title: 'Five portions of fruit and vegetables a day, UK, 2001–2008', source: YP + ' · Collect',
+    text: 'The bar chart shows the percentage of children, men and women in the UK who ate five portions of fruit and vegetables per day from 2001 to 2008.' + END,
+    parts: [{
+      id: 'a', title: 'People eating five portions a day, UK (%)', kind: 'bars', unit: '%', unitEn: '%', tol: 1.5, max: 40, step: 10,
+      axis: { name: 'năm', ordered: true, prep: 'in', labels: ['2001', '2002', '2003', '2004', '2005', '2006', '2007', '2008'] },
+      items: [it('children', 'Children', C.sun), it('men', 'Men', C.blue), it('women', 'Women', C.tomato)],
+      data: { children: [12, 12, 12, 17, 18, 22, 27, 24], men: [17, 17, 17, 20, 23, 27, 27, 26], women: [22, 24, 27, 28, 30, 35, 31, 30] },
+    }],
+  },
+  {
+    id: 't1-sports-males', category: 'Bar Chart', title: 'Young men watching or playing six sports', source: YP + ' · Collect',
+    text: 'The graph shows the percentage of males aged 16-25 in a particular country who prefer watching sports or taking part in them.' + END,
+    parts: [{
+      id: 'a', title: 'Males aged 16-25 who prefer watching or participating (%)', kind: 'bars', unit: '%', unitEn: '%', tol: 2, max: 60, step: 10,
+      axis: { name: 'môn', ordered: false, prep: 'for', labels: ['Football', 'Rugby', 'Basketball', 'Badminton', 'Fishing', 'Horse riding'] },
+      items: [it('watch', 'Watching', C.blue), it('play', 'Participating', C.sun)],
+      data: { watch: [45, 30, 37.5, 29, 15, 45], play: [10, 20, 25, 25, 50, 18] },
     }],
   },
 ];

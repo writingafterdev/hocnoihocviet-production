@@ -45,12 +45,14 @@ export function MiniChips({ prompt, row, noNums, white }: { prompt: T1Prompt; ro
 function askOf(h: Hint): string {
   const t = h.feat.tip;
   if (h.feat.all) return 'Nhìn cả biểu đồ: có điều gì đúng với tất cả các mục không?';
-  if (h.cross) return 'Có hai đường nào cắt nhau không? Đường nào vượt lên?';
-  if (h.opp) return 'Có hai đường nào cứ đường này lên thì đường kia xuống không?';
+  if (h.cross) return 'Có hai mục nào đổi chỗ cho nhau không? Mục nào vượt lên?';
+  if (h.opp) return 'Có hai mục nào cứ mục này lên thì mục kia xuống không?';
+  if (h.gap) return 'Ở nhóm nào hai cột chênh nhau nhiều nhất?';
+  if (h.eq) return 'Có hai cột cùng màu nào cao bằng nhau không?';
   if (h.colPair) return 'Đặt hai cột cạnh nhau: cột nào luôn cao hơn?';
   if (t === 'tăng' || t === 'giảm') return 'Phần lớn các mục đi cùng một hướng. Có mục nào đi ngược lại không?';
   if (t === 'cao hơn') return 'Đặt hai mục cạnh nhau ở mọi mốc: bên nào cao hơn? Có chỗ nào ngoại lệ không?';
-  if (t === 'đạt đỉnh') return 'Đường nào thay đổi nhiều nhất? Điểm cao nhất của nó nằm ở đâu?';
+  if (t === 'đạt đỉnh') return 'Mục nào thay đổi nhiều nhất? Số cao nhất của nó nằm ở đâu?';
   if (t === 'tăng nhiều nhất') return 'Ngoài số lớn nhất, cái gì tăng nhanh nhất?';
   if (t === 'phần lớn' || t === 'gần một nửa') return 'Phần nào lớn nhất, và nó chiếm khoảng bao nhiêu?';
   if ((t === 'cao nhất' || t === 'thấp nhất') && h.text.includes(' ở mọi ')) return 'Có mục nào lúc nào cũng đứng ' + (t === 'cao nhất' ? 'đầu' : 'cuối') + ' không?';
@@ -219,7 +221,7 @@ export function ComparePanel({ prompt, row, setRow, found, setFound, hint, setHi
                 </span>
               );
             })}
-            {!row.length && <span style={{ fontSize: 13, color: CL.ink4, padding: '0 4px' }}>Bấm một điểm, tên một đường hoặc một năm trên biểu đồ, rồi chọn một ý so sánh.</span>}
+            {!row.length && <span style={{ fontSize: 13, color: CL.ink4, padding: '0 4px' }}>{prompt.parts.some((x) => x.kind === 'bars') ? 'Bấm một cột, một tên ở chú thích hoặc một nhãn dưới biểu đồ, rồi chọn một ý so sánh.' : 'Bấm một điểm, tên một đường hoặc một năm trên biểu đồ, rồi chọn một ý so sánh.'}</span>}
             {canChain && !dv && (
               <button type="button" className="cl-btn" title="Kể tiếp chặng sau của cùng đường này" onClick={() => put([...row, { k: 'tip', id: 'rồi' }])} style={{ marginLeft: 'auto', display: 'inline-flex', alignItems: 'center', gap: 5, height: 32, borderRadius: 8, border: '1px dashed #77A1DD', background: '#F7F9FD', color: '#2F62C4', fontSize: 13, fontWeight: 600, padding: '0 11px', cursor: 'pointer' }}>
                 rồi<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
