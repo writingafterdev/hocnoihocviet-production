@@ -56,6 +56,13 @@ export function createTask1Attempt(promptId: string, mode: 'guided' | 'free'): T
   };
 }
 
+/** Creates and saves a new attempt in the chosen mode; returns where to open it. */
+export async function startTask1(promptId: string, mode: 'guided' | 'free') {
+  const a = createTask1Attempt(promptId, mode);
+  await task1Store.save(a);
+  return '/task1/' + a.id;
+}
+
 /** An attempt as the workspace uses it: a missing mode means guided, and a guided attempt always has its guided round. */
 export function normalizeTask1(a: Task1Attempt): Task1Attempt {
   const mode = a.mode || 'guided';

@@ -16,10 +16,10 @@ import { ThinkingLoader } from '@/components/ui/thinking-loader';
 const Bone = ({ w = '100%', h = 11 }: { w?: number | string; h?: number }) => <Skeleton shape="text" style={{ width: w, height: h }} />;
 
 /** While the sentences are being written: the shape of the first sentence card and the box under it. */
-function GuidedBone() {
+function GuidedBone({ phases = ['Đang đọc mạch ý', 'Đang soạn từng câu', 'Đang chọn từ vựng'] }: { phases?: string[] }) {
   return (
     <div style={{ padding: '18px 22px', display: 'flex', flexDirection: 'column', gap: 14 }}>
-      <span style={{ alignSelf: 'flex-start' }}><ThinkingLoader phases={['Đang đọc mạch ý', 'Đang soạn từng câu', 'Đang chọn từ vựng']} interval={2200} /></span>
+      <span style={{ alignSelf: 'flex-start' }}><ThinkingLoader phases={phases} interval={2200} /></span>
       <div className="co-skel-in" style={{ borderRadius: 12, border: '1px solid #DCE7F7', background: '#F7F9FD', padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 12 }}>
         <span style={{ display: 'flex', gap: 8 }}><Bone w={64} /><Bone w="45%" h={13} /></span>
         <span style={{ display: 'flex', flexDirection: 'column', gap: 7 }}><Bone w={56} /><Bone w="88%" h={14} /><Bone w="62%" h={14} /></span>
@@ -74,9 +74,9 @@ export function useGuidedPlan(prompt: Prompt, chains: Chain[], essay: EssayState
  * sentence frame with its slots and the core phrases (typed by the student, never inserted); "Chi tiết" shows the
  * Vietnamese meaning and the first letter of each word. Each finished sentence joins its paragraph's draft.
  */
-export function GuidedWriter({ sections, essay, setEssay, plan, error, loading, retry }: {
+export function GuidedWriter({ sections, essay, setEssay, plan, error, loading, retry, loadingPhases }: {
   sections: EssaySection[]; essay: EssayState; setEssay: (fn: (e: EssayState) => EssayState) => void;
-  plan: GuidedSentence[] | null; error: string; loading: boolean; retry: () => void;
+  plan: GuidedSentence[] | null; error: string; loading: boolean; retry: () => void; loadingPhases?: string[];
 }) {
   const g = essay.guided!;
   const [typed, setTyped] = useState('');
@@ -101,7 +101,7 @@ export function GuidedWriter({ sections, essay, setEssay, plan, error, loading, 
             </span>
           </>
         ) : (
-          loading ? <GuidedBone /> : null
+          loading ? <GuidedBone phases={loadingPhases} /> : null
         )}
       </div>
     );

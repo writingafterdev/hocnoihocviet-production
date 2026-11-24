@@ -58,7 +58,7 @@ export function GuidedColumn({ prompt, plan, essay, setEssay, found }: { prompt:
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, minHeight: 50, padding: '0 20px', borderBottom: '1px solid ' + CL.ink1, background: CL.panel }}>
         <GuidedHeader essay={essay} setEssay={setEssay} total={g.plan ? g.plan.length : 0} />
       </div>
-      <GuidedWriter sections={sections} essay={essay} setEssay={setEssay} plan={g.plan} error={error} loading={loading} retry={load} />
+      <GuidedWriter sections={sections} essay={essay} setEssay={setEssay} plan={g.plan} error={error} loading={loading} retry={load} loadingPhases={['Đang đọc dàn ý của bạn', 'Đang soạn từng câu', 'Đang chọn từ vựng']} />
     </section>
   );
 }

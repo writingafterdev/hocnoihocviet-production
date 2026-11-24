@@ -10,7 +10,8 @@ import { RandomCard } from '../library/RandomCard';
 import { ModePickerDialog } from '../library/ModePickerModal';
 import { PageHeader } from '@/components/shell/BrandHeader';
 import { CATEGORIES_TASK1 } from '@/content/prompts';
-import { createTask1Attempt, task1Store, type Task1Attempt } from './store';
+import { startTask1, task1Store, type Task1Attempt } from './store';
+import { Thumb } from './Thumb';
 
 const STEP_LABEL = { compare: '① So sánh', plan: '② Chia đoạn', write: '③ Viết bài' } as const;
 const shortText = (pr: T1Prompt) => pr.text.replace(/ Summari[sz]e .*$/, '');
@@ -34,20 +35,6 @@ const SketchGuided1 = (
   </span>
 );
 
-/** The prompt's first chart, drawn whole inside the card's picture box (light grid, every line inside the frame). */
-function Thumb({ pr, size = 84 }: { pr: T1Prompt; size?: number }) {
-  const p = pr.parts[0], n = p.axis.labels.length, max = p.max || 100, pad = 10, w = 100, h = 100;
-  const x = (i: number) => pad + (i * (w - 2 * pad)) / Math.max(1, n - 1), y = (v: number) => h - pad - (v / max) * (h - 2 * pad);
-  return (
-    <div style={{ width: size, height: size, borderRadius: 8, background: '#F5F5F5', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <svg viewBox={`0 0 ${w} ${h}`} width={size - 8} height={size - 8} aria-hidden="true" style={{ overflow: 'visible' }}>
-        {[0, 0.5, 1].map((t) => <line key={t} x1={pad} x2={w - pad} y1={y(t * max)} y2={y(t * max)} stroke={t ? '#E5E5E5' : '#D4D4D4'} strokeWidth="1" />)}
-        {p.items.map((it) => <polyline key={it.id} fill="none" stroke={it.color} strokeWidth="2.5" strokeLinejoin="round" strokeLinecap="round" points={p.data[it.id].map((v, i) => (v === null ? null : x(i).toFixed(1) + ',' + y(v).toFixed(1))).filter(Boolean).join(' ')} />)}
-      </svg>
-    </div>
-  );
-}
-
 /** Thư viện đề Task 1 (admins only while it is being built), laid out like Task 2's: header, Dạng đề filter, one card per row. A prompt with an attempt in progress opens that attempt. */
 export function Task1Library() {
   const router = useRouter();
@@ -64,8 +51,7 @@ export function Task1Library() {
   const start = (pr: T1Prompt) => { if (!busy) setPicking(pr); };
   const create = async (pr: T1Prompt, mode: 'guided' | 'free') => {
     setBusy(pr.id);
-    const a = createTask1Attempt(pr.id, mode);
-    try { await task1Store.save(a); router.push('/task1/' + a.id); } catch (e) { if (e instanceof SignedOutError) router.replace('/login?next=/task1'); setBusy(''); setPicking(null); }
+    try { router.push(await startTask1(pr.id, mode)); } catch (e) { if (e instanceof SignedOutError) router.replace('/login?next=/task1'); setBusy(''); setPicking(null); }
   };
   if (open === null) return null;
   if (!open) return <main style={{ maxWidth: 520, margin: '96px auto 0', padding: '0 24px' }}><h1 style={{ fontSize: 22, fontWeight: 600, margin: '0 0 10px' }}>Task 1 đang được soạn</h1><p style={{ fontSize: 14.5, color: CL.ink6, margin: 0 }}>Trong lúc chờ, bạn có thể luyện từ vựng Task 1 ở trang Từ vựng.</p></main>;

@@ -36,13 +36,13 @@ const EASE = 'cubic-bezier(.22,1,.36,1)';
  * One card per prompt or statement: picture, chips, text and a right-hand slot; the whole head is the button that opens
  * the attempts below it. Opening slides the panel down and fades its content in (grid rows 0fr → 1fr), and back.
  */
-export function HistoryCard({ img, chips, title, meta, right, open, onToggle, children }: { img: string; chips: ReactNode; title: ReactNode; meta: ReactNode; right?: ReactNode; open: boolean; onToggle: () => void; children: ReactNode }) {
+export function HistoryCard({ img, chips, title, meta, right, open, onToggle, children }: { img: string | ReactNode; chips: ReactNode; title: ReactNode; meta: ReactNode; right?: ReactNode; open: boolean; onToggle: () => void; children: ReactNode }) {
   return (
     <div style={{ borderRadius: 12, background: '#fff', overflow: 'hidden', boxShadow: '0 0 0 1px ' + (open ? '#DCE7F7' : 'rgba(0,0,0,0.1)') + ', 0 1px 2px rgba(0,0,0,0.05)', transition: 'box-shadow .3s ease' }}>
       <button type="button" onClick={onToggle} aria-expanded={open} style={{ all: 'unset', boxSizing: 'border-box', width: '100%', display: 'flex', alignItems: 'center', gap: 16, padding: '10px 20px 10px 10px', cursor: 'pointer', fontFamily: 'var(--font-sans)', color: '#171717' }}>
         <span style={{ width: 120, height: 96, flexShrink: 0, borderRadius: 8, background: '#F5F5F5', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={'/illustrations/' + img + '.svg'} alt="" style={{ width: 84, height: 84, objectFit: 'contain', mixBlendMode: 'multiply' }} />
+          {typeof img === 'string' ? <img src={'/illustrations/' + img + '.svg'} alt="" style={{ width: 84, height: 84, objectFit: 'contain', mixBlendMode: 'multiply' }} /> : img}
         </span>
         <span style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 8 }}>
           <span style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>{chips}</span>
