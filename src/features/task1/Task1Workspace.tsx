@@ -16,14 +16,25 @@ import { cellById, groupPart, partOfRow, type Hint, type Row } from './engine';
 import { PlanPanel, planReady, type PlanState } from './Plan';
 import { normalizeTask1, task1Store, type Task1Attempt, type Task1Review, type Task1Step } from './store';
 import { FreeColumn, FreeNotes, GuidedColumn, labelsOf, paragraphsOf, sectionsOf, SideColumn } from './Write';
-import { GradedEssay, GradedOutline, ReviewPanel } from './Review';
+import { GradedEssay, GradedOutline, ReviewPanel, type Fixer } from './Review';
+import type { FixTask } from '../essay/FixFlow';
+import { applyEdits, matchesFix } from '../essay/InlineFix';
 import type { Task1Comment, Task1Crit } from './store';
 import { ThinkingLoader } from '@/components/ui/thinking-loader';
 import { markTourSeen, TourLayer, tourPlanOf, tourSeen, tourStage, type TourPlan } from './Tour';
 
 type Status = 'loading' | 'ready' | 'missing' | 'error';
 const SAVE_DELAY = 1500;
-const contentKey = (a: Task1Attempt) => JSON.stringify([a.step, a.found, a.place, a.ov, a.order, a.mode, a.essay.drafts, a.essay.guided, a.essay.notes, a.review]);
+const contentKey = (a: Task1Attempt) => JSON.stringify([a.step, a.found, a.place, a.ov, a.order, a.mode, a.essay.drafts, a.essay.guided, a.essay.notes, a.review, a.fix, a.prevScores]);
+
+/** The paragraphs after Sửa bài go back where the student writes: one free text, or the plan's sections that had words, in order. */
+function writeBack(mode: 'guided' | 'free', essay: EssayState, ids: string[], paras: string[]): EssayState {
+  if (mode === 'free') return { ...essay, drafts: { ...essay.drafts, free: paras.join('\n\n') } };
+  const filled = ids.filter((id) => (essay.drafts[id] || '').trim());
+  const drafts = { ...essay.drafts };
+  filled.forEach((id, i) => { if (paras[i] !== undefined) drafts[id] = paras[i]; });
+  return { ...essay, drafts };
+}
 const STEPS: [Task1Step, string][] = [['compare', '① So sánh'], ['plan', '② Chia đoạn'], ['write', '③ Viết bài']];
 const primary: React.CSSProperties = { height: 36, borderRadius: 10, border: 'none', color: '#fff', fontSize: 14, fontWeight: 500, padding: '0 14px', cursor: 'pointer' };
 
@@ -44,6 +55,10 @@ export function Task1Workspace({ attemptId }: { attemptId: string }) {
     if (id) document.querySelector('[data-tour="part:' + id.split('.')[0] + '"]')?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
   }, [active]);
   const [tab, setTab] = useState<Task1Crit>('ta');
+  /** Sửa bài: the comment open for rewriting, the one being checked, the last error. */
+  const [openFix, setOpenFix] = useState<string | null>(null);
+  const [checkingFix, setCheckingFix] = useState<string | null>(null);
+  const [fixError, setFixError] = useState('');
   /** The first-visit walkthrough in ① (one finding done together); `start` = findings before it began. */
   const [tour, setTour] = useState<{ start: number; plan: TourPlan } | null>(null);
   const tourChecked = useRef(false);
@@ -133,6 +148,57 @@ export function Task1Workspace({ attemptId }: { attemptId: string }) {
   // A review saved before the feedback took Task 2's shape has no paragraphs: treat it as not graded.
   const graded = a.review && Array.isArray(a.review.paragraphs) ? a.review : null;
   const labels = graded ? labelsOf(mode, a.essay, sections, graded.paragraphs.length) : [];
+  // Sửa bài (Task 2's round): every comment that quotes the report is fixed where it stands; key = the comment's index.
+  const tasks: FixTask[] = graded && !grading ? graded.comments.map((c, k) => ({ c, k })).filter(({ c }) => c.quote && (graded.paragraphs[c.section - 1] || '').includes(c.quote)).map(({ c, k }) => ({
+    item: { key: String(k), where: '', text: c.text, sectionId: String(c.section), quote: c.quote },
+    crit: c.crit, title: c.label || c.crit.toUpperCase(), how: c.how || undefined, ask: c.how ? [] : [c.text.replace(/\*\*/g, '')], ok: 'Đã sửa xong chỗ này.', model: c.fix || undefined, vi: c.vi || undefined,
+  })) : [];
+  const fix = a.fix || null, edits = fix?.edits || {};
+  const solvedN = fix ? tasks.filter((t) => fix.solved.includes(t.item.key)).length : 0;
+  const paraAfter = (k: number, ps: string[]) => applyEdits(ps[k] || '', tasks.filter((t) => t.item.sectionId === String(k + 1)), edits);
+  const checkTask = async (t: FixTask) => {
+    if (!graded || checkingFix) return;
+    const key = t.item.key, k = Number(t.item.sectionId) - 1;
+    const before = graded.paragraphs[k] || '', after = applyEdits(before, [t], edits);
+    const verdict = (v: { solved: boolean; reply: string; ask: string }) => setA((x) => (x && x.fix ? { ...x, updatedAt: Date.now(), fix: { ...x.fix, checks: { ...x.fix.checks, [key]: v }, solved: v.solved ? [...x.fix.solved.filter((y) => y !== key), key] : x.fix.solved.filter((y) => y !== key) } } : x));
+    // Written along the hidden fix (the first-letter hints): solved at once, nothing to ask the AI.
+    if (matchesFix(t, edits[key] || '')) { verdict({ solved: true, reply: 'Đã sửa đúng chỗ này.', ask: '' }); return; }
+    // Vocabulary and grammar have one right fix: not matching it is not solved yet.
+    if ((t.crit === 'lr' || t.crit === 'gra') && t.model) { verdict({ solved: false, reply: 'Chưa khớp cách sửa. Bấm "Gợi ý thêm" để xem chữ cái đầu của từng từ.', ask: '' }); return; }
+    setCheckingFix(key); setFixError('');
+    try { verdict(await postAi<{ solved: boolean; reply: string; ask: string }>('task1-fix', { promptId: prompt.id, action: 'check', task: { crit: t.crit, label: t.title.slice(0, 100), text: t.item.text.slice(0, 800), how: (t.how || '').slice(0, 400), quote: t.item.quote }, before, after })); }
+    catch (e) { if (e instanceof SignedOutError) { toLogin(); return; } setFixError(e instanceof AiRequestError ? AI_ERROR_TEXT[e.code] : AI_ERROR_TEXT.network); }
+    setCheckingFix(null);
+  };
+  const fixer: Fixer | null = graded && tasks.length ? {
+    has: (k) => tasks.some((t) => t.item.key === String(k)),
+    task: (k) => tasks.find((t) => t.item.key === String(k)) || null,
+    open: openFix, edits, solved: fix?.solved || [], checks: fix?.checks || {}, checking: checkingFix, error: fixError,
+    onOpen: (k) => {
+      const c = graded.comments[k]; setOpenFix(String(k)); setActive(c); setTab(c.crit); setFixError(''); setGradeError('');
+      if (!a.fix) upd({ fix: { before: [...graded.paragraphs], edits: {}, checks: {}, solved: [] } });
+    },
+    setEdit: (k, v) => setA((x) => (x && x.fix ? { ...x, updatedAt: Date.now(), fix: { ...x.fix, edits: { ...x.fix.edits, [k]: v } } } : x)),
+    onCheck: (k) => { const t = tasks.find((x) => x.item.key === String(k)); if (t) checkTask(t); },
+  } : null;
+  /** "Viết lại" after the round: the rewrites go in place of their struck words and the report is re-scored against the last grading. */
+  const resubmitFix = async () => {
+    if (!graded || !fix || grading) return;
+    const paras = graded.paragraphs.map((_, k) => paraAfter(k, graded.paragraphs));
+    setOpenFix(null); setGrading(true); setGradeError('');
+    try {
+      const done = tasks.filter((t) => fix.solved.includes(t.item.key) || (edits[t.item.key] || '').trim()).slice(0, 12)
+        .map((t) => ({ label: t.title, crit: t.crit, text: t.item.text.replace(/\*\*/g, '').slice(0, 600), solved: fix.solved.includes(t.item.key) }));
+      const why = Object.fromEntries((['ta', 'cc', 'lr', 'gra'] as const).map((k) => [k, [graded.criteria?.[k]?.why, graded.criteria?.[k]?.gap].filter(Boolean).join(' ').replace(/\*\*/g, '')]));
+      const prev = { ta: graded.scores.ta, cc: graded.scores.cc, lr: graded.scores.lr, gra: graded.scores.gra };
+      const r = await postAi<{ scores: Task1Review['scores']; notes: { criterion: Task1Crit; text: string }[] }>('task1-fix', { promptId: prompt.id, action: 'rescore', prev, why, tasks: done, before: fix.before, after: paras });
+      // Comments whose words are gone from the report are done with; the rest stay where their words still are.
+      const comments = graded.comments.filter((c) => !c.quote || (paras[c.section - 1] || '').includes(c.quote));
+      setActive(null); setTab('ta');
+      setA((x) => x && ({ ...x, updatedAt: Date.now(), essay: writeBack(mode, x.essay, sections.map((t) => t.id), paras), review: { ...graded, scores: r.scores, comments, paragraphs: paras, rescore: { notes: r.notes } }, prevScores: graded.scores, fix: null }));
+    } catch (e) { if (e instanceof SignedOutError) { toLogin(); return; } setGradeError(e instanceof AiRequestError ? AI_ERROR_TEXT[e.code] : AI_ERROR_TEXT.network); }
+    setGrading(false);
+  };
   const saveLabel = save === 'failed' ? 'Chưa lưu được · thử lại' : contentKey(a) !== savedKey.current ? 'Đang lưu…' : 'Đã lưu';
 
   return (
@@ -162,7 +228,12 @@ export function Task1Workspace({ attemptId }: { attemptId: string }) {
             {a.step === 'compare' && <button type="button" className="cl-btn cl-primary" disabled={!canPlan} onClick={() => go('plan')} style={{ ...primary, opacity: canPlan ? 1 : 0.4 }}>Chia đoạn →</button>}
             {a.step === 'plan' && <button type="button" className="cl-btn cl-primary" disabled={!ready} title={ready ? '' : 'Cần ít nhất một ý trong Tổng quan, Đoạn 1 và Đoạn 2.'} onClick={() => go('write')} style={{ ...primary, opacity: ready ? 1 : 0.4 }}>Viết bài →</button>}
             {writing && !a.review && (grading ? <span role="status" style={{ fontSize: 13, fontWeight: 500, color: CL.ink5 }}>Đang chấm bài…</span> : <span className="pro-fill"><button type="button" className="cl-btn" onClick={submit} style={primary}>Nộp bài</button></span>)}
-            {writing && a.review && <button type="button" className="cl-btn cl-primary" onClick={() => { setActive(null); upd({ review: null }); }} style={primary}>Viết lại</button>}
+            {writing && a.review && grading && <span role="status" style={{ fontSize: 13, fontWeight: 500, color: CL.ink5 }}>Đang chấm lại…</span>}
+            {writing && a.review && !grading && (fixer ? <>
+              <span style={{ fontSize: 12.5, color: CL.ink5, marginRight: 4 }}>Đã sửa <b style={{ color: CL.ink }}>{solvedN}</b> / {tasks.length}</span>
+              {/* The Pro look only styles a live button: until one comment is fixed it stays the plain blue, faded. */}
+              <span className={solvedN ? 'pro-fill' : ''}><button type="button" className={'cl-btn' + (solvedN ? '' : ' cl-primary')} onClick={resubmitFix} disabled={!solvedN} style={{ ...primary, opacity: solvedN ? 1 : 0.45 }}>Viết lại</button></span>
+            </> : <button type="button" className="cl-btn cl-primary" onClick={() => { setActive(null); upd({ review: null, fix: null, prevScores: null }); }} style={primary}>Viết lại</button>)}
           </div>
         </div>
 
@@ -180,10 +251,10 @@ export function Task1Workspace({ attemptId }: { attemptId: string }) {
           )}
           {a.step === 'compare' && tour && <Walkthrough plan={tour.plan} stage={stage} onEnd={endTour} />}
           {a.step === 'plan' && <PlanPanel prompt={prompt} state={plan} set={(p) => upd(p)} />}
-          {writing && graded && <GradedEssay review={graded} labels={labels} active={active} setActive={setActive} tab={tab} />}
+          {writing && graded && <GradedEssay review={graded} labels={labels} active={active} setActive={setActive} tab={tab} fixer={fixer} reading={grading} />}
           {writing && !graded && !free && <GuidedColumn prompt={prompt} plan={plan} essay={a.essay} setEssay={setEssay} found={a.found} />}
           {writing && !graded && free && <FreeColumn essay={a.essay} setEssay={setEssay} />}
-          {writing && graded && <ReviewPanel review={graded} labels={labels} active={active} setActive={setActive} tab={tab} setTab={setTab} />}
+          {writing && graded && <ReviewPanel review={graded} labels={labels} active={active} setActive={setActive} tab={tab} setTab={setTab} fixer={fixer} prev={a.prevScores || null} />}
           {writing && !graded && (grading
             ? <aside style={{ borderRadius: 12, border: '1px solid ' + CL.border, padding: 18 }}><ThinkingLoader phases={['Đang đọc bài', 'Đang đối chiếu số liệu', 'Đang chấm từng tiêu chí', 'Đang viết nhận xét']} interval={2600} /></aside>
             : <SideColumn />)}

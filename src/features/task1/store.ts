@@ -10,7 +10,7 @@ export type Task1Step = 'compare' | 'plan' | 'write';
 
 export type Task1Crit = 'ta' | 'cc' | 'lr' | 'gra';
 /** One comment on the report: the criterion, a short name, which paragraph (1-based), the exact words, why, and a fix. */
-export interface Task1Comment { crit: Task1Crit; label: string; section: number; quote: string; text: string; fix: string; /** Chart cells the comment is about, lit on the chart when it is picked. */ marks?: string[] }
+export interface Task1Comment { crit: Task1Crit; label: string; section: number; quote: string; text: string; fix: string; /** Cách sửa: what to do, in Vietnamese (reviews from 26/11 on). */ how?: string; /** The fix's meaning in Vietnamese. */ vi?: string; /** Chart cells the comment is about, lit on the chart when it is picked. */ marks?: string[] }
 
 /** The AI's assessment of a Task 1 report, shaped like Task 2's: band, summary, per-criterion analysis, comments that quote the essay. */
 export interface Task1Review {
@@ -26,6 +26,8 @@ export interface Task1Review {
   skeleton: { intro: string; overview: string; bodies: { section: number; points: string[]; weak: boolean }[] };
   /** The paragraphs that were graded, so highlights match what was read. */
   paragraphs: string[];
+  /** Set after Sửa bài: the re-score's one-line notes (the criteria analysis above is from the grading before). */
+  rescore?: { notes: { criterion: Task1Crit; text: string }[] };
 }
 
 export interface Task1Attempt {
@@ -45,6 +47,10 @@ export interface Task1Attempt {
   mode: 'guided' | 'free' | null;
   essay: EssayState;
   review: Task1Review | null;
+  /** Sửa bài: the paragraphs before the round, each comment's rewrite (key = comment index), the checks and the comments fixed. */
+  fix?: { before: string[]; edits: Record<string, string>; checks: Record<string, { solved: boolean; reply: string; ask: string }>; solved: string[] } | null;
+  /** The scores before the last re-score, for the ↑ beside a criterion that went up. */
+  prevScores?: Task1Review['scores'] | null;
 }
 
 export function createTask1Attempt(promptId: string, mode: 'guided' | 'free'): Task1Attempt {
