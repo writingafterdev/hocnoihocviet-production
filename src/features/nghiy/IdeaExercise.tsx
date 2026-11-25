@@ -17,7 +17,11 @@ import { ENDS } from '../coach/ends';
 import { TranslatorChat } from '../coach/TranslatorChat';
 import { primaryBtn } from '../coach/ui';
 import { NOTE_STYLE, useCoach } from '../coach/useCoach';
-import { saveAttempt, type DrillErr } from '../prove/drill-attempts';
+import type { Prompt } from '@/content/prompts';
+import type { Statement } from '@/content/statements';
+import type { FixTask } from '../essay/FixFlow';
+import { saveAttempt, saveParagraph, type DrillErr } from '../prove/drill-attempts';
+import { DrillParagraph, type ParagraphDraft } from '../prove/DrillParagraph';
 import { SampleChain } from '../prove/SampleChain';
 import { useStepHelp } from '../prove/StepHelp';
 import { MACRO_NAME, MACRO_TINT, type IdeaPrompt, type Macro } from './NghiY';
@@ -85,6 +89,11 @@ export function IdeaExercise({ p, onLibrary, onNext, onDone }: { p: IdeaPrompt; 
   // Every note raised on the way is kept, and saved with the attempt once the mạch ý passes (✓ in the list).
   const errs = useRef(new Map<string, DrillErr>());
   const saved = useRef(false);
+  /** The attempt saved when the mạch ý passed, so the paragraph written from it can be added to it. */
+  const attemptId = useRef<Promise<string | null> | null>(null);
+  /** "Viết mạch ý này thành một đoạn văn" (as in Phát triển ý): the paragraph screen, written alone or guided. */
+  const [para, setPara] = useState<'free' | 'guided' | null>(null);
+  const paraDrafts = useRef(new Map<string, ParagraphDraft>());
   useEffect(() => {
     if (!coach.result || !coach.fresh) return;
     for (const n of coach.result.placed) {
@@ -96,7 +105,7 @@ export function IdeaExercise({ p, onLibrary, onNext, onDone }: { p: IdeaPrompt; 
     if (!clean || saved.current) return;
     saved.current = true;
     onDone();
-    saveAttempt(p.id, [start, ...steps.map((x) => x.trim()).filter(Boolean), end], [...errs.current.values()]);
+    attemptId.current = saveAttempt(p.id, [start, ...steps.map((x) => x.trim()).filter(Boolean), end], [...errs.current.values()]);
   }, [clean]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const labelMine = (mineStart ? ENDS[kind].start : ENDS[kind].end) + ' · bạn tìm';
@@ -162,6 +171,19 @@ export function IdeaExercise({ p, onLibrary, onNext, onDone }: { p: IdeaPrompt; 
       )}
     </div>
   );
+  /** The paragraph's first review: its text and comments go onto the saved attempt (shown in Mạch ý đã chứng minh). */
+  const onReviewed = (text: string, tasks: FixTask[]) => {
+    const paraErrs = tasks.map((t) => ({ where: 'Đoạn văn', label: t.title, quote: t.item.quote || '', fix: t.how || '' }));
+    attemptId.current?.then((id) => { if (id) saveParagraph(id, text, paraErrs); });
+  };
+  if (para) {
+    // The paragraph screen reads a statement: here the mạch ý itself is the claim, from the end the student found to the given one.
+    const s: Statement = { id: p.id, promptId: p.id, kind, sentence: start + ' → ' + end, start, end, stakeholder: '', ask: '' };
+    const prompt: Prompt = { id: p.id, text: p.text, questions: [], task: 'task2', category: 'Causes, Problems and Solutions', topic: 'Other Topics', source: 'missbacxiu', reqs: [], driver: '', stakeholders: [] } as unknown as Prompt;
+    const key = para + ':' + steps.join('|');
+    return <DrillParagraph key={key} s={s} prompt={prompt} steps={steps} guided={para === 'guided'} onReviewed={onReviewed} onBack={() => setPara(null)} onNext={onNext}
+      saved={paraDrafts.current.get(key)} onSave={(d) => paraDrafts.current.set(key, d)} />;
+  }
   const footer: React.CSSProperties = { borderTop: '1px solid ' + CL.ink1, background: CL.panel, padding: '12px 22px', display: 'flex', alignItems: 'center', gap: 10 };
 
   return (
@@ -227,9 +249,17 @@ export function IdeaExercise({ p, onLibrary, onNext, onDone }: { p: IdeaPrompt; 
                         stepQuestion={help.stepQuestion} onSubmitStep={help.onSubmitStep} belowStep={help.belowStep}
                       />
                     </div>
-                    <div style={footer}>
-                      <button type="button" className="cl-btn cl-link" onClick={() => setBuilt(false)} style={{ ...miniBtn, border: 'none', background: 'transparent', color: CL.ink5 }}>Đổi hai đầu</button>
-                    </div>
+                    {clean ? (
+                      <div className="co-rise" style={{ ...footer, padding: '14px 22px', flexWrap: 'wrap' }}>
+                        <span style={{ marginRight: 'auto', fontSize: 14, fontWeight: 600, color: CL.ink }}>Viết mạch ý này thành một đoạn văn</span>
+                        <button type="button" className="cl-btn" onClick={() => setPara('free')} style={toolbarBtn(false)}>Tự viết</button>
+                        <ProBeam><button type="button" className="cl-btn cl-primary" onClick={() => setPara('guided')} style={primaryBtn}>Viết có hướng dẫn</button></ProBeam>
+                      </div>
+                    ) : (
+                      <div style={footer}>
+                        <button type="button" className="cl-btn cl-link" onClick={() => setBuilt(false)} style={{ ...miniBtn, border: 'none', background: 'transparent', color: CL.ink5 }}>Đổi hai đầu</button>
+                      </div>
+                    )}
                   </>
                 )}
               </section>

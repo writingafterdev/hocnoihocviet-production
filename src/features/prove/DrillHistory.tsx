@@ -19,7 +19,15 @@ const PARA_STYLE = { bg: '#EEF3FC', fg: '#2F62C4' };
 /** A mạch ý mistake takes its note's colours; a paragraph comment, blue. */
 const styleOf = (e: DrillErr) => (e.where === 'Đoạn văn' ? PARA_STYLE : Object.values(NOTE_STYLE).find((n) => n.label === e.label) || NOTE_STYLE.jump);
 
-interface Group { s: Statement; tries: DrillAttempt[] }
+/** A Nghĩ ý prompt, as this page needs it (sent from the server: the doc itself stays there). */
+export interface IdeaRef { text: string; macro: 'A' | 'B' | 'C' }
+const MACRO_KIND = { A: 'cause', B: 'impact', C: 'solution' } as const;
+const MACRO_CHIP = { A: { label: 'Nguyên nhân', bg: '#FFF0EB', fg: '#B33A1A' }, B: { label: 'Tác động', bg: '#EEF3FC', fg: '#2F62C4' }, C: { label: 'Giải pháp', bg: '#EDF7EA', fg: '#2D6E1E' } };
+const SOURCES = ['prove', 'idea'];
+const SOURCE_LABEL: Record<string, string> = { prove: 'Phát triển ý', idea: 'Nghĩ ý' };
+
+/** One card: a Phát triển ý statement, or a missbacxiu prompt done in Nghĩ ý. */
+interface Group { id: string; source: 'prove' | 'idea'; kind: string; topic: string | null; s?: Statement; idea?: IdeaRef; tries: DrillAttempt[] }
 
 /** One mistake: where it was, the note's label, the student's words, how to fix it. */
 function Err({ e }: { e: DrillErr }) {
@@ -40,7 +48,7 @@ function Err({ e }: { e: DrillErr }) {
  * "Mạch ý đã chứng minh": every Phát triển ý statement the student has proved, one card per statement; opening it lists
  * each attempt with only what went wrong on the way (the notes of each Kiểm tra, then the paragraph's comments).
  */
-export function DrillHistory() {
+export function DrillHistory({ ideas = {} }: { ideas?: Record<string, IdeaRef> }) {
   const router = useRouter();
   const [list, setList] = useState<DrillAttempt[] | null>(null);
   const [failed, setFailed] = useState(false);
@@ -48,21 +56,24 @@ export function DrillHistory() {
   const [kinds, setKinds] = useState<string[]>([]);
   const [topics, setTopics] = useState<string[]>([]);
   const [para, setPara] = useState<string[]>([]);
+  const [sources, setSources] = useState<string[]>([]);
   useEffect(() => {
     listAttempts().then((l) => (l === 'signed-out' ? router.replace('/login?next=/drills') : setList(l)), () => setFailed(true));
   }, [router]);
 
   const groups: Group[] = [];
   for (const a of list || []) {
-    const s = findStatement(a.statementId);
-    if (!s) continue;
-    const g = groups.find((x) => x.s.id === s.id);
-    if (g) g.tries.push(a); else groups.push({ s, tries: [a] });
+    const g = groups.find((x) => x.id === a.statementId);
+    if (g) { g.tries.push(a); continue; }
+    const s = findStatement(a.statementId), idea = ideas[a.statementId];
+    if (s) groups.push({ id: s.id, source: 'prove', kind: s.kind, topic: topicOf(s) || null, s, tries: [a] });
+    else if (idea) groups.push({ id: a.statementId, source: 'idea', kind: MACRO_KIND[idea.macro], topic: null, idea, tries: [a] });
   }
   const toggle = (set: (f: (v: string[]) => string[]) => void) => (v: string) => set((xs) => (xs.includes(v) ? xs.filter((x) => x !== v) : [...xs, v]));
-  const shown = groups.filter(({ s, tries }) => (!kinds.length || kinds.includes(s.kind)) && (!topics.length || topics.includes(topicOf(s) || ''))
-    && (!para.length || para.includes(tries.some((t) => t.paragraph) ? 'yes' : 'no')));
-  const topicOptions = TOPICS_TASK2.filter((t) => groups.some((g) => topicOf(g.s) === t));
+  const shown = groups.filter((g) => (!kinds.length || kinds.includes(g.kind)) && (!topics.length || topics.includes(g.topic || ''))
+    && (!sources.length || sources.includes(g.source)) && (!para.length || para.includes(g.tries.some((t) => t.paragraph) ? 'yes' : 'no')));
+  const topicOptions = TOPICS_TASK2.filter((t) => groups.some((g) => g.topic === t));
+  const bothSources = groups.some((g) => g.source === 'idea') && groups.some((g) => g.source === 'prove');
 
   return (
     <div style={{ minHeight: '100%', background: '#fff' }}>
@@ -79,17 +90,18 @@ export function DrillHistory() {
           </div>
         ) : list && (
           <HistoryLayout filters={<>
+            {bothSources && <Filter title="Từ" options={SOURCES} selected={sources} onToggle={toggle(setSources)} labels={SOURCE_LABEL} />}
             <Filter title="Loại" options={KINDS} selected={kinds} onToggle={toggle(setKinds)} labels={KIND_LABEL} icons={KIND_ICON} />
             {topicOptions.length > 1 && <Filter title="Chủ đề" options={topicOptions} selected={topics} onToggle={toggle(setTopics)} />}
             <Filter title="Đoạn văn" options={PARA} selected={para} onToggle={toggle(setPara)} labels={PARA_LABEL} icons={PARA_ICON} />
           </>}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-              {shown.map(({ s, tries }) => {
-                const chip = kindChip(s), topic = topicOf(s), on = open.includes(s.id);
+              {shown.map(({ id, s, idea, topic, tries }) => {
+                const chip = s ? kindChip(s) : MACRO_CHIP[idea!.macro], on = open.includes(id);
                 return (
-                  <HistoryCard key={s.id} img={TOPIC_ILLUSTRATION[topic || 'Other Topics']} open={on} onToggle={() => toggle(setOpen)(s.id)}
-                    chips={<><Chip bg={chip.bg} fg={chip.fg}>{chip.label}</Chip>{topic && <Chip bg="#F5F5F5" fg="#525252">{topic}</Chip>}</>}
-                    title={<Sentence s={s} />}
+                  <HistoryCard key={id} img={TOPIC_ILLUSTRATION[topic || 'Other Topics']} open={on} onToggle={() => toggle(setOpen)(id)}
+                    chips={<>{idea && <Chip bg="#FFF6DE" fg="#8A5A00">Nghĩ ý</Chip>}<Chip bg={chip.bg} fg={chip.fg}>{chip.label}</Chip>{topic && <Chip bg="#F5F5F5" fg="#525252">{topic}</Chip>}</>}
+                    title={s ? <Sentence s={s} /> : idea!.text}
                     meta={tries.length + ' lần · ' + (tries.length > 1 ? 'gần nhất ' : '') + dayMonth(tries[0].createdAt)}>
                     {tries.map((t, k) => {
                       const errs = [...t.errs, ...t.paraErrs];
@@ -108,7 +120,7 @@ export function DrillHistory() {
                         </div>
                       );
                     })}
-                    <Link href={'/prove?s=' + s.id} style={primaryLink}>Làm lại câu này</Link>
+                    <Link href={s ? '/prove?s=' + s.id : '/nghi-y?q=' + id} style={primaryLink}>{s ? 'Làm lại câu này' : 'Làm lại đề này'}</Link>
                   </HistoryCard>
                 );
               })}
