@@ -4,13 +4,18 @@ import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import type { T1Prompt } from '@/content/task1';
 import { CL } from '../chainlab/constants';
-import { hintsOf, type Row } from './engine';
+import { hintsOf, judge, type Row } from './engine';
 
 /**
  * The first visit to ① So sánh: one finding done together, on the prompt's own chart. The finding is the first simple
- * Gợi ý answer (one line "cao nhất"/"thấp nhất", or "Tất cả" + a trend), so every prompt has one without extra content.
+ * Gợi ý answer (one line "cao nhất"/"thấp nhất", or "Tất cả" + a trend); a chart with neither (sports) compares two
+ * numbers instead ("pair": one bar, "cao hơn", the other bar), so every prompt has one without extra content.
  */
-export interface TourPlan { first: { kind: 'item'; group: string; id: string; name: string; shape: 'line' | 'bars' | 'pies' | 'table' } | { kind: 'all'; group: string }; tip: string; why: string }
+export interface TourPlan {
+  first: { kind: 'item'; group: string; id: string; name: string; shape: 'line' | 'bars' | 'pies' | 'table' } | { kind: 'all'; group: string }
+    | { kind: 'pair'; group: string; a: string; b: string; nameA: string; nameB: string; at: string; shape: 'line' | 'bars' | 'pies' | 'table' };
+  tip: string; why: string;
+}
 
 const SEEN_KEY = 'hnhv.t1tour';
 export const tourSeen = () => { try { return localStorage.getItem(SEEN_KEY) === 'done'; } catch { return true; } };
@@ -35,15 +40,52 @@ export function tourPlanOf(prompt: T1Prompt, found: { row: Row }[]): TourPlan | 
     const row: Row = [{ k: 'group', id: plan.first.group }, { k: 'tip', id: plan.tip }];
     if (!found.some((f) => sameRow(f.row, row))) return plan;
   }
+  // No simple finding: two numbers compared. First a "cao hơn"/"thấp hơn" hint between two cells of one column, then the
+  // biggest and smallest number of a column; only a pair the checks pass (a hint's two numbers can be its exception).
+  const unit = (shape: string) => (shape === 'bars' ? 'cột' : shape === 'pies' ? 'phần' : shape === 'table' ? 'ô' : 'điểm');
+  const pairPlan = (p: T1Prompt['parts'][number], a: string, b: string, tip: string): TourPlan | null => {
+    const ca = a.split('.'), cb = b.split('.');
+    if (ca[2] !== cb[2]) return null;
+    const row: Row = [{ k: 'val', id: a }, { k: 'tip', id: tip }, { k: 'val', id: b }];
+    if (found.some((f) => sameRow(f.row, row)) || !judge(prompt, row).ok) return null;
+    const name = (id: string) => p.items.find((x) => x.id === id)?.name || id, at = p.axis.labels[+ca[2]] || '', u = unit(p.kind);
+    return { first: { kind: 'pair', group: p.id, a, b, nameA: name(ca[1]), nameB: name(cb[1]), at, shape: p.kind }, tip,
+      why: (at ? 'Ở ' + at + ', ' : '') + u + ' ' + name(ca[1]) + (tip === 'cao hơn' ? ' lớn hơn hẳn ' : ' nhỏ hơn hẳn ') + u + ' ' + name(cb[1]) + '.' };
+  };
+  for (const h of hintsOf(prompt)) {
+    const p = prompt.parts.find((x) => x.id === h.part);
+    if (!p || h.ids.length !== 2 || (h.feat.tip !== 'cao hơn' && h.feat.tip !== 'thấp hơn')) continue;
+    const plan = pairPlan(p, h.ids[0], h.ids[1], h.feat.tip);
+    if (plan) return plan;
+  }
+  for (const p of prompt.parts) {
+    for (let ai = 0; ai < p.axis.labels.length; ai++) {
+      const vals = p.items.map((it) => ({ id: p.id + '.' + it.id + '.' + ai, v: p.data[it.id][ai] })).filter((x): x is { id: string; v: number } => x.v !== null).sort((x, y) => y.v - x.v);
+      if (vals.length < 2) continue;
+      const plan = pairPlan(p, vals[0].id, vals[vals.length - 1].id, 'cao hơn');
+      if (plan) return plan;
+    }
+  }
   return null;
 }
 
-/** Which step the student is on, read from what is in the box, so undoing a move steps back. */
-export function tourStage(plan: TourPlan, row: Row, foundNow: number, foundAtStart: number): 1 | 2 | 3 | 4 {
-  if (foundNow > foundAtStart) return 4;
-  if (!row.some((e) => e.k === 'group' && e.id === plan.first.group)) return 1;
+/**
+ * Which step the student is on, read from what is in the box, so undoing a move steps back: 1 the first thing on the chart,
+ * 2 the comparison, 3 the second number (pair only), 4 Kiểm tra, 5 done.
+ */
+export type TourStage = 1 | 2 | 3 | 4 | 5;
+export function tourStage(plan: TourPlan, row: Row, foundNow: number, foundAtStart: number): TourStage {
+  if (foundNow > foundAtStart) return 5;
+  const f = plan.first;
+  if (f.kind === 'pair') {
+    if (!row.some((e) => e.k === 'val' && e.id === f.a)) return 1;
+    if (!row.some((e) => e.k === 'tip' && e.id === plan.tip)) return 2;
+    if (!row.some((e) => e.k === 'val' && e.id === f.b)) return 3;
+    return 4;
+  }
+  if (!row.some((e) => e.k === 'group' && e.id === f.group)) return 1;
   if (!row.some((e) => e.k === 'tip' && e.id === plan.tip)) return 2;
-  return 3;
+  return 4;
 }
 
 type Rect = { x: number; y: number; w: number; h: number };
