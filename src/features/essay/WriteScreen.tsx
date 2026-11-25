@@ -495,7 +495,7 @@ export function WriteScreen({ prompt, chains, setChains, essay, setEssay, toolba
             <section style={{ flexShrink: 0, borderRadius: 12, border: '1px solid ' + CL.border, background: '#fff', overflow: 'hidden' }}>
               {/* The band stays centred; the text beside it is folded to about its height, so the box stays compact. */}
               <div style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '12px 18px' }}>
-                <span style={{ flexShrink: 0, fontFamily: CL.serif, fontSize: 42, fontWeight: 500, lineHeight: 1, color: CL.ink }}>{bandText(scores.band, true)}</span>
+                <span className="pro-text" style={{ flexShrink: 0, fontFamily: CL.serif, fontSize: 42, fontWeight: 600, lineHeight: 1.1 }}>{bandText(scores.band, true)}</span>
                 {panel.rescore
                   ? <span style={{ fontFamily: CL.sans, fontSize: 12.5, lineHeight: 1.5, color: CL.ink6 }}>Đã chấm lại sau vòng sửa.</span>
                   : panel.summary && <span style={{ flex: 1, minWidth: 0, fontFamily: CL.sans, fontSize: 12.5, lineHeight: 1.5, color: CL.ink6 }}>

@@ -385,7 +385,21 @@ a:hover { color: #404040; }
   background: var(--pro-grad); animation: pro-spin 6s linear infinite;
 }
 .pro-ring-in { display: inline-flex; padding: 2px; border-radius: calc(var(--pro-r) - 2px); background: #fff; }
-@media (prefers-reduced-motion: reduce) { .pro-fill > button, .pro-fill > a, .pro-ring { animation: none !important; } }
+@media (prefers-reduced-motion: reduce) { .pro-fill > button, .pro-fill > a, .pro-ring, .pro-text { animation: none !important; } }
+/* Text in the Pro look (the band on the feedback): the Pro buttons' moving colour and white grain, inside the letters. */
+.pro-text {
+  color: transparent; -webkit-text-fill-color: transparent; -webkit-background-clip: text; background-clip: text;
+  background-color: #2F62C4;
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.1' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 1.4 -.55'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"),
+    radial-gradient(60% 90% at 12% 25%, #3A6FD8 0%, transparent 70%),
+    radial-gradient(50% 80% at 88% 20%, #D9481F 0%, transparent 70%),
+    radial-gradient(45% 75% at 70% 95%, #E8A21F 0%, transparent 70%),
+    radial-gradient(55% 85% at 25% 95%, #2D881A 0%, transparent 70%);
+  background-size: 120px 120px, 150% 150%, 150% 150%, 150% 150%, 150% 150%;
+  animation: pro-text-flow 9s ease-in-out infinite alternate;
+}
+@keyframes pro-text-flow { 0% { background-position: 0 0, 0% 30%, 0% 30%, 0% 30%, 0% 30%; } 50% { background-position: 0 0, 100% 60%, 100% 60%, 100% 60%, 100% 60%; } 100% { background-position: 0 0, 30% 100%, 30% 100%, 30% 100%, 30% 100%; } }
 
 /* ScanText: the AI reading a text: faded, words come into view one by one and stay, then the whole fades back. */
 @keyframes scan-read { 0% { opacity: .28; } 4%, 82% { opacity: 1; } 100% { opacity: .28; } }

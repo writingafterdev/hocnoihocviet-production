@@ -64,7 +64,7 @@ export function ReviewPanel({ review, labels, active, setActive, tab, setTab }: 
     <aside className="cl-scroll" style={{ minHeight: 0, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 14, padding: '2px 2px 4px' }}>
       <section style={{ flexShrink: 0, borderRadius: 12, border: '1px solid ' + CL.border, background: '#fff', overflow: 'hidden' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '12px 18px' }}>
-          <span style={{ flexShrink: 0, fontFamily: CL.serif, fontSize: 42, fontWeight: 500, lineHeight: 1, color: CL.ink }}>{bandText(s.band, true)}</span>
+          <span className="pro-text" style={{ flexShrink: 0, fontFamily: CL.serif, fontSize: 42, fontWeight: 600, lineHeight: 1.1 }}>{bandText(s.band, true)}</span>
           {review.summary && (
             <span style={{ flex: 1, minWidth: 0, fontSize: 12.5, lineHeight: 1.5, color: CL.ink6 }}>
               <Clamp lines={2} style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
