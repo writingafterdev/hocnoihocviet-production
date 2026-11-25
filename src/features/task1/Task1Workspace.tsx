@@ -38,6 +38,11 @@ export function Task1Workspace({ attemptId }: { attemptId: string }) {
   const [grading, setGrading] = useState(false);
   const [gradeError, setGradeError] = useState('');
   const [active, setActive] = useState<Task1Comment | null>(null);
+  // A comment about the chart lights its numbers there; bring the chart into view if the column has scrolled past it.
+  useEffect(() => {
+    const id = active?.marks?.[0];
+    if (id) document.querySelector('[data-tour="part:' + id.split('.')[0] + '"]')?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  }, [active]);
   const [tab, setTab] = useState<Task1Crit>('ta');
   /** The first-visit walkthrough in ① (one finding done together); `start` = findings before it began. */
   const [tour, setTour] = useState<{ start: number; plan: TourPlan } | null>(null);
@@ -107,7 +112,7 @@ export function Task1Workspace({ attemptId }: { attemptId: string }) {
   const isIn = (id: string) => row.some((e) => e.k === 'val' && e.id === id);
   const act = {
     interactive: a.step === 'compare',
-    isIn, isHinted: (id: string) => !!hint && hint.ids.includes(id) && !isIn(id),
+    isIn, isHinted: (id: string) => (!!hint && hint.ids.includes(id) && !isIn(id)) || (!!a.review && !!active?.marks?.includes(id)),
     // While the walkthrough shows, the chart only takes its one click (the line's name in step 1).
     focus: tour && a.step === 'compare' && stage <= 2 && tour.plan.first.kind === 'item' ? tour.plan.first.id : undefined,
     onCell: (id: string) => { if (guiding) return; if (rowPart && rowPart !== cellById(prompt, id).part) return; setRow([...row, { k: 'val', id }]); },

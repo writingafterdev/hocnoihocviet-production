@@ -10,7 +10,7 @@ export type Task1Step = 'compare' | 'plan' | 'write';
 
 export type Task1Crit = 'ta' | 'cc' | 'lr' | 'gra';
 /** One comment on the report: the criterion, a short name, which paragraph (1-based), the exact words, why, and a fix. */
-export interface Task1Comment { crit: Task1Crit; label: string; section: number; quote: string; text: string; fix: string }
+export interface Task1Comment { crit: Task1Crit; label: string; section: number; quote: string; text: string; fix: string; /** Chart cells the comment is about, lit on the chart when it is picked. */ marks?: string[] }
 
 /** The AI's assessment of a Task 1 report, shaped like Task 2's: band, summary, per-criterion analysis, comments that quote the essay. */
 export interface Task1Review {
