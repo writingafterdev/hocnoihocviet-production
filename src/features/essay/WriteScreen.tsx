@@ -151,7 +151,7 @@ function Marked({ text, notes, active, onPick, fixing = {}, keyOf, onFix }: { te
 const Bone = ({ w = '100%', h = 11, r }: { w?: number | string; h?: number; r?: number }) => <Skeleton shape="text" style={{ width: w, height: h, ...(r ? { borderRadius: r } : {}) }} />;
 
 /** A comment card that hasn't arrived yet: title, quote, two lines of text. */
-function CommentBone() {
+export function CommentBone() {
   return (
     <div aria-hidden="true" style={{ flexShrink: 0, padding: '14px 14px', display: 'flex', flexDirection: 'column', gap: 9, borderRadius: 12, border: '1px solid ' + CL.ink1, background: '#fff' }}>
       <span style={{ display: 'flex', justifyContent: 'space-between' }}><Bone w="46%" h={12} /><Bone w="16%" h={10} /></span>
@@ -161,8 +161,8 @@ function CommentBone() {
   );
 }
 
-/** The feedback panel while the essay is being graded and the scores haven't arrived: the layout, in grey. */
-function ReviewBone() {
+/** The feedback panel while the essay is being graded and the scores haven't arrived: the layout, in grey, with a running timer. */
+export function ReviewBone({ phases = GRADING_PHASES }: { phases?: string[] }) {
   return (
     <>
       <section aria-hidden="true" style={{ flexShrink: 0, borderRadius: 12, border: '1px solid ' + CL.border, background: '#fff', overflow: 'hidden' }}>
@@ -179,7 +179,7 @@ function ReviewBone() {
           <Bone w="76%" h={10} /><Bone /><Bone w="94%" /><Bone w="58%" h={10} /><Bone w="82%" />
         </div>
       </section>
-      <span style={{ alignSelf: 'flex-start' }}><ThinkingLoader phases={GRADING_PHASES} interval={2600} /></span>
+      <span style={{ alignSelf: 'flex-start' }}><ThinkingLoader phases={phases} interval={2600} timer /></span>
       <CommentBone /><CommentBone /><CommentBone />
     </>
   );
@@ -552,7 +552,7 @@ export function WriteScreen({ prompt, chains, setChains, essay, setEssay, toolba
             </section>
           )}
           {panel && (panel.loading?.includes(tab)
-            ? <><span style={{ alignSelf: 'flex-start' }}><ThinkingLoader size="sm" phases={['Đang đọc lại bài', 'Đang chọn chỗ cần sửa', 'Đang viết nhận xét']} /></span><CommentBone /><CommentBone /></>
+            ? <><span style={{ alignSelf: 'flex-start' }}><ThinkingLoader size="sm" phases={['Đang đọc lại bài', 'Đang chọn chỗ cần sửa', 'Đang viết nhận xét']} timer /></span><CommentBone /><CommentBone /></>
             : <ClLabel>{tabNotes.length ? tabNotes.length + ' nhận xét' : 'Không có nhận xét'}</ClLabel>)}
           {panel && tabNotes.map((note) => {
             const on = active === note, st = CRITERION_STYLE[note.crit];

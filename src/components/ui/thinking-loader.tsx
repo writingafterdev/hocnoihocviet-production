@@ -27,6 +27,8 @@ export type ThinkingLoaderProps = {
   /** Label once done – a string, or a function that gets the seconds since the loader started */
   doneLabel?: string | ((seconds: number) => string);
   size?: "sm" | "md";
+  /** Show the seconds so far after the label ("12s"), counting while the work runs */
+  timer?: boolean;
   /** "pill" = bordered capsule, "plain" = just the spinner and the label, e.g. inside a chat bubble */
   variant?: "pill" | "plain";
   className?: string;
@@ -51,6 +53,7 @@ export function ThinkingLoader({
   done = false,
   doneLabel = (s) => `Xong sau ${took(s)}`,
   size = "md",
+  timer = false,
   variant = "pill",
   className,
 }: ThinkingLoaderProps) {
@@ -70,6 +73,14 @@ export function ThinkingLoader({
     setStarted(Date.now());
     setStep(0);
   }
+
+  // The running clock after the label: ticks once a second while the work runs
+  const [, setTick] = useState(0);
+  useEffect(() => {
+    if (!timer || done) return;
+    const id = window.setInterval(() => setTick((t) => t + 1), 1000);
+    return () => window.clearInterval(id);
+  }, [timer, done]);
 
   // Advance through the phases on a timer – unless the phase is controlled
   useEffect(() => {
@@ -199,6 +210,7 @@ export function ThinkingLoader({
           {shown.text}
         </span>
       </span>
+      {timer && !done && <span className="ui-tlc__timer" aria-hidden="true">{took(Math.max(0, Math.floor((Date.now() - started) / 1000)))}</span>}
     </span>
   );
 }
@@ -301,6 +313,13 @@ const css = /* css */ `
 
 /* The text box glides to the width of the incoming label; labels roll through it */
 /* min-width 0: in a narrow container the box gives way and the label ends in "…" */
+.ui-tlc__timer {
+  flex-shrink: 0;
+  margin-left: 2px;
+  font-variant-numeric: tabular-nums;
+  color: var(--ui-tlc-text);
+  opacity: 0.75;
+}
 .ui-tlc__text {
   position: relative;
   display: block;

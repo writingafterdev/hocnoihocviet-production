@@ -16,11 +16,11 @@ import { cellById, groupPart, partOfRow, type Hint, type Row } from './engine';
 import { PlanPanel, planReady, type PlanState } from './Plan';
 import { normalizeTask1, task1Store, type Task1Attempt, type Task1Review, type Task1Step } from './store';
 import { FreeColumn, FreeNotes, GuidedColumn, labelsOf, paragraphsOf, sectionsOf, SideColumn } from './Write';
-import { GradedEssay, GradedOutline, ReviewPanel, type Fixer } from './Review';
+import { GradedEssay, GradedOutline, ReadingEssay, ReviewPanel, type Fixer } from './Review';
+import { ReviewBone } from '../essay/WriteScreen';
 import type { FixTask } from '../essay/FixFlow';
 import { applyEdits, matchesFix } from '../essay/InlineFix';
 import type { Task1Comment, Task1Crit } from './store';
-import { ThinkingLoader } from '@/components/ui/thinking-loader';
 import { markTourSeen, TourLayer, tourPlanOf, tourSeen, tourStage, type TourPlan, type TourStage } from './Tour';
 
 type Status = 'loading' | 'ready' | 'missing' | 'error';
@@ -48,6 +48,8 @@ export function Task1Workspace({ attemptId }: { attemptId: string }) {
   const [hint, setHint] = useState<Hint | null>(null);
   const [grading, setGrading] = useState(false);
   const [gradeError, setGradeError] = useState('');
+  /** The paragraphs being graded (Nộp bài, or Viết lại after Sửa bài): read in the middle while the feedback panel is grey. */
+  const [reading, setReading] = useState<string[] | null>(null);
   const [active, setActive] = useState<Task1Comment | null>(null);
   // A comment about the chart lights its numbers there; bring the chart into view if the column has scrolled past it.
   useEffect(() => {
@@ -141,10 +143,10 @@ export function Task1Workspace({ attemptId }: { attemptId: string }) {
   const submit = async () => {
     const paras = paragraphsOf(mode, a.essay, sections);
     if (!paras.length) { setGradeError('Bài còn trống.'); return; }
-    setGrading(true); setGradeError('');
+    setGrading(true); setGradeError(''); setReading(paras);
     try { const r = await postAi<{ review: Task1Review }>('task1-review', { promptId: prompt.id, paragraphs: paras }); setActive(null); setTab('ta'); upd({ review: r.review }); }
     catch (e) { if (e instanceof SignedOutError) { toLogin(); return; } setGradeError(e instanceof AiRequestError ? AI_ERROR_TEXT[e.code] : AI_ERROR_TEXT.network); }
-    setGrading(false);
+    setGrading(false); setReading(null);
   };
   const writing = a.step === 'write';
   // A review saved before the feedback took Task 2's shape has no paragraphs: treat it as not graded.
@@ -187,7 +189,7 @@ export function Task1Workspace({ attemptId }: { attemptId: string }) {
   const resubmitFix = async () => {
     if (!graded || !fix || grading) return;
     const paras = graded.paragraphs.map((_, k) => paraAfter(k, graded.paragraphs));
-    setOpenFix(null); setGrading(true); setGradeError('');
+    setOpenFix(null); setGrading(true); setGradeError(''); setReading(paras);
     try {
       const done = tasks.filter((t) => fix.solved.includes(t.item.key) || (edits[t.item.key] || '').trim()).slice(0, 12)
         .map((t) => ({ label: t.title, crit: t.crit, text: t.item.text.replace(/\*\*/g, '').slice(0, 600), solved: fix.solved.includes(t.item.key) }));
@@ -199,7 +201,7 @@ export function Task1Workspace({ attemptId }: { attemptId: string }) {
       setActive(null); setTab('ta');
       setA((x) => x && ({ ...x, updatedAt: Date.now(), essay: writeBack(mode, x.essay, sections.map((t) => t.id), paras), review: { ...graded, scores: r.scores, comments, paragraphs: paras, rescore: { notes: r.notes } }, prevScores: graded.scores, fix: null }));
     } catch (e) { if (e instanceof SignedOutError) { toLogin(); return; } setGradeError(e instanceof AiRequestError ? AI_ERROR_TEXT[e.code] : AI_ERROR_TEXT.network); }
-    setGrading(false);
+    setGrading(false); setReading(null);
   };
   const saveLabel = save === 'failed' ? 'Chưa lưu được · thử lại' : contentKey(a) !== savedKey.current ? 'Đang lưu…' : 'Đã lưu';
 
@@ -239,7 +241,7 @@ export function Task1Workspace({ attemptId }: { attemptId: string }) {
           </div>
         </div>
 
-        <main style={{ flex: 1, minHeight: 0, display: 'grid', gridTemplateColumns: writing ? (a.review ? '360px minmax(0, 1fr) 380px' : '360px minmax(0, 1fr) 330px') : 'minmax(0, 1fr) 520px', gap: 16 }}>
+        <main style={{ flex: 1, minHeight: 0, display: 'grid', gridTemplateColumns: writing ? (a.review || reading ? '360px minmax(0, 1fr) 380px' : '360px minmax(0, 1fr) 330px') : 'minmax(0, 1fr) 520px', gap: 16 }}>
           <section style={{ minHeight: 0, overflowY: 'auto', borderRadius: 12, border: '1px solid ' + CL.border, background: '#fff', padding: writing ? '16px' : '18px 20px 24px', display: 'flex', flexDirection: 'column', gap: writing ? 16 : 28 }}>
             <div style={{ border: '1px solid ' + CL.ink3, padding: '10px 13px' }}><p style={{ margin: 0, fontSize: 12.5, fontWeight: 600, fontStyle: 'italic', lineHeight: 1.55, color: '#20252D' }}>{prompt.text}</p></div>
             <Charts prompt={prompt} act={act} compact={writing} />
@@ -253,13 +255,13 @@ export function Task1Workspace({ attemptId }: { attemptId: string }) {
           )}
           {a.step === 'compare' && tour && stage > 0 && <Walkthrough plan={tour.plan} stage={stage as TourStage} onEnd={endTour} />}
           {a.step === 'plan' && <PlanPanel prompt={prompt} state={plan} set={(p) => upd(p)} />}
-          {writing && graded && <GradedEssay review={graded} labels={labels} active={active} setActive={setActive} tab={tab} fixer={fixer} reading={grading} />}
-          {writing && !graded && !free && <GuidedColumn prompt={prompt} plan={plan} essay={a.essay} setEssay={setEssay} found={a.found} />}
-          {writing && !graded && free && <FreeColumn essay={a.essay} setEssay={setEssay} />}
-          {writing && graded && <ReviewPanel review={graded} labels={labels} active={active} setActive={setActive} tab={tab} setTab={setTab} fixer={fixer} prev={a.prevScores || null} />}
-          {writing && !graded && (grading
-            ? <aside style={{ borderRadius: 12, border: '1px solid ' + CL.border, padding: 18 }}><ThinkingLoader phases={['Đang đọc bài', 'Đang đối chiếu số liệu', 'Đang chấm từng tiêu chí', 'Đang viết nhận xét']} interval={2600} /></aside>
-            : <SideColumn />)}
+          {writing && reading && <ReadingEssay paragraphs={reading} labels={labelsOf(mode, a.essay, sections, reading.length)} />}
+          {writing && graded && !reading && <GradedEssay review={graded} labels={labels} active={active} setActive={setActive} tab={tab} fixer={fixer} reading={grading} />}
+          {writing && !graded && !reading && !free && <GuidedColumn prompt={prompt} plan={plan} essay={a.essay} setEssay={setEssay} found={a.found} />}
+          {writing && !graded && !reading && free && <FreeColumn essay={a.essay} setEssay={setEssay} />}
+          {writing && graded && !reading && <ReviewPanel review={graded} labels={labels} active={active} setActive={setActive} tab={tab} setTab={setTab} fixer={fixer} prev={a.prevScores || null} />}
+          {writing && reading && <aside className="cl-scroll" style={{ minHeight: 0, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 14, padding: '2px 2px 4px' }}><ReviewBone phases={graded ? ['Đang đọc bài đã sửa', 'Đang so với lần chấm trước', 'Đang chấm lại'] : ['Đang đọc bài', 'Đang đối chiếu số liệu', 'Đang chấm từng tiêu chí', 'Đang viết nhận xét']} /></aside>}
+          {writing && !graded && !reading && <SideColumn />}
         </main>
       </div>
     </div>

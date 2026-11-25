@@ -6,6 +6,7 @@ import { ClLabel } from '../chainlab/ui/primitives';
 import { bandText, CRITERION_STYLE } from '../desk/scoring';
 import { Clamp } from '../essay/Clamp';
 import type { FixTask } from '../essay/FixFlow';
+import { ScanText, wordCount as scanWords } from '@/components/ui/scan-text';
 import { DoneTick, FixBody, Folded } from '../essay/InlineFix';
 import type { Task1Comment, Task1Crit, Task1Review } from './store';
 
@@ -50,6 +51,27 @@ function Marked({ text, notes, active, onPick, fixer, indexOf }: { text: string;
   });
   if (last < text.length) out.push(<span key="end">{text.slice(last)}</span>);
   return <>{out}</>;
+}
+
+/** While grading (or re-grading after Sửa bài): the report read as one text, paragraph after paragraph (as in Task 2). */
+export function ReadingEssay({ paragraphs, labels }: { paragraphs: string[]; labels: string[] }) {
+  const counts = paragraphs.map(scanWords), total = counts.reduce((t, n) => t + n, 0);
+  return (
+    <section style={{ borderRadius: 12, border: '1px solid ' + CL.border, background: '#fff', minHeight: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      <div style={{ display: 'flex', alignItems: 'center', minHeight: 50, padding: '0 20px', borderBottom: '1px solid ' + CL.ink1, background: CL.panel }}>
+        <ClLabel color={CL.ink}>Bài viết</ClLabel>
+        <span style={{ marginLeft: 'auto', fontSize: 12, color: CL.ink5 }}>Số từ: <b style={{ color: total >= 150 ? CL.green : CL.ink }}>{total}</b> / 150</span>
+      </div>
+      <div className="cl-scroll" style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: '18px 22px 26px', display: 'flex', flexDirection: 'column', gap: 18 }}>
+        {paragraphs.map((text, i) => (
+          <div key={i} style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            <ClLabel>{labels[i] || 'Đoạn ' + (i + 1)}</ClLabel>
+            <p style={{ margin: 0, whiteSpace: 'pre-wrap', fontFamily: CL.serif, fontSize: 15, lineHeight: 1.75, color: CL.ink8 }}><ScanText text={text} offset={counts.slice(0, i).reduce((t, n) => t + n, 0)} total={total} /></p>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
 }
 
 /** After Nộp bài: the report as graded, paragraph by paragraph, with the comments' words marked (as in Task 2). */
