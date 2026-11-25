@@ -6,9 +6,16 @@ import { CL } from '../chainlab/constants';
 import { fmt, uv } from './engine';
 
 /** A chart is clickable in ① So sánh: a point adds that number, a line's name or a year adds the whole line or the whole year. */
-export interface ChartActions { interactive: boolean; isIn: (id: string) => boolean; isHinted: (id: string) => boolean; onCell: (id: string) => void; onGroup: (g: string) => void; /** The walkthrough's line: drawn thicker, the others faded. */ focus?: string }
+export interface ChartActions { interactive: boolean; isIn: (id: string) => boolean; isHinted: (id: string) => boolean; onCell: (id: string) => void; onGroup: (g: string) => void; /** The walkthrough's line: drawn thicker, the others faded. */ focus?: string; /** A picked comment's numbers after grading: kept bright, the rest faded. */ spot?: string[] }
 
 const L = 44, R = 12, TOP = 12, BOTTOM = 30;
+
+/** How strongly a mark shows: faded when the walkthrough points at another item, or when a picked comment is about other numbers. */
+function shade(act: ChartActions, itemId: string, id: string | null, faded: number) {
+  if (act.focus) return act.focus === itemId ? 1 : faded;
+  if (act.spot && act.spot.length) return id ? (act.spot.includes(id) ? 1 : faded) : act.spot.some((x) => x.split('.')[1] === itemId) ? 1 : faded;
+  return 1;
+}
 
 function Glyph({ shapes }: { shapes: [string, string, number, string, string?][] }) {
   return <svg width="22" height="14" viewBox="0 0 28 18" fill="none" aria-hidden="true">{shapes.map((s, i) => <path key={i} d={s[0]} stroke={s[1]} fill={s[4] || 'none'} strokeWidth={s[2]} strokeLinecap={s[3] as 'round'} strokeLinejoin="round" />)}</svg>;
@@ -39,7 +46,7 @@ export function LineChart({ part: p, act, compact }: { part: T1Part; act: ChartA
           {grid.map((t) => <g key={t}><line x1={L} x2={W - R} y1={ys(t)} y2={ys(t)} stroke={t ? CL.ink1 : CL.ink3} /><text x={L - 8} y={ys(t) + 3.5} fontSize={fs} fill={CL.ink5} textAnchor="end">{t}</text></g>)}
           {p.items.map((it) => {
             const pts = p.data[it.id].map((v, ai) => (v === null ? null : xs(ai).toFixed(1) + ',' + ys(v).toFixed(1))).filter(Boolean).join(' ');
-            return <polyline key={it.id} points={pts} fill="none" stroke={it.color} strokeWidth={act.focus === it.id ? 4 : 2.5} opacity={act.focus && act.focus !== it.id ? 0.2 : 1} strokeLinejoin="round" strokeLinecap="round" />;
+            return <polyline key={it.id} points={pts} fill="none" stroke={it.color} strokeWidth={act.focus === it.id ? 4 : 2.5} opacity={shade(act, it.id, null, 0.2)} strokeLinejoin="round" strokeLinecap="round" />;
           })}
           {p.axis.labels.map((lab, ai) => (!p.axis.show || p.axis.show.includes(ai)) && (
             <text key={ai} x={xs(ai)} y={H - 10} fontSize={fs + 0.5} fontWeight={500} fill={CL.ink6} textAnchor="middle" className={link} onClick={() => act.interactive && act.onGroup(p.id + '>col:' + ai)}>
@@ -49,7 +56,7 @@ export function LineChart({ part: p, act, compact }: { part: T1Part; act: ChartA
           {dots.map((d) => {
             const on = act.isIn(d.id), hint = act.isHinted(d.id);
             return (
-              <g key={d.id} onClick={() => click(d)} opacity={act.focus && act.focus !== d.it.id ? 0.2 : 1} style={{ cursor: act.interactive ? 'pointer' : 'default' }}>
+              <g key={d.id} onClick={() => click(d)} opacity={shade(act, d.it.id, d.id, 0.2)} style={{ cursor: act.interactive ? 'pointer' : 'default' }}>
                 <title>{d.it.name + ', ' + p.axis.labels[d.ai] + ': ' + uv(p, d.v)}</title>
                 {(on || hint) && <circle cx={d.cx} cy={d.cy} r={9} fill="none" stroke={on ? d.it.color : '#FFC73C'} strokeWidth={2.5} />}
                 <circle cx={d.cx} cy={d.cy} r={5} fill={d.it.color} stroke="#fff" strokeWidth={2} />
@@ -123,7 +130,7 @@ export function BarChart({ part: p, act, compact }: { part: T1Part; act: ChartAc
                   const v = p.data[it.id][ai]; if (v === null) return null;
                   const id = p.id + '.' + it.id + '.' + ai, on = act.isIn(id), hint = act.isHinted(id), x = gx + k * bw, y = ys(v), h = Math.max(1, TOP + PH - y);
                   return (
-                    <g key={it.id} onClick={() => act.interactive && act.onCell(id)} opacity={act.focus && act.focus !== it.id ? 0.2 : 1} style={{ cursor: act.interactive ? 'pointer' : 'default' }}>
+                    <g key={it.id} onClick={() => act.interactive && act.onCell(id)} opacity={shade(act, it.id, id, 0.2)} style={{ cursor: act.interactive ? 'pointer' : 'default' }}>
                       <title>{it.name + ', ' + lab + ': ' + uv(p, v)}</title>
                       {(on || hint) && <rect x={x - 2.5} y={y - 3} width={bw + 3} height={h + 3} rx={4} fill="none" stroke={on ? it.color : '#FFC73C'} strokeWidth={2.5} />}
                       <rect x={x} y={y} width={bw - 2} height={h} rx={2} fill={it.color} />
@@ -172,7 +179,7 @@ export function PieChart({ part: p, act, compact }: { part: T1Part; act: ChartAc
                   const d = full ? `M${cx} ${cy - R}A${R} ${R} 0 1 1 ${cx - 0.01} ${cy - R}Z` : `M${cx} ${cy}L${x0} ${y0}A${R} ${R} 0 ${large} 1 ${x1} ${y1}Z`;
                   const mid = (a0 + a1) / 2, small = v / tot < 0.08, [lx, ly] = pt(cx, cy, small ? R + 16 : R * 0.62, mid), tiny = v / tot < 0.03;
                   return (
-                    <g key={it.id} onClick={() => act.interactive && act.onCell(id)} opacity={act.focus && act.focus !== it.id ? 0.25 : 1} style={{ cursor: act.interactive ? 'pointer' : 'default' }}>
+                    <g key={it.id} onClick={() => act.interactive && act.onCell(id)} opacity={shade(act, it.id, id, 0.25)} style={{ cursor: act.interactive ? 'pointer' : 'default' }}>
                       <title>{it.name + (lab ? ', ' + lab : '') + ': ' + uv(p, v)}</title>
                       <path d={d} fill={it.color} stroke={on ? CL.ink : hint ? '#FFC73C' : '#fff'} strokeWidth={on || hint ? 3 : 1.5} strokeLinejoin="round" />
                       {!tiny && <text x={lx} y={ly + 4} fontSize={fs} fontWeight={700} textAnchor="middle" fill={small ? CL.ink7 : '#fff'} style={{ pointerEvents: 'none' }}>{uv(p, v)}</text>}
@@ -207,7 +214,7 @@ export function TableChart({ part: p, act, compact }: { part: T1Part; act: Chart
     const id = p.id + '.' + itemId + '.' + ai, on = act.isIn(id), hint = act.isHinted(id), v = p.data[itemId][ai], it = p.items.find((x) => x.id === itemId)!;
     return (
       <td key={id} onClick={() => act.interactive && v !== null && act.onCell(id)} title={it.name + (A.labels[ai] ? ', ' + A.labels[ai] : '') + ': ' + uv(p, v)}
-        style={{ padding: compact ? '6px 8px' : '8px 12px', textAlign: 'right', fontSize: fs, fontWeight: 500, fontVariantNumeric: 'tabular-nums', color: CL.ink, cursor: act.interactive && v !== null ? 'pointer' : 'default', borderBottom: '1px solid ' + CL.ink1, background: on ? '#EEF3FC' : hint ? '#FFF7E0' : 'transparent', boxShadow: on ? 'inset 0 0 0 2px #77A1DD' : hint ? 'inset 0 0 0 2px #FFC73C' : 'none', opacity: act.focus && act.focus !== itemId ? 0.3 : 1 }}>
+        style={{ padding: compact ? '6px 8px' : '8px 12px', textAlign: 'right', fontSize: fs, fontWeight: 500, fontVariantNumeric: 'tabular-nums', color: CL.ink, cursor: act.interactive && v !== null ? 'pointer' : 'default', borderBottom: '1px solid ' + CL.ink1, background: on ? '#EEF3FC' : hint ? '#FFF7E0' : 'transparent', boxShadow: on ? 'inset 0 0 0 2px #77A1DD' : hint ? 'inset 0 0 0 2px #FFC73C' : 'none', opacity: shade(act, itemId, id, 0.3) }}>
         {show(v)}
       </td>
     );

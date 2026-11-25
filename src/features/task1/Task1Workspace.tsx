@@ -113,6 +113,7 @@ export function Task1Workspace({ attemptId }: { attemptId: string }) {
   const act = {
     interactive: a.step === 'compare',
     isIn, isHinted: (id: string) => (!!hint && hint.ids.includes(id) && !isIn(id)) || (!!a.review && !!active?.marks?.includes(id)),
+    spot: a.review && active?.marks?.length ? active.marks : undefined,
     // While the walkthrough shows, the chart only takes its one click (the line's name in step 1).
     focus: tour && a.step === 'compare' && stage <= 2 && tour.plan.first.kind === 'item' ? tour.plan.first.id : undefined,
     onCell: (id: string) => { if (guiding) return; if (rowPart && rowPart !== cellById(prompt, id).part) return; setRow([...row, { k: 'val', id }]); },
