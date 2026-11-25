@@ -24,7 +24,7 @@ const task1Write = (open: boolean): Item => ({ label: 'Luyện viết', href: '/
 const groupsFor = (task1: boolean): Group[] => [
   { items: [{ label: 'Trang chủ', href: '/home', match: ['/home'], icon: <NavIcon name="home" /> }] },
   { label: 'Tài liệu missbacxiu', items: [{ label: 'Tài liệu', href: '/tai-lieu', match: ['/tai-lieu'], icon: <NavIcon name="cafe" /> },
-    { label: 'Nghĩ ý', href: '/nghi-y', match: ['/nghi-y'], icon: <NavIcon name="chains" /> }] },
+    { label: 'Nghĩ ý', href: '/nghi-y', match: ['/nghi-y'], icon: <NavIcon name="idea" /> }] },
   { label: 'Writing', sections: [
     { label: 'Task 2', items: [drill(), write(), copy()] },
     { label: 'Task 1', soon: !task1, items: [task1Write(task1), copy(true)] },
