@@ -11,9 +11,9 @@ export type { WritingMode };
 const MODE_KEY = 'hnhv.writeMode';
 export const MODE_LABEL: Record<WritingMode, string> = { free: 'Tự viết', guided: 'Viết có hướng dẫn' };
 
-/** The mode picked last time, so the popup opens on it. */
+/** The mode picked last time, so the popup opens on it; someone new starts on Tự viết. */
 function lastMode(): WritingMode {
-  try { return localStorage.getItem(MODE_KEY) === 'free' ? 'free' : 'guided'; } catch { return 'guided'; }
+  try { return localStorage.getItem(MODE_KEY) === 'guided' ? 'guided' : 'free'; } catch { return 'free'; }
 }
 function rememberMode(m: WritingMode) {
   try { localStorage.setItem(MODE_KEY, m); } catch { /* private window */ }
@@ -87,7 +87,7 @@ export function ModePickerModal({ prompt, onClose, onStart, onResume }: { prompt
 
 /** The popup itself, shared by Task 1 and Task 2: the prompt, the two modes (each with its sketch), start, and resume when there is an attempt in progress. */
 export function ModePickerDialog({ text, last, onClose, onStart, sketches }: { text: string; last: { mode: WritingMode; updatedAt: number; resume: () => void } | null; onClose: () => void; onStart: (mode: WritingMode) => void; sketches?: Partial<Record<WritingMode, ReactNode>> }) {
-  const [mode, setMode] = useState<WritingMode>('guided');
+  const [mode, setMode] = useState<WritingMode>('free');
   const [starting, setStarting] = useState(false);
   const [closing, setClosing] = useState(false);
   // Closing plays the quicker scale-down before the modal unmounts.

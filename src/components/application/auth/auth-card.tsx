@@ -108,6 +108,8 @@ export interface AuthCardProps {
   headingLevel?: 1 | 2 | 3 | 4 | 5 | 6;
   /** Keep the email form on the card but switched off: for apps that only sign in through a provider for now. */
   disableForm?: boolean;
+  /** A provider button that was pressed and is on its way (e.g. opening Google): disabled, with a spinner. */
+  providerBusy?: SocialProvider | null;
   /** The text on each provider button; defaults to "Continue with <provider>". */
   providerLabel?: (label: string) => string;
   /** Extra content under the providers (a notice, a dev-only button). */
@@ -160,6 +162,7 @@ export function AuthCard({
   headingLevel = 1,
   disableForm = false,
   providerLabel,
+  providerBusy,
   children,
   className,
 }: AuthCardProps) {
@@ -200,7 +203,10 @@ export function AuthCard({
           className={layout === "grid" ? "w-full" : undefined}
           aria-label={layout !== "stacked" ? (providerLabel ?? ((l: string) => `Continue with ${l}`))(SOCIAL_PROVIDERS[provider].label) : undefined}
           onClick={() => onProvider?.(provider)}
+          disabled={!!providerBusy}
+          aria-busy={providerBusy === provider || undefined}
         >
+          {providerBusy === provider && <span aria-hidden="true" className="mr-2 inline-block size-3.5 animate-spin rounded-full border-2 border-current border-r-transparent align-[-2px]" />}
           {(providerLabel ?? ((l: string) => `Continue with ${l}`))(SOCIAL_PROVIDERS[provider].label)}
         </SocialButton>
       ))}

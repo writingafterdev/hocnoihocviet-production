@@ -20,17 +20,19 @@ export function Login({ dev = false }: { dev?: boolean }) {
   const error = params.get('error');
   const { data: session } = useSession();
   const [busy, setBusy] = useState(false);
+  /** Google's page is opening: the button shows a spinner until the browser leaves (or an error comes back). */
+  const [googling, setGoogling] = useState(false);
   const [failure, setFailure] = useState<string | null>(null);
 
   useEffect(() => { if (session) router.replace(next); }, [session, next, router]);
 
   const google = async () => {
-    setBusy(true); setFailure(null);
+    setBusy(true); setGoogling(true); setFailure(null);
     try {
       const { error: e } = await signIn.social({ provider: 'google', callbackURL: next, errorCallbackURL: '/login?next=' + encodeURIComponent(next) });
-      if (e) { setBusy(false); setFailure((e.status ? e.status + ' · ' : '') + (e.message || e.statusText || 'unknown error')); }
+      if (e) { setBusy(false); setGoogling(false); setFailure((e.status ? e.status + ' · ' : '') + (e.message || e.statusText || 'unknown error')); }
     } catch (err) {
-      setBusy(false); setFailure(err instanceof Error ? err.message : String(err));
+      setBusy(false); setGoogling(false); setFailure(err instanceof Error ? err.message : String(err));
     }
   };
   /** Local development only: one shared test account, created on first use. */
@@ -49,7 +51,8 @@ export function Login({ dev = false }: { dev?: boolean }) {
       <AuthCard
         disableForm
         providers={['google']}
-        providerLabel={() => 'Tiếp tục với Google'}
+        providerLabel={() => (googling ? 'Đang mở Google…' : 'Tiếp tục với Google')}
+        providerBusy={googling ? 'google' : null}
         onProvider={() => { if (!busy) google(); }}
         title="Đăng nhập"
         description=""
