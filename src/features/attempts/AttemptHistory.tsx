@@ -51,7 +51,7 @@ interface Group { key: string; first: Item; tries: Item[] }
 export function AttemptHistory() {
   const router = useRouter();
   const [list, setList] = useState<Attempt[] | null>(null);
-  /** Task 1 attempts, for accounts that can open Task 1 (admins while it is being built). */
+  /** Task 1 attempts, for signed-in students. */
   const [t1, setT1] = useState<Task1Attempt[]>([]);
   const [tasks, setTasks] = useState<string[]>([]);
   const [failed, setFailed] = useState(false);

@@ -35,7 +35,7 @@ const SketchGuided1 = (
   </span>
 );
 
-/** Thư viện đề Task 1 (admins only while it is being built), laid out like Task 2's: header, Dạng đề filter, one card per row. A prompt with an attempt in progress opens that attempt. */
+/** Thư viện đề Task 1 laid out like Task 2's: header, Dạng đề filter, one card per row. A prompt with an attempt in progress opens that attempt. */
 export function Task1Library() {
   const router = useRouter();
   const [open, setOpen] = useState<boolean | null>(null);

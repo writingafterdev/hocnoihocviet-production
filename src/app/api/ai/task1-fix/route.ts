@@ -1,5 +1,5 @@
 import { findTask1Prompt } from '@/content/task1';
-import { getAdmin, notFound } from '@/lib/admin';
+import { getUser } from '@/lib/auth';
 import { aiErrorResponse, AiError } from '@/lib/ai/claude';
 import { aiTask1FixCheck, aiTask1Rescore, type T1FixTask, type T1Scores } from '@/lib/ai/task1';
 
@@ -10,11 +10,11 @@ const paras = (p: unknown): p is string[] => Array.isArray(p) && p.length >= 1 &
 
 /**
  * Task 1 Sửa bài. action "check": is one comment fixed in the edited paragraph; "rescore": the scores after the round,
- * anchored to the last grading. Each takes one "fix" use. Admins only for now.
+ * anchored to the last grading. Each takes one "fix" use.
  */
 export async function POST(request: Request) {
-  const user = await getAdmin(request);
-  if (!user) return notFound();
+  const user = await getUser(request);
+  if (!user) return Response.json({ error: 'unauthorized' }, { status: 401, headers: { 'Cache-Control': 'no-store' } });
   let b: Record<string, unknown>;
   try { b = await request.json(); } catch { return json({ error: 'invalid' }, 400); }
   const pr = typeof b?.promptId === 'string' ? findTask1Prompt(b.promptId) : null;

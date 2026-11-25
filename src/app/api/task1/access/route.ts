@@ -1,7 +1,7 @@
-import { getAdmin, notFound } from '@/lib/admin';
+import { getUser } from '@/lib/auth';
 
-/** Task 1 is open only to admins while it is being built: 200 for them, 404 for everyone else. */
+/** Task 1 is open to every signed-in student (it was admins only while it was being built). */
 export async function GET(request: Request) {
-  if (!(await getAdmin(request))) return notFound();
+  if (!(await getUser(request))) return Response.json({ error: 'unauthorized' }, { status: 401, headers: { 'Cache-Control': 'no-store' } });
   return Response.json({ ok: true }, { headers: { 'Cache-Control': 'no-store' } });
 }

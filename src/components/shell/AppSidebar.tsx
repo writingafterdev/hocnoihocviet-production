@@ -19,7 +19,7 @@ const write = (disabled?: boolean): Item => ({ label: 'Luyện viết', href: '/
 const copy = (disabled?: boolean): Item => ({ label: 'Chép mẫu', href: '/copy', match: disabled ? [] : ['/copy'], icon: <NavIcon name="copy" />, disabled });
 
 // Tài liệu missbacxiu (her doc and Nghĩ ý) comes first; Writing holds Task 2 (quick drill, writing practice, copying a sample) and Task 1 (writing practice, copying a sample later; no drill); vocab and the student's own essays stand apart.
-/** Task 1 opens for admins while it is being built (the rest of the section stays "Sắp có"). */
+/** Task 1: Luyện viết is open to every signed-in student (Chép mẫu stays "Sắp có"). */
 const task1Write = (open: boolean): Item => ({ label: 'Luyện viết', href: '/task1', match: open ? ['/task1'] : [], icon: <NavIcon name="write" />, disabled: !open });
 const groupsFor = (task1: boolean): Group[] => [
   { items: [{ label: 'Trang chủ', href: '/home', match: ['/home'], icon: <NavIcon name="home" /> }] },
@@ -82,7 +82,8 @@ function ToggleIcon({ open }: { open: boolean }) {
 export function AppSidebar({ children }: { children: React.ReactNode }) {
   const path = usePathname();
   const workspace = isWorkspace(path);
-  const [task1, setTask1] = useState(false);
+  // Open for every signed-in student; only a signed-out check (401) greys it out again.
+  const [task1, setTask1] = useState(true);
   useEffect(() => { fetch('/api/task1/access', { credentials: 'same-origin' }).then((r) => setTask1(r.ok), () => {}); }, []);
   const GROUPS = groupsFor(task1);
   const kind = workspace ? 'workspace' : 'page';

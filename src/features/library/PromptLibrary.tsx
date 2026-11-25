@@ -117,7 +117,7 @@ function PromptCard({ prompt, onWrite }: { prompt: Prompt; onWrite: () => void; 
 /** Thư viện đề: Task 1 / Task 2 switch, type and topic filters, prompt cards. */
 export function PromptLibrary({ mode = 'write' }: { mode?: 'write' | 'copy' }) {
   const router = useRouter();
-  const task = 'task2' as Task; // Task 1 has its own (greyed) place in the sidebar for now
+  const task = 'task2' as Task; // Task 1 has its own library (/task1)
   const [cats, setCats] = useState<string[]>([]);
   const [topics, setTopics] = useState<string[]>([]);
   const [modalPrompt, setModalPrompt] = useState<Prompt | null>(null);
